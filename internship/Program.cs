@@ -1,5 +1,6 @@
 ﻿using System;
 using internship;
+using internship.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +14,11 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<ChatService>();
+builder.Services.AddScoped<ChatMemberService>();
+builder.Services.AddScoped<MessageService>();
 
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())
