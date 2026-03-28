@@ -1,53 +1,47 @@
-﻿using internship.Models;
-using Microsoft.EntityFrameworkCore;
+﻿using Contracts;
+using Entities.Models;
 
 namespace internship.Services
 {
     public class ChatService
     {
-        private readonly AppDbContext _db;
+        private readonly IRepositoryManager _repository;
 
-        public ChatService(AppDbContext db)
-        {
-            _db = db;
-        }
+        public ChatService(IRepositoryManager repository)
+            => _repository = repository;
 
-        public async Task<List<Chat>> GetAllAsync()
-        {
-            return await _db.Chats.ToListAsync();
-        }
+        public async Task<IEnumerable<Chat>> GetAllAsync() =>
+            await _repository.Chat.GetAllChatsAsync(trackChanges: false);
 
-        public async Task<Chat?> GetByIdAsync(int id)
-        {
-            return await _db.Chats.FindAsync(id);
-        }
+        public async Task<Chat?> GetByIdAsync(int id) =>
+            await _repository.Chat.GetChatAsync(id, trackChanges: false);
 
         public async Task<Chat> CreateAsync(Chat chat)
         {
             chat.CreatedAt = DateTime.UtcNow;
-            _db.Chats.Add(chat);
-            await _db.SaveChangesAsync();
+            _repository.Chat.CreateChat(chat);
+            await _repository.SaveAsync();
             return chat;
         }
 
         public async Task<Chat?> UpdateAsync(int id, Chat updated)
         {
-            var chat = await _db.Chats.FindAsync(id);
+            var chat = await _repository.Chat.GetChatAsync(id, trackChanges: true);
             if (chat == null) return null;
 
             chat.Name = updated.Name;
 
-            await _db.SaveChangesAsync();
+            await _repository.SaveAsync();
             return chat;
         }
 
         public async Task<bool> DeleteAsync(int id)
         {
-            var chat = await _db.Chats.FindAsync(id);
+            var chat = await _repository.Chat.GetChatAsync(id, trackChanges: false);
             if (chat == null) return false;
 
-            _db.Chats.Remove(chat);
-            await _db.SaveChangesAsync();
+            _repository.Chat.DeleteChat(chat);
+            await _repository.SaveAsync();
             return true;
         }
     }

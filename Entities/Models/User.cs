@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace internship.Models
+﻿namespace Entities.Models
 {
     public class User : BaseEntity
     {

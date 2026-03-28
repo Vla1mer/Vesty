@@ -1,4 +1,4 @@
-﻿namespace internship.Models
+﻿namespace Entities.Models
 {
     public abstract class BaseEntity
     {

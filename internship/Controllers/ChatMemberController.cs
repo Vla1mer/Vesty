@@ -1,4 +1,4 @@
-﻿using internship.Models;
+﻿using Entities.Models;
 using internship.Services;
 using Microsoft.AspNetCore.Mvc;
 

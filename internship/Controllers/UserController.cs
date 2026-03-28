@@ -1,4 +1,5 @@
-﻿using internship.Models;
+﻿using Contracts;
+using Entities.Models;
 using internship.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,15 +10,18 @@ namespace internship.Controllers
     public class UserController : ControllerBase
     {
         private readonly UserService _userService;
+        private readonly ILoggerManager _logger;
 
-        public UserController(UserService userService)
+        public UserController(UserService userService, ILoggerManager logger)
         {
             _userService = userService;
+            _logger = logger;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
+            _logger.LogInfo("Fetching all users");
             return Ok(await _userService.GetAllAsync());
         }
 
