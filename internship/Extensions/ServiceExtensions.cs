@@ -1,6 +1,7 @@
 ﻿using Contracts;
-using LoggerService;
 using internship.Repository;
+using internship.Services;
+using LoggerService;
 
 namespace internship.Extensions
 {
@@ -27,6 +28,13 @@ namespace internship.Extensions
         public static void ConfigureRepositoryManager(this IServiceCollection services) =>
             services.AddScoped<IRepositoryManager, RepositoryManager>();
 
+        public static void ConfigureServiceManager(this IServiceCollection services) =>
+             services.AddScoped<UserService>()
+            .AddScoped<ChatService>()
+            .AddScoped<ChatMemberService>()
+            .AddScoped<MessageService>();
     }
+
+
 }
 
