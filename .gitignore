@@ -486,3 +486,6 @@ $RECYCLE.BIN/
 .vs/
 appsettings.json
 appsettings.Development.json
+
+logs/
+internal_logs/
