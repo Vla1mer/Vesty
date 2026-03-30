@@ -65,7 +65,7 @@ namespace internship
                 {
                     Id = 1,
                     Login = "admin",
-                    Password = BCrypt.Net.BCrypt.HashPassword("admin123"),
+                    Password = "admin123",
                     Name = "Админ",
                     Surname = "Админович",
                     CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)

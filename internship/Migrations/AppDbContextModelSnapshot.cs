@@ -158,7 +158,7 @@ namespace internship.Migrations
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Login = "admin",
                             Name = "Админ",
-                            Password = "$2a$11$RYpLh2oXgpwv9DfhtoYR5ejTjMdkh44aqIZST1pgRKQZfY0Ay3Of.",
+                            Password = "admin123",
                             Surname = "Админович"
                         });
                 });
