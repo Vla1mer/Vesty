@@ -28,7 +28,6 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     bool canConnect = db.Database.CanConnect();
-    Console.WriteLine(canConnect ? "connect!" : "no connect!");
 }
 
 if (app.Environment.IsDevelopment())
