@@ -22,7 +22,7 @@ namespace internship.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("internship.Models.Chat", b =>
+            modelBuilder.Entity("Entities.Models.Chat", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -46,9 +46,18 @@ namespace internship.Migrations
                     b.HasIndex("CreatorId");
 
                     b.ToTable("Chats");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatorId = 1,
+                            Name = "Общий чат"
+                        });
                 });
 
-            modelBuilder.Entity("internship.Models.ChatMember", b =>
+            modelBuilder.Entity("Entities.Models.ChatMember", b =>
                 {
                     b.Property<int>("ChatId")
                         .HasColumnType("integer");
@@ -69,7 +78,7 @@ namespace internship.Migrations
                     b.ToTable("ChatMembers");
                 });
 
-            modelBuilder.Entity("internship.Models.Message", b =>
+            modelBuilder.Entity("Entities.Models.Message", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -99,7 +108,7 @@ namespace internship.Migrations
                     b.ToTable("Messages");
                 });
 
-            modelBuilder.Entity("internship.Models.User", b =>
+            modelBuilder.Entity("Entities.Models.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -141,11 +150,22 @@ namespace internship.Migrations
                         .IsUnique();
 
                     b.ToTable("Users");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Login = "admin",
+                            Name = "Админ",
+                            Password = "admin123",
+                            Surname = "Админович"
+                        });
                 });
 
-            modelBuilder.Entity("internship.Models.Chat", b =>
+            modelBuilder.Entity("Entities.Models.Chat", b =>
                 {
-                    b.HasOne("internship.Models.User", "Creator")
+                    b.HasOne("Entities.Models.User", "Creator")
                         .WithMany("CreatedChats")
                         .HasForeignKey("CreatorId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -153,15 +173,15 @@ namespace internship.Migrations
                     b.Navigation("Creator");
                 });
 
-            modelBuilder.Entity("internship.Models.ChatMember", b =>
+            modelBuilder.Entity("Entities.Models.ChatMember", b =>
                 {
-                    b.HasOne("internship.Models.Chat", "Chat")
+                    b.HasOne("Entities.Models.Chat", "Chat")
                         .WithMany("ChatMembers")
                         .HasForeignKey("ChatId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("internship.Models.User", "User")
+                    b.HasOne("Entities.Models.User", "User")
                         .WithMany("ChatMembers")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -172,15 +192,15 @@ namespace internship.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("internship.Models.Message", b =>
+            modelBuilder.Entity("Entities.Models.Message", b =>
                 {
-                    b.HasOne("internship.Models.Chat", "Chat")
+                    b.HasOne("Entities.Models.Chat", "Chat")
                         .WithMany("Messages")
                         .HasForeignKey("ChatId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("internship.Models.User", "User")
+                    b.HasOne("Entities.Models.User", "User")
                         .WithMany("Messages")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -191,14 +211,14 @@ namespace internship.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("internship.Models.Chat", b =>
+            modelBuilder.Entity("Entities.Models.Chat", b =>
                 {
                     b.Navigation("ChatMembers");
 
                     b.Navigation("Messages");
                 });
 
-            modelBuilder.Entity("internship.Models.User", b =>
+            modelBuilder.Entity("Entities.Models.User", b =>
                 {
                     b.Navigation("ChatMembers");
 

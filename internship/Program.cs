@@ -1,51 +1,41 @@
-﻿using System;
-using internship;
+﻿using internship;
+using internship.Extensions;
+using internship.Services;
 using Microsoft.EntityFrameworkCore;
+using NLog;
+
+var currentDir = Directory.GetCurrentDirectory();
+LogManager.LoadConfiguration(Path.Combine(currentDir, "nlog.config"));
+NLog.GlobalDiagnosticsContext.Set("logDir", Path.Combine(currentDir, "logs"));
+NLog.GlobalDiagnosticsContext.Set("internalLogDir", Path.Combine(currentDir, "internal_logs"));
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
+builder.Services.ConfigureCors();
+builder.Services.ConfigureIISIntegration();
+builder.Services.ConfigureLoggerService();
+builder.Services.ConfigureRepositoryManager();
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
-
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.ConfigureServiceManager();
 
 var app = builder.Build();
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    bool canConnect = db.Database.CanConnect();
 
-    if (canConnect)
-    {
-        Console.WriteLine("connect! ");
-    }
-    else
-    {
-        Console.WriteLine("no connect! ");
-    }
-}
-
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-
     app.UseSwaggerUI(options =>
     {
         options.SwaggerEndpoint("/openapi/v1.json", "My API v1");
-        options.RoutePrefix = "swagger";  // или "" — чтобы был на корне     });
+        options.RoutePrefix = "swagger";
     });
 }
 
 app.UseHttpsRedirection();
-
-    app.UseAuthorization();
-
-    app.MapControllers();
-
-    app.Run();
+app.UseCors("CorsPolicy");
+app.UseAuthorization();
+app.MapControllers();
+app.Run();

@@ -1,4 +1,4 @@
-﻿using internship.Models;
+﻿using Entities.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace internship
@@ -59,6 +59,29 @@ namespace internship
                  .WithMany(u => u.Messages)
                  .HasForeignKey(m => m.UserId);
             });
+
+            modelBuilder.Entity<User>().HasData(
+                new User
+                {
+                    Id = 1,
+                    Login = "admin",
+                    Password = "admin123",
+                    Name = "Админ",
+                    Surname = "Админович",
+                    CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                }
+            );
+
+            modelBuilder.Entity<Chat>().HasData(
+                new Chat
+                {
+                    Id = 1,
+                    Name = "Общий чат",
+                    CreatorId = 1,
+                    CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                }
+            );
+
         }
     }
 }

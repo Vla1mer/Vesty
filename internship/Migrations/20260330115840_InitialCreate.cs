@@ -106,6 +106,16 @@ namespace internship.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.InsertData(
+                table: "Users",
+                columns: new[] { "Id", "Birthday", "CreatedAt", "Login", "Name", "Password", "Phone", "Surname" },
+                values: new object[] { 1, null, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "admin", "Админ", "admin123", null, "Админович" });
+
+            migrationBuilder.InsertData(
+                table: "Chats",
+                columns: new[] { "Id", "CreatedAt", "CreatorId", "Name" },
+                values: new object[] { 1, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), 1, "Общий чат" });
+
             migrationBuilder.CreateIndex(
                 name: "IX_ChatMembers_UserId",
                 table: "ChatMembers",
