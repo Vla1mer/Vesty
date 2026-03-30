@@ -1,6 +1,5 @@
 ﻿using Contracts;
 using Entities.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace internship.Repository
 {
@@ -8,11 +7,11 @@ namespace internship.Repository
     {
         public UserRepository(AppDbContext context) : base(context) { }
 
-        public async Task<IEnumerable<User>> GetAllUsersAsync(bool trackChanges) =>
-            await FindAll(trackChanges).ToListAsync();
+        public IEnumerable<User> GetAllUsers(bool trackChanges) =>
+            FindAll(trackChanges).ToList();
 
-        public async Task<User?> GetUserAsync(int id, bool trackChanges) =>
-            await FindByCondition(u => u.Id == id, trackChanges).FirstOrDefaultAsync();
+        public User? GetUser(int id, bool trackChanges) =>
+            FindByCondition(u => u.Id == id, trackChanges).FirstOrDefault();
 
         public void CreateUser(User user) => Create(user);
         public void DeleteUser(User user) => Delete(user);

@@ -16,30 +16,30 @@ namespace internship.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public IActionResult GetAll()
         {
-            return Ok(await _chatMemberService.GetAllAsync());
+            return Ok(_chatMemberService.GetAll());
         }
 
         [HttpGet("{chatId}/{userId}")]
-        public async Task<IActionResult> GetById(int chatId, int userId)
+        public IActionResult GetById(int chatId, int userId)
         {
-            var member = await _chatMemberService.GetByIdAsync(chatId, userId);
+            var member = _chatMemberService.GetById(chatId, userId);
             if (member == null) return NotFound();
             return Ok(member);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(ChatMember member)
+        public IActionResult Create(ChatMember member)
         {
-            var created = await _chatMemberService.CreateAsync(member);
+            var created = _chatMemberService.Create(member);
             return Ok(created);
         }
 
         [HttpDelete("{chatId}/{userId}")]
-        public async Task<IActionResult> Delete(int chatId, int userId)
+        public IActionResult Delete(int chatId, int userId)
         {
-            var result = await _chatMemberService.DeleteAsync(chatId, userId);
+            var result = _chatMemberService.Delete(chatId, userId);
             if (!result) return NotFound();
             return NoContent();
         }

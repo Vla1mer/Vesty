@@ -1,6 +1,5 @@
 ﻿using Contracts;
 using Entities.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace internship.Repository
 {
@@ -8,11 +7,11 @@ namespace internship.Repository
     {
         public ChatRepository(AppDbContext context) : base(context) { }
 
-        public async Task<IEnumerable<Chat>> GetAllChatsAsync(bool trackChanges) =>
-            await FindAll(trackChanges).ToListAsync();
+        public IEnumerable<Chat> GetAllChats(bool trackChanges) =>
+            FindAll(trackChanges).ToList();
 
-        public async Task<Chat?> GetChatAsync(int id, bool trackChanges) =>
-            await FindByCondition(c => c.Id == id, trackChanges).FirstOrDefaultAsync();
+        public Chat? GetChat(int id, bool trackChanges) =>
+            FindByCondition(c => c.Id == id, trackChanges).FirstOrDefault();
 
         public void CreateChat(Chat chat) => Create(chat);
         public void DeleteChat(Chat chat) => Delete(chat);

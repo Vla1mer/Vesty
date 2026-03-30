@@ -19,39 +19,39 @@ namespace internship.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public IActionResult GetAll()
         {
             _logger.LogInfo("Fetching all users");
-            return Ok(await _userService.GetAllAsync());
+            return Ok(_userService.GetAll());
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public IActionResult GetById(int id)
         {
-            var user = await _userService.GetByIdAsync(id);
+            var user = _userService.GetById(id);
             if (user == null) return NotFound();
             return Ok(user);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(User user)
+        public IActionResult Create(User user)
         {
-            var created = await _userService.CreateAsync(user);
+            var created = _userService.Create(user);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, User updated)
+        public IActionResult Update(int id, User updated)
         {
-            var user = await _userService.UpdateAsync(id, updated);
+            var user = _userService.Update(id, updated);
             if (user == null) return NotFound();
             return Ok(user);
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public IActionResult Delete(int id)
         {
-            var result = await _userService.DeleteAsync(id);
+            var result = _userService.Delete(id);
             if (!result) return NotFound();
             return NoContent();
         }

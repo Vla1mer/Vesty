@@ -10,27 +10,25 @@ namespace internship.Services
         public MessageService(IRepositoryManager repository)
             => _repository = repository;
 
-        public async Task<IEnumerable<Message>> GetAllAsync() =>
-            await _repository.Message.GetAllMessagesAsync(trackChanges: false);
+        public IEnumerable<Message> GetAll() =>
+            _repository.Message.GetAllMessages(trackChanges: false);
 
-        public async Task<Message?> GetByIdAsync(int id) =>
-            await _repository.Message.GetMessageAsync(id, trackChanges: false);
+        public Message? GetById(int id) =>
+            _repository.Message.GetMessage(id, trackChanges: false);
 
-        public async Task<Message> CreateAsync(Message message)
+        public Message Create(Message message)
         {
-            message.CreatedAt = DateTime.UtcNow;
             _repository.Message.CreateMessage(message);
-            await _repository.SaveAsync();
+            _repository.Save();
             return message;
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public bool Delete(int id)
         {
-            var message = await _repository.Message.GetMessageAsync(id, trackChanges: false);
+            var message = _repository.Message.GetMessage(id, trackChanges: false);
             if (message == null) return false;
-
             _repository.Message.DeleteMessage(message);
-            await _repository.SaveAsync();
+            _repository.Save();
             return true;
         }
     }

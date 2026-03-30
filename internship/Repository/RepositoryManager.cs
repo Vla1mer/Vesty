@@ -25,6 +25,6 @@ namespace internship.Repository
         public IMessageRepository Message =>
             _messageRepository ??= new MessageRepository(_context);
 
-        public async Task SaveAsync() => await _context.SaveChangesAsync();
+        public void Save() => _context.SaveChanges();
     }
 }

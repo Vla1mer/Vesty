@@ -10,38 +10,34 @@ namespace internship.Services
         public ChatService(IRepositoryManager repository)
             => _repository = repository;
 
-        public async Task<IEnumerable<Chat>> GetAllAsync() =>
-            await _repository.Chat.GetAllChatsAsync(trackChanges: false);
+        public IEnumerable<Chat> GetAll() =>
+            _repository.Chat.GetAllChats(trackChanges: false);
 
-        public async Task<Chat?> GetByIdAsync(int id) =>
-            await _repository.Chat.GetChatAsync(id, trackChanges: false);
+        public Chat? GetById(int id) =>
+            _repository.Chat.GetChat(id, trackChanges: false);
 
-        public async Task<Chat> CreateAsync(Chat chat)
+        public Chat Create(Chat chat)
         {
-            chat.CreatedAt = DateTime.UtcNow;
             _repository.Chat.CreateChat(chat);
-            await _repository.SaveAsync();
+            _repository.Save();
             return chat;
         }
 
-        public async Task<Chat?> UpdateAsync(int id, Chat updated)
+        public Chat? Update(int id, Chat updated)
         {
-            var chat = await _repository.Chat.GetChatAsync(id, trackChanges: true);
+            var chat = _repository.Chat.GetChat(id, trackChanges: true);
             if (chat == null) return null;
-
             chat.Name = updated.Name;
-
-            await _repository.SaveAsync();
+            _repository.Save();
             return chat;
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public bool Delete(int id)
         {
-            var chat = await _repository.Chat.GetChatAsync(id, trackChanges: false);
+            var chat = _repository.Chat.GetChat(id, trackChanges: false);
             if (chat == null) return false;
-
             _repository.Chat.DeleteChat(chat);
-            await _repository.SaveAsync();
+            _repository.Save();
             return true;
         }
     }

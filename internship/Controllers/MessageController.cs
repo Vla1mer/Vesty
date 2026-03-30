@@ -16,30 +16,30 @@ namespace internship.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public IActionResult GetAll()
         {
-            return Ok(await _messageService.GetAllAsync());
+            return Ok(_messageService.GetAll());
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public IActionResult GetById(int id)
         {
-            var message = await _messageService.GetByIdAsync(id);
+            var message = _messageService.GetById(id);
             if (message == null) return NotFound();
             return Ok(message);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(Message message)
+        public IActionResult Create(Message message)
         {
-            var created = await _messageService.CreateAsync(message);
+            var created = _messageService.Create(message);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public IActionResult Delete(int id)
         {
-            var result = await _messageService.DeleteAsync(id);
+            var result = _messageService.Delete(id);
             if (!result) return NotFound();
             return NoContent();
         }

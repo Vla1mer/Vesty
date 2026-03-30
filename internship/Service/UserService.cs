@@ -10,43 +10,39 @@ namespace internship.Services
         public UserService(IRepositoryManager repository)
             => _repository = repository;
 
-        public async Task<IEnumerable<User>> GetAllAsync() =>
-            await _repository.User.GetAllUsersAsync(trackChanges: false);
+        public IEnumerable<User> GetAll() =>
+            _repository.User.GetAllUsers(trackChanges: false);
 
-        public async Task<User?> GetByIdAsync(int id) =>
-            await _repository.User.GetUserAsync(id, trackChanges: false);
+        public User? GetById(int id) =>
+            _repository.User.GetUser(id, trackChanges: false);
 
-        public async Task<User> CreateAsync(User user)
+        public User Create(User user)
         {
             user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
-            user.CreatedAt = DateTime.UtcNow;
             _repository.User.CreateUser(user);
-            await _repository.SaveAsync();
+            _repository.Save();
             return user;
         }
 
-        public async Task<User?> UpdateAsync(int id, User updated)
+        public User? Update(int id, User updated)
         {
-            var user = await _repository.User.GetUserAsync(id, trackChanges: true);
+            var user = _repository.User.GetUser(id, trackChanges: true);
             if (user == null) return null;
-
             user.Login = updated.Login;
             user.Name = updated.Name;
             user.Surname = updated.Surname;
             user.Phone = updated.Phone;
             user.Birthday = updated.Birthday;
-
-            await _repository.SaveAsync();
+            _repository.Save();
             return user;
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public bool Delete(int id)
         {
-            var user = await _repository.User.GetUserAsync(id, trackChanges: false);
+            var user = _repository.User.GetUser(id, trackChanges: false);
             if (user == null) return false;
-
             _repository.User.DeleteUser(user);
-            await _repository.SaveAsync();
+            _repository.Save();
             return true;
         }
     }
