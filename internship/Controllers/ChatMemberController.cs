@@ -21,27 +21,5 @@ namespace internship.Controllers
             return Ok(_chatMemberService.GetAll());
         }
 
-        [HttpGet("{chatId}/{userId}")]
-        public IActionResult GetById(int chatId, int userId)
-        {
-            var member = _chatMemberService.GetById(chatId, userId);
-            if (member == null) return NotFound();
-            return Ok(member);
-        }
-
-        [HttpPost]
-        public IActionResult Create(ChatMember member)
-        {
-            var created = _chatMemberService.Create(member);
-            return Ok(created);
-        }
-
-        [HttpDelete("{chatId}/{userId}")]
-        public IActionResult Delete(int chatId, int userId)
-        {
-            var result = _chatMemberService.Delete(chatId, userId);
-            if (!result) return NotFound();
-            return NoContent();
-        }
     }
 }

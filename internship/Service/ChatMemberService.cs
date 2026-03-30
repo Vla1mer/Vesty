@@ -13,23 +13,5 @@ namespace internship.Services
         public IEnumerable<ChatMember> GetAll() =>
             _repository.ChatMember.GetAllMembers(trackChanges: false);
 
-        public ChatMember? GetById(int chatId, int userId) =>
-            _repository.ChatMember.GetMember(chatId, userId, trackChanges: false);
-
-        public ChatMember Create(ChatMember member)
-        {
-            _repository.ChatMember.CreateMember(member);
-            _repository.Save();
-            return member;
-        }
-
-        public bool Delete(int chatId, int userId)
-        {
-            var member = _repository.ChatMember.GetMember(chatId, userId, trackChanges: false);
-            if (member == null) return false;
-            _repository.ChatMember.DeleteMember(member);
-            _repository.Save();
-            return true;
-        }
     }
 }

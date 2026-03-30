@@ -25,35 +25,5 @@ namespace internship.Controllers
             return Ok(_userService.GetAll());
         }
 
-        [HttpGet("{id}")]
-        public IActionResult GetById(int id)
-        {
-            var user = _userService.GetById(id);
-            if (user == null) return NotFound();
-            return Ok(user);
-        }
-
-        [HttpPost]
-        public IActionResult Create(User user)
-        {
-            var created = _userService.Create(user);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
-        }
-
-        [HttpPut("{id}")]
-        public IActionResult Update(int id, User updated)
-        {
-            var user = _userService.Update(id, updated);
-            if (user == null) return NotFound();
-            return Ok(user);
-        }
-
-        [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
-        {
-            var result = _userService.Delete(id);
-            if (!result) return NotFound();
-            return NoContent();
-        }
     }
 }
