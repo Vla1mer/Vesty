@@ -1,6 +1,6 @@
-﻿using Contracts;
+﻿using Repository.Interfaces;
 
-namespace internship.Repository
+namespace Repository
 {
     public sealed class RepositoryManager : IRepositoryManager
     {

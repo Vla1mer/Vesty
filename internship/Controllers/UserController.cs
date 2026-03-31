@@ -1,9 +1,9 @@
-﻿using Contracts;
-using Entities.Models;
-using internship.Services;
+﻿using Entities.Models;
+using Services;
+using Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
-namespace internship.Controllers
+namespace Chat.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

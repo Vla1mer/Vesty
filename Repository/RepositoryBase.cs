@@ -1,8 +1,8 @@
-﻿using Contracts;
+﻿using Repository.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
-namespace internship.Repository
+namespace Repository
 {
     public abstract class RepositoryBase<T> : IRepositoryBase<T> where T : class
     {

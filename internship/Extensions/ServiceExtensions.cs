@@ -1,9 +1,9 @@
-﻿using Contracts;
-using internship.Repository;
-using internship.Services;
-using LoggerService;
+﻿using Repository;
+using Repository.Interfaces;
+using Services;
+using Services.Interfaces;
 
-namespace internship.Extensions
+namespace Chat.Extensions
 {
     public static class ServiceExtensions
     {
@@ -17,10 +17,7 @@ namespace internship.Extensions
             });
 
         public static void ConfigureIISIntegration(this IServiceCollection services) =>
-            services.Configure<IISOptions>(options =>
-            {
-
-            });
+            services.Configure<IISOptions>(options => { });
 
         public static void ConfigureLoggerService(this IServiceCollection services) =>
             services.AddSingleton<ILoggerManager, LoggerManager>();
@@ -29,12 +26,9 @@ namespace internship.Extensions
             services.AddScoped<IRepositoryManager, RepositoryManager>();
 
         public static void ConfigureServiceManager(this IServiceCollection services) =>
-             services.AddScoped<UserService>()
-            .AddScoped<ChatService>()
-            .AddScoped<ChatMemberService>()
-            .AddScoped<MessageService>();
+            services.AddScoped<UserService>()
+                    .AddScoped<ChatService>()
+                    .AddScoped<ChatMemberService>()
+                    .AddScoped<MessageService>();
     }
-
-
 }
-

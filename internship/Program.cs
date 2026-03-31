@@ -1,8 +1,7 @@
-﻿using internship;
-using internship.Extensions;
-using internship.Services;
+﻿using Chat.Extensions;
 using Microsoft.EntityFrameworkCore;
 using NLog;
+using Repository;
 
 var currentDir = Directory.GetCurrentDirectory();
 LogManager.LoadConfiguration(Path.Combine(currentDir, "nlog.config"));

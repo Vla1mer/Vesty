@@ -1,8 +1,8 @@
 ﻿using Entities.Models;
-using internship.Services;
+using Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace internship.Controllers
+namespace Chat.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

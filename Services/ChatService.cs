@@ -1,7 +1,7 @@
-﻿using Contracts;
+﻿using Repository.Interfaces;
 using Entities.Models;
 
-namespace internship.Services
+namespace Services
 {
     public class ChatService
     {

@@ -1,7 +1,7 @@
-﻿using Contracts;
+﻿using Repository.Interfaces;
 using Entities.Models;
 
-namespace internship.Repository
+namespace Repository
 {
     public class UserRepository : RepositoryBase<User>, IUserRepository
     {

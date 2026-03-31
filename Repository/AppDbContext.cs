@@ -1,7 +1,7 @@
 ﻿using Entities.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace internship
+namespace Repository
 {
     public class AppDbContext : DbContext
     {
