@@ -1,9 +1,10 @@
 ﻿using Repository.Interfaces;
 using Entities.Models;
+using Services.Interfaces;
 
 namespace Services
 {
-    public class MessageService
+    public class MessageService : IMessageService
     {
         private readonly IRepositoryManager _repository;
 
@@ -12,6 +13,5 @@ namespace Services
 
         public IEnumerable<Message> GetAll() =>
             _repository.Message.GetAllMessages(trackChanges: false);
-
     }
 }

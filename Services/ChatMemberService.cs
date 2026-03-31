@@ -1,9 +1,10 @@
 ﻿using Repository.Interfaces;
 using Entities.Models;
+using Services.Interfaces;
 
 namespace Services
 {
-    public class ChatMemberService
+    public class ChatMemberService : IChatMemberService
     {
         private readonly IRepositoryManager _repository;
 
@@ -12,6 +13,5 @@ namespace Services
 
         public IEnumerable<ChatMember> GetAll() =>
             _repository.ChatMember.GetAllMembers(trackChanges: false);
-
     }
 }
