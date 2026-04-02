@@ -1,5 +1,4 @@
-﻿using Entities.Models;
-using Services;
+﻿using Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Chat.Controllers
@@ -21,5 +20,11 @@ namespace Chat.Controllers
             return Ok(_chatMemberService.GetAll());
         }
 
+        [HttpGet("{chatId:int}/{userId:int}")]
+        public IActionResult GetById(int chatId, int userId)
+        {
+            var member = _chatMemberService.GetById(chatId, userId);
+            return Ok(member);
+        }
     }
 }

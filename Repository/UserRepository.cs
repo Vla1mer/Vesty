@@ -10,5 +10,8 @@ namespace Repository
         public IEnumerable<User> GetAllUsers(bool trackChanges) =>
             FindAll(trackChanges).ToList();
 
+        public User? GetUser(int id, bool trackChanges) =>
+            FindByCondition(u => u.Id == id, trackChanges).SingleOrDefault();
+
     }
 }

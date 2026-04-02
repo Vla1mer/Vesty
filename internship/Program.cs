@@ -1,7 +1,9 @@
 ﻿using Chat.Extensions;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using NLog;
 using Repository;
+using Services.Interfaces;
 
 var currentDir = Directory.GetCurrentDirectory();
 LogManager.LoadConfiguration(Path.Combine(currentDir, "nlog.config"));
@@ -14,14 +16,27 @@ builder.Services.ConfigureCors();
 builder.Services.ConfigureIISIntegration();
 builder.Services.ConfigureLoggerService();
 builder.Services.ConfigureRepositoryManager();
-builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+builder.Services.ConfigureServiceManager();
+builder.Services.AddAutoMapper(typeof(Program));
+
+builder.Services.AddControllers(config => {
+    config.RespectBrowserAcceptHeader = true;
+    config.ReturnHttpNotAcceptable = true;
+}).AddXmlDataContractSerializerFormatters()
+  .AddCustomCSVFormatter();
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.ConfigureServiceManager();
+
 
 var app = builder.Build();
+
+var logger = app.Services.GetRequiredService<ILoggerManager>();
+app.ConfigureExceptionHandler(logger);
+if (app.Environment.IsProduction())
+    app.UseHsts();
 
 if (app.Environment.IsDevelopment())
 {
@@ -34,6 +49,11 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.All
+});
 app.UseCors("CorsPolicy");
 app.UseAuthorization();
 app.MapControllers();

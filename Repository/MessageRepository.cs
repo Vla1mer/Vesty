@@ -10,5 +10,10 @@ namespace Repository
         public IEnumerable<Message> GetAllMessages(bool trackChanges) =>
             FindAll(trackChanges).ToList();
 
+        public Message? GetMessage(int id, bool trackChanges) =>
+            FindByCondition(m => m.Id == id, trackChanges).SingleOrDefault();
+
+        public IEnumerable<Message> GetMessagesByChat(int chatId, bool trackChanges) =>
+            FindByCondition(m => m.ChatId == chatId, trackChanges).ToList();
     }
 }

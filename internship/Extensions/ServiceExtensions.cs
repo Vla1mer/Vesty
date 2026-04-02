@@ -30,5 +30,8 @@ namespace Chat.Extensions
                     .AddScoped<ChatService>()
                     .AddScoped<ChatMemberService>()
                     .AddScoped<MessageService>();
+
+        public static IMvcBuilder AddCustomCSVFormatter(this IMvcBuilder builder) =>
+            builder.AddMvcOptions(config => config.OutputFormatters.Add(new CsvOutputFormatter()));
     }
 }

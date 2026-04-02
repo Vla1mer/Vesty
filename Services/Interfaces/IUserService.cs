@@ -1,9 +1,10 @@
-﻿using Entities.Models;
+﻿using Services.DataTransferObjects;
 
 namespace Services.Interfaces
 {
     public interface IUserService
     {
-        IEnumerable<User> GetAll();
+        IEnumerable<UserDto> GetAll();
+        UserDto GetById(int id);
     }
 }
