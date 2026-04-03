@@ -11,6 +11,6 @@ namespace Repository
             FindAll(trackChanges).ToList();
 
         public ChatMember? GetMember(int chatId, int userId, bool trackChanges) =>
-            FindByCondition(cm => cm.ChatId == chatId && cm.UserId == userId, trackChanges).SingleOrDefault();
+            FindByCondition(cm => cm.ChatId == chatId && cm.UserId == userId, trackChanges).FirstOrDefault();
     }
 }

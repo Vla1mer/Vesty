@@ -11,7 +11,7 @@ namespace Repository
             FindAll(trackChanges).ToList();
 
         public Message? GetMessage(int id, bool trackChanges) =>
-            FindByCondition(m => m.Id == id, trackChanges).SingleOrDefault();
+            FindByCondition(m => m.Id == id, trackChanges).FirstOrDefault();
 
         public IEnumerable<Message> GetMessagesByChat(int chatId, bool trackChanges) =>
             FindByCondition(m => m.ChatId == chatId, trackChanges).ToList();

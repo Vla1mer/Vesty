@@ -11,7 +11,7 @@ namespace Repository
             FindAll(trackChanges).ToList();
 
         public User? GetUser(int id, bool trackChanges) =>
-            FindByCondition(u => u.Id == id, trackChanges).SingleOrDefault();
+            FindByCondition(u => u.Id == id, trackChanges).FirstOrDefault();
 
     }
 }
