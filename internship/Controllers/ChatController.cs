@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Services;
+using Services.DataTransferObjects;
 
 namespace Chat.Controllers
 {
@@ -17,12 +18,15 @@ namespace Chat.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetAll()
+        [ProducesResponseType(typeof(IEnumerable<ChatDto>), StatusCodes.Status200OK)]
+        public IActionResult GetAllChats()
         {
             return Ok(_chatService.GetAll());
         }
 
         [HttpGet("{id:int}")]
+        [ProducesResponseType(typeof(ChatDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetById(int id)
         {
             var chat = _chatService.GetById(id);
@@ -30,6 +34,8 @@ namespace Chat.Controllers
         }
 
         [HttpGet("{chatId:int}/messages")]
+        [ProducesResponseType(typeof(IEnumerable<MessageDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetMessagesForChat(int chatId)
         {
             var messages = _messageService.GetMessagesByChat(chatId, trackChanges: false);

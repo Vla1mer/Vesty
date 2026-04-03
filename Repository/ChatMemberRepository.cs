@@ -1,5 +1,6 @@
-﻿using Repository.Interfaces;
-using Entities.Models;
+﻿using Entities.Models;
+using Microsoft.EntityFrameworkCore;
+using Repository.Interfaces;
 
 namespace Repository
 {
@@ -12,5 +13,11 @@ namespace Repository
 
         public ChatMember? GetMember(int chatId, int userId, bool trackChanges) =>
             FindByCondition(cm => cm.ChatId == chatId && cm.UserId == userId, trackChanges).FirstOrDefault();
+
+        public IEnumerable<User> GetUsersByChatId(int chatId, bool trackChanges) =>
+             FindByCondition(cm => cm.ChatId == chatId, trackChanges)
+            .Include(cm => cm.User)
+            .Select(cm => cm.User)
+            .ToList();
     }
 }

@@ -25,13 +25,14 @@ namespace Services
             return _mapper.Map<IEnumerable<ChatMemberDto>>(members);
         }
 
-        public ChatMemberDto GetById(int chatId, int userId)
+        public IEnumerable<UserDto> GetUsersByChatId(int chatId)
         {
-            var member = _repository.ChatMember.GetMember(chatId, userId, trackChanges: false);
-            if (member is null)
-                throw new ChatMemberNotFoundException(chatId, userId);
+            var chat = _repository.Chat.GetChat(chatId, trackChanges: false);
+            if (chat is null)
+                throw new ChatNotFoundException(chatId);
 
-            return _mapper.Map<ChatMemberDto>(member);
+            var users = _repository.ChatMember.GetUsersByChatId(chatId, trackChanges: false);
+            return _mapper.Map<IEnumerable<UserDto>>(users);
         }
     }
 }
