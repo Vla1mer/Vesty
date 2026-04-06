@@ -1,8 +1,8 @@
-﻿using Entities.Models;
-using internship.Services;
+﻿using Services;
+using Services.DataTransferObjects;
 using Microsoft.AspNetCore.Mvc;
 
-namespace internship.Controllers
+namespace Chat.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -16,10 +16,19 @@ namespace internship.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetAll()
+        [ProducesResponseType(typeof(IEnumerable<MessageDto>), StatusCodes.Status200OK)]
+        public IActionResult GetAllMessages()
         {
             return Ok(_messageService.GetAll());
         }
 
+        [HttpGet("{id:int}")]
+        [ProducesResponseType(typeof(MessageDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult GetById(int id)
+        {
+            var message = _messageService.GetById(id);
+            return Ok(message);
+        }
     }
 }
