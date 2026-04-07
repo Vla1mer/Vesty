@@ -1,8 +1,9 @@
 ﻿using AutoMapper;
-using Repository.Interfaces;
 using Entities.Exceptions;
-using Services.Interfaces;
+using Entities.Models;
+using Repository.Interfaces;
 using Services.DataTransferObjects;
+using Services.Interfaces;
 
 namespace Services
 {
@@ -31,6 +32,15 @@ namespace Services
             if (user is null)
                 throw new UserNotFoundException(id);
 
+            return _mapper.Map<UserDto>(user);
+        }
+
+        public UserDto Create(UserForCreationDto userDto)
+        {
+            var user = _mapper.Map<User>(userDto);
+            user.Password = BCrypt.Net.BCrypt.HashPassword(userDto.Password);
+            _repository.User.CreateUser(user);
+            _repository.Save();
             return _mapper.Map<UserDto>(user);
         }
     }

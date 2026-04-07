@@ -1,8 +1,9 @@
 ﻿using AutoMapper;
-using Repository.Interfaces;
 using Entities.Exceptions;
-using Services.Interfaces;
+using Entities.Models;
+using Repository.Interfaces;
 using Services.DataTransferObjects;
+using Services.Interfaces;
 
 namespace Services
 {
@@ -42,6 +43,26 @@ namespace Services
 
             var messages = _repository.Message.GetMessagesByChat(chatId, trackChanges);
             return _mapper.Map<IEnumerable<MessageDto>>(messages);
+        }
+
+        public MessageDto Create(MessageForCreationDto messageDto)
+        {
+            var message = _mapper.Map<Message>(messageDto);
+            _repository.Message.CreateMessage(message);
+            _repository.Save();
+            return _mapper.Map<MessageDto>(message);
+        }
+
+        public MessageDto CreateMessageForChat(int chatId, MessageForCreationDto messageDto)
+        {
+            var chat = _repository.Chat.GetChat(chatId, trackChanges: false);
+            if (chat is null)
+                throw new ChatNotFoundException(chatId);
+
+            var message = _mapper.Map<Message>(messageDto);
+            _repository.Message.CreateMessageForChat(chatId, message);
+            _repository.Save();
+            return _mapper.Map<MessageDto>(message);
         }
     }
 }

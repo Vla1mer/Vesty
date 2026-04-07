@@ -3,7 +3,7 @@ using Repository.Interfaces;
 using Services;
 using Services.Interfaces;
 
-namespace Chat.Extensions
+namespace ChatApp.Extensions
 {
     public static class ServiceExtensions
     {

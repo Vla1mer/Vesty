@@ -1,8 +1,9 @@
-﻿using Services;
+﻿using Microsoft.AspNetCore.Mvc;
+using Services;
 using Services.DataTransferObjects;
-using Microsoft.AspNetCore.Mvc;
+using Services.Interfaces;
 
-namespace Chat.Controllers
+namespace ChatApp.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -29,6 +30,18 @@ namespace Chat.Controllers
         {
             var message = _messageService.GetById(id);
             return Ok(message);
+        }
+
+        [HttpPost]
+        [ProducesResponseType(typeof(MessageDto), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult CreateMessage([FromBody] MessageForCreationDto message)
+        {
+            if (message is null)
+                return BadRequest("MessageForCreationDto object is null");
+
+            var created = _messageService.Create(message);
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
     }
 }

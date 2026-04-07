@@ -15,5 +15,13 @@ namespace Repository
 
         public IEnumerable<Message> GetMessagesByChat(int chatId, bool trackChanges) =>
             FindByCondition(m => m.ChatId == chatId, trackChanges).ToList();
+
+        public void CreateMessage(Message message) => Create(message);
+
+        public void CreateMessageForChat(int chatId, Message message)
+        {
+            message.ChatId = chatId;
+            Create(message);
+        }
     }
 }

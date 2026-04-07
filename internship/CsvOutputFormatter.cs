@@ -3,7 +3,7 @@ using Microsoft.Net.Http.Headers;
 using Services.DataTransferObjects;
 using System.Text;
 
-namespace Chat
+namespace ChatApp
 {
     public class CsvOutputFormatter : TextOutputFormatter
     {

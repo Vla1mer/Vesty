@@ -2,7 +2,7 @@
 using Services.DataTransferObjects;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Chat.Controllers
+namespace ChatApp.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

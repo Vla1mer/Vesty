@@ -1,5 +1,6 @@
-﻿using Chat.Extensions;
+﻿using ChatApp.Extensions;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NLog;
 using Repository;
@@ -19,6 +20,11 @@ builder.Services.ConfigureRepositoryManager();
 builder.Services.AddOpenApi();
 builder.Services.ConfigureServiceManager();
 builder.Services.AddAutoMapper(typeof(Program));
+
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.SuppressModelStateInvalidFilter = true;
+});
 
 builder.Services.AddControllers(config => {
     config.RespectBrowserAcceptHeader = true;

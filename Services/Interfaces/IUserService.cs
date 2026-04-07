@@ -6,5 +6,6 @@ namespace Services.Interfaces
     {
         IEnumerable<UserDto> GetAll();
         UserDto GetById(int id);
+        UserDto Create(UserForCreationDto userDto);
     }
 }

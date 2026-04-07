@@ -4,7 +4,7 @@ using Entities.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Services.Interfaces;
 
-namespace Chat.Extensions
+namespace ChatApp.Extensions
 {
     public static class ExceptionMiddlewareExtensions
     {

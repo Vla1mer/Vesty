@@ -13,5 +13,7 @@ namespace Repository
         public User? GetUser(int id, bool trackChanges) =>
             FindByCondition(u => u.Id == id, trackChanges).FirstOrDefault();
 
+        public void CreateUser(User user) => Create(user);
+
     }
 }

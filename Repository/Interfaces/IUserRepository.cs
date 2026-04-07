@@ -6,5 +6,6 @@ namespace Repository.Interfaces
     {
         IEnumerable<User> GetAllUsers(bool trackChanges);
         User? GetUser(int id, bool trackChanges);
+        void CreateUser(User user);
     }
 }

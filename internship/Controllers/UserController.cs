@@ -3,7 +3,7 @@ using Services.DataTransferObjects;
 using Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Chat.Controllers
+namespace ChatApp.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -33,6 +33,18 @@ namespace Chat.Controllers
         {
             var user = _userService.GetById(id);
             return Ok(user);
+        }
+
+        [HttpPost]
+        [ProducesResponseType(typeof(UserDto), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult CreateUser([FromBody] UserForCreationDto user)
+        {
+            if (user is null)
+                return BadRequest("UserForCreationDto object is null");
+
+            var created = _userService.Create(user);
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
     }
 }

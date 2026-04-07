@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Services;
 using Services.DataTransferObjects;
+using Services.Interfaces;
 
-namespace Chat.Controllers
+namespace ChatApp.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -33,13 +34,38 @@ namespace Chat.Controllers
             return Ok(chat);
         }
 
-        [HttpGet("{chatId:int}/messages")]
+        [HttpGet("{chatId:int}/messages", Name = "GetMessagesForChat")]
         [ProducesResponseType(typeof(IEnumerable<MessageDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetMessagesForChat(int chatId)
         {
             var messages = _messageService.GetMessagesByChat(chatId, trackChanges: false);
             return Ok(messages);
+        }
+
+        [HttpPost]
+        [ProducesResponseType(typeof(ChatDto), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult CreateChat([FromBody] ChatForCreationDto chat)
+        {
+            if (chat is null)
+                return BadRequest("ChatForCreationDto object is null");
+
+            var created = _chatService.Create(chat);
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        }
+
+        [HttpPost("{chatId:int}/messages")]
+        [ProducesResponseType(typeof(MessageDto), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult CreateMessageForChat(int chatId, [FromBody] MessageForCreationDto message)
+        {
+            if (message is null)
+                return BadRequest("MessageForCreationDto object is null");
+
+            var created = _messageService.CreateMessageForChat(chatId, message);
+            return CreatedAtRoute("GetMessagesForChat", new { chatId }, created);
         }
     }
 }
