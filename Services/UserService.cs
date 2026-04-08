@@ -43,5 +43,37 @@ namespace Services
             _repository.Save();
             return _mapper.Map<UserDto>(user);
         }
+
+        public IEnumerable<UserDto> GetByIds(IEnumerable<int> ids)
+        {
+            if (ids is null)
+                throw new IdParametersBadRequestException();
+
+            var users = _repository.User.GetByIds(ids, trackChanges: false);
+            if (ids.Count() != users.Count())
+                throw new CollectionByIdsBadRequestException();
+
+            return _mapper.Map<IEnumerable<UserDto>>(users);
+        }
+
+        public (IEnumerable<UserDto> users, string ids) CreateUserCollection(IEnumerable<UserForCreationDto> userCollection)
+        {
+            if (userCollection is null)
+                throw new UserCollectionBadRequestException();
+
+            var userEntities = _mapper.Map<IEnumerable<User>>(userCollection);
+            foreach (var user in userEntities)
+            {
+                user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+                _repository.User.CreateUser(user);
+            }
+
+            _repository.Save();
+
+            var usersToReturn = _mapper.Map<IEnumerable<UserDto>>(userEntities);
+            var ids = string.Join(",", usersToReturn.Select(u => u.Id));
+
+            return (users: usersToReturn, ids: ids);
+        }
     }
 }

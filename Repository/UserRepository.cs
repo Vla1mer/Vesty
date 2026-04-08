@@ -10,10 +10,12 @@ namespace Repository
         public IEnumerable<User> GetAllUsers(bool trackChanges) =>
             FindAll(trackChanges).ToList();
 
+        public IEnumerable<User> GetByIds(IEnumerable<int> ids, bool trackChanges) =>
+            FindByCondition(u => ids.Contains(u.Id), trackChanges).ToList();
+
         public User? GetUser(int id, bool trackChanges) =>
             FindByCondition(u => u.Id == id, trackChanges).FirstOrDefault();
 
         public void CreateUser(User user) => Create(user);
-
     }
 }

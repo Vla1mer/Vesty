@@ -1,7 +1,9 @@
-﻿using Services;
+﻿using ChatApp.ModelBinders;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
+using Services;
 using Services.DataTransferObjects;
 using Services.Interfaces;
-using Microsoft.AspNetCore.Mvc;
 
 namespace ChatApp.Controllers
 {
@@ -45,6 +47,25 @@ namespace ChatApp.Controllers
 
             var created = _userService.Create(user);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        }
+
+        [HttpGet("collection/({ids})", Name = "UserCollection")]
+        [ProducesResponseType(typeof(IEnumerable<UserDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult GetUserCollection(
+        [ModelBinder(BinderType = typeof(ArrayModelBinder))] IEnumerable<int> ids)
+        {
+            var users = _userService.GetByIds(ids);
+            return Ok(users);
+        }
+
+        [HttpPost("collection")]
+        [ProducesResponseType(typeof(IEnumerable<UserDto>), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult CreateUserCollection([FromBody] IEnumerable<UserForCreationDto> userCollection)
+        {
+            var result = _userService.CreateUserCollection(userCollection);
+            return CreatedAtRoute("UserCollection", new { result.ids }, result.users);
         }
     }
 }
