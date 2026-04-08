@@ -42,5 +42,15 @@ namespace Services
             _repository.Save();
             return _mapper.Map<ChatDto>(chat);
         }
+
+        public void Delete(int id)
+        {
+            var chat = _repository.Chat.GetChat(id, trackChanges: false);
+            if (chat is null)
+                throw new ChatNotFoundException(id);
+
+            _repository.Chat.DeleteChat(chat);
+            _repository.Save();
+        }
     }
 }

@@ -75,5 +75,15 @@ namespace Services
 
             return (users: usersToReturn, ids: ids);
         }
+
+        public void Delete(int id)
+        {
+            var user = _repository.User.GetUser(id, trackChanges: false);
+            if (user is null)
+                throw new UserNotFoundException(id);
+
+            _repository.User.DeleteUser(user);
+            _repository.Save();
+        }
     }
 }

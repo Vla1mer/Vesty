@@ -9,5 +9,6 @@ namespace Repository.Interfaces
         Message? GetMessage(int id, bool trackChanges);
         void CreateMessage(Message message);
         void CreateMessageForChat(int chatId, Message message);
+        void DeleteMessage(Message message );
     }
 }

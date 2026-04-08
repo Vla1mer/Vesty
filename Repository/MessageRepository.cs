@@ -23,5 +23,7 @@ namespace Repository
             message.ChatId = chatId;
             Create(message);
         }
+
+        public void DeleteMessage(Message message) => Delete(message);
     }
 }

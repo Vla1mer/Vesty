@@ -67,5 +67,14 @@ namespace ChatApp.Controllers
             var result = _userService.CreateUserCollection(userCollection);
             return CreatedAtRoute("UserCollection", new { result.ids }, result.users);
         }
+
+        [HttpDelete("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult DeleteUser(int id)
+        {
+            _userService.Delete(id);
+            return NoContent();
+        }
     }
 }

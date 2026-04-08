@@ -67,5 +67,14 @@ namespace ChatApp.Controllers
             var created = _messageService.CreateMessageForChat(chatId, message);
             return CreatedAtRoute("GetMessagesForChat", new { chatId }, created);
         }
+
+        [HttpDelete("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult DeleteChat(int id)
+        {
+            _chatService.Delete(id);
+            return NoContent();
+        }
     }
 }

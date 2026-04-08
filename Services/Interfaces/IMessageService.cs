@@ -10,5 +10,6 @@ namespace Services.Interfaces
         MessageDto GetById(int id);
         MessageDto Create(MessageForCreationDto messageDto);
         MessageDto CreateMessageForChat(int chatId, MessageForCreationDto message);
+        void Delete(int id);
     }
 }

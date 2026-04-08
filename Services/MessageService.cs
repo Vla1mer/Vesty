@@ -64,5 +64,15 @@ namespace Services
             _repository.Save();
             return _mapper.Map<MessageDto>(message);
         }
+
+        public void Delete(int id)
+        {
+            var message = _repository.Message.GetMessage(id, trackChanges: false);
+            if (message is null)
+                throw new MessageNotFoundException(id);
+
+            _repository.Message.DeleteMessage(message);
+            _repository.Save();
+        }
     }
 }
