@@ -21,14 +21,5 @@ namespace ChatApp.Controllers
         {
             return Ok(_chatMemberService.GetAll());
         }
-
-        [HttpGet("{chatId:int}/users")]
-        [ProducesResponseType(typeof(IEnumerable<UserDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult GetUsersByChatId(int chatId)
-        {
-            var users = _chatMemberService.GetUsersByChatId(chatId);
-            return Ok(users);
-        }
     }
 }

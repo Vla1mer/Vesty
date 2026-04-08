@@ -9,6 +9,7 @@ namespace ChatApp.Mappings
         public ChatMemberProfile()
         {
             CreateMap<ChatMember, ChatMemberDto>();
+            CreateMap<ChatMemberForCreationDto, ChatMember>();
         }
     }
 }

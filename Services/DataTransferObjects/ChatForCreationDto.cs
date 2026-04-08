@@ -4,5 +4,6 @@
     {
         public string Name { get; init; } = null!;
         public int? CreatorId { get; init; }
+        public IEnumerable<ChatMemberForCreationDto> Members { get; init; } = [];
     }
 }

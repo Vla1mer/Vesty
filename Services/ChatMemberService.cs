@@ -1,8 +1,9 @@
 ﻿using AutoMapper;
-using Repository.Interfaces;
 using Entities.Exceptions;
-using Services.Interfaces;
+using Entities.Models;
+using Repository.Interfaces;
 using Services.DataTransferObjects;
+using Services.Interfaces;
 
 namespace Services
 {
@@ -33,6 +34,38 @@ namespace Services
 
             var users = _repository.ChatMember.GetUsersByChatId(chatId, trackChanges: false);
             return _mapper.Map<IEnumerable<UserDto>>(users);
+        }
+
+        public ChatMemberDto AddUserToChat(int chatId, ChatMemberForCreationDto memberDto)
+        {
+            var chat = _repository.Chat.GetChat(chatId, trackChanges: false);
+            if (chat is null)
+                throw new ChatNotFoundException(chatId);
+
+            var member = new ChatMember
+            {
+                ChatId = chatId,
+                UserId = memberDto.UserId
+            };
+
+            _repository.ChatMember.CreateMember(member);
+            _repository.Save();
+
+            return _mapper.Map<ChatMemberDto>(member);
+        }
+
+        public void RemoveUserFromChat(int chatId, int userId)
+        {
+            var chat = _repository.Chat.GetChat(chatId, trackChanges: false);
+            if (chat is null)
+                throw new ChatNotFoundException(chatId);
+
+            var member = _repository.ChatMember.GetMember(chatId, userId, trackChanges: false);
+            if (member is null)
+                throw new ChatMemberNotFoundException(chatId, userId);
+
+            _repository.ChatMember.DeleteMember(member);
+            _repository.Save();
         }
     }
 }

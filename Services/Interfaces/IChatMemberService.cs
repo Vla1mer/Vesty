@@ -6,5 +6,7 @@ namespace Services.Interfaces
     {
         IEnumerable<ChatMemberDto> GetAll();
         IEnumerable<UserDto> GetUsersByChatId(int chatId);
+        ChatMemberDto AddUserToChat(int chatId, ChatMemberForCreationDto memberDto);
+        void RemoveUserFromChat(int chatId, int userId);
     }
 }

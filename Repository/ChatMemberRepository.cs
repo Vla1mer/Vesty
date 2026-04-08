@@ -19,5 +19,9 @@ namespace Repository
             .Include(cm => cm.User)
             .Select(cm => cm.User)
             .ToList();
+
+        public void CreateMember(ChatMember member) => Create(member);
+
+        public void DeleteMember(ChatMember member) => Delete(member);
     }
 }
