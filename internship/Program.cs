@@ -5,11 +5,19 @@ using Microsoft.EntityFrameworkCore;
 using NLog;
 using Repository;
 using Services.Interfaces;
+using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.Extensions.Options;
 
 var currentDir = Directory.GetCurrentDirectory();
 LogManager.LoadConfiguration(Path.Combine(currentDir, "nlog.config"));
 NLog.GlobalDiagnosticsContext.Set("logDir", Path.Combine(currentDir, "logs"));
 NLog.GlobalDiagnosticsContext.Set("internalLogDir", Path.Combine(currentDir, "internal_logs"));
+
+NewtonsoftJsonPatchInputFormatter GetJsonPatchInputFormatter() =>
+    new ServiceCollection().AddLogging().AddMvc().AddNewtonsoftJson()
+    .Services.BuildServiceProvider()
+    .GetRequiredService<IOptions<MvcOptions>>().Value.InputFormatters
+    .OfType<NewtonsoftJsonPatchInputFormatter>().First();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +37,7 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 builder.Services.AddControllers(config => {
     config.RespectBrowserAcceptHeader = true;
     config.ReturnHttpNotAcceptable = true;
+    config.InputFormatters.Insert(0, GetJsonPatchInputFormatter());
 }).AddXmlDataContractSerializerFormatters()
   .AddCustomCSVFormatter();
 

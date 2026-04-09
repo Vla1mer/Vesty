@@ -96,5 +96,21 @@ namespace Services
             user.Password = BCrypt.Net.BCrypt.HashPassword(userDto.Password);
             _repository.Save();
         }
+
+        public (UserForUpdateDto userToPatch, User userEntity) GetUserForPatch(int id, bool trackChanges)
+        {
+            var user = _repository.User.GetUser(id, trackChanges);
+            if (user is null)
+                throw new UserNotFoundException(id);
+
+            var userToPatch = _mapper.Map<UserForUpdateDto>(user);
+            return (userToPatch, user);
+        }
+
+        public void SaveChangesForPatch(UserForUpdateDto userToPatch, User userEntity)
+        {
+            _mapper.Map(userToPatch, userEntity);
+            _repository.Save();
+        }
     }
 }

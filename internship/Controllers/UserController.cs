@@ -1,4 +1,5 @@
 ﻿using ChatApp.ModelBinders;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using Services;
@@ -87,6 +88,24 @@ namespace ChatApp.Controllers
                 return BadRequest("UserForUpdateDto object is null");
 
             _userService.Update(id, user);
+            return NoContent();
+        }
+
+        [HttpPatch("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult PartiallyUpdateUser(int id, [FromBody] JsonPatchDocument<UserForUpdateDto> patchDoc)
+        {
+            if (patchDoc is null)
+                return BadRequest("patchDoc object is null");
+
+            var (userToPatch, userEntity) = _userService.GetUserForPatch(id, trackChanges: true);
+
+            patchDoc.ApplyTo(userToPatch);
+
+            _userService.SaveChangesForPatch(userToPatch, userEntity);
+
             return NoContent();
         }
     }

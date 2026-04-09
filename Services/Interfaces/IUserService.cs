@@ -1,4 +1,5 @@
-﻿using Services.DataTransferObjects;
+﻿using Entities.Models;
+using Services.DataTransferObjects;
 
 namespace Services.Interfaces
 {
@@ -11,5 +12,7 @@ namespace Services.Interfaces
         (IEnumerable<UserDto> users, string ids) CreateUserCollection(IEnumerable<UserForCreationDto> userCollection);
         void Delete(int id);
         void Update(int id, UserForUpdateDto userDto);
+        (UserForUpdateDto userToPatch, User userEntity) GetUserForPatch(int id, bool trackChanges);
+        void SaveChangesForPatch(UserForUpdateDto userToPatch, User userEntity);
     }
 }
