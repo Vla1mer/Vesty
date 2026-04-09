@@ -76,5 +76,18 @@ namespace ChatApp.Controllers
             _userService.Delete(id);
             return NoContent();
         }
+
+        [HttpPut("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult UpdateUser(int id, [FromBody] UserForUpdateDto user)
+        {
+            if (user is null)
+                return BadRequest("UserForUpdateDto object is null");
+
+            _userService.Update(id, user);
+            return NoContent();
+        }
     }
 }

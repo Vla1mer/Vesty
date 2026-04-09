@@ -10,6 +10,7 @@ namespace ChatApp.Mappings
         {
             CreateMap<User, UserDto>();
             CreateMap<UserForCreationDto, User>();
+            CreateMap<UserForUpdateDto, User>();
         }
     }
 }

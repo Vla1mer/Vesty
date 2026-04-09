@@ -10,5 +10,6 @@ namespace Services.Interfaces
         IEnumerable<UserDto> GetByIds(IEnumerable<int> ids);
         (IEnumerable<UserDto> users, string ids) CreateUserCollection(IEnumerable<UserForCreationDto> userCollection);
         void Delete(int id);
+        void Update(int id, UserForUpdateDto userDto);
     }
 }

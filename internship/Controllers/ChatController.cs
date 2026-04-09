@@ -111,5 +111,18 @@ namespace ChatApp.Controllers
             _chatMemberService.RemoveUserFromChat(chatId, userId);
             return NoContent();
         }
+
+        [HttpPut("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult UpdateChat(int id, [FromBody] ChatForUpdateDto chat)
+        {
+            if (chat is null)
+                return BadRequest("ChatForUpdateDto object is null");
+
+            _chatService.Update(id, chat);
+            return NoContent();
+        }
     }
 }

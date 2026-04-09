@@ -52,5 +52,18 @@ namespace ChatApp.Controllers
             _messageService.Delete(id);
             return NoContent();
         }
+
+        [HttpPut("{chatId:int}/messages/{id:int}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult UpdateMessageForChat(int chatId, int id, [FromBody] MessageForUpdateDto message)
+        {
+            if (message is null)
+                return BadRequest("MessageForUpdateDto object is null");
+
+            _messageService.UpdateMessageForChat(chatId, id, message);
+            return NoContent();
+        }
     }
 }

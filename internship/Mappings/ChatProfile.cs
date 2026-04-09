@@ -12,6 +12,7 @@ namespace ChatApp.Mappings
             CreateMap<ChatForCreationDto, Chat>()
                 .ForMember(c => c.ChatMembers,
                     opt => opt.MapFrom(src => src.Members));
+            CreateMap<ChatForUpdateDto, Chat>();
         }
     }
 }

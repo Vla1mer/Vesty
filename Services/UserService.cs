@@ -85,5 +85,16 @@ namespace Services
             _repository.User.DeleteUser(user);
             _repository.Save();
         }
+
+        public void Update(int id, UserForUpdateDto userDto)
+        {
+            var user = _repository.User.GetUser(id, trackChanges: true);
+            if (user is null)
+                throw new UserNotFoundException(id);
+
+            _mapper.Map(userDto, user);
+            user.Password = BCrypt.Net.BCrypt.HashPassword(userDto.Password);
+            _repository.Save();
+        }
     }
 }

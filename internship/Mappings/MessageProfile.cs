@@ -10,6 +10,7 @@ namespace ChatApp.Mappings
         {
             CreateMap<Message, MessageDto>();
             CreateMap<MessageForCreationDto, Message>();
+            CreateMap<MessageForUpdateDto, Message>();
         }
     }
 }
