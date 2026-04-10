@@ -1,8 +1,7 @@
 ﻿namespace Services.DataTransferObjects
 {
-    public record MessageForCreationDto
+    public record MessageForCreationDto : MessageForManipulationDto
     {
         public int UserId { get; init; }
-        public string Content { get; init; } = null!;
     }
 }

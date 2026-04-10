@@ -1,9 +1,7 @@
 ﻿namespace Services.DataTransferObjects
 {
-    public record ChatForCreationDto
+    public record ChatForCreationDto : ChatForManipulationDto
     {
-        public string Name { get; init; } = null!;
-        public int? CreatorId { get; init; }
         public IEnumerable<ChatMemberForCreationDto> Members { get; init; } = [];
     }
 }

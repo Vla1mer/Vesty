@@ -35,10 +35,14 @@ namespace ChatApp.Controllers
         [HttpPost]
         [ProducesResponseType(typeof(MessageDto), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
         public IActionResult CreateMessage([FromBody] MessageForCreationDto message)
         {
             if (message is null)
                 return BadRequest("MessageForCreationDto object is null");
+
+            if (!ModelState.IsValid)
+                return UnprocessableEntity(ModelState);
 
             var created = _messageService.Create(message);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
@@ -57,10 +61,14 @@ namespace ChatApp.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
         public IActionResult UpdateMessageForChat(int chatId, int id, [FromBody] MessageForUpdateDto message)
         {
             if (message is null)
                 return BadRequest("MessageForUpdateDto object is null");
+
+            if (!ModelState.IsValid)
+                return UnprocessableEntity(ModelState);
 
             _messageService.UpdateMessageForChat(chatId, id, message);
             return NoContent();

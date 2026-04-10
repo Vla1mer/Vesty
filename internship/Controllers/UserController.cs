@@ -46,6 +46,9 @@ namespace ChatApp.Controllers
             if (user is null)
                 return BadRequest("UserForCreationDto object is null");
 
+            if (!ModelState.IsValid)
+                return UnprocessableEntity(ModelState);
+
             var created = _userService.Create(user);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
@@ -87,6 +90,9 @@ namespace ChatApp.Controllers
             if (user is null)
                 return BadRequest("UserForUpdateDto object is null");
 
+            if (!ModelState.IsValid)
+                return UnprocessableEntity(ModelState);
+
             _userService.Update(id, user);
             return NoContent();
         }
@@ -95,6 +101,7 @@ namespace ChatApp.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
         public IActionResult PartiallyUpdateUser(int id, [FromBody] JsonPatchDocument<UserForUpdateDto> patchDoc)
         {
             if (patchDoc is null)
@@ -102,7 +109,10 @@ namespace ChatApp.Controllers
 
             var (userToPatch, userEntity) = _userService.GetUserForPatch(id, trackChanges: true);
 
-            patchDoc.ApplyTo(userToPatch);
+            patchDoc.ApplyTo(userToPatch, ModelState);
+
+            if (!ModelState.IsValid)
+                return UnprocessableEntity(ModelState);
 
             _userService.SaveChangesForPatch(userToPatch, userEntity);
 
