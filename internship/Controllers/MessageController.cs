@@ -9,18 +9,18 @@ namespace ChatApp.Controllers
     [Route("api/[controller]")]
     public class MessageController : ControllerBase
     {
-        private readonly MessageService _messageService;
+        private readonly IServiceManager _service;
 
-        public MessageController(MessageService messageService)
+        public MessageController(IServiceManager service)
         {
-            _messageService = messageService;
+            _service = service;
         }
 
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<MessageDto>), StatusCodes.Status200OK)]
         public IActionResult GetAllMessages()
         {
-            return Ok(_messageService.GetAll());
+            return Ok(_service.Message.GetAll());
         }
 
         [HttpGet("{id:int}")]
@@ -28,24 +28,8 @@ namespace ChatApp.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetById(int id)
         {
-            var message = _messageService.GetById(id);
+            var message = _service.Message.GetById(id);
             return Ok(message);
-        }
-
-        [HttpPost]
-        [ProducesResponseType(typeof(MessageDto), StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-        public IActionResult CreateMessage([FromBody] MessageForCreationDto message)
-        {
-            if (message is null)
-                return BadRequest("MessageForCreationDto object is null");
-
-            if (!ModelState.IsValid)
-                return UnprocessableEntity(ModelState);
-
-            var created = _messageService.Create(message);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
         [HttpDelete("{id:int}")]
@@ -53,7 +37,7 @@ namespace ChatApp.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult DeleteMessage(int id)
         {
-            _messageService.Delete(id);
+            _service.Message.Delete(id);
             return NoContent();
         }
 
@@ -70,7 +54,7 @@ namespace ChatApp.Controllers
             if (!ModelState.IsValid)
                 return UnprocessableEntity(ModelState);
 
-            _messageService.UpdateMessageForChat(chatId, id, message);
+            _service.Message.UpdateMessageForChat(chatId, id, message);
             return NoContent();
         }
     }

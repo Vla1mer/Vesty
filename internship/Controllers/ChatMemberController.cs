@@ -1,6 +1,7 @@
-﻿using Services;
+﻿using Microsoft.AspNetCore.Mvc;
+using Services;
 using Services.DataTransferObjects;
-using Microsoft.AspNetCore.Mvc;
+using Services.Interfaces;
 
 namespace ChatApp.Controllers
 {
@@ -8,18 +9,18 @@ namespace ChatApp.Controllers
     [Route("api/[controller]")]
     public class ChatMemberController : ControllerBase
     {
-        private readonly ChatMemberService _chatMemberService;
+        private readonly IServiceManager _service;
 
-        public ChatMemberController(ChatMemberService chatMemberService)
+        public ChatMemberController(IServiceManager service)
         {
-            _chatMemberService = chatMemberService;
+            _service = service;
         }
 
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<ChatMemberDto>), StatusCodes.Status200OK)]
         public IActionResult GetAllChats()
         {
-            return Ok(_chatMemberService.GetAll());
+            return Ok(_service.ChatMember.GetAll());
         }
     }
 }

@@ -26,10 +26,7 @@ namespace ChatApp.Extensions
             services.AddScoped<IRepositoryManager, RepositoryManager>();
 
         public static void ConfigureServiceManager(this IServiceCollection services) =>
-            services.AddScoped<UserService>()
-                    .AddScoped<ChatService>()
-                    .AddScoped<ChatMemberService>()
-                    .AddScoped<MessageService>();
+            services.AddScoped<IServiceManager, ServiceManager>();
 
         public static IMvcBuilder AddCustomCSVFormatter(this IMvcBuilder builder) =>
             builder.AddMvcOptions(config => config.OutputFormatters.Add(new CsvOutputFormatter()));

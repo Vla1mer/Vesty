@@ -1,7 +1,6 @@
 ﻿using ChatApp.ModelBinders;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using Services;
 using Services.DataTransferObjects;
 using Services.Interfaces;
@@ -12,12 +11,12 @@ namespace ChatApp.Controllers
     [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
-        private readonly UserService _userService;
+        private readonly IServiceManager _service;
         private readonly ILoggerManager _logger;
 
-        public UserController(UserService userService, ILoggerManager logger)
+        public UserController(IServiceManager service, ILoggerManager logger)
         {
-            _userService = userService;
+            _service = service;
             _logger = logger;
         }
 
@@ -26,7 +25,7 @@ namespace ChatApp.Controllers
         public IActionResult GetAllUsers()
         {
             _logger.LogInfo("Fetching all users");
-            return Ok(_userService.GetAll());
+            return Ok(_service.User.GetAll());
         }
 
         [HttpGet("{id:int}")]
@@ -34,7 +33,7 @@ namespace ChatApp.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetById(int id)
         {
-            var user = _userService.GetById(id);
+            var user = _service.User.GetById(id);
             return Ok(user);
         }
 
@@ -49,7 +48,7 @@ namespace ChatApp.Controllers
             if (!ModelState.IsValid)
                 return UnprocessableEntity(ModelState);
 
-            var created = _userService.Create(user);
+            var created = _service.User.Create(user);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
@@ -59,7 +58,7 @@ namespace ChatApp.Controllers
         public IActionResult GetUserCollection(
         [ModelBinder(BinderType = typeof(ArrayModelBinder))] IEnumerable<int> ids)
         {
-            var users = _userService.GetByIds(ids);
+            var users = _service.User.GetByIds(ids);
             return Ok(users);
         }
 
@@ -68,7 +67,7 @@ namespace ChatApp.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult CreateUserCollection([FromBody] IEnumerable<UserForCreationDto> userCollection)
         {
-            var result = _userService.CreateUserCollection(userCollection);
+            var result = _service.User.CreateUserCollection(userCollection);
             return CreatedAtRoute("UserCollection", new { result.ids }, result.users);
         }
 
@@ -77,7 +76,7 @@ namespace ChatApp.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult DeleteUser(int id)
         {
-            _userService.Delete(id);
+            _service.User.Delete(id);
             return NoContent();
         }
 
@@ -93,7 +92,7 @@ namespace ChatApp.Controllers
             if (!ModelState.IsValid)
                 return UnprocessableEntity(ModelState);
 
-            _userService.Update(id, user);
+            _service.User.Update(id, user);
             return NoContent();
         }
 
@@ -107,14 +106,14 @@ namespace ChatApp.Controllers
             if (patchDoc is null)
                 return BadRequest("patchDoc object is null");
 
-            var (userToPatch, userEntity) = _userService.GetUserForPatch(id, trackChanges: true);
+            var (userToPatch, userEntity) = _service.User.GetUserForPatch(id, trackChanges: true);
 
             patchDoc.ApplyTo(userToPatch, ModelState);
 
             if (!ModelState.IsValid)
                 return UnprocessableEntity(ModelState);
 
-            _userService.SaveChangesForPatch(userToPatch, userEntity);
+            _service.User.SaveChangesForPatch(userToPatch, userEntity);
 
             return NoContent();
         }

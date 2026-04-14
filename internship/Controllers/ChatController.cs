@@ -9,30 +9,26 @@ namespace ChatApp.Controllers
     [Route("api/[controller]")]
     public class ChatController : ControllerBase
     {
-        private readonly ChatService _chatService;
-        private readonly MessageService _messageService;
-        private readonly ChatMemberService _chatMemberService;
+        private readonly IServiceManager _service;
 
-        public ChatController(ChatService chatService, MessageService messageService, ChatMemberService chatMemberService)
+        public ChatController(IServiceManager service)
         {
-            _chatService = chatService;
-            _messageService = messageService;
-            _chatMemberService = chatMemberService;
+            _service = service;
         }
 
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<ChatDto>), StatusCodes.Status200OK)]
         public IActionResult GetAllChats()
         {
-            return Ok(_chatService.GetAll());
+            return Ok(_service.Chat.GetAll());
         }
 
         [HttpGet("{id:int}")]
         [ProducesResponseType(typeof(ChatDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]   
         public IActionResult GetById(int id)
         {
-            var chat = _chatService.GetById(id);
+            var chat = _service.Chat.GetById(id);
             return Ok(chat);
         }
 
@@ -41,7 +37,7 @@ namespace ChatApp.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetMessagesForChat(int chatId)
         {
-            var messages = _messageService.GetMessagesByChat(chatId, trackChanges: false);
+            var messages = _service.Message.GetMessagesByChat(chatId, trackChanges: false);
             return Ok(messages);
         }
 
@@ -57,7 +53,7 @@ namespace ChatApp.Controllers
             if (!ModelState.IsValid)
                 return UnprocessableEntity(ModelState);
 
-            var created = _chatService.Create(chat);
+            var created = _service.Chat.Create(chat);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
@@ -70,7 +66,7 @@ namespace ChatApp.Controllers
             if (message is null)
                 return BadRequest("MessageForCreationDto object is null");
 
-            var created = _messageService.CreateMessageForChat(chatId, message);
+            var created = _service.Message.CreateMessageForChat(chatId, message);
             return CreatedAtRoute("GetMessagesForChat", new { chatId }, created);
         }
 
@@ -79,7 +75,7 @@ namespace ChatApp.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult DeleteChat(int id)
         {
-            _chatService.Delete(id);
+            _service.Chat.Delete(id);
             return NoContent();
         }
 
@@ -88,7 +84,7 @@ namespace ChatApp.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetUsersByChatId(int chatId)
         {
-            var users = _chatMemberService.GetUsersByChatId(chatId);
+            var users = _service.ChatMember.GetUsersByChatId(chatId);
             return Ok(users);
         }
 
@@ -101,7 +97,7 @@ namespace ChatApp.Controllers
             if (member is null)
                 return BadRequest("ChatMemberForCreationDto object is null");
 
-            var created = _chatMemberService.AddUserToChat(chatId, member);
+            var created = _service.ChatMember.AddUserToChat(chatId, member);
             return CreatedAtAction(nameof(GetUsersByChatId), new { chatId }, created);
         }
 
@@ -110,7 +106,7 @@ namespace ChatApp.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult RemoveUserFromChat(int chatId, int userId)
         {
-            _chatMemberService.RemoveUserFromChat(chatId, userId);
+            _service.ChatMember.RemoveUserFromChat(chatId, userId);
             return NoContent();
         }
 
@@ -127,7 +123,7 @@ namespace ChatApp.Controllers
             if (!ModelState.IsValid)
                 return UnprocessableEntity(ModelState);
 
-            _chatService.Update(id, chat);
+            _service.Chat.Update(id, chat);
             return NoContent();
         }
     }

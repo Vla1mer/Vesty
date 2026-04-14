@@ -45,14 +45,6 @@ namespace Services
             return _mapper.Map<IEnumerable<MessageDto>>(messages);
         }
 
-        public MessageDto Create(MessageForCreationDto messageDto)
-        {
-            var message = _mapper.Map<Message>(messageDto);
-            _repository.Message.CreateMessage(message);
-            _repository.Save();
-            return _mapper.Map<MessageDto>(message);
-        }
-
         public MessageDto CreateMessageForChat(int chatId, MessageForCreationDto messageDto)
         {
             var chat = _repository.Chat.GetChat(chatId, trackChanges: false);
