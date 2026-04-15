@@ -12,5 +12,9 @@ namespace Repository
 
         public Chat? GetChat(int id, bool trackChanges) =>
             FindByCondition(c => c.Id == id, trackChanges).FirstOrDefault();
+
+        public void CreateChat(Chat chat) => Create(chat);
+
+        public void DeleteChat(Chat chat) => Delete(chat);
     }
 }

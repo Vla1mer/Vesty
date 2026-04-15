@@ -8,9 +8,6 @@ namespace Repository
     {
         public ChatMemberRepository(AppDbContext context) : base(context) { }
 
-        public IEnumerable<ChatMember> GetAllMembers(bool trackChanges) =>
-            FindAll(trackChanges).ToList();
-
         public ChatMember? GetMember(int chatId, int userId, bool trackChanges) =>
             FindByCondition(cm => cm.ChatId == chatId && cm.UserId == userId, trackChanges).FirstOrDefault();
 
@@ -19,5 +16,9 @@ namespace Repository
             .Include(cm => cm.User)
             .Select(cm => cm.User)
             .ToList();
+
+        public void CreateMember(ChatMember member) => Create(member);
+
+        public void DeleteMember(ChatMember member) => Delete(member);
     }
 }

@@ -3,7 +3,7 @@ using Repository.Interfaces;
 using Services;
 using Services.Interfaces;
 
-namespace Chat.Extensions
+namespace ChatApp.Extensions
 {
     public static class ServiceExtensions
     {
@@ -26,10 +26,7 @@ namespace Chat.Extensions
             services.AddScoped<IRepositoryManager, RepositoryManager>();
 
         public static void ConfigureServiceManager(this IServiceCollection services) =>
-            services.AddScoped<UserService>()
-                    .AddScoped<ChatService>()
-                    .AddScoped<ChatMemberService>()
-                    .AddScoped<MessageService>();
+            services.AddScoped<IServiceManager, ServiceManager>();
 
         public static IMvcBuilder AddCustomCSVFormatter(this IMvcBuilder builder) =>
             builder.AddMvcOptions(config => config.OutputFormatters.Add(new CsvOutputFormatter()));

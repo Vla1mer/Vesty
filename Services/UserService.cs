@@ -1,8 +1,9 @@
 ﻿using AutoMapper;
-using Repository.Interfaces;
 using Entities.Exceptions;
-using Services.Interfaces;
+using Entities.Models;
+using Repository.Interfaces;
 using Services.DataTransferObjects;
+using Services.Interfaces;
 
 namespace Services
 {
@@ -32,6 +33,84 @@ namespace Services
                 throw new UserNotFoundException(id);
 
             return _mapper.Map<UserDto>(user);
+        }
+
+        public UserDto Create(UserForCreationDto userDto)
+        {
+            var user = _mapper.Map<User>(userDto);
+            user.Password = BCrypt.Net.BCrypt.HashPassword(userDto.Password);
+            _repository.User.CreateUser(user);
+            _repository.Save();
+            return _mapper.Map<UserDto>(user);
+        }
+
+        public IEnumerable<UserDto> GetByIds(IEnumerable<int> ids)
+        {
+            if (ids is null)
+                throw new IdParametersBadRequestException();
+
+            var users = _repository.User.GetByIds(ids, trackChanges: false);
+            if (ids.Count() != users.Count())
+                throw new CollectionByIdsBadRequestException();
+
+            return _mapper.Map<IEnumerable<UserDto>>(users);
+        }
+
+        public (IEnumerable<UserDto> users, string ids) CreateUserCollection(IEnumerable<UserForCreationDto> userCollection)
+        {
+            if (userCollection is null)
+                throw new UserCollectionBadRequestException();
+
+            var userEntities = _mapper.Map<IEnumerable<User>>(userCollection);
+            foreach (var user in userEntities)
+            {
+                user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+                _repository.User.CreateUser(user);
+            }
+
+            _repository.Save();
+
+            var usersToReturn = _mapper.Map<IEnumerable<UserDto>>(userEntities);
+            var ids = string.Join(",", usersToReturn.Select(u => u.Id));
+
+            return (users: usersToReturn, ids: ids);
+        }
+
+        public void Delete(int id)
+        {
+            var user = _repository.User.GetUser(id, trackChanges: false);
+            if (user is null)
+                throw new UserNotFoundException(id);
+
+            _repository.User.DeleteUser(user);
+            _repository.Save();
+        }
+
+        public void Update(int id, UserForUpdateDto userDto)
+        {
+            var user = _repository.User.GetUser(id, trackChanges: true);
+            if (user is null)
+                throw new UserNotFoundException(id);
+
+            _mapper.Map(userDto, user);
+            user.Password = BCrypt.Net.BCrypt.HashPassword(userDto.Password);
+            _repository.Save();
+        }
+
+        public (UserForUpdateDto userToPatch, User userEntity) GetUserForPatch(int id, bool trackChanges)
+        {
+            var user = _repository.User.GetUser(id, trackChanges);
+            if (user is null)
+                throw new UserNotFoundException(id);
+
+            var userToPatch = _mapper.Map<UserForUpdateDto>(user);
+            return (userToPatch, user);
+        }
+
+        public void SaveChangesForPatch(UserForUpdateDto userToPatch, User userEntity)
+        {
+            _mapper.Map(userToPatch, userEntity);
+            _repository.Save();
         }
     }
 }

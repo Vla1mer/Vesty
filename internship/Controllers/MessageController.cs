@@ -1,25 +1,39 @@
-﻿using Services;
+﻿using Microsoft.AspNetCore.Mvc;
+using Services;
 using Services.DataTransferObjects;
-using Microsoft.AspNetCore.Mvc;
+using Services.Interfaces;
 
-namespace Chat.Controllers
+namespace ChatApp.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     public class MessageController : ControllerBase
     {
-        private readonly MessageService _messageService;
+        private readonly IServiceManager _service;
 
-        public MessageController(MessageService messageService)
+        public MessageController(IServiceManager service)
         {
-            _messageService = messageService;
+            _service = service;
         }
 
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<MessageDto>), StatusCodes.Status200OK)]
         public IActionResult GetAllMessages()
         {
-            return Ok(_messageService.GetAll());
+            return Ok(_service.Message.GetAll());
+        }
+
+        [HttpPost("{chatId:int}/messages")]
+        [ProducesResponseType(typeof(MessageDto), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult CreateMessageForChat(int chatId, [FromBody] MessageForCreationDto message)
+        {
+            if (message is null)
+                return BadRequest("MessageForCreationDto object is null");
+
+            var created = _service.Message.CreateMessageForChat(chatId, message);
+            return CreatedAtRoute("GetMessagesForChat", new { chatId }, created);
         }
 
         [HttpGet("{id:int}")]
@@ -27,8 +41,34 @@ namespace Chat.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetById(int id)
         {
-            var message = _messageService.GetById(id);
+            var message = _service.Message.GetById(id);
             return Ok(message);
+        }
+
+        [HttpDelete("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult DeleteMessage(int id)
+        {
+            _service.Message.Delete(id);
+            return NoContent();
+        }
+
+        [HttpPut("{chatId:int}/messages/{id:int}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+        public IActionResult UpdateMessageForChat(int chatId, int id, [FromBody] MessageForUpdateDto message)
+        {
+            if (message is null)
+                return BadRequest("MessageForUpdateDto object is null");
+
+            if (!ModelState.IsValid)
+                return UnprocessableEntity(ModelState);
+
+            _service.Message.UpdateMessageForChat(chatId, id, message);
+            return NoContent();
         }
     }
 }

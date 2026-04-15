@@ -1,13 +1,18 @@
 ﻿using AutoMapper;
+using Entities.Models;
 using Services.DataTransferObjects;
 
-namespace Chat.Mappings
+namespace ChatApp.Mappings
 {
     public class ChatProfile : Profile
     {
         public ChatProfile()
         {
-            CreateMap<Entities.Models.Chat, ChatDto>();
+            CreateMap<Chat, ChatDto>();
+            CreateMap<ChatForCreationDto, Chat>()
+                .ForMember(c => c.ChatMembers,
+                    opt => opt.MapFrom(src => src.Members));
+            CreateMap<ChatForUpdateDto, Chat>();
         }
     }
 }

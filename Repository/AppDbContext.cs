@@ -39,7 +39,8 @@ namespace Repository
             });
 
             modelBuilder.Entity<ChatMember>(e => {
-                e.HasKey(cm => new { cm.ChatId, cm.UserId });
+                e.HasKey(cm => cm.Id);
+                e.Property(cm => cm.Id).ValueGeneratedOnAdd();
                 e.Property(cm => cm.CreatedAt);
                 e.HasOne(cm => cm.Chat)
                  .WithMany(c => c.ChatMembers)
