@@ -57,19 +57,6 @@ namespace ChatApp.Controllers
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
-        [HttpPost("{chatId:int}/messages")]
-        [ProducesResponseType(typeof(MessageDto), StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult CreateMessageForChat(int chatId, [FromBody] MessageForCreationDto message)
-        {
-            if (message is null)
-                return BadRequest("MessageForCreationDto object is null");
-
-            var created = _service.Message.CreateMessageForChat(chatId, message);
-            return CreatedAtRoute("GetMessagesForChat", new { chatId }, created);
-        }
-
         [HttpDelete("{id:int}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

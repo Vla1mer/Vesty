@@ -20,12 +20,6 @@ namespace Services
             _mapper = mapper;
         }
 
-        public IEnumerable<ChatMemberDto> GetAll()
-        {
-            var members = _repository.ChatMember.GetAllMembers(trackChanges: false);
-            return _mapper.Map<IEnumerable<ChatMemberDto>>(members);
-        }
-
         public IEnumerable<UserDto> GetUsersByChatId(int chatId)
         {
             var chat = _repository.Chat.GetChat(chatId, trackChanges: false);
