@@ -8,14 +8,15 @@ namespace Repository
     {
         public ChatMemberRepository(AppDbContext context) : base(context) { }
 
-        public ChatMember? GetMember(int chatId, int userId, bool trackChanges) =>
-            FindByCondition(cm => cm.ChatId == chatId && cm.UserId == userId, trackChanges).FirstOrDefault();
+        public async Task<ChatMember?> GetMemberAsync(int chatId, int userId, bool trackChanges) =>
+            await FindByCondition(cm => cm.ChatId == chatId && cm.UserId == userId, trackChanges)
+                .FirstOrDefaultAsync();
 
-        public IEnumerable<User> GetUsersByChatId(int chatId, bool trackChanges) =>
-             FindByCondition(cm => cm.ChatId == chatId, trackChanges)
-            .Include(cm => cm.User)
-            .Select(cm => cm.User)
-            .ToList();
+        public async Task<IEnumerable<User>> GetUsersByChatIdAsync(int chatId, bool trackChanges) =>
+            await FindByCondition(cm => cm.ChatId == chatId, trackChanges)
+                .Include(cm => cm.User)
+                .Select(cm => cm.User)
+                .ToListAsync();
 
         public void CreateMember(ChatMember member) => Create(member);
 

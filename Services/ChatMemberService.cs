@@ -20,46 +20,36 @@ namespace Services
             _mapper = mapper;
         }
 
-        public IEnumerable<UserDto> GetUsersByChatId(int chatId)
+        public async Task<IEnumerable<UserDto>> GetUsersByChatIdAsync(int chatId)
         {
-            var chat = _repository.Chat.GetChat(chatId, trackChanges: false);
+            var chat = await _repository.Chat.GetChatAsync(chatId, trackChanges: false);
             if (chat is null)
                 throw new ChatNotFoundException(chatId);
-
-            var users = _repository.ChatMember.GetUsersByChatId(chatId, trackChanges: false);
+            var users = await _repository.ChatMember.GetUsersByChatIdAsync(chatId, trackChanges: false);
             return _mapper.Map<IEnumerable<UserDto>>(users);
         }
 
-        public ChatMemberDto AddUserToChat(int chatId, ChatMemberForCreationDto memberDto)
+        public async Task<ChatMemberDto> AddUserToChatAsync(int chatId, ChatMemberForCreationDto memberDto)
         {
-            var chat = _repository.Chat.GetChat(chatId, trackChanges: false);
+            var chat = await _repository.Chat.GetChatAsync(chatId, trackChanges: false);
             if (chat is null)
                 throw new ChatNotFoundException(chatId);
-
-            var member = new ChatMember
-            {
-                ChatId = chatId,
-                UserId = memberDto.UserId
-            };
-
+            var member = new ChatMember { ChatId = chatId, UserId = memberDto.UserId };
             _repository.ChatMember.CreateMember(member);
-            _repository.Save();
-
+            await _repository.SaveAsync();
             return _mapper.Map<ChatMemberDto>(member);
         }
 
-        public void RemoveUserFromChat(int chatId, int userId)
+        public async Task RemoveUserFromChatAsync(int chatId, int userId)
         {
-            var chat = _repository.Chat.GetChat(chatId, trackChanges: false);
+            var chat = await _repository.Chat.GetChatAsync(chatId, trackChanges: false);
             if (chat is null)
                 throw new ChatNotFoundException(chatId);
-
-            var member = _repository.ChatMember.GetMember(chatId, userId, trackChanges: false);
+            var member = await _repository.ChatMember.GetMemberAsync(chatId, userId, trackChanges: false);
             if (member is null)
                 throw new ChatMemberNotFoundException(chatId, userId);
-
             _repository.ChatMember.DeleteMember(member);
-            _repository.Save();
+            await _repository.SaveAsync();
         }
     }
 }

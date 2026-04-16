@@ -18,39 +18,38 @@ namespace ChatApp.Controllers
 
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<MessageDto>), StatusCodes.Status200OK)]
-        public IActionResult GetAllMessages()
+        public async Task<IActionResult> GetAllMessages()
         {
-            return Ok(_service.Message.GetAll());
+            return Ok(await _service.Message.GetAllAsync());
         }
 
         [HttpPost("{chatId:int}/messages")]
         [ProducesResponseType(typeof(MessageDto), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult CreateMessageForChat(int chatId, [FromBody] MessageForCreationDto message)
+        public async Task<IActionResult> CreateMessageForChat(int chatId, [FromBody] MessageForCreationDto message)
         {
             if (message is null)
                 return BadRequest("MessageForCreationDto object is null");
-
-            var created = _service.Message.CreateMessageForChat(chatId, message);
+            var created = await _service.Message.CreateMessageForChatAsync(chatId, message);
             return CreatedAtRoute("GetMessagesForChat", new { chatId }, created);
         }
 
         [HttpGet("{id:int}")]
         [ProducesResponseType(typeof(MessageDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult GetById(int id)
+        public async Task<IActionResult> GetById(int id)
         {
-            var message = _service.Message.GetById(id);
+            var message = await _service.Message.GetByIdAsync(id);
             return Ok(message);
         }
 
         [HttpDelete("{id:int}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult DeleteMessage(int id)
+        public async Task<IActionResult> DeleteMessage(int id)
         {
-            _service.Message.Delete(id);
+            await _service.Message.DeleteAsync(id);
             return NoContent();
         }
 
@@ -59,15 +58,13 @@ namespace ChatApp.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-        public IActionResult UpdateMessageForChat(int chatId, int id, [FromBody] MessageForUpdateDto message)
+        public async Task<IActionResult> UpdateMessageForChat(int chatId, int id, [FromBody] MessageForUpdateDto message)
         {
             if (message is null)
                 return BadRequest("MessageForUpdateDto object is null");
-
             if (!ModelState.IsValid)
                 return UnprocessableEntity(ModelState);
-
-            _service.Message.UpdateMessageForChat(chatId, id, message);
+            await _service.Message.UpdateMessageForChatAsync(chatId, id, message);
             return NoContent();
         }
     }

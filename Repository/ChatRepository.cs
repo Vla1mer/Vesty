@@ -1,5 +1,6 @@
-﻿using Repository.Interfaces;
-using Entities.Models;
+﻿using Entities.Models;
+using Microsoft.EntityFrameworkCore;
+using Repository.Interfaces;
 
 namespace Repository
 {
@@ -7,11 +8,11 @@ namespace Repository
     {
         public ChatRepository(AppDbContext context) : base(context) { }
 
-        public IEnumerable<Chat> GetAllChats(bool trackChanges) =>
-            FindAll(trackChanges).ToList();
+        public async Task<IEnumerable<Chat>> GetAllChatsAsync(bool trackChanges) =>
+            await FindAll(trackChanges).ToListAsync();
 
-        public Chat? GetChat(int id, bool trackChanges) =>
-            FindByCondition(c => c.Id == id, trackChanges).FirstOrDefault();
+        public async Task<Chat?> GetChatAsync(int id, bool trackChanges) =>
+            await FindByCondition(c => c.Id == id, trackChanges).FirstOrDefaultAsync();
 
         public void CreateChat(Chat chat) => Create(chat);
 

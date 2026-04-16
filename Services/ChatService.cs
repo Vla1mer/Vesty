@@ -20,47 +20,44 @@ namespace Services
             _mapper = mapper;
         }
 
-        public IEnumerable<ChatDto> GetAll()
+        public async Task<IEnumerable<ChatDto>> GetAllAsync()
         {
-            var chats = _repository.Chat.GetAllChats(trackChanges: false);
+            var chats = await _repository.Chat.GetAllChatsAsync(trackChanges: false);
             return _mapper.Map<IEnumerable<ChatDto>>(chats);
         }
 
-        public ChatDto GetById(int id)
+        public async Task<ChatDto> GetByIdAsync(int id)
         {
-            var chat = _repository.Chat.GetChat(id, trackChanges: false);
+            var chat = await _repository.Chat.GetChatAsync(id, trackChanges: false);
             if (chat is null)
                 throw new ChatNotFoundException(id);
-
             return _mapper.Map<ChatDto>(chat);
         }
 
-        public ChatDto Create(ChatForCreationDto chatDto)
+        public async Task<ChatDto> CreateAsync(ChatForCreationDto chatDto)
         {
             var chat = _mapper.Map<Chat>(chatDto);
             _repository.Chat.CreateChat(chat);
-            _repository.Save();
+            await _repository.SaveAsync();
             return _mapper.Map<ChatDto>(chat);
         }
 
-        public void Delete(int id)
+        public async Task DeleteAsync(int id)
         {
-            var chat = _repository.Chat.GetChat(id, trackChanges: false);
+            var chat = await _repository.Chat.GetChatAsync(id, trackChanges: false);
             if (chat is null)
                 throw new ChatNotFoundException(id);
-
             _repository.Chat.DeleteChat(chat);
-            _repository.Save();
+            await _repository.SaveAsync();
         }
 
-        public void Update(int id, ChatForUpdateDto chatDto)
+        public async Task UpdateAsync(int id, ChatForUpdateDto chatDto)
         {
-            var chat = _repository.Chat.GetChat(id, trackChanges: true);
+            var chat = await _repository.Chat.GetChatAsync(id, trackChanges: true);
             if (chat is null)
                 throw new ChatNotFoundException(id);
-
             _mapper.Map(chatDto, chat);
-            _repository.Save();
+            await _repository.SaveAsync();
         }
     }
 }

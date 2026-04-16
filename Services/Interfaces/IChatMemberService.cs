@@ -4,8 +4,8 @@ namespace Services.Interfaces
 {
     public interface IChatMemberService
     {
-        IEnumerable<UserDto> GetUsersByChatId(int chatId);
-        ChatMemberDto AddUserToChat(int chatId, ChatMemberForCreationDto memberDto);
-        void RemoveUserFromChat(int chatId, int userId);
+        Task<IEnumerable<UserDto>> GetUsersByChatIdAsync(int chatId);
+        Task<ChatMemberDto> AddUserToChatAsync(int chatId, ChatMemberForCreationDto memberDto);
+        Task RemoveUserFromChatAsync(int chatId, int userId);
     }
 }

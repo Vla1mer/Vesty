@@ -6,6 +6,6 @@
         IChatRepository Chat { get; }
         IChatMemberRepository ChatMember { get; }
         IMessageRepository Message { get; }
-        void Save();
+        Task SaveAsync();
     }
 }

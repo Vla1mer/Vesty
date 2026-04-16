@@ -1,5 +1,6 @@
-﻿using Repository.Interfaces;
-using Entities.Models;
+﻿using Entities.Models;
+using Microsoft.EntityFrameworkCore;
+using Repository.Interfaces;
 
 namespace Repository
 {
@@ -7,14 +8,14 @@ namespace Repository
     {
         public MessageRepository(AppDbContext context) : base(context) { }
 
-        public IEnumerable<Message> GetAllMessages(bool trackChanges) =>
-            FindAll(trackChanges).ToList();
+        public async Task<IEnumerable<Message>> GetAllMessagesAsync(bool trackChanges) =>
+            await FindAll(trackChanges).ToListAsync();
 
-        public Message? GetMessage(int id, bool trackChanges) =>
-            FindByCondition(m => m.Id == id, trackChanges).FirstOrDefault();
+        public async Task<Message?> GetMessageAsync(int id, bool trackChanges) =>
+            await FindByCondition(m => m.Id == id, trackChanges).FirstOrDefaultAsync();
 
-        public IEnumerable<Message> GetMessagesByChat(int chatId, bool trackChanges) =>
-            FindByCondition(m => m.ChatId == chatId, trackChanges).ToList();
+        public async Task<IEnumerable<Message>> GetMessagesByChatAsync(int chatId, bool trackChanges) =>
+            await FindByCondition(m => m.ChatId == chatId, trackChanges).ToListAsync();
 
         public void CreateMessage(Message message) => Create(message);
 

@@ -1,5 +1,6 @@
-﻿using Repository.Interfaces;
-using Entities.Models;
+﻿using Entities.Models;
+using Microsoft.EntityFrameworkCore;
+using Repository.Interfaces;
 
 namespace Repository
 {
@@ -7,14 +8,14 @@ namespace Repository
     {
         public UserRepository(AppDbContext context) : base(context) { }
 
-        public IEnumerable<User> GetAllUsers(bool trackChanges) =>
-            FindAll(trackChanges).ToList();
+        public async Task<IEnumerable<User>> GetAllUsersAsync(bool trackChanges) =>
+            await FindAll(trackChanges).ToListAsync();
 
-        public IEnumerable<User> GetByIds(IEnumerable<int> ids, bool trackChanges) =>
-            FindByCondition(u => ids.Contains(u.Id), trackChanges).ToList();
+        public async Task<IEnumerable<User>> GetByIdsAsync(IEnumerable<int> ids, bool trackChanges) =>
+            await FindByCondition(u => ids.Contains(u.Id), trackChanges).ToListAsync();
 
-        public User? GetUser(int id, bool trackChanges) =>
-            FindByCondition(u => u.Id == id, trackChanges).FirstOrDefault();
+        public async Task<User?> GetUserAsync(int id, bool trackChanges) =>
+            await FindByCondition(u => u.Id == id, trackChanges).FirstOrDefaultAsync();
 
         public void CreateUser(User user) => Create(user);
 

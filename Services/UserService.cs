@@ -20,97 +20,87 @@ namespace Services
             _mapper = mapper;
         }
 
-        public IEnumerable<UserDto> GetAll()
+        public async Task<IEnumerable<UserDto>> GetAllAsync()
         {
-            var users = _repository.User.GetAllUsers(trackChanges: false);
+            var users = await _repository.User.GetAllUsersAsync(trackChanges: false);
             return _mapper.Map<IEnumerable<UserDto>>(users);
         }
 
-        public UserDto GetById(int id)
+        public async Task<UserDto> GetByIdAsync(int id)
         {
-            var user = _repository.User.GetUser(id, trackChanges: false);
+            var user = await _repository.User.GetUserAsync(id, trackChanges: false);
             if (user is null)
                 throw new UserNotFoundException(id);
-
             return _mapper.Map<UserDto>(user);
         }
 
-        public UserDto Create(UserForCreationDto userDto)
+        public async Task<UserDto> CreateAsync(UserForCreationDto userDto)
         {
             var user = _mapper.Map<User>(userDto);
             user.Password = BCrypt.Net.BCrypt.HashPassword(userDto.Password);
             _repository.User.CreateUser(user);
-            _repository.Save();
+            await _repository.SaveAsync();
             return _mapper.Map<UserDto>(user);
         }
 
-        public IEnumerable<UserDto> GetByIds(IEnumerable<int> ids)
+        public async Task<IEnumerable<UserDto>> GetByIdsAsync(IEnumerable<int> ids)
         {
             if (ids is null)
                 throw new IdParametersBadRequestException();
-
-            var users = _repository.User.GetByIds(ids, trackChanges: false);
+            var users = await _repository.User.GetByIdsAsync(ids, trackChanges: false);
             if (ids.Count() != users.Count())
                 throw new CollectionByIdsBadRequestException();
-
             return _mapper.Map<IEnumerable<UserDto>>(users);
         }
 
-        public (IEnumerable<UserDto> users, string ids) CreateUserCollection(IEnumerable<UserForCreationDto> userCollection)
+        public async Task<(IEnumerable<UserDto> users, string ids)> CreateUserCollectionAsync(IEnumerable<UserForCreationDto> userCollection)
         {
             if (userCollection is null)
                 throw new UserCollectionBadRequestException();
-
             var userEntities = _mapper.Map<IEnumerable<User>>(userCollection);
             foreach (var user in userEntities)
             {
                 user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
                 _repository.User.CreateUser(user);
             }
-
-            _repository.Save();
-
+            await _repository.SaveAsync();
             var usersToReturn = _mapper.Map<IEnumerable<UserDto>>(userEntities);
             var ids = string.Join(",", usersToReturn.Select(u => u.Id));
-
             return (users: usersToReturn, ids: ids);
         }
 
-        public void Delete(int id)
+        public async Task DeleteAsync(int id)
         {
-            var user = _repository.User.GetUser(id, trackChanges: false);
+            var user = await _repository.User.GetUserAsync(id, trackChanges: false);
             if (user is null)
                 throw new UserNotFoundException(id);
-
             _repository.User.DeleteUser(user);
-            _repository.Save();
+            await _repository.SaveAsync();
         }
 
-        public void Update(int id, UserForUpdateDto userDto)
+        public async Task UpdateAsync(int id, UserForUpdateDto userDto)
         {
-            var user = _repository.User.GetUser(id, trackChanges: true);
+            var user = await _repository.User.GetUserAsync(id, trackChanges: true);
             if (user is null)
                 throw new UserNotFoundException(id);
-
             _mapper.Map(userDto, user);
             user.Password = BCrypt.Net.BCrypt.HashPassword(userDto.Password);
-            _repository.Save();
+            await _repository.SaveAsync();
         }
 
-        public (UserForUpdateDto userToPatch, User userEntity) GetUserForPatch(int id, bool trackChanges)
+        public async Task<(UserForUpdateDto userToPatch, User userEntity)> GetUserForPatchAsync(int id, bool trackChanges)
         {
-            var user = _repository.User.GetUser(id, trackChanges);
+            var user = await _repository.User.GetUserAsync(id, trackChanges);
             if (user is null)
                 throw new UserNotFoundException(id);
-
             var userToPatch = _mapper.Map<UserForUpdateDto>(user);
             return (userToPatch, user);
         }
 
-        public void SaveChangesForPatch(UserForUpdateDto userToPatch, User userEntity)
+        public async Task SaveChangesForPatchAsync(UserForUpdateDto userToPatch, User userEntity)
         {
             _mapper.Map(userToPatch, userEntity);
-            _repository.Save();
+            await _repository.SaveAsync();
         }
     }
 }
