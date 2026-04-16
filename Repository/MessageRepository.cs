@@ -9,11 +9,13 @@ namespace Repository
     {
         public MessageRepository(AppDbContext context) : base(context) { }
 
-        public async Task<IEnumerable<Message>> GetAllMessagesAsync(MessageParameters messageParameters, bool trackChanges) =>
-            await FindAll(trackChanges)
-                .Skip((messageParameters.PageNumber - 1) * messageParameters.PageSize)
-                .Take(messageParameters.PageSize)
+        public async Task<PagedList<Message>> GetAllMessagesAsync(MessageParameters messageParameters, bool trackChanges)
+        {
+            var messages = await FindAll(trackChanges)
+                .OrderBy(m => m.CreatedAt)
                 .ToListAsync();
+            return PagedList<Message>.ToPagedList(messages, messageParameters.PageNumber, messageParameters.PageSize);
+        }
 
         public async Task<Message?> GetMessageAsync(int id, bool trackChanges) =>
             await FindByCondition(m => m.Id == id, trackChanges).FirstOrDefaultAsync();

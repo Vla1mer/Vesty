@@ -6,7 +6,7 @@ namespace Services.Interfaces
 {
     public interface IUserService
     {
-        Task<IEnumerable<UserDto>> GetAllAsync(UserParameters userParameters);
+        Task<(IEnumerable<UserDto> users, MetaData metaData)> GetAllAsync(UserParameters userParameters);
         Task<UserDto> GetByIdAsync(int id);
         Task<UserDto> CreateAsync(UserForCreationDto userDto);
         Task<IEnumerable<UserDto>> GetByIdsAsync(IEnumerable<int> ids);

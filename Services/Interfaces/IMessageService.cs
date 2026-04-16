@@ -6,7 +6,7 @@ namespace Services.Interfaces
 {
     public interface IMessageService
     {
-        Task<IEnumerable<MessageDto>> GetAllAsync(MessageParameters messageParameters);
+        Task<(IEnumerable<MessageDto> messages, MetaData metaData)> GetAllAsync(MessageParameters messageParameters);
         Task<IEnumerable<MessageDto>> GetMessagesByChatAsync(int chatId, bool trackChanges);
         Task<MessageDto> GetByIdAsync(int id);
         Task<MessageDto> CreateMessageForChatAsync(int chatId, MessageForCreationDto message);

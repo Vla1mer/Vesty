@@ -9,11 +9,13 @@ namespace Repository
     {
         public ChatRepository(AppDbContext context) : base(context) { }
 
-        public async Task<IEnumerable<Chat>> GetAllChatsAsync(ChatParameters chatParameters, bool trackChanges) =>
-            await FindAll(trackChanges)
-                .Skip((chatParameters.PageNumber - 1) * chatParameters.PageSize)
-                .Take(chatParameters.PageSize)
+        public async Task<PagedList<Chat>> GetAllChatsAsync(ChatParameters chatParameters, bool trackChanges)
+        {
+            var chats = await FindAll(trackChanges)
+                .OrderBy(c => c.Name)
                 .ToListAsync();
+            return PagedList<Chat>.ToPagedList(chats, chatParameters.PageNumber, chatParameters.PageSize);
+        }
 
         public async Task<Chat?> GetChatAsync(int id, bool trackChanges) =>
             await FindByCondition(c => c.Id == id, trackChanges).FirstOrDefaultAsync();

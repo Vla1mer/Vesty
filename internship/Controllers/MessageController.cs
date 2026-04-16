@@ -3,6 +3,7 @@ using Services;
 using Services.DataTransferObjects;
 using Services.Interfaces;
 using Entities.RequestFeatures;
+using System.Text.Json;
 
 namespace ChatApp.Controllers
 {
@@ -21,7 +22,9 @@ namespace ChatApp.Controllers
         [ProducesResponseType(typeof(IEnumerable<MessageDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllMessages([FromQuery] MessageParameters messageParameters)
         {
-            return Ok(await _service.Message.GetAllAsync(messageParameters));
+            var pagedResult = await _service.Message.GetAllAsync(messageParameters);
+            Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(pagedResult.metaData));
+            return Ok(pagedResult.messages);
         }
 
         [HttpPost("{chatId:int}/messages")]

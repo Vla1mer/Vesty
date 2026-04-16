@@ -21,10 +21,11 @@ namespace Services
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<ChatDto>> GetAllAsync(ChatParameters chatParameters)
+        public async Task<(IEnumerable<ChatDto> chats, MetaData metaData)> GetAllAsync(ChatParameters chatParameters)
         {
-            var chats = await _repository.Chat.GetAllChatsAsync(chatParameters, trackChanges: false);
-            return _mapper.Map<IEnumerable<ChatDto>>(chats);
+            var chatsWithMetaData = await _repository.Chat.GetAllChatsAsync(chatParameters, trackChanges: false);
+            var chatsDto = _mapper.Map<IEnumerable<ChatDto>>(chatsWithMetaData);
+            return (chats: chatsDto, metaData: chatsWithMetaData.MetaData);
         }
 
         public async Task<ChatDto> GetByIdAsync(int id)

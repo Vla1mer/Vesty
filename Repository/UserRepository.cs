@@ -9,11 +9,13 @@ namespace Repository
     {
         public UserRepository(AppDbContext context) : base(context) { }
 
-        public async Task<IEnumerable<User>> GetAllUsersAsync(UserParameters userParameters, bool trackChanges) =>
-            await FindAll(trackChanges)
-                .Skip((userParameters.PageNumber - 1) * userParameters.PageSize)
-                .Take(userParameters.PageSize)
+        public async Task<PagedList<User>> GetAllUsersAsync(UserParameters userParameters, bool trackChanges)
+        {
+            var users = await FindAll(trackChanges)
+                .OrderBy(u => u.Login)
                 .ToListAsync();
+            return PagedList<User>.ToPagedList(users, userParameters.PageNumber, userParameters.PageSize);
+        }
 
         public async Task<IEnumerable<User>> GetByIdsAsync(IEnumerable<int> ids, bool trackChanges) =>
             await FindByCondition(u => ids.Contains(u.Id), trackChanges).ToListAsync();

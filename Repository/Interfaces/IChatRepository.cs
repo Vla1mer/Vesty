@@ -5,7 +5,7 @@ namespace Repository.Interfaces
 {
     public interface IChatRepository
     {
-        Task<IEnumerable<Chat>> GetAllChatsAsync(ChatParameters chatParameters, bool trackChanges);
+        Task<PagedList<Chat>> GetAllChatsAsync(ChatParameters chatParameters, bool trackChanges);
         Task<Chat?> GetChatAsync(int id, bool trackChanges);
         void CreateChat(Chat chat);
         void DeleteChat(Chat chat);
