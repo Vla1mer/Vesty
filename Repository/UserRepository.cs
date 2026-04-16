@@ -12,8 +12,11 @@ namespace Repository
         public async Task<PagedList<User>> GetAllUsersAsync(UserParameters userParameters, bool trackChanges)
         {
             var users = await FindAll(trackChanges)
+                .Where(u => u.Birthday >= userParameters.MinBirthday &&
+                            u.Birthday <= userParameters.MaxBirthday)
                 .OrderBy(u => u.Login)
                 .ToListAsync();
+
             return PagedList<User>.ToPagedList(users, userParameters.PageNumber, userParameters.PageSize);
         }
 

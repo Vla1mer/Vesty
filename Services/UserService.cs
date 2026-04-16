@@ -23,6 +23,9 @@ namespace Services
 
         public async Task<(IEnumerable<UserDto> users, MetaData metaData)> GetAllAsync(UserParameters userParameters)
         {
+            if (!userParameters.ValidBirthdayRange)
+                throw new MaxBirthdayRangeBadRequestException();
+
             var usersWithMetaData = await _repository.User.GetAllUsersAsync(userParameters, trackChanges: false);
             var usersDto = _mapper.Map<IEnumerable<UserDto>>(usersWithMetaData);
             return (users: usersDto, metaData: usersWithMetaData.MetaData);
