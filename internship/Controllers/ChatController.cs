@@ -2,6 +2,7 @@
 using Services;
 using Services.DataTransferObjects;
 using Services.Interfaces;
+using Entities.RequestFeatures;
 
 namespace ChatApp.Controllers
 {
@@ -18,9 +19,9 @@ namespace ChatApp.Controllers
 
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<ChatDto>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetAllChats()
+        public async Task<IActionResult> GetAllChats([FromQuery] ChatParameters chatParameters)
         {
-            return Ok(await _service.Chat.GetAllAsync());
+            return Ok(await _service.Chat.GetAllAsync(chatParameters));
         }
 
         [HttpGet("{id:int}")]

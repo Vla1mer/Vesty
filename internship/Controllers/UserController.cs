@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Services;
 using Services.DataTransferObjects;
 using Services.Interfaces;
+using Entities.RequestFeatures;
 
 namespace ChatApp.Controllers
 {
@@ -22,10 +23,10 @@ namespace ChatApp.Controllers
 
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<UserDto>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetAllUsers()
+        public async Task<IActionResult> GetAllUsers([FromQuery] UserParameters userParameters)
         {
             _logger.LogInfo("Fetching all users");
-            return Ok(await _service.User.GetAllAsync());
+            return Ok(await _service.User.GetAllAsync(userParameters));
         }
 
         [HttpGet("{id:int}")]

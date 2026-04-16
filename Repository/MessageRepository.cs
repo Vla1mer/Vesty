@@ -1,6 +1,7 @@
 ﻿using Entities.Models;
 using Microsoft.EntityFrameworkCore;
 using Repository.Interfaces;
+using Entities.RequestFeatures;
 
 namespace Repository
 {
@@ -8,8 +9,11 @@ namespace Repository
     {
         public MessageRepository(AppDbContext context) : base(context) { }
 
-        public async Task<IEnumerable<Message>> GetAllMessagesAsync(bool trackChanges) =>
-            await FindAll(trackChanges).ToListAsync();
+        public async Task<IEnumerable<Message>> GetAllMessagesAsync(MessageParameters messageParameters, bool trackChanges) =>
+            await FindAll(trackChanges)
+                .Skip((messageParameters.PageNumber - 1) * messageParameters.PageSize)
+                .Take(messageParameters.PageSize)
+                .ToListAsync();
 
         public async Task<Message?> GetMessageAsync(int id, bool trackChanges) =>
             await FindByCondition(m => m.Id == id, trackChanges).FirstOrDefaultAsync();

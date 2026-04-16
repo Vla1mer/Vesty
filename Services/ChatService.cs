@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Entities.Exceptions;
 using Entities.Models;
+using Entities.RequestFeatures;
 using Repository.Interfaces;
 using Services.DataTransferObjects;
 using Services.Interfaces;
@@ -20,9 +21,9 @@ namespace Services
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<ChatDto>> GetAllAsync()
+        public async Task<IEnumerable<ChatDto>> GetAllAsync(ChatParameters chatParameters)
         {
-            var chats = await _repository.Chat.GetAllChatsAsync(trackChanges: false);
+            var chats = await _repository.Chat.GetAllChatsAsync(chatParameters, trackChanges: false);
             return _mapper.Map<IEnumerable<ChatDto>>(chats);
         }
 
