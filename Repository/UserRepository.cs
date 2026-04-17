@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Repository.Interfaces;
 using Entities.RequestFeatures;
+using Repository.Extensions;
 
 namespace Repository
 {
@@ -13,6 +14,7 @@ namespace Repository
         {
             var users = await FindAll(trackChanges)
                 .FilterByBirthday(userParameters.MinBirthday, userParameters.MaxBirthday)
+                .FilterByPhone(userParameters.HasPhone)
                 .Search(userParameters.SearchTerm)
                 .OrderBy(u => u.Login)
                 .ToListAsync();

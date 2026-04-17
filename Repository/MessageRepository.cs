@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Repository.Interfaces;
 using Entities.RequestFeatures;
+using Repository.Extensions;
 
 namespace Repository
 {
@@ -12,8 +13,13 @@ namespace Repository
         public async Task<PagedList<Message>> GetAllMessagesAsync(MessageParameters messageParameters, bool trackChanges)
         {
             var messages = await FindAll(trackChanges)
+                .FilterByCreatedAt(messageParameters.MinCreatedAt, messageParameters.MaxCreatedAt)
+                .FilterByChatId(messageParameters.ChatId)
+                .FilterByUserId(messageParameters.UserId)
+                .Search(messageParameters.SearchTerm)
                 .OrderBy(m => m.CreatedAt)
                 .ToListAsync();
+
             return PagedList<Message>.ToPagedList(messages, messageParameters.PageNumber, messageParameters.PageSize);
         }
 

@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Repository.Interfaces;
 using Entities.RequestFeatures;
+using Repository.Extensions;
 
 namespace Repository
 {
@@ -12,8 +13,11 @@ namespace Repository
         public async Task<PagedList<Chat>> GetAllChatsAsync(ChatParameters chatParameters, bool trackChanges)
         {
             var chats = await FindAll(trackChanges)
+                .FilterByCreator(chatParameters.CreatorId)
+                .Search(chatParameters.SearchTerm)
                 .OrderBy(c => c.Name)
                 .ToListAsync();
+
             return PagedList<Chat>.ToPagedList(chats, chatParameters.PageNumber, chatParameters.PageSize);
         }
 
