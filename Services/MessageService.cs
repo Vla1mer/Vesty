@@ -23,6 +23,9 @@ namespace Services
 
         public async Task<(IEnumerable<MessageDto> messages, MetaData metaData)> GetAllAsync(MessageParameters messageParameters)
         {
+            if (!messageParameters.ValidCreatedAtRange)
+                throw new MaxCreatedAtRangeBadRequestException();
+
             var messagesWithMetaData = await _repository.Message.GetAllMessagesAsync(messageParameters, trackChanges: false);
             var messagesDto = _mapper.Map<IEnumerable<MessageDto>>(messagesWithMetaData);
             return (messages: messagesDto, metaData: messagesWithMetaData.MetaData);
