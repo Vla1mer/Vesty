@@ -13,15 +13,13 @@ namespace Repository.Extensions
 
         public static IQueryable<User> FilterByPhone(
             this IQueryable<User> users,
-            bool? hasPhone)
-        {
-            if (hasPhone is null)
-                return users;
-
-            return hasPhone.Value
-                ? users.Where(u => u.Phone != null)
-                : users.Where(u => u.Phone == null);
-        }
+            bool? hasPhone) =>
+            hasPhone switch
+            {
+                true => users.Where(u => u.Phone != null),
+                false => users.Where(u => u.Phone == null),
+                null => users
+            };
 
         public static IQueryable<User> Search(
     this IQueryable<User> users,

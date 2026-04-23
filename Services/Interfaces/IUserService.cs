@@ -1,5 +1,5 @@
 ﻿using Entities.Models;
-using Entities.RequestFeatures;
+using Shared.RequestFeatures;
 using Services.DataTransferObjects;
 
 namespace Services.Interfaces

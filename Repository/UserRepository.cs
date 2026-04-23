@@ -1,7 +1,7 @@
 ﻿using Entities.Models;
 using Microsoft.EntityFrameworkCore;
 using Repository.Interfaces;
-using Entities.RequestFeatures;
+using Shared.RequestFeatures;
 using Repository.Extensions;
 
 namespace Repository

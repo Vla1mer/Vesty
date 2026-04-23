@@ -1,4 +1,4 @@
-﻿namespace Entities.RequestFeatures
+﻿namespace Shared.RequestFeatures
 {
     public class UserParameters : RequestParameters
     {

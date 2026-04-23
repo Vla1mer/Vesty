@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Services;
 using Services.DataTransferObjects;
 using Services.Interfaces;
-using Entities.RequestFeatures;
+using Shared.RequestFeatures;
 using System.Text.Json;
 
 namespace ChatApp.Controllers

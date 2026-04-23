@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
-using Entities.Exceptions;
+using Shared.Exceptions;
 using Entities.Models;
-using Entities.RequestFeatures;
+using Shared.RequestFeatures;
 using Repository.Interfaces;
 using Services.DataTransferObjects;
 using Services.Interfaces;

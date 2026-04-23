@@ -1,4 +1,4 @@
-﻿namespace Entities.Exceptions
+﻿namespace Shared.Exceptions
 {
     public sealed class ChatMemberNotFoundException : NotFoundException
     {

@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using Entities.Exceptions;
+using Shared.Exceptions;
 using Entities.Models;
 using Repository.Interfaces;
 using Services.DataTransferObjects;
