@@ -1,6 +1,6 @@
 ﻿using System.Net;
-using Entities.ErrorModel;
-using Entities.Exceptions;
+using Shared.ErrorModel;
+using Shared.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Services.Interfaces;
 

@@ -1,18 +1,19 @@
 ﻿using Entities.Models;
+using Shared.RequestFeatures;
 using Services.DataTransferObjects;
 
 namespace Services.Interfaces
 {
     public interface IUserService
     {
-        IEnumerable<UserDto> GetAll();
-        UserDto GetById(int id);
-        UserDto Create(UserForCreationDto userDto);
-        IEnumerable<UserDto> GetByIds(IEnumerable<int> ids);
-        (IEnumerable<UserDto> users, string ids) CreateUserCollection(IEnumerable<UserForCreationDto> userCollection);
-        void Delete(int id);
-        void Update(int id, UserForUpdateDto userDto);
-        (UserForUpdateDto userToPatch, User userEntity) GetUserForPatch(int id, bool trackChanges);
-        void SaveChangesForPatch(UserForUpdateDto userToPatch, User userEntity);
+        Task<(IEnumerable<UserDto> users, MetaData metaData)> GetAllAsync(UserParameters userParameters);
+        Task<UserDto> GetByIdAsync(int id);
+        Task<UserDto> CreateAsync(UserForCreationDto userDto);
+        Task<IEnumerable<UserDto>> GetByIdsAsync(IEnumerable<int> ids);
+        Task<(IEnumerable<UserDto> users, string ids)> CreateUserCollectionAsync(IEnumerable<UserForCreationDto> userCollection);
+        Task DeleteAsync(int id);
+        Task UpdateAsync(int id, UserForUpdateDto userDto);
+        Task<(UserForUpdateDto userToPatch, User userEntity)> GetUserForPatchAsync(int id, bool trackChanges);
+        Task SaveChangesForPatchAsync(UserForUpdateDto userToPatch, User userEntity);
     }
 }

@@ -1,11 +1,12 @@
 ﻿using Entities.Models;
+using Shared.RequestFeatures;
 
 namespace Repository.Interfaces
 {
     public interface IChatRepository
     {
-        IEnumerable<Chat> GetAllChats(bool trackChanges);
-        Chat? GetChat(int id, bool trackChanges);
+        Task<PagedList<Chat>> GetAllChatsAsync(ChatParameters chatParameters, bool trackChanges);
+        Task<Chat?> GetChatAsync(int id, bool trackChanges);
         void CreateChat(Chat chat);
         void DeleteChat(Chat chat);
     }

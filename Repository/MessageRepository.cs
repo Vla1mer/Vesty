@@ -1,5 +1,8 @@
-﻿using Repository.Interfaces;
-using Entities.Models;
+﻿using Entities.Models;
+using Microsoft.EntityFrameworkCore;
+using Repository.Interfaces;
+using Shared.RequestFeatures;
+using Repository.Extensions;
 
 namespace Repository
 {
@@ -7,14 +10,24 @@ namespace Repository
     {
         public MessageRepository(AppDbContext context) : base(context) { }
 
-        public IEnumerable<Message> GetAllMessages(bool trackChanges) =>
-            FindAll(trackChanges).ToList();
+        public async Task<PagedList<Message>> GetAllMessagesAsync(MessageParameters messageParameters, bool trackChanges)
+        {
+            var messages = await FindAll(trackChanges)
+                .FilterByCreatedAt(messageParameters.MinCreatedAt, messageParameters.MaxCreatedAt)
+                .FilterByChatId(messageParameters.ChatId)
+                .FilterByUserId(messageParameters.UserId)
+                .Search(messageParameters.SearchTerm)
+                .OrderBy(m => m.CreatedAt)
+                .ToListAsync();
 
-        public Message? GetMessage(int id, bool trackChanges) =>
-            FindByCondition(m => m.Id == id, trackChanges).FirstOrDefault();
+            return PagedList<Message>.ToPagedList(messages, messageParameters.PageNumber, messageParameters.PageSize);
+        }
 
-        public IEnumerable<Message> GetMessagesByChat(int chatId, bool trackChanges) =>
-            FindByCondition(m => m.ChatId == chatId, trackChanges).ToList();
+        public async Task<Message?> GetMessageAsync(int id, bool trackChanges) =>
+            await FindByCondition(m => m.Id == id, trackChanges).FirstOrDefaultAsync();
+
+        public async Task<IEnumerable<Message>> GetMessagesByChatAsync(int chatId, bool trackChanges) =>
+            await FindByCondition(m => m.ChatId == chatId, trackChanges).ToListAsync();
 
         public void CreateMessage(Message message) => Create(message);
 

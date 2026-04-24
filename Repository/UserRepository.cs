@@ -1,5 +1,8 @@
-﻿using Repository.Interfaces;
-using Entities.Models;
+﻿using Entities.Models;
+using Microsoft.EntityFrameworkCore;
+using Repository.Interfaces;
+using Shared.RequestFeatures;
+using Repository.Extensions;
 
 namespace Repository
 {
@@ -7,14 +10,23 @@ namespace Repository
     {
         public UserRepository(AppDbContext context) : base(context) { }
 
-        public IEnumerable<User> GetAllUsers(bool trackChanges) =>
-            FindAll(trackChanges).ToList();
+        public async Task<PagedList<User>> GetAllUsersAsync(UserParameters userParameters, bool trackChanges)
+        {
+            var users = await FindAll(trackChanges)
+                .FilterByBirthday(userParameters.MinBirthday, userParameters.MaxBirthday)
+                .FilterByPhone(userParameters.HasPhone)
+                .Search(userParameters.SearchTerm)
+                .OrderBy(u => u.Login)
+                .ToListAsync();
 
-        public IEnumerable<User> GetByIds(IEnumerable<int> ids, bool trackChanges) =>
-            FindByCondition(u => ids.Contains(u.Id), trackChanges).ToList();
+            return PagedList<User>.ToPagedList(users, userParameters.PageNumber, userParameters.PageSize);
+        }
 
-        public User? GetUser(int id, bool trackChanges) =>
-            FindByCondition(u => u.Id == id, trackChanges).FirstOrDefault();
+        public async Task<IEnumerable<User>> GetByIdsAsync(IEnumerable<int> ids, bool trackChanges) =>
+            await FindByCondition(u => ids.Contains(u.Id), trackChanges).ToListAsync();
+
+        public async Task<User?> GetUserAsync(int id, bool trackChanges) =>
+            await FindByCondition(u => u.Id == id, trackChanges).FirstOrDefaultAsync();
 
         public void CreateUser(User user) => Create(user);
 

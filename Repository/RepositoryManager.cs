@@ -24,6 +24,6 @@ namespace Repository
         public IChatMemberRepository ChatMember => _chatMemberRepository.Value;
         public IMessageRepository Message => _messageRepository.Value;
 
-        public void Save() => _context.SaveChanges();
+        public async Task SaveAsync() => await _context.SaveChangesAsync();
     }
 }
