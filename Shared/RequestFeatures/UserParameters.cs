@@ -2,6 +2,8 @@
 {
     public class UserParameters : RequestParameters
     {
+        public UserParameters() => OrderBy = "login";
+
         public DateOnly MinBirthday { get; set; } = DateOnly.MinValue;
         public DateOnly MaxBirthday { get; set; } = DateOnly.MaxValue;
         public bool ValidBirthdayRange => MaxBirthday > MinBirthday;
