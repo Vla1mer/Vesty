@@ -15,7 +15,7 @@ namespace Repository
             var chats = await FindAll(trackChanges)
                 .FilterByCreator(chatParameters.CreatorId)
                 .Search(chatParameters.SearchTerm)
-                .OrderBy(c => c.Name)
+                .Sort(chatParameters.OrderBy)
                 .ToListAsync();
 
             return PagedList<Chat>.ToPagedList(chats, chatParameters.PageNumber, chatParameters.PageSize);
