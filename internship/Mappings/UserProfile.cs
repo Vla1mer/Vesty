@@ -12,6 +12,7 @@ namespace ChatApp.Mappings
             CreateMap<UserForCreationDto, User>();
             CreateMap<UserForUpdateDto, User>();
             CreateMap<UserForUpdateDto, User>().ReverseMap();
+            CreateMap<UserForRegistrationDto, User>();
         }
     }
 }

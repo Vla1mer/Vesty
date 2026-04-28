@@ -1,12 +1,15 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace Services.DataTransferObjects
 {
-    public record UserForUpdateDto
+    public record UserForRegistrationDto
     {
         [Required(ErrorMessage = "UserName is a required field.")]
         [MaxLength(50, ErrorMessage = "Maximum length for UserName is 50 characters.")]
         public string? UserName { get; init; }
+
+        [Required(ErrorMessage = "Password is a required field.")]
+        public string? Password { get; init; }
 
         [MaxLength(100, ErrorMessage = "Maximum length for Name is 100 characters.")]
         public string? Name { get; init; }
@@ -18,5 +21,7 @@ namespace Services.DataTransferObjects
         public string? Phone { get; init; }
 
         public DateOnly? Birthday { get; init; }
+
+        public ICollection<string>? Roles { get; init; }
     }
-} 
+}

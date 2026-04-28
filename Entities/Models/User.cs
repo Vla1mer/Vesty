@@ -1,13 +1,14 @@
-﻿namespace Entities.Models
+﻿using Microsoft.AspNetCore.Identity;
+
+namespace Entities.Models
 {
-    public class User : BaseEntity
+    public class User : IdentityUser<int>
     {
-        public string Login { get; set; } = null!;
-        public string Password { get; set; } = null!;
         public string? Name { get; set; }
         public string? Surname { get; set; }
         public string? Phone { get; set; }
         public DateOnly? Birthday { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public ICollection<Chat> CreatedChats { get; set; } = [];
         public ICollection<ChatMember> ChatMembers { get; set; } = [];

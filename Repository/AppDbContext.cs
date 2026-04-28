@@ -1,27 +1,26 @@
 ﻿using Entities.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Repository
 {
-    public class AppDbContext : DbContext
+    public class AppDbContext : IdentityDbContext<User, IdentityRole<int>, int>
     {
         public AppDbContext(DbContextOptions<AppDbContext> options)
             : base(options)
         {
         }
 
-        public DbSet<User> Users { get; set; }
         public DbSet<Chat> Chats { get; set; }
         public DbSet<ChatMember> ChatMembers { get; set; }
         public DbSet<Message> Messages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            base.OnModelCreating(modelBuilder);
+
             modelBuilder.Entity<User>(e => {
-                e.HasKey(u => u.Id);
-                e.Property(u => u.Login).HasMaxLength(50).IsRequired();
-                e.HasIndex(u => u.Login).IsUnique();
-                e.Property(u => u.Password).HasMaxLength(255).IsRequired();
                 e.Property(u => u.Name).HasMaxLength(100);
                 e.Property(u => u.Surname).HasMaxLength(100);
                 e.Property(u => u.Phone).HasMaxLength(20);
@@ -61,15 +60,18 @@ namespace Repository
                  .HasForeignKey(m => m.UserId);
             });
 
-            modelBuilder.Entity<User>().HasData(
-                new User
+            modelBuilder.Entity<IdentityRole<int>>().HasData(
+                new IdentityRole<int>
                 {
                     Id = 1,
-                    Login = "admin",
-                    Password = "admin123",
-                    Name = "Админ",
-                    Surname = "Админович",
-                    CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                    Name = "Administrator",
+                    NormalizedName = "ADMINISTRATOR"
+                },
+                new IdentityRole<int>
+                {
+                    Id = 2,
+                    Name = "User",
+                    NormalizedName = "USER"
                 }
             );
 
@@ -78,11 +80,10 @@ namespace Repository
                 {
                     Id = 1,
                     Name = "Общий чат",
-                    CreatorId = 1,
+                    CreatorId = null,
                     CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
                 }
             );
-
         }
     }
 }

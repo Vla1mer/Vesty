@@ -46,7 +46,7 @@ namespace ChatApp
 
         private static void FormatCsv(StringBuilder buffer, UserDto user)
         {
-            buffer.AppendLine($"{user.Id},\"{user.Login}\",\"{user.Name}\",\"{user.Surname}\"");
+            buffer.AppendLine($"{user.Id},\"{user.UserName}\",\"{user.Name}\",\"{user.Surname}\"");
         }
     }
 }

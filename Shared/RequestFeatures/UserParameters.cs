@@ -2,7 +2,7 @@
 {
     public class UserParameters : RequestParameters
     {
-        public UserParameters() => OrderBy = "login";
+        public UserParameters() => OrderBy = "userName";
 
         public DateOnly MinBirthday { get; set; } = DateOnly.MinValue;
         public DateOnly MaxBirthday { get; set; } = DateOnly.MaxValue;

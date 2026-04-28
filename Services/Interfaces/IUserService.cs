@@ -1,4 +1,5 @@
 ﻿using Entities.Models;
+using Microsoft.AspNetCore.Identity;
 using Shared.RequestFeatures;
 using Services.DataTransferObjects;
 
@@ -8,12 +9,14 @@ namespace Services.Interfaces
     {
         Task<(IEnumerable<UserDto> users, MetaData metaData)> GetAllAsync(UserParameters userParameters);
         Task<UserDto> GetByIdAsync(int id);
-        Task<UserDto> CreateAsync(UserForCreationDto userDto);
         Task<IEnumerable<UserDto>> GetByIdsAsync(IEnumerable<int> ids);
-        Task<(IEnumerable<UserDto> users, string ids)> CreateUserCollectionAsync(IEnumerable<UserForCreationDto> userCollection);
+        Task<(IEnumerable<UserDto> users, string ids)> RegisterUserCollectionAsync(IEnumerable<UserForRegistrationDto> userCollection);
         Task DeleteAsync(int id);
         Task UpdateAsync(int id, UserForUpdateDto userDto);
         Task<(UserForUpdateDto userToPatch, User userEntity)> GetUserForPatchAsync(int id, bool trackChanges);
         Task SaveChangesForPatchAsync(UserForUpdateDto userToPatch, User userEntity);
+        Task<IdentityResult> RegisterUser(UserForRegistrationDto userForRegistration);
+        Task<bool> ValidateUser(UserForAuthenticationDto userForAuth);
+        Task<string> CreateToken();
     }
 }
