@@ -50,8 +50,18 @@ namespace ChatApp.Controllers
             if (!await _service.User.ValidateUser(user))
                 return Unauthorized();
 
-            var token = await _service.User.CreateToken();
-            return Ok(new { Token = token });
+            var tokenDto = await _service.User.CreateToken(populateExp: true);
+            return Ok(tokenDto);
+        }
+
+        [HttpPost("refresh")]
+        [AllowAnonymous]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Refresh([FromBody] TokenDto tokenDto)
+        {
+            var tokenDtoToReturn = await _service.User.RefreshToken(tokenDto);
+            return Ok(tokenDtoToReturn);
         }
 
         [HttpGet]

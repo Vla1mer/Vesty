@@ -9,6 +9,8 @@ namespace Entities.Models
         public string? Phone { get; set; }
         public DateOnly? Birthday { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public string? RefreshToken { get; set; }
+        public DateTime RefreshTokenExpiryTime { get; set; }
 
         public ICollection<Chat> CreatedChats { get; set; } = [];
         public ICollection<ChatMember> ChatMembers { get; set; } = [];
