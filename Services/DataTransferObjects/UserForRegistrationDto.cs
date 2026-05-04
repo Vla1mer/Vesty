@@ -6,10 +6,10 @@ namespace Services.DataTransferObjects
     {
         [Required(ErrorMessage = "UserName is a required field.")]
         [MaxLength(50, ErrorMessage = "Maximum length for UserName is 50 characters.")]
-        public string? UserName { get; init; }
+        public string UserName { get; init; }
 
         [Required(ErrorMessage = "Password is a required field.")]
-        public string? Password { get; init; }
+        public string Password { get; init; }
 
         [MaxLength(100, ErrorMessage = "Maximum length for Name is 100 characters.")]
         public string? Name { get; init; }

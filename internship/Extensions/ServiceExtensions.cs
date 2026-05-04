@@ -55,7 +55,8 @@ namespace ChatApp.Extensions
         public static void ConfigureJWT(this IServiceCollection services, IConfiguration configuration)
         {
             var jwtSettings = configuration.GetSection("JwtSettings");
-            var secretKey = jwtSettings["secretKey"];
+            var secretKey = jwtSettings["secretKey"]
+                ?? throw new InvalidOperationException("JWT secretKey is not configured");
 
             services.AddAuthentication(opt =>
             {
@@ -73,7 +74,7 @@ namespace ChatApp.Extensions
 
                     ValidIssuer = jwtSettings["validIssuer"],
                     ValidAudience = jwtSettings["validAudience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey!))
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
                 };
             });
         }
