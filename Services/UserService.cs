@@ -74,8 +74,6 @@ namespace Services
                 var result = await _userManager.CreateAsync(user, userDto.Password!);
                 if (result.Succeeded)
                 {
-                    if (userDto.Roles is not null)
-                        await _userManager.AddToRolesAsync(user, userDto.Roles);
                     createdUsers.Add(user);
                 }
             }
@@ -123,9 +121,6 @@ namespace Services
             var user = _mapper.Map<User>(userForRegistration);
 
             var result = await _userManager.CreateAsync(user, userForRegistration.Password!);
-
-            if (result.Succeeded && userForRegistration.Roles is not null)
-                await _userManager.AddToRolesAsync(user, userForRegistration.Roles);
 
             return result;
         }
@@ -221,20 +216,14 @@ namespace Services
             return new SigningCredentials(secret, SecurityAlgorithms.HmacSha256);
         }
 
-        private async Task<List<Claim>> GetClaims()
+        private Task<List<Claim>> GetClaims()
         {
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, _user!.UserName!)
             };
 
-            var roles = await _userManager.GetRolesAsync(_user);
-            foreach (var role in roles)
-            {
-                claims.Add(new Claim(ClaimTypes.Role, role));
-            }
-
-            return claims;
+            return Task.FromResult(claims);
         }
 
         private JwtSecurityToken GenerateTokenOptions(SigningCredentials signingCredentials, List<Claim> claims)

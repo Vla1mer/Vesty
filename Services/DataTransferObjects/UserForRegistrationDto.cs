@@ -21,7 +21,5 @@ namespace Services.DataTransferObjects
         public string? Phone { get; init; }
 
         public DateOnly? Birthday { get; init; }
-
-        public ICollection<string>? Roles { get; init; }
     }
 }

@@ -60,21 +60,6 @@ namespace Repository
                  .HasForeignKey(m => m.UserId);
             });
 
-            modelBuilder.Entity<IdentityRole<int>>().HasData(
-                new IdentityRole<int>
-                {
-                    Id = 1,
-                    Name = "Administrator",
-                    NormalizedName = "ADMINISTRATOR"
-                },
-                new IdentityRole<int>
-                {
-                    Id = 2,
-                    Name = "User",
-                    NormalizedName = "USER"
-                }
-            );
-
             modelBuilder.Entity<Chat>().HasData(
                 new Chat
                 {
