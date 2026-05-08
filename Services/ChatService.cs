@@ -41,6 +41,24 @@ namespace Services
             var chat = _mapper.Map<Chat>(chatDto);
             _repository.Chat.CreateChat(chat);
             await _repository.SaveAsync();
+
+            if (chat.CreatorId.HasValue)
+            {
+                var creatorAlreadyMember = chat.ChatMembers
+                    .Any(cm => cm.UserId == chat.CreatorId.Value);
+
+                if (!creatorAlreadyMember)
+                {
+                    var creatorMember = new ChatMember
+                    {
+                        ChatId = chat.Id,
+                        UserId = chat.CreatorId.Value
+                    };
+                    _repository.ChatMember.CreateMember(creatorMember);
+                    await _repository.SaveAsync();
+                }
+            }
+
             return _mapper.Map<ChatDto>(chat);
         }
 

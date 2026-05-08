@@ -1,4 +1,6 @@
-﻿using Entities.Models;
+﻿using System.Linq.Dynamic.Core;
+using Entities.Models;
+using Repository.Extensions.Utility;
 
 namespace Repository.Extensions
 {
@@ -41,6 +43,19 @@ namespace Repository.Extensions
             var lowerCaseTerm = searchTerm.Trim().ToLower();
 
             return messages.Where(m => m.Content.ToLower().Contains(lowerCaseTerm));
+        }
+
+        public static IQueryable<Message> Sort(this IQueryable<Message> messages, string? orderByQueryString)
+        {
+            if (string.IsNullOrWhiteSpace(orderByQueryString))
+                return messages.OrderBy(m => m.CreatedAt);
+
+            var orderQuery = OrderQueryBuilder.CreateOrderQuery<Message>(orderByQueryString);
+
+            if (string.IsNullOrWhiteSpace(orderQuery))
+                return messages.OrderBy(m => m.CreatedAt);
+
+            return messages.OrderBy(orderQuery);
         }
     }
 }

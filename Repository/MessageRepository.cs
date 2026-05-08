@@ -17,7 +17,7 @@ namespace Repository
                 .FilterByChatId(messageParameters.ChatId)
                 .FilterByUserId(messageParameters.UserId)
                 .Search(messageParameters.SearchTerm)
-                .OrderBy(m => m.CreatedAt)
+                .Sort(messageParameters.OrderBy)
                 .ToListAsync();
 
             return PagedList<Message>.ToPagedList(messages, messageParameters.PageNumber, messageParameters.PageSize);

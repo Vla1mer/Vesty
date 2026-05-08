@@ -16,7 +16,7 @@ namespace Repository
                 .FilterByBirthday(userParameters.MinBirthday, userParameters.MaxBirthday)
                 .FilterByPhone(userParameters.HasPhone)
                 .Search(userParameters.SearchTerm)
-                .OrderBy(u => u.Login)
+                .Sort(userParameters.OrderBy)
                 .ToListAsync();
 
             return PagedList<User>.ToPagedList(users, userParameters.PageNumber, userParameters.PageSize);
