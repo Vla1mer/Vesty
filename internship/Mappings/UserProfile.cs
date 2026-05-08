@@ -9,9 +9,9 @@ namespace ChatApp.Mappings
         public UserProfile()
         {
             CreateMap<User, UserDto>();
-            CreateMap<UserForCreationDto, User>();
             CreateMap<UserForUpdateDto, User>();
             CreateMap<UserForUpdateDto, User>().ReverseMap();
+            CreateMap<UserForRegistrationDto, User>();
         }
     }
 }

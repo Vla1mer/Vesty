@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(python *)",
-      "Bash(dir *)",
-      "Bash(cmd.exe *)"
-    ]
-  }
-}

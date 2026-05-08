@@ -1,4 +1,7 @@
 ﻿using AutoMapper;
+using Entities.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 using Repository.Interfaces;
 using Services.Interfaces;
 
@@ -11,9 +14,10 @@ namespace Services
         private readonly Lazy<IChatMemberService> _chatMemberService;
         private readonly Lazy<IMessageService> _messageService;
 
-        public ServiceManager(IRepositoryManager repositoryManager, ILoggerManager logger, IMapper mapper)
+        public ServiceManager(IRepositoryManager repositoryManager, ILoggerManager logger, IMapper mapper,
+            UserManager<User> userManager, IConfiguration configuration)
         {
-            _userService = new Lazy<IUserService>(() => new UserService(repositoryManager, logger, mapper));
+            _userService = new Lazy<IUserService>(() => new UserService(repositoryManager, logger, mapper, userManager, configuration));
             _chatService = new Lazy<IChatService>(() => new ChatService(repositoryManager, logger, mapper));
             _chatMemberService = new Lazy<IChatMemberService>(() => new ChatMemberService(repositoryManager, logger, mapper));
             _messageService = new Lazy<IMessageService>(() => new MessageService(repositoryManager, logger, mapper));

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Services;
 using Services.DataTransferObjects;
 using Services.Interfaces;
@@ -9,6 +10,7 @@ namespace ChatApp.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class MessageController : ControllerBase
     {
         private readonly IServiceManager _service;

@@ -33,7 +33,7 @@ namespace Repository.Extensions
             var lowerCaseTerm = searchTerm.Trim().ToLower();
 
             return users.Where(u =>
-                u.Login.ToLower().Contains(lowerCaseTerm) ||
+                (u.UserName != null && u.UserName.ToLower().Contains(lowerCaseTerm)) ||
                 (u.Name != null && u.Name.ToLower().Contains(lowerCaseTerm)) ||
                 (u.Surname != null && u.Surname.ToLower().Contains(lowerCaseTerm)));
         }
@@ -41,12 +41,12 @@ namespace Repository.Extensions
         public static IQueryable<User> Sort(this IQueryable<User> users, string? orderByQueryString)
         {
             if (string.IsNullOrWhiteSpace(orderByQueryString))
-                return users.OrderBy(u => u.Login);
+                return users.OrderBy(u => u.UserName);
 
             var orderQuery = OrderQueryBuilder.CreateOrderQuery<User>(orderByQueryString);
 
             if (string.IsNullOrWhiteSpace(orderQuery))
-                return users.OrderBy(u => u.Login);
+                return users.OrderBy(u => u.UserName);
 
             return users.OrderBy(orderQuery);
         }

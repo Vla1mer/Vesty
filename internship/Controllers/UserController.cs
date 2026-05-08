@@ -1,7 +1,7 @@
 ﻿using ChatApp.ModelBinders;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
-using Services;
 using Services.DataTransferObjects;
 using Services.Interfaces;
 using Shared.RequestFeatures;
@@ -11,6 +11,7 @@ namespace ChatApp.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class UserController : ControllerBase
     {
         private readonly IServiceManager _service;
@@ -20,6 +21,47 @@ namespace ChatApp.Controllers
         {
             _service = service;
             _logger = logger;
+        }
+
+        [HttpPost("register")]
+        [AllowAnonymous]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> RegisterUser([FromBody] UserForRegistrationDto userForRegistration)
+        {
+            var result = await _service.User.RegisterUser(userForRegistration);
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                {
+                    ModelState.TryAddModelError(error.Code, error.Description);
+                }
+                return BadRequest(ModelState);
+            }
+            return StatusCode(201);
+        }
+
+        [HttpPost("login")]
+        [AllowAnonymous]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> Authenticate([FromBody] UserForAuthenticationDto user)
+        {
+            if (!await _service.User.ValidateUser(user))
+                return Unauthorized();
+
+            var tokenDto = await _service.User.CreateToken(populateExp: true);
+            return Ok(tokenDto);
+        }
+
+        [HttpPost("refresh")]
+        [AllowAnonymous]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Refresh([FromBody] TokenDto tokenDto)
+        {
+            var tokenDtoToReturn = await _service.User.RefreshToken(tokenDto);
+            return Ok(tokenDtoToReturn);
         }
 
         [HttpGet]
@@ -41,19 +83,6 @@ namespace ChatApp.Controllers
             return Ok(user);
         }
 
-        [HttpPost]
-        [ProducesResponseType(typeof(UserDto), StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> CreateUser([FromBody] UserForCreationDto user)
-        {
-            if (user is null)
-                return BadRequest("UserForCreationDto object is null");
-            if (!ModelState.IsValid)
-                return UnprocessableEntity(ModelState);
-            var created = await _service.User.CreateAsync(user);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
-        }
-
         [HttpGet("collection/({ids})", Name = "UserCollection")]
         [ProducesResponseType(typeof(IEnumerable<UserDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -64,12 +93,13 @@ namespace ChatApp.Controllers
             return Ok(users);
         }
 
-        [HttpPost("collection")]
+        [HttpPost("register/collection")]
+        [AllowAnonymous]
         [ProducesResponseType(typeof(IEnumerable<UserDto>), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> CreateUserCollection([FromBody] IEnumerable<UserForCreationDto> userCollection)
+        public async Task<IActionResult> RegisterUserCollection([FromBody] IEnumerable<UserForRegistrationDto> userCollection)
         {
-            var result = await _service.User.CreateUserCollectionAsync(userCollection);
+            var result = await _service.User.RegisterUserCollectionAsync(userCollection);
             return CreatedAtRoute("UserCollection", new { result.ids }, result.users);
         }
 
