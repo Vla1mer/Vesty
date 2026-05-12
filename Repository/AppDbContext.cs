@@ -20,6 +20,13 @@ namespace Repository
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.Ignore<IdentityRole<int>>();
+            modelBuilder.Ignore<IdentityUserRole<int>>();
+            modelBuilder.Ignore<IdentityRoleClaim<int>>();
+            modelBuilder.Ignore<IdentityUserClaim<int>>();
+            modelBuilder.Ignore<IdentityUserLogin<int>>();
+            modelBuilder.Ignore<IdentityUserToken<int>>();
+
             modelBuilder.Entity<User>(e => {
                 e.Property(u => u.Name).HasMaxLength(100);
                 e.Property(u => u.Surname).HasMaxLength(100);

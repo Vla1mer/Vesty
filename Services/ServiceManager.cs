@@ -3,6 +3,7 @@ using Entities.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Repository.Interfaces;
+using Services.Cryptography;
 using Services.Interfaces;
 
 namespace Services
@@ -15,12 +16,12 @@ namespace Services
         private readonly Lazy<IMessageService> _messageService;
 
         public ServiceManager(IRepositoryManager repositoryManager, ILoggerManager logger, IMapper mapper,
-            UserManager<User> userManager, IConfiguration configuration)
+            UserManager<User> userManager, IConfiguration configuration, IMessageCipher messageCipher)
         {
             _userService = new Lazy<IUserService>(() => new UserService(repositoryManager, logger, mapper, userManager, configuration));
             _chatService = new Lazy<IChatService>(() => new ChatService(repositoryManager, logger, mapper));
             _chatMemberService = new Lazy<IChatMemberService>(() => new ChatMemberService(repositoryManager, logger, mapper));
-            _messageService = new Lazy<IMessageService>(() => new MessageService(repositoryManager, logger, mapper));
+            _messageService = new Lazy<IMessageService>(() => new MessageService(repositoryManager, logger, mapper, messageCipher));
         }
 
         public IUserService User => _userService.Value;

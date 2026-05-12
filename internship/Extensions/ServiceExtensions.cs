@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using Repository;
 using Repository.Interfaces;
 using Services;
+using Services.Cryptography;
 using Services.Interfaces;
 
 namespace ChatApp.Extensions
@@ -33,6 +34,9 @@ namespace ChatApp.Extensions
 
         public static void ConfigureServiceManager(this IServiceCollection services) =>
             services.AddScoped<IServiceManager, ServiceManager>();
+
+        public static void ConfigureMessageCipher(this IServiceCollection services) =>
+            services.AddSingleton<IMessageCipher, AesGcmMessageCipher>();
 
         public static IMvcBuilder AddCustomCSVFormatter(this IMvcBuilder builder) =>
             builder.AddMvcOptions(config => config.OutputFormatters.Add(new CsvOutputFormatter()));

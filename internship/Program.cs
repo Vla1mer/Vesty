@@ -57,6 +57,7 @@ builder.Services.AddOpenApi(options =>
     });
 });
 builder.Services.ConfigureServiceManager();
+builder.Services.ConfigureMessageCipher();
 builder.Services.ConfigureIdentity();
 builder.Services.ConfigureJWT(builder.Configuration);
 builder.Services.AddAutoMapper(typeof(Program));
