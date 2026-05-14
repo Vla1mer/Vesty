@@ -220,7 +220,8 @@ namespace Services
         {
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, _user!.UserName!)
+                new Claim(ClaimTypes.Name, _user!.UserName!),
+                new Claim(ClaimTypes.NameIdentifier, _user.Id.ToString())
             };
 
             return Task.FromResult(claims);

@@ -1,4 +1,4 @@
-﻿using Entities.Models;
+using Entities.Models;
 using Microsoft.EntityFrameworkCore;
 using Repository.Interfaces;
 using Shared.RequestFeatures;
@@ -10,9 +10,10 @@ namespace Repository
     {
         public MessageRepository(AppDbContext context) : base(context) { }
 
-        public async Task<PagedList<Message>> GetAllMessagesAsync(MessageParameters messageParameters, bool trackChanges)
+        public async Task<PagedList<Message>> GetAllMessagesAsync(MessageParameters messageParameters, IEnumerable<int> allowedChatIds, bool trackChanges)
         {
             var messages = await FindAll(trackChanges)
+                .FilterByChatIds(allowedChatIds)
                 .FilterByCreatedAt(messageParameters.MinCreatedAt, messageParameters.MaxCreatedAt)
                 .FilterByChatId(messageParameters.ChatId)
                 .FilterByUserId(messageParameters.UserId)

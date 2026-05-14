@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services;
 using Services.DataTransferObjects;
 using Services.Interfaces;
 using Shared.RequestFeatures;
+using System.Security.Claims;
 using System.Text.Json;
 
 namespace ChatApp.Controllers
@@ -20,11 +21,14 @@ namespace ChatApp.Controllers
             _service = service;
         }
 
+        private int CurrentUserId =>
+            int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<MessageDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllMessages([FromQuery] MessageParameters messageParameters)
         {
-            var pagedResult = await _service.Message.GetAllAsync(messageParameters);
+            var pagedResult = await _service.Message.GetAllAsync(CurrentUserId, messageParameters);
             Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(pagedResult.metaData));
             return Ok(pagedResult.messages);
         }
@@ -32,36 +36,40 @@ namespace ChatApp.Controllers
         [HttpPost("{chatId:int}/messages")]
         [ProducesResponseType(typeof(MessageDto), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> CreateMessageForChat(int chatId, [FromBody] MessageForCreationDto message)
         {
             if (message is null)
                 return BadRequest("MessageForCreationDto object is null");
-            var created = await _service.Message.CreateMessageForChatAsync(chatId, message);
+            var created = await _service.Message.CreateMessageForChatAsync(chatId, CurrentUserId, message);
             return CreatedAtRoute("GetMessagesForChat", new { chatId }, created);
         }
 
         [HttpGet("{id:int}")]
         [ProducesResponseType(typeof(MessageDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetById(int id)
         {
-            var message = await _service.Message.GetByIdAsync(id);
+            var message = await _service.Message.GetByIdAsync(id, CurrentUserId);
             return Ok(message);
         }
 
         [HttpDelete("{id:int}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteMessage(int id)
         {
-            await _service.Message.DeleteAsync(id);
+            await _service.Message.DeleteAsync(id, CurrentUserId);
             return NoContent();
         }
 
         [HttpPut("{chatId:int}/messages/{id:int}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
         public async Task<IActionResult> UpdateMessageForChat(int chatId, int id, [FromBody] MessageForUpdateDto message)
@@ -70,7 +78,7 @@ namespace ChatApp.Controllers
                 return BadRequest("MessageForUpdateDto object is null");
             if (!ModelState.IsValid)
                 return UnprocessableEntity(ModelState);
-            await _service.Message.UpdateMessageForChatAsync(chatId, id, message);
+            await _service.Message.UpdateMessageForChatAsync(chatId, id, CurrentUserId, message);
             return NoContent();
         }
     }

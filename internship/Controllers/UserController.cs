@@ -1,10 +1,11 @@
-﻿using ChatApp.ModelBinders;
+using ChatApp.ModelBinders;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Services.DataTransferObjects;
 using Services.Interfaces;
 using Shared.RequestFeatures;
+using System.Security.Claims;
 using System.Text.Json;
 
 namespace ChatApp.Controllers
@@ -22,6 +23,9 @@ namespace ChatApp.Controllers
             _service = service;
             _logger = logger;
         }
+
+        private int CurrentUserId =>
+            int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         [HttpPost("register")]
         [AllowAnonymous]
@@ -105,9 +109,12 @@ namespace ChatApp.Controllers
 
         [HttpDelete("{id:int}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteUser(int id)
         {
+            if (id != CurrentUserId)
+                return StatusCode(StatusCodes.Status403Forbidden, "You can only modify your own account.");
             await _service.User.DeleteAsync(id);
             return NoContent();
         }
@@ -115,11 +122,14 @@ namespace ChatApp.Controllers
         [HttpPut("{id:int}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] UserForUpdateDto user)
         {
             if (user is null)
                 return BadRequest("UserForUpdateDto object is null");
+            if (id != CurrentUserId)
+                return StatusCode(StatusCodes.Status403Forbidden, "You can only modify your own account.");
             if (!ModelState.IsValid)
                 return UnprocessableEntity(ModelState);
             await _service.User.UpdateAsync(id, user);
@@ -129,12 +139,15 @@ namespace ChatApp.Controllers
         [HttpPatch("{id:int}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
         public async Task<IActionResult> PartiallyUpdateUser(int id, [FromBody] JsonPatchDocument<UserForUpdateDto> patchDoc)
         {
             if (patchDoc is null)
                 return BadRequest("patchDoc object is null");
+            if (id != CurrentUserId)
+                return StatusCode(StatusCodes.Status403Forbidden, "You can only modify your own account.");
             var (userToPatch, userEntity) = await _service.User.GetUserForPatchAsync(id, trackChanges: true);
             patchDoc.ApplyTo(userToPatch, ModelState);
             if (!ModelState.IsValid)

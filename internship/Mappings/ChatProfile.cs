@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Entities.Models;
 using Services.DataTransferObjects;
 
@@ -10,8 +10,8 @@ namespace ChatApp.Mappings
         {
             CreateMap<Chat, ChatDto>();
             CreateMap<ChatForCreationDto, Chat>()
-                .ForMember(c => c.ChatMembers,
-                    opt => opt.MapFrom(src => src.Members));
+                .ForMember(c => c.ChatMembers, opt => opt.Ignore())
+                .ForMember(c => c.CreatorId, opt => opt.Ignore());
             CreateMap<ChatForUpdateDto, Chat>();
         }
     }
