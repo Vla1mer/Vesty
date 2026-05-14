@@ -144,7 +144,7 @@ namespace Services
 
             var refreshToken = GenerateRefreshToken();
 
-            _user!.RefreshToken = refreshToken;
+            _user!.RefreshToken = HashRefreshToken(refreshToken);
 
             if (populateExp)
                 _user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
@@ -161,7 +161,7 @@ namespace Services
             var principal = GetPrincipalFromExpiredToken(tokenDto.AccessToken);
 
             var user = await _userManager.FindByNameAsync(principal.Identity!.Name!);
-            if (user == null || user.RefreshToken != tokenDto.RefreshToken ||
+            if (user == null || user.RefreshToken != HashRefreshToken(tokenDto.RefreshToken) ||
                 user.RefreshTokenExpiryTime <= DateTime.UtcNow)
                 throw new RefreshTokenBadRequestException();
 
@@ -176,6 +176,12 @@ namespace Services
             using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
             rng.GetBytes(randomNumber);
             return Convert.ToBase64String(randomNumber);
+        }
+
+        private static string HashRefreshToken(string token)
+        {
+            var bytes = System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(token));
+            return Convert.ToHexString(bytes);
         }
 
         private ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
