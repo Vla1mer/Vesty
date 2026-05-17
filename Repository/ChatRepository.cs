@@ -10,9 +10,10 @@ namespace Repository
     {
         public ChatRepository(AppDbContext context) : base(context) { }
 
-        public async Task<PagedList<Chat>> GetAllChatsAsync(ChatParameters chatParameters, bool trackChanges)
+        public async Task<PagedList<Chat>> GetAllChatsAsync(ChatParameters chatParameters, IEnumerable<int> allowedChatIds, bool trackChanges)
         {
             var chats = await FindAll(trackChanges)
+                .FilterByChatIds(allowedChatIds)
                 .FilterByCreator(chatParameters.CreatorId)
                 .Search(chatParameters.SearchTerm)
                 .Sort(chatParameters.OrderBy)

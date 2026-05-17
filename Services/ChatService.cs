@@ -21,18 +21,22 @@ namespace Services
             _mapper = mapper;
         }
 
-        public async Task<(IEnumerable<ChatDto> chats, MetaData metaData)> GetAllAsync(ChatParameters chatParameters)
+        public async Task<(IEnumerable<ChatDto> chats, MetaData metaData)> GetAllAsync(int currentUserId, ChatParameters chatParameters)
         {
-            var chatsWithMetaData = await _repository.Chat.GetAllChatsAsync(chatParameters, trackChanges: false);
+            var allowedChatIds = await _repository.ChatMember.GetChatIdsForUserAsync(currentUserId);
+            var chatsWithMetaData = await _repository.Chat.GetAllChatsAsync(chatParameters, allowedChatIds, trackChanges: false);
             var chatsDto = _mapper.Map<IEnumerable<ChatDto>>(chatsWithMetaData);
             return (chats: chatsDto, metaData: chatsWithMetaData.MetaData);
         }
 
-        public async Task<ChatDto> GetByIdAsync(int id)
+        public async Task<ChatDto> GetByIdAsync(int id, int currentUserId)
         {
             var chat = await _repository.Chat.GetChatAsync(id, trackChanges: false);
             if (chat is null)
                 throw new ChatNotFoundException(id);
+            var isMember = await _repository.ChatMember.IsUserInChatAsync(id, currentUserId);
+            if (!isMember)
+                throw new ChatAccessDeniedException(id, currentUserId);
             return _mapper.Map<ChatDto>(chat);
         }
 

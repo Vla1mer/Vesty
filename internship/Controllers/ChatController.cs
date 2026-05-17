@@ -28,17 +28,18 @@ namespace ChatApp.Controllers
         [ProducesResponseType(typeof(IEnumerable<ChatDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllChats([FromQuery] ChatParameters chatParameters)
         {
-            var pagedResult = await _service.Chat.GetAllAsync(chatParameters);
+            var pagedResult = await _service.Chat.GetAllAsync(CurrentUserId, chatParameters);
             Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(pagedResult.metaData));
             return Ok(pagedResult.chats);
         }
 
         [HttpGet("{id:int}")]
         [ProducesResponseType(typeof(ChatDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetById(int id)
         {
-            var chat = await _service.Chat.GetByIdAsync(id);
+            var chat = await _service.Chat.GetByIdAsync(id, CurrentUserId);
             return Ok(chat);
         }
 
