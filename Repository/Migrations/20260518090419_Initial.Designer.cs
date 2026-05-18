@@ -12,8 +12,8 @@ using Repository;
 namespace Repository.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260512120738_AddIsPrivateToChat")]
-    partial class AddIsPrivateToChat
+    [Migration("20260518090419_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -95,41 +95,6 @@ namespace Repository.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("ChatMembers");
-                });
-
-            modelBuilder.Entity("Entities.Models.ChatRole", b =>
-                {
-                    b.Property<int>("Id")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Name")
-                        .IsUnique();
-
-                    b.ToTable("ChatRoles");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Name = "Owner"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Name = "Admin"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Name = "User"
-                        });
                 });
 
             modelBuilder.Entity("Entities.Models.Message", b =>
@@ -253,6 +218,41 @@ namespace Repository.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("Entities.Models.UserRole", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("UserRoles");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "Owner"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "Admin"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "User"
+                        });
+                });
+
             modelBuilder.Entity("Entities.Models.Chat", b =>
                 {
                     b.HasOne("Entities.Models.User", "Creator")
@@ -271,7 +271,7 @@ namespace Repository.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Entities.Models.ChatRole", "Role")
+                    b.HasOne("Entities.Models.UserRole", "Role")
                         .WithMany("ChatMembers")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -316,11 +316,6 @@ namespace Repository.Migrations
                     b.Navigation("Messages");
                 });
 
-            modelBuilder.Entity("Entities.Models.ChatRole", b =>
-                {
-                    b.Navigation("ChatMembers");
-                });
-
             modelBuilder.Entity("Entities.Models.User", b =>
                 {
                     b.Navigation("ChatMembers");
@@ -328,6 +323,11 @@ namespace Repository.Migrations
                     b.Navigation("CreatedChats");
 
                     b.Navigation("Messages");
+                });
+
+            modelBuilder.Entity("Entities.Models.UserRole", b =>
+                {
+                    b.Navigation("ChatMembers");
                 });
 #pragma warning restore 612, 618
         }

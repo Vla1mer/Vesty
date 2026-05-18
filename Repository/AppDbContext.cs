@@ -14,7 +14,7 @@ namespace Repository
 
         public DbSet<Chat> Chats { get; set; }
         public DbSet<ChatMember> ChatMembers { get; set; }
-        public DbSet<ChatRole> ChatRoles { get; set; }
+        public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<Message> Messages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -63,17 +63,17 @@ namespace Repository
                  .OnDelete(DeleteBehavior.Restrict);
             });
 
-            modelBuilder.Entity<ChatRole>(e => {
+            modelBuilder.Entity<UserRole>(e => {
                 e.HasKey(r => r.Id);
                 e.Property(r => r.Id).ValueGeneratedNever();
                 e.Property(r => r.Name).HasMaxLength(50).IsRequired();
                 e.HasIndex(r => r.Name).IsUnique();
             });
 
-            modelBuilder.Entity<ChatRole>().HasData(
-                new ChatRole { Id = ChatRoleIds.Owner, Name = "Owner" },
-                new ChatRole { Id = ChatRoleIds.Admin, Name = "Admin" },
-                new ChatRole { Id = ChatRoleIds.User,  Name = "User" }
+            modelBuilder.Entity<UserRole>().HasData(
+                new UserRole { Id = UserRole.Owner, Name = nameof(UserRole.Owner) },
+                new UserRole { Id = UserRole.Admin, Name = nameof(UserRole.Admin) },
+                new UserRole { Id = UserRole.User,  Name = nameof(UserRole.User) }
             );
 
             modelBuilder.Entity<Message>(e => {

@@ -12,26 +12,30 @@ namespace Services
         private readonly IRepositoryManager _repository;
         private readonly ILoggerManager _logger;
         private readonly IMapper _mapper;
+        private readonly ICurrentUserService _currentUser;
 
-        public ChatMemberService(IRepositoryManager repository, ILoggerManager logger, IMapper mapper)
+        public ChatMemberService(IRepositoryManager repository, ILoggerManager logger, IMapper mapper,
+            ICurrentUserService currentUser)
         {
             _repository = repository;
             _logger = logger;
             _mapper = mapper;
+            _currentUser = currentUser;
         }
 
-        public async Task<IEnumerable<UserDto>> GetUsersByChatIdAsync(int chatId, int currentUserId)
+        public async Task<IEnumerable<UserDto>> GetUsersByChatIdAsync(int chatId)
         {
             var chat = await _repository.Chat.GetChatAsync(chatId, trackChanges: false);
             if (chat is null)
                 throw new ChatNotFoundException(chatId);
-            await EnsureUserIsChatMember(chatId, currentUserId);
+            await EnsureUserIsChatMember(chatId, _currentUser.UserId);
             var users = await _repository.ChatMember.GetUsersByChatIdAsync(chatId, trackChanges: false);
             return _mapper.Map<IEnumerable<UserDto>>(users);
         }
 
-        public async Task<ChatMemberDto> AddUserToChatAsync(int chatId, int currentUserId, ChatMemberForCreationDto memberDto)
+        public async Task<ChatMemberDto> AddUserToChatAsync(int chatId, ChatMemberForCreationDto memberDto)
         {
+            var currentUserId = _currentUser.UserId;
             var chat = await _repository.Chat.GetChatAsync(chatId, trackChanges: false);
             if (chat is null)
                 throw new ChatNotFoundException(chatId);
@@ -39,7 +43,7 @@ namespace Services
                 throw new OperationNotAllowedInPrivateChatException("add members");
 
             var caller = await _repository.ChatMember.GetMemberAsync(chatId, currentUserId, trackChanges: false);
-            if (caller is null || (caller.RoleId != ChatRoleIds.Owner && caller.RoleId != ChatRoleIds.Admin))
+            if (caller is null || (caller.RoleId != UserRole.Owner && caller.RoleId != UserRole.Admin))
                 throw new InsufficientChatPermissionException("invite members", chatId);
 
             var user = await _repository.User.GetUserAsync(memberDto.UserId, trackChanges: false);
@@ -56,8 +60,9 @@ namespace Services
             return _mapper.Map<ChatMemberDto>(member);
         }
 
-        public async Task RemoveUserFromChatAsync(int chatId, int targetUserId, int currentUserId)
+        public async Task RemoveUserFromChatAsync(int chatId, int targetUserId)
         {
+            var currentUserId = _currentUser.UserId;
             var chat = await _repository.Chat.GetChatAsync(chatId, trackChanges: false);
             if (chat is null)
                 throw new ChatNotFoundException(chatId);
@@ -70,7 +75,7 @@ namespace Services
 
             if (targetUserId == currentUserId)
             {
-                if (target.RoleId == ChatRoleIds.Owner)
+                if (target.RoleId == UserRole.Owner)
                     throw new InvalidRoleAssignmentException("Owner cannot leave the chat.");
             }
             else
@@ -81,8 +86,8 @@ namespace Services
 
                 var allowed = caller.RoleId switch
                 {
-                    ChatRoleIds.Owner => target.RoleId != ChatRoleIds.Owner,
-                    ChatRoleIds.Admin => target.RoleId == ChatRoleIds.User,
+                    UserRole.Owner => target.RoleId != UserRole.Owner,
+                    UserRole.Admin => target.RoleId == UserRole.User,
                     _ => false
                 };
                 if (!allowed)
@@ -93,8 +98,9 @@ namespace Services
             await _repository.SaveAsync();
         }
 
-        public async Task UpdateMemberRoleAsync(int chatId, int targetUserId, int currentUserId, ChatMemberRoleForUpdateDto roleDto)
+        public async Task UpdateMemberRoleAsync(int chatId, int targetUserId, ChatMemberRoleForUpdateDto roleDto)
         {
+            var currentUserId = _currentUser.UserId;
             var chat = await _repository.Chat.GetChatAsync(chatId, trackChanges: false);
             if (chat is null)
                 throw new ChatNotFoundException(chatId);
@@ -102,20 +108,20 @@ namespace Services
                 throw new OperationNotAllowedInPrivateChatException("change roles");
 
             var caller = await _repository.ChatMember.GetMemberAsync(chatId, currentUserId, trackChanges: false);
-            if (caller is null || caller.RoleId != ChatRoleIds.Owner)
+            if (caller is null || caller.RoleId != UserRole.Owner)
                 throw new OnlyOwnerCanChangeRolesException(chatId);
 
             var target = await _repository.ChatMember.GetMemberAsync(chatId, targetUserId, trackChanges: true);
             if (target is null)
                 throw new ChatMemberNotFoundException(chatId, targetUserId);
 
-            if (target.RoleId == ChatRoleIds.Owner)
+            if (target.RoleId == UserRole.Owner)
                 throw new InvalidRoleAssignmentException("Owner role cannot be changed.");
 
-            if (roleDto.RoleId == ChatRoleIds.Owner)
+            if (roleDto.RoleId == UserRole.Owner)
                 throw new InvalidRoleAssignmentException("Owner role cannot be granted to another member.");
 
-            if (roleDto.RoleId != ChatRoleIds.Admin && roleDto.RoleId != ChatRoleIds.User)
+            if (roleDto.RoleId != UserRole.Admin && roleDto.RoleId != UserRole.User)
                 throw new InvalidRoleAssignmentException($"Unknown role id: {roleDto.RoleId}.");
 
             target.RoleId = roleDto.RoleId;

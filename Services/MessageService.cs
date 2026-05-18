@@ -15,51 +15,54 @@ namespace Services
         private readonly ILoggerManager _logger;
         private readonly IMapper _mapper;
         private readonly IMessageCipher _cipher;
+        private readonly ICurrentUserService _currentUser;
 
         public MessageService(IRepositoryManager repository, ILoggerManager logger, IMapper mapper,
-            IMessageCipher cipher)
+            IMessageCipher cipher, ICurrentUserService currentUser)
         {
             _repository = repository;
             _logger = logger;
             _mapper = mapper;
             _cipher = cipher;
+            _currentUser = currentUser;
         }
 
-        public async Task<(IEnumerable<MessageDto> messages, MetaData metaData)> GetAllAsync(int currentUserId, MessageParameters messageParameters)
+        public async Task<(IEnumerable<MessageDto> messages, MetaData metaData)> GetAllAsync(MessageParameters messageParameters)
         {
             if (!messageParameters.ValidCreatedAtRange)
                 throw new MaxCreatedAtRangeBadRequestException();
 
-            var allowedChatIds = await _repository.ChatMember.GetChatIdsForUserAsync(currentUserId);
+            var allowedChatIds = await _repository.ChatMember.GetChatIdsForUserAsync(_currentUser.UserId);
             var messagesWithMetaData = await _repository.Message.GetAllMessagesAsync(messageParameters, allowedChatIds, trackChanges: false);
             DecryptInPlace(messagesWithMetaData);
             var messagesDto = _mapper.Map<IEnumerable<MessageDto>>(messagesWithMetaData);
             return (messages: messagesDto, metaData: messagesWithMetaData.MetaData);
         }
 
-        public async Task<MessageDto> GetByIdAsync(int id, int currentUserId)
+        public async Task<MessageDto> GetByIdAsync(int id)
         {
             var message = await _repository.Message.GetMessageAsync(id, trackChanges: false);
             if (message is null)
                 throw new MessageNotFoundException(id);
-            await EnsureUserIsChatMember(message.ChatId, currentUserId);
+            await EnsureUserIsChatMember(message.ChatId, _currentUser.UserId);
             message.Content = _cipher.Decrypt(message.Content);
             return _mapper.Map<MessageDto>(message);
         }
 
-        public async Task<IEnumerable<MessageDto>> GetMessagesByChatAsync(int chatId, int currentUserId, bool trackChanges)
+        public async Task<IEnumerable<MessageDto>> GetMessagesByChatAsync(int chatId, bool trackChanges)
         {
             var chat = await _repository.Chat.GetChatAsync(chatId, trackChanges: false);
             if (chat is null)
                 throw new ChatNotFoundException(chatId);
-            await EnsureUserIsChatMember(chatId, currentUserId);
+            await EnsureUserIsChatMember(chatId, _currentUser.UserId);
             var messages = await _repository.Message.GetMessagesByChatAsync(chatId, trackChanges);
             DecryptInPlace(messages);
             return _mapper.Map<IEnumerable<MessageDto>>(messages);
         }
 
-        public async Task<MessageDto> CreateMessageForChatAsync(int chatId, int currentUserId, MessageForCreationDto messageDto)
+        public async Task<MessageDto> CreateMessageForChatAsync(int chatId, MessageForCreationDto messageDto)
         {
+            var currentUserId = _currentUser.UserId;
             var chat = await _repository.Chat.GetChatAsync(chatId, trackChanges: false);
             if (chat is null)
                 throw new ChatNotFoundException(chatId);
@@ -73,8 +76,9 @@ namespace Services
             return _mapper.Map<MessageDto>(message);
         }
 
-        public async Task DeleteAsync(int id, int currentUserId)
+        public async Task DeleteAsync(int id)
         {
+            var currentUserId = _currentUser.UserId;
             var message = await _repository.Message.GetMessageAsync(id, trackChanges: false);
             if (message is null)
                 throw new MessageNotFoundException(id);
@@ -83,7 +87,7 @@ namespace Services
             {
                 var caller = await _repository.ChatMember.GetMemberAsync(message.ChatId, currentUserId, trackChanges: false);
                 var isModerator = caller is not null &&
-                    (caller.RoleId == ChatRoleIds.Owner || caller.RoleId == ChatRoleIds.Admin);
+                    (caller.RoleId == UserRole.Owner || caller.RoleId == UserRole.Admin);
                 if (!isModerator)
                     throw new MessageOwnershipException(id);
             }
@@ -92,8 +96,9 @@ namespace Services
             await _repository.SaveAsync();
         }
 
-        public async Task UpdateMessageForChatAsync(int chatId, int id, int currentUserId, MessageForUpdateDto messageDto)
+        public async Task UpdateMessageForChatAsync(int chatId, int id, MessageForUpdateDto messageDto)
         {
+            var currentUserId = _currentUser.UserId;
             var chat = await _repository.Chat.GetChatAsync(chatId, trackChanges: false);
             if (chat is null)
                 throw new ChatNotFoundException(chatId);

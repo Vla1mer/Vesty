@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 using Services.DataTransferObjects;
 using Services.Interfaces;
 using Shared.RequestFeatures;
-using System.Security.Claims;
 using System.Text.Json;
 
 namespace ChatApp.Controllers
@@ -17,15 +16,14 @@ namespace ChatApp.Controllers
     {
         private readonly IServiceManager _service;
         private readonly ILoggerManager _logger;
+        private readonly ICurrentUserService _currentUser;
 
-        public UserController(IServiceManager service, ILoggerManager logger)
+        public UserController(IServiceManager service, ILoggerManager logger, ICurrentUserService currentUser)
         {
             _service = service;
             _logger = logger;
+            _currentUser = currentUser;
         }
-
-        private int CurrentUserId =>
-            int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         [HttpPost("register")]
         [AllowAnonymous]
@@ -113,7 +111,7 @@ namespace ChatApp.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteUser(int id)
         {
-            if (id != CurrentUserId)
+            if (id != _currentUser.UserId)
                 return StatusCode(StatusCodes.Status403Forbidden, "You can only modify your own account.");
             await _service.User.DeleteAsync(id);
             return NoContent();
@@ -128,7 +126,7 @@ namespace ChatApp.Controllers
         {
             if (user is null)
                 return BadRequest("UserForUpdateDto object is null");
-            if (id != CurrentUserId)
+            if (id != _currentUser.UserId)
                 return StatusCode(StatusCodes.Status403Forbidden, "You can only modify your own account.");
             if (!ModelState.IsValid)
                 return UnprocessableEntity(ModelState);
@@ -146,7 +144,7 @@ namespace ChatApp.Controllers
         {
             if (patchDoc is null)
                 return BadRequest("patchDoc object is null");
-            if (id != CurrentUserId)
+            if (id != _currentUser.UserId)
                 return StatusCode(StatusCodes.Status403Forbidden, "You can only modify your own account.");
             var (userToPatch, userEntity) = await _service.User.GetUserForPatchAsync(id, trackChanges: true);
             patchDoc.ApplyTo(userToPatch, ModelState);

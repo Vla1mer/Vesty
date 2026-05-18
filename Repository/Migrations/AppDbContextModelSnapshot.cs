@@ -36,14 +36,20 @@ namespace Repository.Migrations
                     b.Property<int?>("CreatorId")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("IsPrivate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CreatorId");
+
+                    b.HasIndex("IsPrivate");
 
                     b.ToTable("Chats");
 
@@ -52,6 +58,7 @@ namespace Repository.Migrations
                         {
                             Id = 1,
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsPrivate = false,
                             Name = "Общий чат"
                         });
                 });
@@ -70,12 +77,17 @@ namespace Repository.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("RoleId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ChatId");
+
+                    b.HasIndex("RoleId");
 
                     b.HasIndex("UserId");
 
@@ -203,6 +215,41 @@ namespace Repository.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("Entities.Models.UserRole", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("UserRoles");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "Owner"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "Admin"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "User"
+                        });
+                });
+
             modelBuilder.Entity("Entities.Models.Chat", b =>
                 {
                     b.HasOne("Entities.Models.User", "Creator")
@@ -221,6 +268,12 @@ namespace Repository.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Entities.Models.UserRole", "Role")
+                        .WithMany("ChatMembers")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Entities.Models.User", "User")
                         .WithMany("ChatMembers")
                         .HasForeignKey("UserId")
@@ -228,6 +281,8 @@ namespace Repository.Migrations
                         .IsRequired();
 
                     b.Navigation("Chat");
+
+                    b.Navigation("Role");
 
                     b.Navigation("User");
                 });
@@ -265,6 +320,11 @@ namespace Repository.Migrations
                     b.Navigation("CreatedChats");
 
                     b.Navigation("Messages");
+                });
+
+            modelBuilder.Entity("Entities.Models.UserRole", b =>
+                {
+                    b.Navigation("ChatMembers");
                 });
 #pragma warning restore 612, 618
         }

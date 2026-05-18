@@ -13,35 +13,39 @@ namespace Services
         private readonly IRepositoryManager _repository;
         private readonly ILoggerManager _logger;
         private readonly IMapper _mapper;
+        private readonly ICurrentUserService _currentUser;
 
-        public ChatService(IRepositoryManager repository, ILoggerManager logger, IMapper mapper)
+        public ChatService(IRepositoryManager repository, ILoggerManager logger, IMapper mapper,
+            ICurrentUserService currentUser)
         {
             _repository = repository;
             _logger = logger;
             _mapper = mapper;
+            _currentUser = currentUser;
         }
 
-        public async Task<(IEnumerable<ChatDto> chats, MetaData metaData)> GetAllAsync(int currentUserId, ChatParameters chatParameters)
+        public async Task<(IEnumerable<ChatDto> chats, MetaData metaData)> GetAllAsync(ChatParameters chatParameters)
         {
-            var allowedChatIds = await _repository.ChatMember.GetChatIdsForUserAsync(currentUserId);
+            var allowedChatIds = await _repository.ChatMember.GetChatIdsForUserAsync(_currentUser.UserId);
             var chatsWithMetaData = await _repository.Chat.GetAllChatsAsync(chatParameters, allowedChatIds, trackChanges: false);
             var chatsDto = _mapper.Map<IEnumerable<ChatDto>>(chatsWithMetaData);
             return (chats: chatsDto, metaData: chatsWithMetaData.MetaData);
         }
 
-        public async Task<ChatDto> GetByIdAsync(int id, int currentUserId)
+        public async Task<ChatDto> GetByIdAsync(int id)
         {
             var chat = await _repository.Chat.GetChatAsync(id, trackChanges: false);
             if (chat is null)
                 throw new ChatNotFoundException(id);
-            var isMember = await _repository.ChatMember.IsUserInChatAsync(id, currentUserId);
+            var isMember = await _repository.ChatMember.IsUserInChatAsync(id, _currentUser.UserId);
             if (!isMember)
-                throw new ChatAccessDeniedException(id, currentUserId);
+                throw new ChatAccessDeniedException(id, _currentUser.UserId);
             return _mapper.Map<ChatDto>(chat);
         }
 
-        public async Task<ChatDto> CreateAsync(int currentUserId, ChatForCreationDto chatDto)
+        public async Task<ChatDto> CreateAsync(ChatForCreationDto chatDto)
         {
+            var currentUserId = _currentUser.UserId;
             var chat = _mapper.Map<Chat>(chatDto);
             chat.CreatorId = currentUserId;
             chat.IsPrivate = false;
@@ -52,7 +56,7 @@ namespace Services
             {
                 ChatId = chat.Id,
                 UserId = currentUserId,
-                RoleId = ChatRoleIds.Owner
+                RoleId = UserRole.Owner
             });
 
             var seenUserIds = new HashSet<int> { currentUserId };
@@ -69,7 +73,7 @@ namespace Services
                 {
                     ChatId = chat.Id,
                     UserId = memberDto.UserId,
-                    RoleId = ChatRoleIds.User
+                    RoleId = UserRole.User
                 });
             }
 
@@ -77,8 +81,9 @@ namespace Services
             return _mapper.Map<ChatDto>(chat);
         }
 
-        public async Task<ChatDto> CreateDirectChatAsync(int currentUserId, int otherUserId)
+        public async Task<ChatDto> CreateDirectChatAsync(int otherUserId)
         {
+            var currentUserId = _currentUser.UserId;
             if (otherUserId == currentUserId)
                 throw new DirectChatWithSelfException();
 
@@ -103,21 +108,22 @@ namespace Services
             {
                 ChatId = chat.Id,
                 UserId = currentUserId,
-                RoleId = ChatRoleIds.User
+                RoleId = UserRole.User
             });
             _repository.ChatMember.CreateMember(new ChatMember
             {
                 ChatId = chat.Id,
                 UserId = otherUserId,
-                RoleId = ChatRoleIds.User
+                RoleId = UserRole.User
             });
             await _repository.SaveAsync();
 
             return _mapper.Map<ChatDto>(chat);
         }
 
-        public async Task DeleteAsync(int id, int currentUserId)
+        public async Task DeleteAsync(int id)
         {
+            var currentUserId = _currentUser.UserId;
             var chat = await _repository.Chat.GetChatAsync(id, trackChanges: false);
             if (chat is null)
                 throw new ChatNotFoundException(id);
@@ -137,14 +143,14 @@ namespace Services
             await _repository.SaveAsync();
         }
 
-        public async Task UpdateAsync(int id, int currentUserId, ChatForUpdateDto chatDto)
+        public async Task UpdateAsync(int id, ChatForUpdateDto chatDto)
         {
             var chat = await _repository.Chat.GetChatAsync(id, trackChanges: true);
             if (chat is null)
                 throw new ChatNotFoundException(id);
             if (chat.IsPrivate)
                 throw new OperationNotAllowedInPrivateChatException("rename");
-            await EnsureUserIsOwner(id, currentUserId, "rename this chat");
+            await EnsureUserIsOwner(id, _currentUser.UserId, "rename this chat");
             _mapper.Map(chatDto, chat);
             await _repository.SaveAsync();
         }
@@ -152,7 +158,7 @@ namespace Services
         private async Task EnsureUserIsOwner(int chatId, int userId, string action)
         {
             var member = await _repository.ChatMember.GetMemberAsync(chatId, userId, trackChanges: false);
-            if (member is null || member.RoleId != ChatRoleIds.Owner)
+            if (member is null || member.RoleId != UserRole.Owner)
                 throw new InsufficientChatPermissionException(action, chatId);
         }
     }

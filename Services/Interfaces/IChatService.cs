@@ -6,11 +6,11 @@ namespace Services.Interfaces
 {
     public interface IChatService
     {
-        Task<(IEnumerable<ChatDto> chats, MetaData metaData)> GetAllAsync(int currentUserId, ChatParameters chatParameters);
-        Task<ChatDto> GetByIdAsync(int id, int currentUserId);
-        Task<ChatDto> CreateAsync(int currentUserId, ChatForCreationDto chatDto);
-        Task<ChatDto> CreateDirectChatAsync(int currentUserId, int otherUserId);
-        Task DeleteAsync(int id, int currentUserId);
-        Task UpdateAsync(int id, int currentUserId, ChatForUpdateDto chatDto);
+        Task<(IEnumerable<ChatDto> chats, MetaData metaData)> GetAllAsync(ChatParameters chatParameters);
+        Task<ChatDto> GetByIdAsync(int id);
+        Task<ChatDto> CreateAsync(ChatForCreationDto chatDto);
+        Task<ChatDto> CreateDirectChatAsync(int otherUserId);
+        Task DeleteAsync(int id);
+        Task UpdateAsync(int id, ChatForUpdateDto chatDto);
     }
 }

@@ -4,7 +4,6 @@ using Services;
 using Services.DataTransferObjects;
 using Services.Interfaces;
 using Shared.RequestFeatures;
-using System.Security.Claims;
 using System.Text.Json;
 
 namespace ChatApp.Controllers
@@ -21,14 +20,11 @@ namespace ChatApp.Controllers
             _service = service;
         }
 
-        private int CurrentUserId =>
-            int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<MessageDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllMessages([FromQuery] MessageParameters messageParameters)
         {
-            var pagedResult = await _service.Message.GetAllAsync(CurrentUserId, messageParameters);
+            var pagedResult = await _service.Message.GetAllAsync(messageParameters);
             Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(pagedResult.metaData));
             return Ok(pagedResult.messages);
         }
@@ -42,7 +38,7 @@ namespace ChatApp.Controllers
         {
             if (message is null)
                 return BadRequest("MessageForCreationDto object is null");
-            var created = await _service.Message.CreateMessageForChatAsync(chatId, CurrentUserId, message);
+            var created = await _service.Message.CreateMessageForChatAsync(chatId, message);
             return CreatedAtRoute("GetMessagesForChat", new { chatId }, created);
         }
 
@@ -52,7 +48,7 @@ namespace ChatApp.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetById(int id)
         {
-            var message = await _service.Message.GetByIdAsync(id, CurrentUserId);
+            var message = await _service.Message.GetByIdAsync(id);
             return Ok(message);
         }
 
@@ -62,7 +58,7 @@ namespace ChatApp.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteMessage(int id)
         {
-            await _service.Message.DeleteAsync(id, CurrentUserId);
+            await _service.Message.DeleteAsync(id);
             return NoContent();
         }
 
@@ -78,7 +74,7 @@ namespace ChatApp.Controllers
                 return BadRequest("MessageForUpdateDto object is null");
             if (!ModelState.IsValid)
                 return UnprocessableEntity(ModelState);
-            await _service.Message.UpdateMessageForChatAsync(chatId, id, CurrentUserId, message);
+            await _service.Message.UpdateMessageForChatAsync(chatId, id, message);
             return NoContent();
         }
     }

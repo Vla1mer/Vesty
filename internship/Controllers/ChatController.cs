@@ -4,7 +4,6 @@ using Services;
 using Services.DataTransferObjects;
 using Services.Interfaces;
 using Shared.RequestFeatures;
-using System.Security.Claims;
 using System.Text.Json;
 
 namespace ChatApp.Controllers
@@ -21,14 +20,11 @@ namespace ChatApp.Controllers
             _service = service;
         }
 
-        private int CurrentUserId =>
-            int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<ChatDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllChats([FromQuery] ChatParameters chatParameters)
         {
-            var pagedResult = await _service.Chat.GetAllAsync(CurrentUserId, chatParameters);
+            var pagedResult = await _service.Chat.GetAllAsync(chatParameters);
             Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(pagedResult.metaData));
             return Ok(pagedResult.chats);
         }
@@ -39,7 +35,7 @@ namespace ChatApp.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetById(int id)
         {
-            var chat = await _service.Chat.GetByIdAsync(id, CurrentUserId);
+            var chat = await _service.Chat.GetByIdAsync(id);
             return Ok(chat);
         }
 
@@ -49,7 +45,7 @@ namespace ChatApp.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetMessagesForChat(int chatId)
         {
-            var messages = await _service.Message.GetMessagesByChatAsync(chatId, CurrentUserId, trackChanges: false);
+            var messages = await _service.Message.GetMessagesByChatAsync(chatId, trackChanges: false);
             return Ok(messages);
         }
 
@@ -63,7 +59,7 @@ namespace ChatApp.Controllers
                 return BadRequest("ChatForCreationDto object is null");
             if (!ModelState.IsValid)
                 return UnprocessableEntity(ModelState);
-            var created = await _service.Chat.CreateAsync(CurrentUserId, chat);
+            var created = await _service.Chat.CreateAsync(chat);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
@@ -73,7 +69,7 @@ namespace ChatApp.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> CreateDirectChat(int otherUserId)
         {
-            var created = await _service.Chat.CreateDirectChatAsync(CurrentUserId, otherUserId);
+            var created = await _service.Chat.CreateDirectChatAsync(otherUserId);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
@@ -83,7 +79,7 @@ namespace ChatApp.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteChat(int id)
         {
-            await _service.Chat.DeleteAsync(id, CurrentUserId);
+            await _service.Chat.DeleteAsync(id);
             return NoContent();
         }
 
@@ -93,7 +89,7 @@ namespace ChatApp.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetUsersByChatId(int chatId)
         {
-            var users = await _service.ChatMember.GetUsersByChatIdAsync(chatId, CurrentUserId);
+            var users = await _service.ChatMember.GetUsersByChatIdAsync(chatId);
             return Ok(users);
         }
 
@@ -106,7 +102,7 @@ namespace ChatApp.Controllers
         {
             if (member is null)
                 return BadRequest("ChatMemberForCreationDto object is null");
-            var created = await _service.ChatMember.AddUserToChatAsync(chatId, CurrentUserId, member);
+            var created = await _service.ChatMember.AddUserToChatAsync(chatId, member);
             return CreatedAtAction(nameof(GetUsersByChatId), new { chatId }, created);
         }
 
@@ -117,7 +113,7 @@ namespace ChatApp.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> RemoveUserFromChat(int chatId, int userId)
         {
-            await _service.ChatMember.RemoveUserFromChatAsync(chatId, userId, CurrentUserId);
+            await _service.ChatMember.RemoveUserFromChatAsync(chatId, userId);
             return NoContent();
         }
 
@@ -132,7 +128,7 @@ namespace ChatApp.Controllers
                 return BadRequest("ChatMemberRoleForUpdateDto object is null");
             if (!ModelState.IsValid)
                 return UnprocessableEntity(ModelState);
-            await _service.ChatMember.UpdateMemberRoleAsync(chatId, userId, CurrentUserId, roleDto);
+            await _service.ChatMember.UpdateMemberRoleAsync(chatId, userId, roleDto);
             return NoContent();
         }
 
@@ -148,7 +144,7 @@ namespace ChatApp.Controllers
                 return BadRequest("ChatForUpdateDto object is null");
             if (!ModelState.IsValid)
                 return UnprocessableEntity(ModelState);
-            await _service.Chat.UpdateAsync(id, CurrentUserId, chat);
+            await _service.Chat.UpdateAsync(id, chat);
             return NoContent();
         }
     }
