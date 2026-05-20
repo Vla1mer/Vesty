@@ -25,34 +25,18 @@ namespace Services
 
         public async Task<IEnumerable<UserDto>> GetUsersByChatIdAsync(int chatId)
         {
-            var chat = await _repository.Chat.GetChatAsync(chatId, trackChanges: false);
-            if (chat is null)
-                throw new ChatNotFoundException(chatId);
-            await EnsureUserIsChatMember(chatId, _currentUser.UserId);
+            await GetChatOrThrowAsync(chatId);
+            await EnsureCallerIsChatMember(chatId);
             var users = await _repository.ChatMember.GetUsersByChatIdAsync(chatId, trackChanges: false);
             return _mapper.Map<IEnumerable<UserDto>>(users);
         }
 
         public async Task<ChatMemberDto> AddUserToChatAsync(int chatId, ChatMemberForCreationDto memberDto)
         {
-            var currentUserId = _currentUser.UserId;
-            var chat = await _repository.Chat.GetChatAsync(chatId, trackChanges: false);
-            if (chat is null)
-                throw new ChatNotFoundException(chatId);
-            if (chat.IsPrivate)
-                throw new OperationNotAllowedInPrivateChatException("add members");
-
-            var caller = await _repository.ChatMember.GetMemberAsync(chatId, currentUserId, trackChanges: false);
-            if (caller is null || (caller.RoleId != UserRole.Owner && caller.RoleId != UserRole.Admin))
-                throw new InsufficientChatPermissionException("invite members", chatId);
-
-            var user = await _repository.User.GetUserAsync(memberDto.UserId, trackChanges: false);
-            if (user is null)
-                throw new UserNotFoundException(memberDto.UserId);
-
-            var existing = await _repository.ChatMember.GetMemberAsync(chatId, memberDto.UserId, trackChanges: false);
-            if (existing is not null)
-                throw new UserAlreadyInChatException(chatId, memberDto.UserId);
+            await GetChatOrThrowAsync(chatId, mustBeGroupChat: "add members");
+            await EnsureCallerCanInvite(chatId);
+            await EnsureUserExistsAsync(memberDto.UserId);
+            await EnsureUserNotInChatAsync(chatId, memberDto.UserId);
 
             var member = new ChatMember { ChatId = chatId, UserId = memberDto.UserId };
             _repository.ChatMember.CreateMember(member);
@@ -63,15 +47,9 @@ namespace Services
         public async Task RemoveUserFromChatAsync(int chatId, int targetUserId)
         {
             var currentUserId = _currentUser.UserId;
-            var chat = await _repository.Chat.GetChatAsync(chatId, trackChanges: false);
-            if (chat is null)
-                throw new ChatNotFoundException(chatId);
-            if (chat.IsPrivate)
-                throw new OperationNotAllowedInPrivateChatException("remove members");
+            await GetChatOrThrowAsync(chatId, mustBeGroupChat: "remove members");
 
-            var target = await _repository.ChatMember.GetMemberAsync(chatId, targetUserId, trackChanges: false);
-            if (target is null)
-                throw new ChatMemberNotFoundException(chatId, targetUserId);
+            var target = await GetMemberOrThrowAsync(chatId, targetUserId);
 
             if (targetUserId == currentUserId)
             {
@@ -80,18 +58,7 @@ namespace Services
             }
             else
             {
-                var caller = await _repository.ChatMember.GetMemberAsync(chatId, currentUserId, trackChanges: false);
-                if (caller is null)
-                    throw new InsufficientChatPermissionException("remove members", chatId);
-
-                var allowed = caller.RoleId switch
-                {
-                    UserRole.Owner => target.RoleId != UserRole.Owner,
-                    UserRole.Admin => target.RoleId == UserRole.User,
-                    _ => false
-                };
-                if (!allowed)
-                    throw new InsufficientChatPermissionException("remove this member", chatId);
+                EnsureCallerCanRemove(chatId, await GetCallerMembershipAsync(chatId, "remove members"), target);
             }
 
             _repository.ChatMember.DeleteMember(target);
@@ -100,20 +67,13 @@ namespace Services
 
         public async Task UpdateMemberRoleAsync(int chatId, int targetUserId, ChatMemberRoleForUpdateDto roleDto)
         {
-            var currentUserId = _currentUser.UserId;
-            var chat = await _repository.Chat.GetChatAsync(chatId, trackChanges: false);
-            if (chat is null)
-                throw new ChatNotFoundException(chatId);
-            if (chat.IsPrivate)
-                throw new OperationNotAllowedInPrivateChatException("change roles");
+            await GetChatOrThrowAsync(chatId, mustBeGroupChat: "change roles");
 
-            var caller = await _repository.ChatMember.GetMemberAsync(chatId, currentUserId, trackChanges: false);
-            if (caller is null || caller.RoleId != UserRole.Owner)
+            var caller = await GetCallerMembershipAsync(chatId, "change roles");
+            if (caller.RoleId != UserRole.Owner)
                 throw new OnlyOwnerCanChangeRolesException(chatId);
 
-            var target = await _repository.ChatMember.GetMemberAsync(chatId, targetUserId, trackChanges: true);
-            if (target is null)
-                throw new ChatMemberNotFoundException(chatId, targetUserId);
+            var target = await GetMemberOrThrowAsync(chatId, targetUserId, trackChanges: true);
 
             if (target.RoleId == UserRole.Owner)
                 throw new InvalidRoleAssignmentException("Owner role cannot be changed.");
@@ -128,11 +88,71 @@ namespace Services
             await _repository.SaveAsync();
         }
 
-        private async Task EnsureUserIsChatMember(int chatId, int userId)
+        private async Task<Chat> GetChatOrThrowAsync(int chatId, string? mustBeGroupChat = null)
         {
-            var isMember = await _repository.ChatMember.IsUserInChatAsync(chatId, userId);
-            if (!isMember)
-                throw new ChatAccessDeniedException(chatId, userId);
+            var chat = await _repository.Chat.GetChatAsync(chatId, trackChanges: false);
+            if (chat is null)
+                throw new ChatNotFoundException(chatId);
+            if (mustBeGroupChat is not null && chat.IsPrivate)
+                throw new OperationNotAllowedInPrivateChatException(mustBeGroupChat);
+            return chat;
+        }
+
+        private async Task<ChatMember> GetMemberOrThrowAsync(int chatId, int userId, bool trackChanges = false)
+        {
+            var member = userId == _currentUser.UserId && !trackChanges
+                ? await _currentUser.GetMembershipAsync(chatId)
+                : await _repository.ChatMember.GetMemberAsync(chatId, userId, trackChanges);
+            if (member is null)
+                throw new ChatMemberNotFoundException(chatId, userId);
+            return member;
+        }
+
+        private async Task<ChatMember> GetCallerMembershipAsync(int chatId, string action)
+        {
+            var caller = await _currentUser.GetMembershipAsync(chatId);
+            if (caller is null)
+                throw new InsufficientChatPermissionException(action, chatId);
+            return caller;
+        }
+
+        private async Task EnsureCallerIsChatMember(int chatId)
+        {
+            var member = await _currentUser.GetMembershipAsync(chatId);
+            if (member is null)
+                throw new ChatAccessDeniedException(chatId, _currentUser.UserId);
+        }
+
+        private async Task EnsureCallerCanInvite(int chatId)
+        {
+            var caller = await _currentUser.GetMembershipAsync(chatId);
+            if (caller is null || (caller.RoleId != UserRole.Owner && caller.RoleId != UserRole.Admin))
+                throw new InsufficientChatPermissionException("invite members", chatId);
+        }
+
+        private static void EnsureCallerCanRemove(int chatId, ChatMember caller, ChatMember target)
+        {
+            var allowed = caller.RoleId switch
+            {
+                UserRole.Owner => target.RoleId != UserRole.Owner,
+                UserRole.Admin => target.RoleId == UserRole.User,
+                _ => false
+            };
+            if (!allowed)
+                throw new InsufficientChatPermissionException("remove this member", chatId);
+        }
+
+        private async Task EnsureUserExistsAsync(int userId)
+        {
+            var user = await _repository.User.GetUserAsync(userId, trackChanges: false);
+            if (user is null)
+                throw new UserNotFoundException(userId);
+        }
+
+        private async Task EnsureUserNotInChatAsync(int chatId, int userId)
+        {
+            if (await _repository.ChatMember.IsUserInChatAsync(chatId, userId))
+                throw new UserAlreadyInChatException(chatId, userId);
         }
     }
 }

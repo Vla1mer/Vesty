@@ -21,17 +21,19 @@ namespace Services
         private readonly IMapper _mapper;
         private readonly UserManager<User> _userManager;
         private readonly IConfiguration _configuration;
+        private readonly ICurrentUserService _currentUser;
 
         private User? _user;
 
         public UserService(IRepositoryManager repository, ILoggerManager logger, IMapper mapper,
-            UserManager<User> userManager, IConfiguration configuration)
+            UserManager<User> userManager, IConfiguration configuration, ICurrentUserService currentUser)
         {
             _repository = repository;
             _logger = logger;
             _mapper = mapper;
             _userManager = userManager;
             _configuration = configuration;
+            _currentUser = currentUser;
         }
 
         public async Task<(IEnumerable<UserDto> users, MetaData metaData)> GetAllAsync(UserParameters userParameters)
@@ -85,6 +87,8 @@ namespace Services
 
         public async Task DeleteAsync(int id)
         {
+            if (id != _currentUser.UserId)
+                throw new UserSelfModificationException();
             var user = await _repository.User.GetUserAsync(id, trackChanges: false);
             if (user is null)
                 throw new UserNotFoundException(id);
@@ -94,6 +98,8 @@ namespace Services
 
         public async Task UpdateAsync(int id, UserForUpdateDto userDto)
         {
+            if (id != _currentUser.UserId)
+                throw new UserSelfModificationException();
             var user = await _repository.User.GetUserAsync(id, trackChanges: true);
             if (user is null)
                 throw new UserNotFoundException(id);
@@ -103,6 +109,8 @@ namespace Services
 
         public async Task<(UserForUpdateDto userToPatch, User userEntity)> GetUserForPatchAsync(int id, bool trackChanges)
         {
+            if (id != _currentUser.UserId)
+                throw new UserSelfModificationException();
             var user = await _repository.User.GetUserAsync(id, trackChanges);
             if (user is null)
                 throw new UserNotFoundException(id);

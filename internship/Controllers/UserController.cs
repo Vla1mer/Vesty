@@ -16,13 +16,11 @@ namespace ChatApp.Controllers
     {
         private readonly IServiceManager _service;
         private readonly ILoggerManager _logger;
-        private readonly ICurrentUserService _currentUser;
 
-        public UserController(IServiceManager service, ILoggerManager logger, ICurrentUserService currentUser)
+        public UserController(IServiceManager service, ILoggerManager logger)
         {
             _service = service;
             _logger = logger;
-            _currentUser = currentUser;
         }
 
         [HttpPost("register")]
@@ -111,8 +109,6 @@ namespace ChatApp.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteUser(int id)
         {
-            if (id != _currentUser.UserId)
-                return StatusCode(StatusCodes.Status403Forbidden, "You can only modify your own account.");
             await _service.User.DeleteAsync(id);
             return NoContent();
         }
@@ -126,8 +122,6 @@ namespace ChatApp.Controllers
         {
             if (user is null)
                 return BadRequest("UserForUpdateDto object is null");
-            if (id != _currentUser.UserId)
-                return StatusCode(StatusCodes.Status403Forbidden, "You can only modify your own account.");
             if (!ModelState.IsValid)
                 return UnprocessableEntity(ModelState);
             await _service.User.UpdateAsync(id, user);
@@ -144,8 +138,6 @@ namespace ChatApp.Controllers
         {
             if (patchDoc is null)
                 return BadRequest("patchDoc object is null");
-            if (id != _currentUser.UserId)
-                return StatusCode(StatusCodes.Status403Forbidden, "You can only modify your own account.");
             var (userToPatch, userEntity) = await _service.User.GetUserForPatchAsync(id, trackChanges: true);
             patchDoc.ApplyTo(userToPatch, ModelState);
             if (!ModelState.IsValid)
