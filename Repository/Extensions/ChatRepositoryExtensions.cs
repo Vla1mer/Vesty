@@ -1,4 +1,4 @@
-﻿using System.Linq.Dynamic.Core;
+using System.Linq.Dynamic.Core;
 using Entities.Models;
 using Repository.Extensions.Utility;
 
@@ -6,6 +6,11 @@ namespace Repository.Extensions
 {
     public static class ChatRepositoryExtensions
     {
+        public static IQueryable<Chat> FilterByChatIds(
+            this IQueryable<Chat> chats,
+            IEnumerable<int> chatIds) =>
+            chats.Where(c => chatIds.Contains(c.Id));
+
         public static IQueryable<Chat> FilterByCreator(
             this IQueryable<Chat> chats,
             int? creatorId)
@@ -25,7 +30,7 @@ namespace Repository.Extensions
 
             var lowerCaseTerm = searchTerm.Trim().ToLower();
 
-            return chats.Where(c => c.Name.ToLower().Contains(lowerCaseTerm));
+            return chats.Where(c => c.Name != null && c.Name.ToLower().Contains(lowerCaseTerm));
         }
 
         public static IQueryable<Chat> Sort(this IQueryable<Chat> chats, string? orderByQueryString)

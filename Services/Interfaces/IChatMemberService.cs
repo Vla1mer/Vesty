@@ -1,4 +1,4 @@
-﻿using Services.DataTransferObjects;
+using Services.DataTransferObjects;
 
 namespace Services.Interfaces
 {
@@ -6,6 +6,7 @@ namespace Services.Interfaces
     {
         Task<IEnumerable<UserDto>> GetUsersByChatIdAsync(int chatId);
         Task<ChatMemberDto> AddUserToChatAsync(int chatId, ChatMemberForCreationDto memberDto);
-        Task RemoveUserFromChatAsync(int chatId, int userId);
+        Task RemoveUserFromChatAsync(int chatId, int targetUserId);
+        Task UpdateMemberRoleAsync(int chatId, int targetUserId, ChatMemberRoleForUpdateDto roleDto);
     }
 }

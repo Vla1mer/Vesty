@@ -1,4 +1,4 @@
-﻿using Entities.Models;
+using Entities.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -14,11 +14,19 @@ namespace Repository
 
         public DbSet<Chat> Chats { get; set; }
         public DbSet<ChatMember> ChatMembers { get; set; }
+        public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<Message> Messages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Ignore<IdentityRole<int>>();
+            modelBuilder.Ignore<IdentityUserRole<int>>();
+            modelBuilder.Ignore<IdentityRoleClaim<int>>();
+            modelBuilder.Ignore<IdentityUserClaim<int>>();
+            modelBuilder.Ignore<IdentityUserLogin<int>>();
+            modelBuilder.Ignore<IdentityUserToken<int>>();
 
             modelBuilder.Entity<User>(e => {
                 e.Property(u => u.Name).HasMaxLength(100);
@@ -29,12 +37,14 @@ namespace Repository
 
             modelBuilder.Entity<Chat>(e => {
                 e.HasKey(c => c.Id);
-                e.Property(c => c.Name).HasMaxLength(200).IsRequired();
+                e.Property(c => c.Name).HasMaxLength(200);
                 e.Property(c => c.CreatedAt);
+                e.Property(c => c.IsPrivate).HasDefaultValue(false);
                 e.HasOne(c => c.Creator)
                  .WithMany(u => u.CreatedChats)
                  .HasForeignKey(c => c.CreatorId)
                  .OnDelete(DeleteBehavior.SetNull);
+                e.HasIndex(c => c.IsPrivate);
             });
 
             modelBuilder.Entity<ChatMember>(e => {
@@ -47,7 +57,24 @@ namespace Repository
                 e.HasOne(cm => cm.User)
                  .WithMany(u => u.ChatMembers)
                  .HasForeignKey(cm => cm.UserId);
+                e.HasOne(cm => cm.Role)
+                 .WithMany(r => r.ChatMembers)
+                 .HasForeignKey(cm => cm.RoleId)
+                 .OnDelete(DeleteBehavior.Restrict);
             });
+
+            modelBuilder.Entity<UserRole>(e => {
+                e.HasKey(r => r.Id);
+                e.Property(r => r.Id).ValueGeneratedNever();
+                e.Property(r => r.Name).HasMaxLength(50).IsRequired();
+                e.HasIndex(r => r.Name).IsUnique();
+            });
+
+            modelBuilder.Entity<UserRole>().HasData(
+                new UserRole { Id = UserRole.Owner, Name = nameof(UserRole.Owner) },
+                new UserRole { Id = UserRole.Admin, Name = nameof(UserRole.Admin) },
+                new UserRole { Id = UserRole.User,  Name = nameof(UserRole.User) }
+            );
 
             modelBuilder.Entity<Message>(e => {
                 e.HasKey(m => m.Id);

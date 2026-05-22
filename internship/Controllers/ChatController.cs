@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services;
 using Services.DataTransferObjects;
@@ -31,6 +31,7 @@ namespace ChatApp.Controllers
 
         [HttpGet("{id:int}")]
         [ProducesResponseType(typeof(ChatDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetById(int id)
         {
@@ -40,6 +41,7 @@ namespace ChatApp.Controllers
 
         [HttpGet("{chatId:int}/messages", Name = "GetMessagesForChat")]
         [ProducesResponseType(typeof(IEnumerable<MessageDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetMessagesForChat(int chatId)
         {
@@ -61,8 +63,19 @@ namespace ChatApp.Controllers
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
+        [HttpPost("direct/{otherUserId:int}")]
+        [ProducesResponseType(typeof(ChatDto), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> CreateDirectChat(int otherUserId)
+        {
+            var created = await _service.Chat.CreateDirectChatAsync(otherUserId);
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        }
+
         [HttpDelete("{id:int}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteChat(int id)
         {
@@ -72,6 +85,7 @@ namespace ChatApp.Controllers
 
         [HttpGet("{chatId:int}/users")]
         [ProducesResponseType(typeof(IEnumerable<UserDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetUsersByChatId(int chatId)
         {
@@ -82,6 +96,7 @@ namespace ChatApp.Controllers
         [HttpPost("{chatId:int}/users")]
         [ProducesResponseType(typeof(ChatMemberDto), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> AddUserToChat(int chatId, [FromBody] ChatMemberForCreationDto member)
         {
@@ -93,6 +108,8 @@ namespace ChatApp.Controllers
 
         [HttpDelete("{chatId:int}/users/{userId:int}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> RemoveUserFromChat(int chatId, int userId)
         {
@@ -100,9 +117,25 @@ namespace ChatApp.Controllers
             return NoContent();
         }
 
+        [HttpPatch("{chatId:int}/users/{userId:int}/role")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UpdateMemberRole(int chatId, int userId, [FromBody] ChatMemberRoleForUpdateDto roleDto)
+        {
+            if (roleDto is null)
+                return BadRequest("ChatMemberRoleForUpdateDto object is null");
+            if (!ModelState.IsValid)
+                return UnprocessableEntity(ModelState);
+            await _service.ChatMember.UpdateMemberRoleAsync(chatId, userId, roleDto);
+            return NoContent();
+        }
+
         [HttpPut("{id:int}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
         public async Task<IActionResult> UpdateChat(int id, [FromBody] ChatForUpdateDto chat)

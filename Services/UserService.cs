@@ -21,17 +21,19 @@ namespace Services
         private readonly IMapper _mapper;
         private readonly UserManager<User> _userManager;
         private readonly IConfiguration _configuration;
+        private readonly ICurrentUserService _currentUser;
 
         private User? _user;
 
         public UserService(IRepositoryManager repository, ILoggerManager logger, IMapper mapper,
-            UserManager<User> userManager, IConfiguration configuration)
+            UserManager<User> userManager, IConfiguration configuration, ICurrentUserService currentUser)
         {
             _repository = repository;
             _logger = logger;
             _mapper = mapper;
             _userManager = userManager;
             _configuration = configuration;
+            _currentUser = currentUser;
         }
 
         public async Task<(IEnumerable<UserDto> users, MetaData metaData)> GetAllAsync(UserParameters userParameters)
@@ -85,6 +87,8 @@ namespace Services
 
         public async Task DeleteAsync(int id)
         {
+            if (id != _currentUser.UserId)
+                throw new UserSelfModificationException();
             var user = await _repository.User.GetUserAsync(id, trackChanges: false);
             if (user is null)
                 throw new UserNotFoundException(id);
@@ -94,6 +98,8 @@ namespace Services
 
         public async Task UpdateAsync(int id, UserForUpdateDto userDto)
         {
+            if (id != _currentUser.UserId)
+                throw new UserSelfModificationException();
             var user = await _repository.User.GetUserAsync(id, trackChanges: true);
             if (user is null)
                 throw new UserNotFoundException(id);
@@ -103,6 +109,8 @@ namespace Services
 
         public async Task<(UserForUpdateDto userToPatch, User userEntity)> GetUserForPatchAsync(int id, bool trackChanges)
         {
+            if (id != _currentUser.UserId)
+                throw new UserSelfModificationException();
             var user = await _repository.User.GetUserAsync(id, trackChanges);
             if (user is null)
                 throw new UserNotFoundException(id);
@@ -144,7 +152,7 @@ namespace Services
 
             var refreshToken = GenerateRefreshToken();
 
-            _user!.RefreshToken = refreshToken;
+            _user!.RefreshToken = HashRefreshToken(refreshToken);
 
             if (populateExp)
                 _user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
@@ -161,7 +169,7 @@ namespace Services
             var principal = GetPrincipalFromExpiredToken(tokenDto.AccessToken);
 
             var user = await _userManager.FindByNameAsync(principal.Identity!.Name!);
-            if (user == null || user.RefreshToken != tokenDto.RefreshToken ||
+            if (user == null || user.RefreshToken != HashRefreshToken(tokenDto.RefreshToken) ||
                 user.RefreshTokenExpiryTime <= DateTime.UtcNow)
                 throw new RefreshTokenBadRequestException();
 
@@ -176,6 +184,12 @@ namespace Services
             using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
             rng.GetBytes(randomNumber);
             return Convert.ToBase64String(randomNumber);
+        }
+
+        private static string HashRefreshToken(string token)
+        {
+            var bytes = System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(token));
+            return Convert.ToHexString(bytes);
         }
 
         private ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
@@ -220,7 +234,8 @@ namespace Services
         {
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, _user!.UserName!)
+                new Claim(ClaimTypes.Name, _user!.UserName!),
+                new Claim(ClaimTypes.NameIdentifier, _user.Id.ToString())
             };
 
             return Task.FromResult(claims);

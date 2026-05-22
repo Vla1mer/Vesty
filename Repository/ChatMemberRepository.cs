@@ -1,4 +1,4 @@
-﻿using Entities.Models;
+using Entities.Models;
 using Microsoft.EntityFrameworkCore;
 using Repository.Interfaces;
 
@@ -11,6 +11,15 @@ namespace Repository
         public async Task<ChatMember?> GetMemberAsync(int chatId, int userId, bool trackChanges) =>
             await FindByCondition(cm => cm.ChatId == chatId && cm.UserId == userId, trackChanges)
                 .FirstOrDefaultAsync();
+
+        public async Task<bool> IsUserInChatAsync(int chatId, int userId) =>
+            await FindByCondition(cm => cm.ChatId == chatId && cm.UserId == userId, trackChanges: false)
+                .AnyAsync();
+
+        public async Task<IEnumerable<int>> GetChatIdsForUserAsync(int userId) =>
+            await FindByCondition(cm => cm.UserId == userId, trackChanges: false)
+                .Select(cm => cm.ChatId)
+                .ToListAsync();
 
         public async Task<IEnumerable<User>> GetUsersByChatIdAsync(int chatId, bool trackChanges) =>
             await FindByCondition(cm => cm.ChatId == chatId, trackChanges)
