@@ -9,9 +9,17 @@ namespace Repository.Extensions
         public static IQueryable<User> FilterByBirthday(
             this IQueryable<User> users,
             DateOnly minBirthday,
-            DateOnly maxBirthday) =>
-            users.Where(u => u.Birthday >= minBirthday &&
-                             u.Birthday <= maxBirthday);
+            DateOnly maxBirthday)
+        {
+            var isDefaultRange = minBirthday == DateOnly.MinValue && maxBirthday == DateOnly.MaxValue;
+            if (isDefaultRange)
+                return users;
+
+            return users.Where(u =>
+                u.Birthday != null &&
+                u.Birthday >= minBirthday &&
+                u.Birthday <= maxBirthday);
+        }
 
         public static IQueryable<User> FilterByPhone(
             this IQueryable<User> users,
