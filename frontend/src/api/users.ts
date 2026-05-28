@@ -7,3 +7,8 @@ export async function getAllUsers(): Promise<UserDto[]> {
   });
   return response.data;
 }
+
+export async function getUserById(id: number): Promise<UserDto> {
+  const response = await api.get<UserDto>(`/api/User/${id}`);
+  return response.data;
+}

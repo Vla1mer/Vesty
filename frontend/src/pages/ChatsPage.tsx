@@ -4,6 +4,7 @@ import { getChats } from "../api/chats";
 import { useAuth } from "../context/useAuth";
 import { ChatListItem } from "../components/ChatListItem";
 import { CreateChatModal } from "../components/CreateChatModal";
+import { UserSearch } from "../components/UserSearch";
 import type { ChatDto } from "../types/api";
 
 export function ChatsPage() {
@@ -66,6 +67,8 @@ export function ChatsPage() {
           </button>
         </div>
       </header>
+
+      <UserSearch />
 
       {loading && <p className="text-slate-400">Loading...</p>}
 

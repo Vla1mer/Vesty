@@ -6,6 +6,7 @@ import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { ChatsPage } from "./pages/ChatsPage";
 import { ChatDetailPage } from "./pages/ChatDetailPage";
+import { NewDirectChatPage } from "./pages/NewDirectChatPage";
 
 function App() {
   return (
@@ -19,6 +20,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <ChatsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/chats/new/:userId"
+            element={
+              <ProtectedRoute>
+                <NewDirectChatPage />
               </ProtectedRoute>
             }
           />

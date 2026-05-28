@@ -42,6 +42,18 @@ namespace ChatApp.Controllers
             return CreatedAtRoute("GetMessagesForChat", new { chatId }, created);
         }
 
+        [HttpPost("direct/{otherUserId:int}")]
+        [ProducesResponseType(typeof(DirectMessageResultDto), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> SendDirectMessage(int otherUserId, [FromBody] MessageForCreationDto message)
+        {
+            if (message is null)
+                return BadRequest("MessageForCreationDto object is null");
+            var result = await _service.Message.SendDirectMessageAsync(otherUserId, message);
+            return Created($"/api/Chat/{result.Chat.Id}", result);
+        }
+
         [HttpGet("{id:int}")]
         [ProducesResponseType(typeof(MessageDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]

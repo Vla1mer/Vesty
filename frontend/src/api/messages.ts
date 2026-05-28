@@ -1,5 +1,9 @@
 import { api } from "./client";
-import type { MessageDto, MessageForCreationDto } from "../types/api";
+import type {
+  MessageDto,
+  MessageForCreationDto,
+  DirectMessageResultDto,
+} from "../types/api";
 
 export async function getMessagesByChat(chatId: number): Promise<MessageDto[]> {
   const response = await api.get<MessageDto[]>(`/api/Chat/${chatId}/messages`);
@@ -12,6 +16,17 @@ export async function createMessage(
 ): Promise<MessageDto> {
   const response = await api.post<MessageDto>(
     `/api/Message/${chatId}/messages`,
+    dto
+  );
+  return response.data;
+}
+
+export async function sendDirectMessage(
+  otherUserId: number,
+  dto: MessageForCreationDto
+): Promise<DirectMessageResultDto> {
+  const response = await api.post<DirectMessageResultDto>(
+    `/api/Message/direct/${otherUserId}`,
     dto
   );
   return response.data;

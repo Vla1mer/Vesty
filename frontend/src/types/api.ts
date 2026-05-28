@@ -32,6 +32,7 @@ export interface ChatDto {
   creatorId: number | null;
   isPrivate: boolean;
   createdAt: string;
+  partnerUserName: string | null;
 }
 
 export interface ChatMemberForCreationDto {
@@ -53,6 +54,11 @@ export interface MessageDto {
 
 export interface MessageForCreationDto {
   content: string;
+}
+
+export interface DirectMessageResultDto {
+  chat: ChatDto;
+  message: MessageDto;
 }
 
 export interface ApiError {

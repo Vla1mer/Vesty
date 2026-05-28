@@ -70,6 +70,46 @@ namespace Services
             return _mapper.Map<MessageDto>(message);
         }
 
+        public async Task<DirectMessageResultDto> SendDirectMessageAsync(int otherUserId, MessageForCreationDto messageDto)
+        {
+            var currentUserId = _currentUser.UserId;
+            if (otherUserId == currentUserId)
+                throw new DirectChatWithSelfException();
+
+            var otherUser = await _repository.User.GetUserAsync(otherUserId, trackChanges: false);
+            if (otherUser is null)
+                throw new UserNotFoundException(otherUserId);
+
+            var chat = await _repository.Chat.GetPrivateChatBetweenAsync(currentUserId, otherUserId);
+            if (chat is null)
+            {
+                chat = new Chat
+                {
+                    Name = null,
+                    CreatorId = currentUserId,
+                    IsPrivate = true
+                };
+                _repository.Chat.CreateChat(chat);
+                await _repository.SaveAsync();
+
+                _repository.ChatMember.CreateMember(new ChatMember { ChatId = chat.Id, UserId = currentUserId, RoleId = UserRole.User });
+                _repository.ChatMember.CreateMember(new ChatMember { ChatId = chat.Id, UserId = otherUserId, RoleId = UserRole.User });
+                await _repository.SaveAsync();
+            }
+
+            var message = _mapper.Map<Message>(messageDto);
+            message.UserId = currentUserId;
+            message.Content = _cipher.Encrypt(message.Content);
+            _repository.Message.CreateMessageForChat(chat.Id, message);
+            await _repository.SaveAsync();
+            message.Content = _cipher.Decrypt(message.Content);
+
+            var chatDto = _mapper.Map<ChatDto>(chat) with { PartnerUserName = otherUser.UserName };
+            var messageReturnDto = _mapper.Map<MessageDto>(message);
+
+            return new DirectMessageResultDto { Chat = chatDto, Message = messageReturnDto };
+        }
+
         public async Task DeleteAsync(int id)
         {
             var message = await GetMessageOrThrowAsync(id, trackChanges: false);

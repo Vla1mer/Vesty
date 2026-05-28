@@ -93,7 +93,11 @@ export function ChatDetailPage() {
     }
   }
 
-  const title = chat?.name ?? (chat?.isPrivate ? "Direct chat" : `Chat #${chatId}`);
+  const title =
+    chat?.name ??
+    (chat?.isPrivate
+      ? chat.partnerUserName ?? "Direct chat"
+      : `Chat #${chatId}`);
 
   return (
     <div className="min-h-screen flex flex-col max-w-4xl mx-auto">

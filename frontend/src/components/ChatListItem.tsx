@@ -6,7 +6,11 @@ interface Props {
 }
 
 export function ChatListItem({ chat }: Props) {
-  const title = chat.name ?? (chat.isPrivate ? "Direct chat" : `Chat #${chat.id}`);
+  const title =
+    chat.name ??
+    (chat.isPrivate
+      ? chat.partnerUserName ?? "Direct chat"
+      : `Chat #${chat.id}`);
 
   return (
     <Link
