@@ -12,7 +12,7 @@ export function NewDirectChatPage() {
   const otherUserId = Number(userId);
 
   const [partner, setPartner] = useState<UserDto | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(Number.isFinite(otherUserId));
   const [error, setError] = useState<string | null>(
     Number.isFinite(otherUserId) ? null : "Invalid user id"
   );
@@ -21,7 +21,6 @@ export function NewDirectChatPage() {
 
   useEffect(() => {
     if (!Number.isFinite(otherUserId)) {
-      setLoading(false);
       return;
     }
 

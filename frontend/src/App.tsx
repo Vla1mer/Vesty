@@ -1,12 +1,13 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
-import { VersionBadge } from "./components/VersionBadge";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { ChatsPage } from "./pages/ChatsPage";
 import { ChatDetailPage } from "./pages/ChatDetailPage";
 import { NewDirectChatPage } from "./pages/NewDirectChatPage";
+import { ProfilePage } from "./pages/ProfilePage";
+import { SettingsPage } from "./pages/SettingsPage";
 
 function App() {
   return (
@@ -20,6 +21,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <ChatsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <SettingsPage />
               </ProtectedRoute>
             }
           />
@@ -41,7 +58,6 @@ function App() {
           />
           <Route path="*" element={<Navigate to="/chats" replace />} />
         </Routes>
-        <VersionBadge />
       </BrowserRouter>
     </AuthProvider>
   );

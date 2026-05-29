@@ -16,6 +16,10 @@ export async function createChat(dto: ChatForCreationDto): Promise<ChatDto> {
   return response.data;
 }
 
+export async function deleteChat(chatId: number): Promise<void> {
+  await api.delete(`/api/Chat/${chatId}`);
+}
+
 export async function getChatMembers(chatId: number): Promise<UserDto[]> {
   const response = await api.get<UserDto[]>(`/api/Chat/${chatId}/users`);
   return response.data;

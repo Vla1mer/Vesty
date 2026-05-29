@@ -5,7 +5,7 @@ import { getChatById, getChatMembers } from "../api/chats";
 import { getMessagesByChat, createMessage } from "../api/messages";
 import { useAuth } from "../context/useAuth";
 import { MessageBubble } from "../components/MessageBubble";
-import { MembersModal } from "../components/MembersModal";
+import { ChatInfoModal } from "../components/ChatInfoModal";
 import type { ChatDto, MessageDto, UserDto } from "../types/api";
 import type { AxiosError } from "axios";
 
@@ -24,7 +24,7 @@ export function ChatDetailPage() {
   );
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
-  const [isMembersOpen, setIsMembersOpen] = useState(false);
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -109,17 +109,31 @@ export function ChatDetailPage() {
         >
           ←
         </button>
-        <div className="flex-1">
-          <h1 className="text-xl font-bold text-slate-100">{title}</h1>
-        </div>
-        {chat && !chat.isPrivate && (
-          <button
-            onClick={() => setIsMembersOpen(true)}
-            className="px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-100 text-sm border border-slate-600 transition"
-          >
-            👥 Members
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => chat && setIsInfoOpen(true)}
+          disabled={!chat}
+          className="group flex-1 flex items-center gap-2 text-left rounded px-2 py-1 -mx-2 hover:bg-slate-800 transition disabled:cursor-default disabled:hover:bg-transparent"
+        >
+          <div className="flex-1">
+            <h1 className="text-xl font-bold text-slate-100">{title}</h1>
+            {chat && (
+              <p className="text-xs text-slate-400">
+                {members.length > 0
+                  ? `${members.length} ${members.length === 1 ? "member" : "members"}`
+                  : "Loading..."}
+              </p>
+            )}
+          </div>
+          {chat && (
+            <span
+              className="text-slate-500 group-hover:text-amber-400 transition text-3xl leading-none"
+              aria-hidden="true"
+            >
+              ›
+            </span>
+          )}
+        </button>
       </header>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -148,10 +162,11 @@ export function ChatDetailPage() {
         <div ref={bottomRef} />
       </div>
 
-      {isMembersOpen && (
-        <MembersModal
-          chatId={chatId}
-          onClose={() => setIsMembersOpen(false)}
+      {isInfoOpen && chat && (
+        <ChatInfoModal
+          chat={chat}
+          onClose={() => setIsInfoOpen(false)}
+          onDeleted={() => navigate("/chats", { replace: true })}
         />
       )}
 
