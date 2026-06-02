@@ -54,8 +54,11 @@ export function NewDirectChatPage() {
 
     setSending(true);
     try {
-      const result = await sendDirectMessage(otherUserId, { content });
-      navigate(`/chats/${result.chat.id}`, { replace: true });
+      const result = await sendDirectMessage({
+        otherUserId,
+        message: { content },
+      });
+      navigate(`/chats/${result.chatId}`, { replace: true });
     } catch {
       setError("Failed to send message");
       setSending(false);

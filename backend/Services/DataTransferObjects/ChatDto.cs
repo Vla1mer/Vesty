@@ -1,5 +1,8 @@
+using System.Text.Json.Serialization;
+
 namespace Services.DataTransferObjects
 {
+    [JsonDerivedType(typeof(DirectChatDto))]
     public record ChatDto
     {
         public int Id { get; init; }
@@ -7,6 +10,5 @@ namespace Services.DataTransferObjects
         public int? CreatorId { get; init; }
         public bool IsPrivate { get; init; }
         public DateTime CreatedAt { get; init; }
-        public string? PartnerUserName { get; init; }
     }
 }

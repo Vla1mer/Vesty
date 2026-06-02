@@ -16,15 +16,17 @@ namespace Services
         private readonly IMapper _mapper;
         private readonly IMessageCipher _cipher;
         private readonly ICurrentUserService _currentUser;
+        private readonly IChatService _chatService;
 
         public MessageService(IRepositoryManager repository, ILoggerManager logger, IMapper mapper,
-            IMessageCipher cipher, ICurrentUserService currentUser)
+            IMessageCipher cipher, ICurrentUserService currentUser, IChatService chatService)
         {
             _repository = repository;
             _logger = logger;
             _mapper = mapper;
             _cipher = cipher;
             _currentUser = currentUser;
+            _chatService = chatService;
         }
 
         public async Task<(IEnumerable<MessageDto> messages, MetaData metaData)> GetAllAsync(MessageParameters messageParameters)
@@ -70,44 +72,16 @@ namespace Services
             return _mapper.Map<MessageDto>(message);
         }
 
-        public async Task<DirectMessageResultDto> SendDirectMessageAsync(int otherUserId, MessageForCreationDto messageDto)
+        public async Task<SentDirectMessageDto> SendDirectMessageAsync(SendDirectMessageDto dto)
         {
-            var currentUserId = _currentUser.UserId;
-            if (otherUserId == currentUserId)
-                throw new DirectChatWithSelfException();
+            var chat = await _chatService.CreateDirectChatAsync(dto.OtherUserId);
+            var message = await CreateMessageForChatAsync(chat.Id, dto.Message);
 
-            var otherUser = await _repository.User.GetUserAsync(otherUserId, trackChanges: false);
-            if (otherUser is null)
-                throw new UserNotFoundException(otherUserId);
-
-            var chat = await _repository.Chat.GetPrivateChatBetweenAsync(currentUserId, otherUserId);
-            if (chat is null)
+            return new SentDirectMessageDto
             {
-                chat = new Chat
-                {
-                    Name = null,
-                    CreatorId = currentUserId,
-                    IsPrivate = true
-                };
-                _repository.Chat.CreateChat(chat);
-                await _repository.SaveAsync();
-
-                _repository.ChatMember.CreateMember(new ChatMember { ChatId = chat.Id, UserId = currentUserId, RoleId = UserRole.User });
-                _repository.ChatMember.CreateMember(new ChatMember { ChatId = chat.Id, UserId = otherUserId, RoleId = UserRole.User });
-                await _repository.SaveAsync();
-            }
-
-            var message = _mapper.Map<Message>(messageDto);
-            message.UserId = currentUserId;
-            message.Content = _cipher.Encrypt(message.Content);
-            _repository.Message.CreateMessageForChat(chat.Id, message);
-            await _repository.SaveAsync();
-            message.Content = _cipher.Decrypt(message.Content);
-
-            var chatDto = _mapper.Map<ChatDto>(chat) with { PartnerUserName = otherUser.UserName };
-            var messageReturnDto = _mapper.Map<MessageDto>(message);
-
-            return new DirectMessageResultDto { Chat = chatDto, Message = messageReturnDto };
+                ChatId = chat.Id,
+                Message = message
+            };
         }
 
         public async Task DeleteAsync(int id)

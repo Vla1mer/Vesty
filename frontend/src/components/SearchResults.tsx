@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { getAllUsers } from "../api/users";
 import { useAuth } from "../context/useAuth";
 import { getChatDisplayName } from "../utils/chats";
+import { isDirectChat } from "../types/api";
 import type { ChatDto, UserDto } from "../types/api";
 
 interface Props {
@@ -45,7 +46,8 @@ export function SearchResults({ query, chats }: Props) {
     () =>
       new Set(
         chats
-          .filter((c) => c.isPrivate && c.partnerUserName)
+          .filter(isDirectChat)
+          .filter((c) => c.partnerUserName)
           .map((c) => c.partnerUserName!.toLowerCase())
       ),
     [chats]

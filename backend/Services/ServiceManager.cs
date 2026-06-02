@@ -22,7 +22,7 @@ namespace Services
             _userService = new Lazy<IUserService>(() => new UserService(repositoryManager, logger, mapper, userManager, configuration, currentUser));
             _chatService = new Lazy<IChatService>(() => new ChatService(repositoryManager, logger, mapper, currentUser));
             _chatMemberService = new Lazy<IChatMemberService>(() => new ChatMemberService(repositoryManager, logger, mapper, currentUser));
-            _messageService = new Lazy<IMessageService>(() => new MessageService(repositoryManager, logger, mapper, messageCipher, currentUser));
+            _messageService = new Lazy<IMessageService>(() => new MessageService(repositoryManager, logger, mapper, messageCipher, currentUser, _chatService.Value));
         }
 
         public IUserService User => _userService.Value;

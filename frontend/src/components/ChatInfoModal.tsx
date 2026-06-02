@@ -8,6 +8,8 @@ import {
 import { getAllUsers } from "../api/users";
 import { useAuth } from "../context/useAuth";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { isDirectChat } from "../types/api";
+import { getChatDisplayName } from "../utils/chats";
 import type { ChatDto, UserDto } from "../types/api";
 import type { AxiosError } from "axios";
 
@@ -122,9 +124,7 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
     }
   }
 
-  const title =
-    chat.name ??
-    (chat.isPrivate ? chat.partnerUserName ?? "Direct chat" : `Chat #${chat.id}`);
+  const title = getChatDisplayName(chat);
 
   return (
     <>
@@ -277,7 +277,7 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
         <ConfirmDialog
           title="Delete chat?"
           message={
-            chat.isPrivate
+            isDirectChat(chat)
               ? `Are you sure you want to delete this conversation with ${
                   chat.partnerUserName ?? "this user"
                 }? All messages will be permanently lost.`

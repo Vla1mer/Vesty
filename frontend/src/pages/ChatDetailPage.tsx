@@ -6,6 +6,7 @@ import { getMessagesByChat, createMessage } from "../api/messages";
 import { useAuth } from "../context/useAuth";
 import { MessageBubble } from "../components/MessageBubble";
 import { ChatInfoModal } from "../components/ChatInfoModal";
+import { getChatDisplayName } from "../utils/chats";
 import type { ChatDto, MessageDto, UserDto } from "../types/api";
 import type { AxiosError } from "axios";
 
@@ -93,11 +94,7 @@ export function ChatDetailPage() {
     }
   }
 
-  const title =
-    chat?.name ??
-    (chat?.isPrivate
-      ? chat.partnerUserName ?? "Direct chat"
-      : `Chat #${chatId}`);
+  const title = chat ? getChatDisplayName(chat) : `Chat #${chatId}`;
 
   return (
     <div className="min-h-screen flex flex-col max-w-4xl mx-auto">

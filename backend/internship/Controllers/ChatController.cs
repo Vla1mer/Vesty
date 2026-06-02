@@ -64,7 +64,7 @@ namespace ChatApp.Controllers
         }
 
         [HttpPost("direct/{otherUserId:int}")]
-        [ProducesResponseType(typeof(ChatDto), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(DirectChatDto), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> CreateDirectChat(int otherUserId)

@@ -1,8 +1,8 @@
 namespace Services.DataTransferObjects
 {
-    public record DirectMessageResultDto
+    public record SentDirectMessageDto
     {
-        public ChatDto Chat { get; init; } = null!;
+        public int ChatId { get; init; }
         public MessageDto Message { get; init; } = null!;
     }
 }

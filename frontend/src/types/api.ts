@@ -32,7 +32,14 @@ export interface ChatDto {
   creatorId: number | null;
   isPrivate: boolean;
   createdAt: string;
+}
+
+export interface DirectChatDto extends ChatDto {
   partnerUserName: string | null;
+}
+
+export function isDirectChat(chat: ChatDto): chat is DirectChatDto {
+  return chat.isPrivate;
 }
 
 export interface ChatMemberForCreationDto {
@@ -56,8 +63,13 @@ export interface MessageForCreationDto {
   content: string;
 }
 
-export interface DirectMessageResultDto {
-  chat: ChatDto;
+export interface SendDirectMessageDto {
+  otherUserId: number;
+  message: MessageForCreationDto;
+}
+
+export interface SentDirectMessageDto {
+  chatId: number;
   message: MessageDto;
 }
 
