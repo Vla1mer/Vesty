@@ -4,6 +4,7 @@ import {
   deleteChat,
   getChatMembers,
   removeChatMember,
+  renameChat,
 } from "../api/chats";
 import { getAllUsers } from "../api/users";
 import { useAuth } from "../context/useAuth";
@@ -17,9 +18,10 @@ interface Props {
   chat: ChatDto;
   onClose: () => void;
   onDeleted: () => void;
+  onRenamed?: (newName: string) => void;
 }
 
-export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
+export function ChatInfoModal({ chat, onClose, onDeleted, onRenamed }: Props) {
   const { userId: currentUserId } = useAuth();
   const [members, setMembers] = useState<UserDto[]>([]);
   const [allUsers, setAllUsers] = useState<UserDto[]>([]);
@@ -29,9 +31,13 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [nameDraft, setNameDraft] = useState(chat.name ?? "");
+  const [renaming, setRenaming] = useState(false);
 
   const isGroup = !chat.isPrivate;
   const canDelete = chat.isPrivate || chat.creatorId === currentUserId;
+  const canRename = isGroup && chat.creatorId === currentUserId;
 
   useEffect(() => {
     let cancelled = false;
@@ -124,6 +130,28 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
     }
   }
 
+  async function handleRename() {
+    const newName = nameDraft.trim();
+    if (!newName || renaming) return;
+
+    setRenaming(true);
+    setError(null);
+    try {
+      await renameChat(chat.id, newName);
+      onRenamed?.(newName);
+      setIsRenaming(false);
+    } catch (err) {
+      const axiosErr = err as AxiosError;
+      setError(
+        axiosErr.response?.status === 403
+          ? "Only the owner can rename this chat"
+          : "Failed to rename chat"
+      );
+    } finally {
+      setRenaming(false);
+    }
+  }
+
   const title = getChatDisplayName(chat);
 
   return (
@@ -138,12 +166,65 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
         >
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1 pr-2">
-              <h2 className="text-2xl font-bold text-slate-100 break-words">
-                {title}
-              </h2>
-              <p className="text-sm text-slate-400 mt-1">
-                {loading ? "Loading..." : `Members (${members.length})`}
-              </p>
+              {isRenaming ? (
+                <div className="flex flex-col gap-2">
+                  <input
+                    type="text"
+                    value={nameDraft}
+                    onChange={(e) => setNameDraft(e.target.value)}
+                    autoFocus
+                    maxLength={200}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleRename();
+                      if (e.key === "Escape") setIsRenaming(false);
+                    }}
+                    className="text-xl font-bold bg-slate-900 border border-slate-600 rounded px-2 py-1 text-slate-100 focus:outline-none focus:border-amber-500"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={handleRename}
+                      disabled={renaming || !nameDraft.trim()}
+                      className="text-xs px-3 py-1 rounded bg-amber-600 hover:bg-amber-500 text-white disabled:opacity-50"
+                    >
+                      {renaming ? "..." : "Save"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsRenaming(false)}
+                      disabled={renaming}
+                      className="text-xs px-3 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-100 disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <h2 className="text-2xl font-bold text-slate-100 break-words">
+                    {title}
+                  </h2>
+                  {canRename && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNameDraft(chat.name ?? "");
+                        setIsRenaming(true);
+                      }}
+                      className="text-slate-400 hover:text-amber-400 transition text-sm"
+                      aria-label="Rename chat"
+                      title="Rename chat"
+                    >
+                      ✏️
+                    </button>
+                  )}
+                </div>
+              )}
+              {!isRenaming && (
+                <p className="text-sm text-slate-400 mt-1">
+                  {loading ? "Loading..." : `Members (${members.length})`}
+                </p>
+              )}
             </div>
             <button
               type="button"

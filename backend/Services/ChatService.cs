@@ -135,13 +135,13 @@ namespace Services
             await _repository.SaveAsync();
         }
 
-        public async Task UpdateAsync(int id, ChatForUpdateDto chatDto)
+        public async Task RenameAsync(int id, ChatForRenameDto chatDto)
         {
             var chat = await GetChatOrThrowAsync(id, trackChanges: true);
             if (chat.IsPrivate)
                 throw new OperationNotAllowedInPrivateChatException("rename");
             await EnsureCallerIsChatOwner(id, "rename this chat");
-            _mapper.Map(chatDto, chat);
+            chat.Name = chatDto.Name;
             await _repository.SaveAsync();
         }
 

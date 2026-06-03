@@ -138,13 +138,13 @@ namespace ChatApp.Controllers
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-        public async Task<IActionResult> UpdateChat(int id, [FromBody] ChatForUpdateDto chat)
+        public async Task<IActionResult> RenameChat(int id, [FromBody] ChatForRenameDto chat)
         {
             if (chat is null)
-                return BadRequest("ChatForUpdateDto object is null");
+                return BadRequest("ChatForRenameDto object is null");
             if (!ModelState.IsValid)
                 return UnprocessableEntity(ModelState);
-            await _service.Chat.UpdateAsync(id, chat);
+            await _service.Chat.RenameAsync(id, chat);
             return NoContent();
         }
     }

@@ -197,6 +197,9 @@ export function ChatDetailPage() {
           chat={chat}
           onClose={() => setIsInfoOpen(false)}
           onDeleted={() => navigate("/chats", { replace: true })}
+          onRenamed={(newName) =>
+            setChat((prev) => (prev ? { ...prev, name: newName } : prev))
+          }
         />
       )}
 
