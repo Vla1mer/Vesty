@@ -2,10 +2,16 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getChatById, getChatMembers } from "../api/chats";
-import { getMessagesByChat, createMessage } from "../api/messages";
+import {
+  getMessagesByChat,
+  createMessage,
+  updateMessage,
+  deleteMessage,
+} from "../api/messages";
 import { useAuth } from "../context/useAuth";
 import { MessageBubble } from "../components/MessageBubble";
 import { ChatInfoModal } from "../components/ChatInfoModal";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { getChatDisplayName } from "../utils/chats";
 import type { ChatDto, MessageDto, UserDto } from "../types/api";
 import type { AxiosError } from "axios";
@@ -26,6 +32,8 @@ export function ChatDetailPage() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [deletingMessage, setDeletingMessage] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -94,6 +102,27 @@ export function ChatDetailPage() {
     }
   }
 
+  async function handleEditMessage(id: number, content: string) {
+    await updateMessage(chatId, id, content);
+    setMessages((prev) =>
+      prev.map((m) => (m.id === id ? { ...m, content } : m))
+    );
+  }
+
+  async function confirmDeleteMessage() {
+    if (deleteTargetId === null) return;
+    setDeletingMessage(true);
+    try {
+      await deleteMessage(deleteTargetId);
+      setMessages((prev) => prev.filter((m) => m.id !== deleteTargetId));
+      setDeleteTargetId(null);
+    } catch {
+      setError("Failed to delete message");
+    } finally {
+      setDeletingMessage(false);
+    }
+  }
+
   const title = chat ? getChatDisplayName(chat) : `Chat #${chatId}`;
 
   return (
@@ -154,6 +183,10 @@ export function ChatDetailPage() {
             message={msg}
             isOwn={msg.userId === userId}
             authorName={userNameById.get(msg.userId)}
+            onEdit={msg.userId === userId ? handleEditMessage : undefined}
+            onDelete={
+              msg.userId === userId ? (id) => setDeleteTargetId(id) : undefined
+            }
           />
         ))}
         <div ref={bottomRef} />
@@ -164,6 +197,18 @@ export function ChatDetailPage() {
           chat={chat}
           onClose={() => setIsInfoOpen(false)}
           onDeleted={() => navigate("/chats", { replace: true })}
+        />
+      )}
+
+      {deleteTargetId !== null && (
+        <ConfirmDialog
+          title="Delete message?"
+          message="This message will be permanently deleted."
+          confirmText="Delete"
+          variant="danger"
+          loading={deletingMessage}
+          onConfirm={confirmDeleteMessage}
+          onCancel={() => setDeleteTargetId(null)}
         />
       )}
 

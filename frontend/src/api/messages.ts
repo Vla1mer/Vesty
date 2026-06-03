@@ -27,3 +27,15 @@ export async function createDirectChatAndSendMessage(
   const response = await api.post<MessageDto>(`/api/Message/direct`, dto);
   return response.data;
 }
+
+export async function updateMessage(
+  chatId: number,
+  id: number,
+  content: string
+): Promise<void> {
+  await api.put(`/api/Message/${chatId}/messages/${id}`, { content });
+}
+
+export async function deleteMessage(id: number): Promise<void> {
+  await api.delete(`/api/Message/${id}`);
+}
