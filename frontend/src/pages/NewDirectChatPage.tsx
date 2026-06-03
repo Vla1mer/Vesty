@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getUserById } from "../api/users";
-import { sendDirectMessage } from "../api/messages";
+import { createDirectChatAndSendMessage } from "../api/messages";
 import type { UserDto } from "../types/api";
 import type { AxiosError } from "axios";
 
@@ -54,11 +54,11 @@ export function NewDirectChatPage() {
 
     setSending(true);
     try {
-      const result = await sendDirectMessage({
+      const message = await createDirectChatAndSendMessage({
         otherUserId,
-        message: { content },
+        content,
       });
-      navigate(`/chats/${result.chatId}`, { replace: true });
+      navigate(`/chats/${message.chatId}`, { replace: true });
     } catch {
       setError("Failed to send message");
       setSending(false);

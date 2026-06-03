@@ -58,30 +58,26 @@ namespace Services
             return _mapper.Map<IEnumerable<MessageDto>>(messages);
         }
 
-        public async Task<MessageDto> CreateMessageForChatAsync(int chatId, MessageForCreationDto messageDto)
+        public async Task<MessageDto> CreateMessageForChatAsync(int chatId, string content)
         {
             await GetChatOrThrowAsync(chatId);
             await EnsureCallerIsChatMember(chatId);
 
-            var message = _mapper.Map<Message>(messageDto);
-            message.UserId = _currentUser.UserId;
-            message.Content = _cipher.Encrypt(message.Content);
+            var message = new Message
+            {
+                UserId = _currentUser.UserId,
+                Content = _cipher.Encrypt(content)
+            };
             _repository.Message.CreateMessageForChat(chatId, message);
             await _repository.SaveAsync();
             message.Content = _cipher.Decrypt(message.Content);
             return _mapper.Map<MessageDto>(message);
         }
 
-        public async Task<SentDirectMessageDto> SendDirectMessageAsync(SendDirectMessageDto dto)
+        public async Task<MessageDto> CreateDirectChatAndSendMessageAsync(int otherUserId, string content)
         {
-            var chat = await _chatService.CreateDirectChatAsync(dto.OtherUserId);
-            var message = await CreateMessageForChatAsync(chat.Id, dto.Message);
-
-            return new SentDirectMessageDto
-            {
-                ChatId = chat.Id,
-                Message = message
-            };
+            var chat = await _chatService.CreateDirectChatAsync(otherUserId);
+            return await CreateMessageForChatAsync(chat.Id, content);
         }
 
         public async Task DeleteAsync(int id)
@@ -92,7 +88,7 @@ namespace Services
             await _repository.SaveAsync();
         }
 
-        public async Task UpdateMessageForChatAsync(int chatId, int id, MessageForUpdateDto messageDto)
+        public async Task UpdateMessageForChatAsync(int chatId, int id, string content)
         {
             await GetChatOrThrowAsync(chatId);
             await EnsureCallerIsChatMember(chatId);
@@ -100,8 +96,7 @@ namespace Services
             var message = await GetMessageOrThrowAsync(id, trackChanges: true);
             if (message.UserId != _currentUser.UserId)
                 throw new MessageOwnershipException(id);
-            _mapper.Map(messageDto, message);
-            message.Content = _cipher.Encrypt(message.Content);
+            message.Content = _cipher.Encrypt(content);
             await _repository.SaveAsync();
         }
 

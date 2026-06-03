@@ -38,20 +38,24 @@ namespace ChatApp.Controllers
         {
             if (message is null)
                 return BadRequest("MessageForCreationDto object is null");
-            var created = await _service.Message.CreateMessageForChatAsync(chatId, message);
+            if (!ModelState.IsValid)
+                return UnprocessableEntity(ModelState);
+            var created = await _service.Message.CreateMessageForChatAsync(chatId, message.Content);
             return CreatedAtRoute("GetMessagesForChat", new { chatId }, created);
         }
 
         [HttpPost("direct")]
-        [ProducesResponseType(typeof(SentDirectMessageDto), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(MessageDto), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> SendDirectMessage([FromBody] SendDirectMessageDto dto)
+        public async Task<IActionResult> CreateDirectChatAndSendMessage([FromBody] CreateDirectChatMessageDto dto)
         {
             if (dto is null)
-                return BadRequest("SendDirectMessageDto object is null");
-            var result = await _service.Message.SendDirectMessageAsync(dto);
-            return Created($"/api/Chat/{result.ChatId}", result);
+                return BadRequest("CreateDirectChatMessageDto object is null");
+            if (!ModelState.IsValid)
+                return UnprocessableEntity(ModelState);
+            var created = await _service.Message.CreateDirectChatAndSendMessageAsync(dto.OtherUserId, dto.Content);
+            return Created($"/api/Chat/{created.ChatId}", created);
         }
 
         [HttpGet("{id:int}")]
@@ -86,7 +90,7 @@ namespace ChatApp.Controllers
                 return BadRequest("MessageForUpdateDto object is null");
             if (!ModelState.IsValid)
                 return UnprocessableEntity(ModelState);
-            await _service.Message.UpdateMessageForChatAsync(chatId, id, message);
+            await _service.Message.UpdateMessageForChatAsync(chatId, id, message.Content);
             return NoContent();
         }
     }

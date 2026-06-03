@@ -63,14 +63,9 @@ export interface MessageForCreationDto {
   content: string;
 }
 
-export interface SendDirectMessageDto {
+export interface CreateDirectChatMessageDto {
   otherUserId: number;
-  message: MessageForCreationDto;
-}
-
-export interface SentDirectMessageDto {
-  chatId: number;
-  message: MessageDto;
+  content: string;
 }
 
 export interface ApiError {
