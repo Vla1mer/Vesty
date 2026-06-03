@@ -13,7 +13,7 @@ import { MessageBubble } from "../components/MessageBubble";
 import { ChatInfoModal } from "../components/ChatInfoModal";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { getChatDisplayName } from "../utils/chats";
-import type { ChatDto, MessageDto, UserDto } from "../types/api";
+import type { ChatDto, MessageDto, ChatMemberWithRoleDto } from "../types/api";
 import type { AxiosError } from "axios";
 
 export function ChatDetailPage() {
@@ -24,7 +24,7 @@ export function ChatDetailPage() {
 
   const [chat, setChat] = useState<ChatDto | null>(null);
   const [messages, setMessages] = useState<MessageDto[]>([]);
-  const [members, setMembers] = useState<UserDto[]>([]);
+  const [members, setMembers] = useState<ChatMemberWithRoleDto[]>([]);
   const [loading, setLoading] = useState(Number.isFinite(chatId));
   const [error, setError] = useState<string | null>(
     Number.isFinite(chatId) ? null : "Invalid chat id"
@@ -39,7 +39,7 @@ export function ChatDetailPage() {
 
   const userNameById = useMemo(() => {
     const map = new Map<number, string>();
-    for (const m of members) map.set(m.id, m.userName);
+    for (const m of members) map.set(m.userId, m.userName);
     return map;
   }, [members]);
 

@@ -46,6 +46,20 @@ export interface ChatMemberForCreationDto {
   userId: number;
 }
 
+export const UserRole = {
+  Owner: 1,
+  Admin: 2,
+  User: 3,
+} as const;
+
+export interface ChatMemberWithRoleDto {
+  userId: number;
+  userName: string;
+  name?: string;
+  surname?: string;
+  roleId: number;
+}
+
 export interface ChatForCreationDto {
   name: string;
   members?: ChatMemberForCreationDto[];

@@ -5,13 +5,14 @@ import {
   getChatMembers,
   removeChatMember,
   renameChat,
+  updateMemberRole,
 } from "../api/chats";
 import { getAllUsers } from "../api/users";
 import { useAuth } from "../context/useAuth";
 import { ConfirmDialog } from "./ConfirmDialog";
-import { isDirectChat } from "../types/api";
+import { isDirectChat, UserRole } from "../types/api";
 import { getChatDisplayName } from "../utils/chats";
-import type { ChatDto, UserDto } from "../types/api";
+import type { ChatDto, UserDto, ChatMemberWithRoleDto } from "../types/api";
 import type { AxiosError } from "axios";
 
 interface Props {
@@ -21,9 +22,15 @@ interface Props {
   onRenamed?: (newName: string) => void;
 }
 
+const roleLabel: Record<number, string> = {
+  [UserRole.Owner]: "Owner",
+  [UserRole.Admin]: "Admin",
+  [UserRole.User]: "Member",
+};
+
 export function ChatInfoModal({ chat, onClose, onDeleted, onRenamed }: Props) {
   const { userId: currentUserId } = useAuth();
-  const [members, setMembers] = useState<UserDto[]>([]);
+  const [members, setMembers] = useState<ChatMemberWithRoleDto[]>([]);
   const [allUsers, setAllUsers] = useState<UserDto[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -39,16 +46,27 @@ export function ChatInfoModal({ chat, onClose, onDeleted, onRenamed }: Props) {
   const canDelete = chat.isPrivate || chat.creatorId === currentUserId;
   const canRename = isGroup && chat.creatorId === currentUserId;
 
+  const isCallerOwner = useMemo(
+    () =>
+      members.some(
+        (m) => m.userId === currentUserId && m.roleId === UserRole.Owner
+      ),
+    [members, currentUserId]
+  );
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const requests: Promise<unknown>[] = [getChatMembers(chat.id)];
-        if (isGroup) requests.push(getAllUsers());
-        const results = await Promise.all(requests);
+        const requests: [
+          Promise<ChatMemberWithRoleDto[]>,
+          Promise<UserDto[]>?
+        ] = [getChatMembers(chat.id)];
+        if (isGroup) requests[1] = getAllUsers();
+        const [m, u] = await Promise.all(requests);
         if (cancelled) return;
-        setMembers(results[0] as UserDto[]);
-        if (isGroup && results[1]) setAllUsers(results[1] as UserDto[]);
+        setMembers(m);
+        if (isGroup && u) setAllUsers(u);
       } catch {
         if (!cancelled) setError("Failed to load chat info");
       } finally {
@@ -68,7 +86,10 @@ export function ChatInfoModal({ chat, onClose, onDeleted, onRenamed }: Props) {
     return () => window.removeEventListener("keydown", handleEsc);
   }, [busyUserId, deleting, onClose]);
 
-  const memberIds = useMemo(() => new Set(members.map((m) => m.id)), [members]);
+  const memberIds = useMemo(
+    () => new Set(members.map((m) => m.userId)),
+    [members]
+  );
 
   const filteredCandidates = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -82,7 +103,16 @@ export function ChatInfoModal({ chat, onClose, onDeleted, onRenamed }: Props) {
     setError(null);
     try {
       await addChatMember(chat.id, user.id);
-      setMembers((prev) => [...prev, user]);
+      setMembers((prev) => [
+        ...prev,
+        {
+          userId: user.id,
+          userName: user.userName,
+          name: user.name,
+          surname: user.surname,
+          roleId: UserRole.User,
+        },
+      ]);
     } catch (err) {
       const axiosErr = err as AxiosError;
       setError(
@@ -95,18 +125,40 @@ export function ChatInfoModal({ chat, onClose, onDeleted, onRenamed }: Props) {
     }
   }
 
-  async function handleRemove(user: UserDto) {
-    setBusyUserId(user.id);
+  async function handleRemove(member: ChatMemberWithRoleDto) {
+    setBusyUserId(member.userId);
     setError(null);
     try {
-      await removeChatMember(chat.id, user.id);
-      setMembers((prev) => prev.filter((m) => m.id !== user.id));
+      await removeChatMember(chat.id, member.userId);
+      setMembers((prev) => prev.filter((m) => m.userId !== member.userId));
     } catch (err) {
       const axiosErr = err as AxiosError;
       setError(
         axiosErr.response?.status === 403
           ? "You don't have permission to remove this member"
           : "Failed to remove member"
+      );
+    } finally {
+      setBusyUserId(null);
+    }
+  }
+
+  async function handleChangeRole(member: ChatMemberWithRoleDto, newRole: number) {
+    setBusyUserId(member.userId);
+    setError(null);
+    try {
+      await updateMemberRole(chat.id, member.userId, newRole);
+      setMembers((prev) =>
+        prev.map((m) =>
+          m.userId === member.userId ? { ...m, roleId: newRole } : m
+        )
+      );
+    } catch (err) {
+      const axiosErr = err as AxiosError;
+      setError(
+        axiosErr.response?.status === 403
+          ? "Only the owner can change roles"
+          : "Failed to change role"
       );
     } finally {
       setBusyUserId(null);
@@ -257,34 +309,85 @@ export function ChatInfoModal({ chat, onClose, onDeleted, onRenamed }: Props) {
                   <ul className="space-y-1">
                     {members.map((m) => (
                       <li
-                        key={m.id}
-                        className="flex items-center justify-between rounded bg-slate-900 px-3 py-2"
+                        key={m.userId}
+                        className="flex items-center justify-between rounded bg-slate-900 px-3 py-2 gap-2"
                       >
-                        <div>
-                          <p className="text-slate-100 text-sm">
+                        <div className="min-w-0">
+                          <p className="text-slate-100 text-sm truncate">
                             {m.userName}
-                            {m.id === currentUserId && (
+                            {m.userId === currentUserId && (
                               <span className="text-xs text-amber-400 ml-2">
                                 (you)
                               </span>
                             )}
                           </p>
                           {(m.name || m.surname) && (
-                            <p className="text-xs text-slate-400">
+                            <p className="text-xs text-slate-400 truncate">
                               {[m.name, m.surname].filter(Boolean).join(" ")}
                             </p>
                           )}
                         </div>
-                        {isGroup && m.id !== currentUserId && (
-                          <button
-                            type="button"
-                            onClick={() => handleRemove(m)}
-                            disabled={busyUserId !== null}
-                            className="text-xs px-2 py-1 rounded bg-red-900 hover:bg-red-800 text-red-100 disabled:opacity-50 transition"
+
+                        <div className="flex items-center gap-1 shrink-0">
+                          {/* Бейдж роли */}
+                          <span
+                            className={`text-xs px-2 py-0.5 rounded ${
+                              m.roleId === UserRole.Owner
+                                ? "bg-amber-900 text-amber-200"
+                                : m.roleId === UserRole.Admin
+                                ? "bg-blue-900 text-blue-200"
+                                : "bg-slate-700 text-slate-300"
+                            }`}
                           >
-                            {busyUserId === m.id ? "..." : "Remove"}
-                          </button>
-                        )}
+                            {roleLabel[m.roleId]}
+                          </span>
+
+                          {/* Управление ролью — только Owner, не для себя и не для Owner */}
+                          {isGroup &&
+                            isCallerOwner &&
+                            m.userId !== currentUserId &&
+                            m.roleId !== UserRole.Owner && (
+                              <>
+                                {m.roleId === UserRole.User ? (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleChangeRole(m, UserRole.Admin)
+                                    }
+                                    disabled={busyUserId !== null}
+                                    className="text-xs px-2 py-0.5 rounded bg-blue-900 hover:bg-blue-800 text-blue-100 disabled:opacity-50 transition"
+                                    title="Make admin"
+                                  >
+                                    ↑ Admin
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleChangeRole(m, UserRole.User)
+                                    }
+                                    disabled={busyUserId !== null}
+                                    className="text-xs px-2 py-0.5 rounded bg-slate-700 hover:bg-slate-600 text-slate-200 disabled:opacity-50 transition"
+                                    title="Remove admin"
+                                  >
+                                    ↓ Member
+                                  </button>
+                                )}
+                              </>
+                            )}
+
+                          {/* Удалить участника */}
+                          {isGroup && m.userId !== currentUserId && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemove(m)}
+                              disabled={busyUserId !== null}
+                              className="text-xs px-2 py-0.5 rounded bg-red-900 hover:bg-red-800 text-red-100 disabled:opacity-50 transition"
+                            >
+                              {busyUserId === m.userId ? "..." : "✕"}
+                            </button>
+                          )}
+                        </div>
                       </li>
                     ))}
                   </ul>

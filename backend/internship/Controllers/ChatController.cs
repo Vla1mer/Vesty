@@ -84,13 +84,13 @@ namespace ChatApp.Controllers
         }
 
         [HttpGet("{chatId:int}/users")]
-        [ProducesResponseType(typeof(IEnumerable<UserDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(IEnumerable<ChatMemberWithRoleDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetUsersByChatId(int chatId)
         {
-            var users = await _service.ChatMember.GetUsersByChatIdAsync(chatId);
-            return Ok(users);
+            var members = await _service.ChatMember.GetUsersByChatIdAsync(chatId);
+            return Ok(members);
         }
 
         [HttpPost("{chatId:int}/users")]

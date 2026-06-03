@@ -23,12 +23,12 @@ namespace Services
             _currentUser = currentUser;
         }
 
-        public async Task<IEnumerable<UserDto>> GetUsersByChatIdAsync(int chatId)
+        public async Task<IEnumerable<ChatMemberWithRoleDto>> GetUsersByChatIdAsync(int chatId)
         {
             await GetChatOrThrowAsync(chatId);
             await EnsureCallerIsChatMember(chatId);
-            var users = await _repository.ChatMember.GetUsersByChatIdAsync(chatId, trackChanges: false);
-            return _mapper.Map<IEnumerable<UserDto>>(users);
+            var members = await _repository.ChatMember.GetMembersByChatIdAsync(chatId, trackChanges: false);
+            return _mapper.Map<IEnumerable<ChatMemberWithRoleDto>>(members);
         }
 
         public async Task<ChatMemberDto> AddUserToChatAsync(int chatId, ChatMemberForCreationDto memberDto)

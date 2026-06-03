@@ -1,5 +1,9 @@
 import { api } from "./client";
-import type { ChatDto, ChatForCreationDto, UserDto } from "../types/api";
+import type {
+  ChatDto,
+  ChatForCreationDto,
+  ChatMemberWithRoleDto,
+} from "../types/api";
 
 export async function getChats(): Promise<ChatDto[]> {
   const response = await api.get<ChatDto[]>("/api/Chat");
@@ -24,8 +28,12 @@ export async function renameChat(chatId: number, name: string): Promise<void> {
   await api.put(`/api/Chat/${chatId}`, { name });
 }
 
-export async function getChatMembers(chatId: number): Promise<UserDto[]> {
-  const response = await api.get<UserDto[]>(`/api/Chat/${chatId}/users`);
+export async function getChatMembers(
+  chatId: number
+): Promise<ChatMemberWithRoleDto[]> {
+  const response = await api.get<ChatMemberWithRoleDto[]>(
+    `/api/Chat/${chatId}/users`
+  );
   return response.data;
 }
 
@@ -35,4 +43,12 @@ export async function addChatMember(chatId: number, userId: number): Promise<voi
 
 export async function removeChatMember(chatId: number, userId: number): Promise<void> {
   await api.delete(`/api/Chat/${chatId}/users/${userId}`);
+}
+
+export async function updateMemberRole(
+  chatId: number,
+  userId: number,
+  roleId: number
+): Promise<void> {
+  await api.patch(`/api/Chat/${chatId}/users/${userId}/role`, { roleId });
 }

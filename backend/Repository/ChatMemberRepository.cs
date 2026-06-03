@@ -21,10 +21,9 @@ namespace Repository
                 .Select(cm => cm.ChatId)
                 .ToListAsync();
 
-        public async Task<IEnumerable<User>> GetUsersByChatIdAsync(int chatId, bool trackChanges) =>
+        public async Task<IEnumerable<ChatMember>> GetMembersByChatIdAsync(int chatId, bool trackChanges) =>
             await FindByCondition(cm => cm.ChatId == chatId, trackChanges)
                 .Include(cm => cm.User)
-                .Select(cm => cm.User)
                 .ToListAsync();
 
         public async Task<Dictionary<int, string>> GetDirectChatPartnerNamesAsync(IEnumerable<int> chatIds, int currentUserId)
