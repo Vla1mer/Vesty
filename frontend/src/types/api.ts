@@ -26,6 +26,14 @@ export interface UserDto {
   birthday?: string;
 }
 
+export interface UserForUpdateDto {
+  userName: string;
+  name?: string;
+  surname?: string;
+  phone?: string;
+  birthday?: string;
+}
+
 export interface ChatDto {
   id: number;
   name: string | null;

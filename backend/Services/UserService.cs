@@ -104,6 +104,7 @@ namespace Services
             if (user is null)
                 throw new UserNotFoundException(id);
             _mapper.Map(userDto, user);
+            user.NormalizedUserName = userDto.UserName?.ToUpperInvariant();
             await _repository.SaveAsync();
         }
 
@@ -121,6 +122,7 @@ namespace Services
         public async Task SaveChangesForPatchAsync(UserForUpdateDto userToPatch, User userEntity)
         {
             _mapper.Map(userToPatch, userEntity);
+            userEntity.NormalizedUserName = userToPatch.UserName?.ToUpperInvariant();
             await _repository.SaveAsync();
         }
 
