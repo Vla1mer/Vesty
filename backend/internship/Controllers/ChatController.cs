@@ -64,7 +64,7 @@ namespace ChatApp.Controllers
         }
 
         [HttpPost("direct/{otherUserId:int}")]
-        [ProducesResponseType(typeof(ChatDto), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(DirectChatDto), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> CreateDirectChat(int otherUserId)
@@ -84,13 +84,13 @@ namespace ChatApp.Controllers
         }
 
         [HttpGet("{chatId:int}/users")]
-        [ProducesResponseType(typeof(IEnumerable<UserDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(IEnumerable<ChatMemberWithRoleDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetUsersByChatId(int chatId)
         {
-            var users = await _service.ChatMember.GetUsersByChatIdAsync(chatId);
-            return Ok(users);
+            var members = await _service.ChatMember.GetUsersByChatIdAsync(chatId);
+            return Ok(members);
         }
 
         [HttpPost("{chatId:int}/users")]
@@ -138,13 +138,13 @@ namespace ChatApp.Controllers
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-        public async Task<IActionResult> UpdateChat(int id, [FromBody] ChatForUpdateDto chat)
+        public async Task<IActionResult> RenameChat(int id, [FromBody] ChatForRenameDto chat)
         {
             if (chat is null)
-                return BadRequest("ChatForUpdateDto object is null");
+                return BadRequest("ChatForRenameDto object is null");
             if (!ModelState.IsValid)
                 return UnprocessableEntity(ModelState);
-            await _service.Chat.UpdateAsync(id, chat);
+            await _service.Chat.RenameAsync(id, chat);
             return NoContent();
         }
     }

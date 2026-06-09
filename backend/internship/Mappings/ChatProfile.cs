@@ -12,7 +12,6 @@ namespace ChatApp.Mappings
             CreateMap<ChatForCreationDto, Chat>()
                 .ForMember(c => c.ChatMembers, opt => opt.Ignore())
                 .ForMember(c => c.CreatorId, opt => opt.Ignore());
-            CreateMap<ChatForUpdateDto, Chat>();
         }
     }
 }

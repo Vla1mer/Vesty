@@ -28,15 +28,32 @@ namespace Services
         {
             var allowedChatIds = await _repository.ChatMember.GetChatIdsForUserAsync(_currentUser.UserId);
             var chatsWithMetaData = await _repository.Chat.GetAllChatsAsync(chatParameters, allowedChatIds, trackChanges: false);
-            var chatsDto = _mapper.Map<IEnumerable<ChatDto>>(chatsWithMetaData);
-            return (chats: chatsDto, metaData: chatsWithMetaData.MetaData);
+            var chatsDto = _mapper.Map<IEnumerable<ChatDto>>(chatsWithMetaData).ToList();
+            var result = await ConvertDirectChatsAsync(chatsDto);
+            return (chats: result, metaData: chatsWithMetaData.MetaData);
         }
 
         public async Task<ChatDto> GetByIdAsync(int id)
         {
             var chat = await GetChatOrThrowAsync(id, trackChanges: false);
             await EnsureCallerIsChatMember(id);
-            return _mapper.Map<ChatDto>(chat);
+
+            if (!chat.IsPrivate)
+                return _mapper.Map<ChatDto>(chat);
+
+            var partnerNames = await _repository.ChatMember.GetDirectChatPartnerNamesAsync(
+                new[] { chat.Id }, _currentUser.UserId);
+            partnerNames.TryGetValue(chat.Id, out var partnerName);
+
+            return new DirectChatDto
+            {
+                Id = chat.Id,
+                Name = chat.Name,
+                CreatorId = chat.CreatorId,
+                IsPrivate = chat.IsPrivate,
+                CreatedAt = chat.CreatedAt,
+                PartnerUserName = partnerName
+            };
         }
 
         public async Task<ChatDto> CreateAsync(ChatForCreationDto chatDto)
@@ -64,17 +81,19 @@ namespace Services
             return _mapper.Map<ChatDto>(chat);
         }
 
-        public async Task<ChatDto> CreateDirectChatAsync(int otherUserId)
+        public async Task<DirectChatDto> CreateDirectChatAsync(int otherUserId)
         {
             var currentUserId = _currentUser.UserId;
             if (otherUserId == currentUserId)
                 throw new DirectChatWithSelfException();
 
-            await EnsureUserExistsAsync(otherUserId);
+            var otherUser = await _repository.User.GetUserAsync(otherUserId, trackChanges: false);
+            if (otherUser is null)
+                throw new UserNotFoundException(otherUserId);
 
             var existing = await _repository.Chat.GetPrivateChatBetweenAsync(currentUserId, otherUserId);
             if (existing is not null)
-                return _mapper.Map<ChatDto>(existing);
+                return MapToDirectChatDto(existing, otherUser.UserName);
 
             var chat = new Chat
             {
@@ -89,8 +108,19 @@ namespace Services
             AddMember(chat.Id, otherUserId, UserRole.User);
             await _repository.SaveAsync();
 
-            return _mapper.Map<ChatDto>(chat);
+            return MapToDirectChatDto(chat, otherUser.UserName);
         }
+
+        private static DirectChatDto MapToDirectChatDto(Chat chat, string? partnerUserName) =>
+            new DirectChatDto
+            {
+                Id = chat.Id,
+                Name = chat.Name,
+                CreatorId = chat.CreatorId,
+                IsPrivate = chat.IsPrivate,
+                CreatedAt = chat.CreatedAt,
+                PartnerUserName = partnerUserName
+            };
 
         public async Task DeleteAsync(int id)
         {
@@ -105,13 +135,13 @@ namespace Services
             await _repository.SaveAsync();
         }
 
-        public async Task UpdateAsync(int id, ChatForUpdateDto chatDto)
+        public async Task RenameAsync(int id, ChatForRenameDto chatDto)
         {
             var chat = await GetChatOrThrowAsync(id, trackChanges: true);
             if (chat.IsPrivate)
                 throw new OperationNotAllowedInPrivateChatException("rename");
             await EnsureCallerIsChatOwner(id, "rename this chat");
-            _mapper.Map(chatDto, chat);
+            chat.Name = chatDto.Name;
             await _repository.SaveAsync();
         }
 
@@ -121,6 +151,38 @@ namespace Services
             if (chat is null)
                 throw new ChatNotFoundException(chatId);
             return chat;
+        }
+
+        private async Task<List<ChatDto>> ConvertDirectChatsAsync(List<ChatDto> chats)
+        {
+            var directChatIds = chats.Where(c => c.IsPrivate).Select(c => c.Id).ToList();
+            if (directChatIds.Count == 0) return chats;
+
+            var partnerNames = await _repository.ChatMember.GetDirectChatPartnerNamesAsync(
+                directChatIds, _currentUser.UserId);
+
+            var result = new List<ChatDto>(chats.Count);
+            foreach (var chat in chats)
+            {
+                if (chat.IsPrivate)
+                {
+                    partnerNames.TryGetValue(chat.Id, out var partnerName);
+                    result.Add(new DirectChatDto
+                    {
+                        Id = chat.Id,
+                        Name = chat.Name,
+                        CreatorId = chat.CreatorId,
+                        IsPrivate = chat.IsPrivate,
+                        CreatedAt = chat.CreatedAt,
+                        PartnerUserName = partnerName
+                    });
+                }
+                else
+                {
+                    result.Add(chat);
+                }
+            }
+            return result;
         }
 
         private void AddMember(int chatId, int userId, int roleId) =>

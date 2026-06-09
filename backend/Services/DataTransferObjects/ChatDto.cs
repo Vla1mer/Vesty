@@ -1,5 +1,8 @@
+using System.Text.Json.Serialization;
+
 namespace Services.DataTransferObjects
 {
+    [JsonDerivedType(typeof(DirectChatDto))]
     public record ChatDto
     {
         public int Id { get; init; }
