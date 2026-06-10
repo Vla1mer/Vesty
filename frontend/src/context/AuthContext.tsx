@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import { getAccessToken, clearTokens } from "../api/client";
 import { AuthContext } from "./authContextInternal";
+import { startConnection, stopConnection } from "../lib/signalr";
 
 function decodeJwtPayload(token: string): Record<string, unknown> | null {
   try {
@@ -37,15 +38,26 @@ function readUserFromToken(): { id: number | null; name: string | null } {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(!!getAccessToken());
 
+  // Connect SignalR on mount if already authenticated (page reload)
+  useEffect(() => {
+    const token = getAccessToken();
+    if (token) startConnection(token).catch(console.error);
+  }, []);
+
   const { userId, userName } = useMemo(() => {
     if (!isAuthenticated) return { userId: null, userName: null };
     const { id, name } = readUserFromToken();
     return { userId: id, userName: name };
   }, [isAuthenticated]);
 
-  const setAuthenticated = () => setIsAuthenticated(true);
+  const setAuthenticated = () => {
+    setIsAuthenticated(true);
+    const token = getAccessToken();
+    if (token) startConnection(token).catch(console.error);
+  };
 
   const logout = () => {
+    stopConnection().catch(console.error);
     clearTokens();
     setIsAuthenticated(false);
   };
