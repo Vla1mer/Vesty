@@ -4,19 +4,60 @@ import {
   HubConnectionState,
   LogLevel,
 } from "@microsoft/signalr";
-import type { MessageDto } from "../types/api";
+import type {
+  ChatDto,
+  ChatDeletedDto,
+  ChatRenamedDto,
+  MessageDto,
+  MessageDeletedDto,
+} from "../types/api";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:5005";
 const HUB_URL = `${API_URL}/chatHub`;
 
-const MESSAGE_RECEIVED = "MessageReceived";
+type Handler<T> = (payload: T) => void;
 
-type MessageHandler = (message: MessageDto) => void;
+interface HubEvent<T> {
+  name: string;
+  handlers: Set<Handler<T>>;
+}
+
+function createEvent<T>(name: string): HubEvent<T> {
+  return { name, handlers: new Set() };
+}
+
+const messageReceived = createEvent<MessageDto>("MessageReceived");
+const messageUpdated = createEvent<MessageDto>("MessageUpdated");
+const messageDeleted = createEvent<MessageDeletedDto>("MessageDeleted");
+const chatCreated = createEvent<ChatDto>("ChatCreated");
+const chatDeleted = createEvent<ChatDeletedDto>("ChatDeleted");
+const chatRenamed = createEvent<ChatRenamedDto>("ChatRenamed");
+const reconnected = createEvent<void>("reconnected");
+
+function subscribe<T>(event: HubEvent<T>) {
+  return (handler: Handler<T>): (() => void) => {
+    event.handlers.add(handler);
+    return () => {
+      event.handlers.delete(handler);
+    };
+  };
+}
+
+export const onMessageReceived = subscribe(messageReceived);
+export const onMessageUpdated = subscribe(messageUpdated);
+export const onMessageDeleted = subscribe(messageDeleted);
+export const onChatCreated = subscribe(chatCreated);
+export const onChatDeleted = subscribe(chatDeleted);
+export const onChatRenamed = subscribe(chatRenamed);
+export const onReconnected = subscribe(reconnected);
 
 let connection: HubConnection | null = null;
 
-// Handler registry survives connection rebuilds (logout/login).
-const messageHandlers = new Set<MessageHandler>();
+function attach<T>(conn: HubConnection, event: HubEvent<T>): void {
+  conn.on(event.name, (payload: T) => {
+    event.handlers.forEach((handler) => handler(payload));
+  });
+}
 
 function buildConnection(token: string): HubConnection {
   const conn = new HubConnectionBuilder()
@@ -27,8 +68,16 @@ function buildConnection(token: string): HubConnection {
     .configureLogging(LogLevel.Warning)
     .build();
 
-  conn.on(MESSAGE_RECEIVED, (message: MessageDto) => {
-    messageHandlers.forEach((handler) => handler(message));
+  attach(conn, messageReceived);
+  attach(conn, messageUpdated);
+  attach(conn, messageDeleted);
+  attach(conn, chatCreated);
+  attach(conn, chatDeleted);
+  attach(conn, chatRenamed);
+
+  conn.onreconnected(() => {
+    console.log("[SignalR] Reconnected");
+    reconnected.handlers.forEach((handler) => handler());
   });
 
   return conn;
@@ -60,17 +109,6 @@ export async function stopConnection(): Promise<void> {
   } finally {
     connection = null;
   }
-}
-
-/**
- * Subscribe to incoming messages. Returns an unsubscribe function
- * suitable for a useEffect cleanup.
- */
-export function onMessageReceived(handler: MessageHandler): () => void {
-  messageHandlers.add(handler);
-  return () => {
-    messageHandlers.delete(handler);
-  };
 }
 
 export function getConnection(): HubConnection | null {

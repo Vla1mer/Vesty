@@ -9,6 +9,12 @@ import { SearchBar } from "../components/SearchBar";
 import { SearchResults } from "../components/SearchResults";
 import { FloatingActionButton } from "../components/FloatingActionButton";
 import { BottomNav } from "../components/BottomNav";
+import {
+  onChatCreated,
+  onChatDeleted,
+  onChatRenamed,
+  onReconnected,
+} from "../lib/signalr";
 import type { ChatDto } from "../types/api";
 
 export function ChatsPage() {
@@ -20,6 +26,7 @@ export function ChatsPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isSelectUserOpen, setIsSelectUserOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -36,6 +43,35 @@ export function ChatsPage() {
     return () => {
       cancelled = true;
     };
+  }, [reloadKey]);
+
+  useEffect(() => {
+    const unsubscribeCreated = onChatCreated((chat) => {
+      setChats((prev) =>
+        prev.some((c) => c.id === chat.id) ? prev : [chat, ...prev]
+      );
+    });
+
+    const unsubscribeDeleted = onChatDeleted(({ chatId }) => {
+      setChats((prev) => prev.filter((c) => c.id !== chatId));
+    });
+
+    const unsubscribeRenamed = onChatRenamed(({ chatId, name }) => {
+      setChats((prev) =>
+        prev.map((c) => (c.id === chatId ? { ...c, name } : c))
+      );
+    });
+
+    const unsubscribeReconnected = onReconnected(() => {
+      setReloadKey((key) => key + 1);
+    });
+
+    return () => {
+      unsubscribeCreated();
+      unsubscribeDeleted();
+      unsubscribeRenamed();
+      unsubscribeReconnected();
+    };
   }, []);
 
   function handleLogout() {
@@ -44,7 +80,9 @@ export function ChatsPage() {
   }
 
   function handleChatCreated(chat: ChatDto) {
-    setChats((prev) => [chat, ...prev]);
+    setChats((prev) =>
+      prev.some((c) => c.id === chat.id) ? prev : [chat, ...prev]
+    );
   }
 
   const isSearching = searchQuery.trim().length > 0;

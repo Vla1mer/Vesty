@@ -95,7 +95,6 @@ namespace ChatApp.Extensions
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
                 };
 
-                // SignalR passes JWT via query string for WebSocket connections
                 options.Events = new JwtBearerEvents
                 {
                     OnMessageReceived = context =>

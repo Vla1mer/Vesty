@@ -38,7 +38,6 @@ function readUserFromToken(): { id: number | null; name: string | null } {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(!!getAccessToken());
 
-  // Connect SignalR on mount if already authenticated (page reload)
   useEffect(() => {
     const token = getAccessToken();
     if (token) startConnection(token).catch(console.error);

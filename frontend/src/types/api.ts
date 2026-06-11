@@ -85,6 +85,20 @@ export interface MessageForCreationDto {
   content: string;
 }
 
+export interface MessageDeletedDto {
+  chatId: number;
+  messageId: number;
+}
+
+export interface ChatDeletedDto {
+  chatId: number;
+}
+
+export interface ChatRenamedDto {
+  chatId: number;
+  name: string;
+}
+
 export interface CreateDirectChatMessageDto {
   otherUserId: number;
   content: string;
