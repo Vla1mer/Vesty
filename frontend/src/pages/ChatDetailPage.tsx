@@ -13,6 +13,7 @@ import { MessageBubble } from "../components/MessageBubble";
 import { ChatInfoModal } from "../components/ChatInfoModal";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { getChatDisplayName } from "../utils/chats";
+import { onMessageReceived } from "../lib/signalr";
 import type { ChatDto, MessageDto, ChatMemberWithRoleDto } from "../types/api";
 import type { AxiosError } from "axios";
 
@@ -84,6 +85,18 @@ export function ChatDetailPage() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    if (!Number.isFinite(chatId)) return;
+
+    const unsubscribe = onMessageReceived((message) => {
+      if (message.chatId !== chatId) return;
+      setMessages((prev) =>
+        prev.some((m) => m.id === message.id) ? prev : [...prev, message]
+      );
+    });
+    return unsubscribe;
+  }, [chatId]);
 
   async function handleSend(e: FormEvent) {
     e.preventDefault();

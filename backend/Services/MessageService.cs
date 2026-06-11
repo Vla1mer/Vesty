@@ -17,9 +17,11 @@ namespace Services
         private readonly IMessageCipher _cipher;
         private readonly ICurrentUserService _currentUser;
         private readonly IChatService _chatService;
+        private readonly IChatNotifier _notifier;
 
         public MessageService(IRepositoryManager repository, ILoggerManager logger, IMapper mapper,
-            IMessageCipher cipher, ICurrentUserService currentUser, IChatService chatService)
+            IMessageCipher cipher, ICurrentUserService currentUser, IChatService chatService,
+            IChatNotifier notifier)
         {
             _repository = repository;
             _logger = logger;
@@ -27,6 +29,7 @@ namespace Services
             _cipher = cipher;
             _currentUser = currentUser;
             _chatService = chatService;
+            _notifier = notifier;
         }
 
         public async Task<(IEnumerable<MessageDto> messages, MetaData metaData)> GetAllAsync(MessageParameters messageParameters)
@@ -71,7 +74,10 @@ namespace Services
             _repository.Message.CreateMessageForChat(chatId, message);
             await _repository.SaveAsync();
             message.Content = _cipher.Decrypt(message.Content);
-            return _mapper.Map<MessageDto>(message);
+
+            var messageDto = _mapper.Map<MessageDto>(message);
+            await NotifyMembersAsync(chatId, messageDto);
+            return messageDto;
         }
 
         public async Task<MessageDto> CreateDirectChatAndSendMessageAsync(int otherUserId, string content)
@@ -98,6 +104,13 @@ namespace Services
                 throw new MessageOwnershipException(id);
             message.Content = _cipher.Encrypt(content);
             await _repository.SaveAsync();
+        }
+
+        private async Task NotifyMembersAsync(int chatId, MessageDto message)
+        {
+            var members = await _repository.ChatMember.GetMembersByChatIdAsync(chatId, trackChanges: false);
+            var recipientIds = members.Select(m => m.UserId);
+            await _notifier.MessageReceivedAsync(recipientIds, message);
         }
 
         private async Task<Chat> GetChatOrThrowAsync(int chatId)

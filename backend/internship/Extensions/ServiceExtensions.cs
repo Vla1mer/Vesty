@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using ChatApp.Hubs;
 using Entities.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -24,8 +25,11 @@ namespace ChatApp.Extensions
                     .WithExposedHeaders("X-Pagination"));
             });
 
-        public static void ConfigureSignalR(this IServiceCollection services) =>
+        public static void ConfigureSignalR(this IServiceCollection services)
+        {
             services.AddSignalR();
+            services.AddScoped<IChatNotifier, ChatNotifier>();
+        }
 
         public static void ConfigureIISIntegration(this IServiceCollection services) =>
             services.Configure<IISOptions>(options => { });
