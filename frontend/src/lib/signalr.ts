@@ -12,7 +12,7 @@ import type {
   MessageDeletedDto,
 } from "../types/api";
 
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:5005";
+const API_URL = import.meta.env.VITE_API_URL ?? "https://localhost:7033";
 const HUB_URL = `${API_URL}/chatHub`;
 
 type Handler<T> = (payload: T) => void;

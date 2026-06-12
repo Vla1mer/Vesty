@@ -2,7 +2,7 @@ import axios from "axios";
 import type { AxiosError, AxiosRequestConfig } from "axios";
 import type { TokenDto } from "../types/api";
 
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:5005";
+const API_URL = import.meta.env.VITE_API_URL ?? "https://localhost:7033";
 
 export const ACCESS_TOKEN_KEY = "chatapp.accessToken";
 export const REFRESH_TOKEN_KEY = "chatapp.refreshToken";
