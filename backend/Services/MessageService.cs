@@ -93,8 +93,7 @@ namespace Services
             _repository.Message.DeleteMessage(message);
             await _repository.SaveAsync();
 
-            var deletedDto = new MessageDeletedDto { ChatId = message.ChatId, MessageId = id };
-            await _notifier.MessageDeletedAsync(await GetMemberIdsAsync(message.ChatId), deletedDto);
+            await _notifier.MessageDeletedAsync(await GetMemberIdsAsync(message.ChatId), message.ChatId, id);
         }
 
         public async Task UpdateMessageForChatAsync(int chatId, int id, string content)

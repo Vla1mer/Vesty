@@ -4,38 +4,32 @@ import {
   HubConnectionState,
   LogLevel,
 } from "@microsoft/signalr";
-import type {
-  ChatDto,
-  ChatDeletedDto,
-  ChatRenamedDto,
-  MessageDto,
-  MessageDeletedDto,
-} from "../types/api";
+import type { ChatDto, MessageDto } from "../types/api";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "https://localhost:7033";
 const HUB_URL = `${API_URL}/chatHub`;
 
-type Handler<T> = (payload: T) => void;
+type Handler<TArgs extends unknown[]> = (...args: TArgs) => void;
 
-interface HubEvent<T> {
+interface HubEvent<TArgs extends unknown[]> {
   name: string;
-  handlers: Set<Handler<T>>;
+  handlers: Set<Handler<TArgs>>;
 }
 
-function createEvent<T>(name: string): HubEvent<T> {
+function createEvent<TArgs extends unknown[]>(name: string): HubEvent<TArgs> {
   return { name, handlers: new Set() };
 }
 
-const messageReceived = createEvent<MessageDto>("MessageReceived");
-const messageUpdated = createEvent<MessageDto>("MessageUpdated");
-const messageDeleted = createEvent<MessageDeletedDto>("MessageDeleted");
-const chatCreated = createEvent<ChatDto>("ChatCreated");
-const chatDeleted = createEvent<ChatDeletedDto>("ChatDeleted");
-const chatRenamed = createEvent<ChatRenamedDto>("ChatRenamed");
-const reconnected = createEvent<void>("reconnected");
+const messageReceived = createEvent<[MessageDto]>("MessageReceived");
+const messageUpdated = createEvent<[MessageDto]>("MessageUpdated");
+const messageDeleted = createEvent<[number, number]>("MessageDeleted");
+const chatCreated = createEvent<[ChatDto]>("ChatCreated");
+const chatDeleted = createEvent<[number]>("ChatDeleted");
+const chatRenamed = createEvent<[number, string]>("ChatRenamed");
+const reconnected = createEvent<[]>("reconnected");
 
-function subscribe<T>(event: HubEvent<T>) {
-  return (handler: Handler<T>): (() => void) => {
+function subscribe<TArgs extends unknown[]>(event: HubEvent<TArgs>) {
+  return (handler: Handler<TArgs>): (() => void) => {
     event.handlers.add(handler);
     return () => {
       event.handlers.delete(handler);
@@ -53,9 +47,9 @@ export const onReconnected = subscribe(reconnected);
 
 let connection: HubConnection | null = null;
 
-function attach<T>(conn: HubConnection, event: HubEvent<T>): void {
-  conn.on(event.name, (payload: T) => {
-    event.handlers.forEach((handler) => handler(payload));
+function attach<TArgs extends unknown[]>(conn: HubConnection, event: HubEvent<TArgs>): void {
+  conn.on(event.name, (...args: TArgs) => {
+    event.handlers.forEach((handler) => handler(...args));
   });
 }
 

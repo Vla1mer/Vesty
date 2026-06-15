@@ -52,11 +52,11 @@ export function ChatsPage() {
       );
     });
 
-    const unsubscribeDeleted = onChatDeleted(({ chatId }) => {
+    const unsubscribeDeleted = onChatDeleted((chatId) => {
       setChats((prev) => prev.filter((c) => c.id !== chatId));
     });
 
-    const unsubscribeRenamed = onChatRenamed(({ chatId, name }) => {
+    const unsubscribeRenamed = onChatRenamed((chatId, name) => {
       setChats((prev) =>
         prev.map((c) => (c.id === chatId ? { ...c, name } : c))
       );

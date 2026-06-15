@@ -111,17 +111,17 @@ export function ChatDetailPage() {
       );
     });
 
-    const unsubscribeDeleted = onMessageDeleted(({ chatId: eventChatId, messageId }) => {
+    const unsubscribeDeleted = onMessageDeleted((eventChatId, messageId) => {
       if (eventChatId !== chatId) return;
       setMessages((prev) => prev.filter((m) => m.id !== messageId));
     });
 
-    const unsubscribeChatDeleted = onChatDeleted(({ chatId: deletedChatId }) => {
+    const unsubscribeChatDeleted = onChatDeleted((deletedChatId) => {
       if (deletedChatId !== chatId) return;
       navigate("/chats", { replace: true });
     });
 
-    const unsubscribeChatRenamed = onChatRenamed(({ chatId: renamedChatId, name }) => {
+    const unsubscribeChatRenamed = onChatRenamed((renamedChatId, name) => {
       if (renamedChatId !== chatId) return;
       setChat((prev) => (prev ? { ...prev, name } : prev));
     });

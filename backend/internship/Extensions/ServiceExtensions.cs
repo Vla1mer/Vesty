@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using ChatApp.Constants;
 using ChatApp.Hubs;
 using Entities.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -14,16 +15,21 @@ namespace ChatApp.Extensions
 {
     public static class ServiceExtensions
     {
-        public static void ConfigureCors(this IServiceCollection services) =>
+        public static void ConfigureCors(this IServiceCollection services, IConfiguration configuration)
+        {
+            var allowedOrigins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+                ?? throw new InvalidOperationException("Cors:AllowedOrigins is not configured");
+
             services.AddCors(options =>
             {
                 options.AddPolicy("CorsPolicy", builder =>
-                    builder.WithOrigins("http://localhost:5173", "https://localhost:5173")
+                    builder.WithOrigins(allowedOrigins)
                     .AllowAnyMethod()
                     .AllowAnyHeader()
                     .AllowCredentials()
                     .WithExposedHeaders("X-Pagination"));
             });
+        }
 
         public static void ConfigureSignalR(this IServiceCollection services)
         {
@@ -101,7 +107,7 @@ namespace ChatApp.Extensions
                     {
                         var accessToken = context.Request.Query["access_token"];
                         var path = context.HttpContext.Request.Path;
-                        if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/chatHub"))
+                        if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments(HubRoutes.ChatHub))
                             context.Token = accessToken;
                         return Task.CompletedTask;
                     }
