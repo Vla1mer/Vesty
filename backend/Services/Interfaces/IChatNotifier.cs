@@ -6,9 +6,9 @@ namespace Services.Interfaces
     {
         Task MessageReceivedAsync(IEnumerable<int> recipientUserIds, MessageDto message);
         Task MessageUpdatedAsync(IEnumerable<int> recipientUserIds, MessageDto message);
-        Task MessageDeletedAsync(IEnumerable<int> recipientUserIds, int chatId, int messageId);
+        Task MessageDeletedAsync(IEnumerable<int> recipientUserIds, MessageDeletedSignalrDto deleted);
         Task ChatCreatedAsync(IEnumerable<int> recipientUserIds, ChatDto chat);
-        Task ChatDeletedAsync(IEnumerable<int> recipientUserIds, int chatId);
-        Task ChatRenamedAsync(IEnumerable<int> recipientUserIds, int chatId, string name);
+        Task ChatDeletedAsync(IEnumerable<int> recipientUserIds, ChatDeletedSignalrDto deleted);
+        Task ChatRenamedAsync(IEnumerable<int> recipientUserIds, ChatRenamedSignalrDto renamed);
     }
 }

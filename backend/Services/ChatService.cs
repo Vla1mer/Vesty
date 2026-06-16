@@ -144,7 +144,7 @@ namespace Services
             _repository.Chat.DeleteChat(chat);
             await _repository.SaveAsync();
 
-            await _notifier.ChatDeletedAsync(memberIds, id);
+            await _notifier.ChatDeletedAsync(memberIds, new ChatDeletedSignalrDto { ChatId = id });
         }
 
         public async Task RenameAsync(int id, ChatForRenameDto chatDto)
@@ -156,7 +156,8 @@ namespace Services
             chat.Name = chatDto.Name;
             await _repository.SaveAsync();
 
-            await _notifier.ChatRenamedAsync(await GetMemberIdsAsync(id), id, chatDto.Name);
+            var renamedDto = new ChatRenamedSignalrDto { ChatId = id, Name = chatDto.Name };
+            await _notifier.ChatRenamedAsync(await GetMemberIdsAsync(id), renamedDto);
         }
 
         private async Task<List<int>> GetMemberIdsAsync(int chatId)

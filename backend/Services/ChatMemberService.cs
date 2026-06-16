@@ -69,7 +69,7 @@ namespace Services
             _repository.ChatMember.DeleteMember(target);
             await _repository.SaveAsync();
 
-            await _notifier.ChatDeletedAsync(new[] { targetUserId }, chatId);
+            await _notifier.ChatDeletedAsync(new[] { targetUserId }, new ChatDeletedSignalrDto { ChatId = chatId });
         }
 
         public async Task UpdateMemberRoleAsync(int chatId, int targetUserId, ChatMemberRoleForUpdateDto roleDto)

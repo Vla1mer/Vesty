@@ -26,22 +26,22 @@ namespace ChatApp.Hubs
         public Task MessageUpdatedAsync(IEnumerable<int> recipientUserIds, MessageDto message) =>
             SendToUsersAsync(recipientUserIds, MessageUpdated, message);
 
-        public Task MessageDeletedAsync(IEnumerable<int> recipientUserIds, int chatId, int messageId) =>
-            SendToUsersAsync(recipientUserIds, MessageDeleted, chatId, messageId);
+        public Task MessageDeletedAsync(IEnumerable<int> recipientUserIds, MessageDeletedSignalrDto deleted) =>
+            SendToUsersAsync(recipientUserIds, MessageDeleted, deleted);
 
         public Task ChatCreatedAsync(IEnumerable<int> recipientUserIds, ChatDto chat) =>
             SendToUsersAsync(recipientUserIds, ChatCreated, chat);
 
-        public Task ChatDeletedAsync(IEnumerable<int> recipientUserIds, int chatId) =>
-            SendToUsersAsync(recipientUserIds, ChatDeleted, chatId);
+        public Task ChatDeletedAsync(IEnumerable<int> recipientUserIds, ChatDeletedSignalrDto deleted) =>
+            SendToUsersAsync(recipientUserIds, ChatDeleted, deleted);
 
-        public Task ChatRenamedAsync(IEnumerable<int> recipientUserIds, int chatId, string name) =>
-            SendToUsersAsync(recipientUserIds, ChatRenamed, chatId, name);
+        public Task ChatRenamedAsync(IEnumerable<int> recipientUserIds, ChatRenamedSignalrDto renamed) =>
+            SendToUsersAsync(recipientUserIds, ChatRenamed, renamed);
 
-        private Task SendToUsersAsync(IEnumerable<int> recipientUserIds, string eventName, params object[] args)
+        private Task SendToUsersAsync(IEnumerable<int> recipientUserIds, string eventName, object payload)
         {
             var groups = recipientUserIds.Select(ChatHub.UserGroup).ToList();
-            return _hubContext.Clients.Groups(groups).SendCoreAsync(eventName, args);
+            return _hubContext.Clients.Groups(groups).SendAsync(eventName, payload);
         }
     }
 }
