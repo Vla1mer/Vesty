@@ -13,14 +13,16 @@ namespace Services
         private readonly ILoggerManager _logger;
         private readonly IMapper _mapper;
         private readonly ICurrentUserService _currentUser;
+        private readonly IChatNotifier _notifier;
 
         public ChatMemberService(IRepositoryManager repository, ILoggerManager logger, IMapper mapper,
-            ICurrentUserService currentUser)
+            ICurrentUserService currentUser, IChatNotifier notifier)
         {
             _repository = repository;
             _logger = logger;
             _mapper = mapper;
             _currentUser = currentUser;
+            _notifier = notifier;
         }
 
         public async Task<IEnumerable<ChatMemberWithRoleDto>> GetUsersByChatIdAsync(int chatId)
@@ -33,7 +35,7 @@ namespace Services
 
         public async Task<ChatMemberDto> AddUserToChatAsync(int chatId, ChatMemberForCreationDto memberDto)
         {
-            await GetChatOrThrowAsync(chatId, mustBeGroupChat: "add members");
+            var chat = await GetChatOrThrowAsync(chatId, mustBeGroupChat: "add members");
             await EnsureCallerCanInvite(chatId);
             await EnsureUserExistsAsync(memberDto.UserId);
             await EnsureUserNotInChatAsync(chatId, memberDto.UserId);
@@ -41,6 +43,9 @@ namespace Services
             var member = new ChatMember { ChatId = chatId, UserId = memberDto.UserId };
             _repository.ChatMember.CreateMember(member);
             await _repository.SaveAsync();
+
+            await _notifier.ChatCreatedAsync(new[] { memberDto.UserId }, _mapper.Map<ChatDto>(chat));
+
             return _mapper.Map<ChatMemberDto>(member);
         }
 
@@ -63,6 +68,8 @@ namespace Services
 
             _repository.ChatMember.DeleteMember(target);
             await _repository.SaveAsync();
+
+            await _notifier.ChatDeletedAsync(new[] { targetUserId }, new ChatDeletedSignalrDto { ChatId = chatId });
         }
 
         public async Task UpdateMemberRoleAsync(int chatId, int targetUserId, ChatMemberRoleForUpdateDto roleDto)

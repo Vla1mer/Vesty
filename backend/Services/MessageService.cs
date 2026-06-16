@@ -17,9 +17,11 @@ namespace Services
         private readonly IMessageCipher _cipher;
         private readonly ICurrentUserService _currentUser;
         private readonly IChatService _chatService;
+        private readonly IChatNotifier _notifier;
 
         public MessageService(IRepositoryManager repository, ILoggerManager logger, IMapper mapper,
-            IMessageCipher cipher, ICurrentUserService currentUser, IChatService chatService)
+            IMessageCipher cipher, ICurrentUserService currentUser, IChatService chatService,
+            IChatNotifier notifier)
         {
             _repository = repository;
             _logger = logger;
@@ -27,6 +29,7 @@ namespace Services
             _cipher = cipher;
             _currentUser = currentUser;
             _chatService = chatService;
+            _notifier = notifier;
         }
 
         public async Task<(IEnumerable<MessageDto> messages, MetaData metaData)> GetAllAsync(MessageParameters messageParameters)
@@ -71,7 +74,10 @@ namespace Services
             _repository.Message.CreateMessageForChat(chatId, message);
             await _repository.SaveAsync();
             message.Content = _cipher.Decrypt(message.Content);
-            return _mapper.Map<MessageDto>(message);
+
+            var messageDto = _mapper.Map<MessageDto>(message);
+            await _notifier.MessageReceivedAsync(await GetMemberIdsAsync(chatId), messageDto);
+            return messageDto;
         }
 
         public async Task<MessageDto> CreateDirectChatAndSendMessageAsync(int otherUserId, string content)
@@ -86,6 +92,9 @@ namespace Services
             await EnsureCallerCanModerateMessage(message);
             _repository.Message.DeleteMessage(message);
             await _repository.SaveAsync();
+
+            var deletedDto = new MessageDeletedSignalrDto { ChatId = message.ChatId, MessageId = id };
+            await _notifier.MessageDeletedAsync(await GetMemberIdsAsync(message.ChatId), deletedDto);
         }
 
         public async Task UpdateMessageForChatAsync(int chatId, int id, string content)
@@ -98,6 +107,16 @@ namespace Services
                 throw new MessageOwnershipException(id);
             message.Content = _cipher.Encrypt(content);
             await _repository.SaveAsync();
+            message.Content = content;
+
+            var messageDto = _mapper.Map<MessageDto>(message);
+            await _notifier.MessageUpdatedAsync(await GetMemberIdsAsync(chatId), messageDto);
+        }
+
+        private async Task<IEnumerable<int>> GetMemberIdsAsync(int chatId)
+        {
+            var members = await _repository.ChatMember.GetMembersByChatIdAsync(chatId, trackChanges: false);
+            return members.Select(m => m.UserId);
         }
 
         private async Task<Chat> GetChatOrThrowAsync(int chatId)

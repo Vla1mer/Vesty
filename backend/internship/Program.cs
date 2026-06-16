@@ -1,4 +1,6 @@
-﻿using ChatApp.Extensions;
+﻿using ChatApp.Constants;
+using ChatApp.Extensions;
+using ChatApp.Hubs;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -22,7 +24,7 @@ NewtonsoftJsonPatchInputFormatter GetJsonPatchInputFormatter() =>
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.ConfigureCors();
+builder.Services.ConfigureCors(builder.Configuration);
 builder.Services.ConfigureIISIntegration();
 builder.Services.ConfigureLoggerService();
 builder.Services.ConfigureRepositoryManager();
@@ -61,6 +63,7 @@ builder.Services.ConfigureMessageCipher();
 builder.Services.ConfigureCurrentUserService();
 builder.Services.ConfigureIdentity();
 builder.Services.ConfigureJWT(builder.Configuration);
+builder.Services.ConfigureSignalR();
 builder.Services.AddAutoMapper(typeof(Program));
 
 builder.Services.Configure<ApiBehaviorOptions>(options =>
@@ -107,4 +110,5 @@ app.UseCors("CorsPolicy");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<ChatHub>(HubRoutes.ChatHub);
 app.Run();

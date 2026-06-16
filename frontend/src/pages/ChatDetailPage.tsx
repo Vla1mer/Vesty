@@ -13,6 +13,14 @@ import { MessageBubble } from "../components/MessageBubble";
 import { ChatInfoModal } from "../components/ChatInfoModal";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { getChatDisplayName } from "../utils/chats";
+import {
+  onMessageReceived,
+  onMessageUpdated,
+  onMessageDeleted,
+  onChatDeleted,
+  onChatRenamed,
+  onReconnected,
+} from "../lib/signalr";
 import type { ChatDto, MessageDto, ChatMemberWithRoleDto } from "../types/api";
 import type { AxiosError } from "axios";
 
@@ -34,6 +42,7 @@ export function ChatDetailPage() {
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [deletingMessage, setDeletingMessage] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -79,11 +88,57 @@ export function ChatDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [chatId]);
+  }, [chatId, reloadKey]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    if (!Number.isFinite(chatId)) return;
+
+    const unsubscribeReceived = onMessageReceived((message) => {
+      if (message.chatId !== chatId) return;
+      setMessages((prev) =>
+        prev.some((m) => m.id === message.id) ? prev : [...prev, message]
+      );
+    });
+
+    const unsubscribeUpdated = onMessageUpdated((message) => {
+      if (message.chatId !== chatId) return;
+      setMessages((prev) =>
+        prev.map((m) => (m.id === message.id ? message : m))
+      );
+    });
+
+    const unsubscribeDeleted = onMessageDeleted(({ chatId: eventChatId, messageId }) => {
+      if (eventChatId !== chatId) return;
+      setMessages((prev) => prev.filter((m) => m.id !== messageId));
+    });
+
+    const unsubscribeChatDeleted = onChatDeleted(({ chatId: deletedChatId }) => {
+      if (deletedChatId !== chatId) return;
+      navigate("/chats", { replace: true });
+    });
+
+    const unsubscribeChatRenamed = onChatRenamed(({ chatId: renamedChatId, name }) => {
+      if (renamedChatId !== chatId) return;
+      setChat((prev) => (prev ? { ...prev, name } : prev));
+    });
+
+    const unsubscribeReconnected = onReconnected(() => {
+      setReloadKey((key) => key + 1);
+    });
+
+    return () => {
+      unsubscribeReceived();
+      unsubscribeUpdated();
+      unsubscribeDeleted();
+      unsubscribeChatDeleted();
+      unsubscribeChatRenamed();
+      unsubscribeReconnected();
+    };
+  }, [chatId, navigate]);
 
   async function handleSend(e: FormEvent) {
     e.preventDefault();
@@ -93,7 +148,9 @@ export function ChatDetailPage() {
     setSending(true);
     try {
       const created = await createMessage(chatId, { content });
-      setMessages((prev) => [...prev, created]);
+      setMessages((prev) =>
+        prev.some((m) => m.id === created.id) ? prev : [...prev, created]
+      );
       setInput("");
     } catch {
       setError("Failed to send message");

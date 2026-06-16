@@ -1,4 +1,6 @@
 ﻿using System.Text;
+using ChatApp.Constants;
+using ChatApp.Hubs;
 using Entities.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -13,15 +15,27 @@ namespace ChatApp.Extensions
 {
     public static class ServiceExtensions
     {
-        public static void ConfigureCors(this IServiceCollection services) =>
+        public static void ConfigureCors(this IServiceCollection services, IConfiguration configuration)
+        {
+            var allowedOrigins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+                ?? throw new InvalidOperationException("Cors:AllowedOrigins is not configured");
+
             services.AddCors(options =>
             {
                 options.AddPolicy("CorsPolicy", builder =>
-                    builder.AllowAnyOrigin()
+                    builder.WithOrigins(allowedOrigins)
                     .AllowAnyMethod()
                     .AllowAnyHeader()
+                    .AllowCredentials()
                     .WithExposedHeaders("X-Pagination"));
             });
+        }
+
+        public static void ConfigureSignalR(this IServiceCollection services)
+        {
+            services.AddSignalR();
+            services.AddScoped<IChatNotifier, ChatNotifier>();
+        }
 
         public static void ConfigureIISIntegration(this IServiceCollection services) =>
             services.Configure<IISOptions>(options => { });
@@ -85,6 +99,18 @@ namespace ChatApp.Extensions
                     ValidIssuer = jwtSettings["validIssuer"],
                     ValidAudience = jwtSettings["validAudience"],
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
+                };
+
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments(HubRoutes.ChatHub))
+                            context.Token = accessToken;
+                        return Task.CompletedTask;
+                    }
                 };
             });
         }

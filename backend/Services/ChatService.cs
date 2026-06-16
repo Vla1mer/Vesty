@@ -14,14 +14,16 @@ namespace Services
         private readonly ILoggerManager _logger;
         private readonly IMapper _mapper;
         private readonly ICurrentUserService _currentUser;
+        private readonly IChatNotifier _notifier;
 
         public ChatService(IRepositoryManager repository, ILoggerManager logger, IMapper mapper,
-            ICurrentUserService currentUser)
+            ICurrentUserService currentUser, IChatNotifier notifier)
         {
             _repository = repository;
             _logger = logger;
             _mapper = mapper;
             _currentUser = currentUser;
+            _notifier = notifier;
         }
 
         public async Task<(IEnumerable<ChatDto> chats, MetaData metaData)> GetAllAsync(ChatParameters chatParameters)
@@ -78,7 +80,10 @@ namespace Services
             }
 
             await _repository.SaveAsync();
-            return _mapper.Map<ChatDto>(chat);
+
+            var createdDto = _mapper.Map<ChatDto>(chat);
+            await _notifier.ChatCreatedAsync(seenUserIds, createdDto);
+            return createdDto;
         }
 
         public async Task<DirectChatDto> CreateDirectChatAsync(int otherUserId)
@@ -108,6 +113,9 @@ namespace Services
             AddMember(chat.Id, otherUserId, UserRole.User);
             await _repository.SaveAsync();
 
+            await _notifier.ChatCreatedAsync(new[] { currentUserId }, MapToDirectChatDto(chat, otherUser.UserName));
+            await _notifier.ChatCreatedAsync(new[] { otherUserId }, MapToDirectChatDto(chat, _currentUser.UserName));
+
             return MapToDirectChatDto(chat, otherUser.UserName);
         }
 
@@ -131,8 +139,12 @@ namespace Services
             else
                 await EnsureCallerIsChatOwner(id, "delete this chat");
 
+            var memberIds = await GetMemberIdsAsync(id);
+
             _repository.Chat.DeleteChat(chat);
             await _repository.SaveAsync();
+
+            await _notifier.ChatDeletedAsync(memberIds, new ChatDeletedSignalrDto { ChatId = id });
         }
 
         public async Task RenameAsync(int id, ChatForRenameDto chatDto)
@@ -143,6 +155,15 @@ namespace Services
             await EnsureCallerIsChatOwner(id, "rename this chat");
             chat.Name = chatDto.Name;
             await _repository.SaveAsync();
+
+            var renamedDto = new ChatRenamedSignalrDto { ChatId = id, Name = chatDto.Name };
+            await _notifier.ChatRenamedAsync(await GetMemberIdsAsync(id), renamedDto);
+        }
+
+        private async Task<List<int>> GetMemberIdsAsync(int chatId)
+        {
+            var members = await _repository.ChatMember.GetMembersByChatIdAsync(chatId, trackChanges: false);
+            return members.Select(m => m.UserId).ToList();
         }
 
         private async Task<Chat> GetChatOrThrowAsync(int chatId, bool trackChanges)
