@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import { Formik, Form } from "formik";
 import { getUserById, updateUser, deleteUser } from "../api/users";
 import { useAuth } from "../context/useAuth";
 import { BottomNav } from "../components/BottomNav";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { FormField } from "../components/FormField";
+import { profileSchema } from "../validation/profileSchema";
 import type { UserDto } from "../types/api";
 import type { AxiosError } from "axios";
 
@@ -16,16 +18,8 @@ export function ProfilePage() {
   const [loading, setLoading] = useState(userId !== null);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
-
-  // Поля формы редактирования
-  const [userName, setUserName] = useState("");
-  const [name, setName] = useState("");
-  const [surname, setSurname] = useState("");
-  const [phone, setPhone] = useState("");
-  const [birthday, setBirthday] = useState("");
 
   useEffect(() => {
     if (userId === null) {
@@ -46,57 +40,6 @@ export function ProfilePage() {
       cancelled = true;
     };
   }, [userId]);
-
-  function startEdit() {
-    if (!user) return;
-    setUserName(user.userName);
-    setName(user.name ?? "");
-    setSurname(user.surname ?? "");
-    setPhone(user.phone ?? "");
-    setBirthday(user.birthday ?? "");
-    setError(null);
-    setIsEditing(true);
-  }
-
-  async function handleSave(e: FormEvent) {
-    e.preventDefault();
-    if (userId === null || saving) return;
-
-    setSaving(true);
-    setError(null);
-    try {
-      await updateUser(userId, {
-        userName: userName.trim(),
-        name: name.trim() || undefined,
-        surname: surname.trim() || undefined,
-        phone: phone.trim() || undefined,
-        birthday: birthday || undefined,
-      });
-      setUser((prev) =>
-        prev
-          ? {
-              ...prev,
-              userName: userName.trim(),
-              name: name.trim() || undefined,
-              surname: surname.trim() || undefined,
-              phone: phone.trim() || undefined,
-              birthday: birthday || undefined,
-            }
-          : prev
-      );
-      setIsEditing(false);
-    } catch (err) {
-      const axiosErr = err as AxiosError<{ errors?: Record<string, string[]> }>;
-      const data = axiosErr.response?.data;
-      if (data?.errors) {
-        setError(Object.values(data.errors).flat().join(" "));
-      } else {
-        setError("Failed to save profile");
-      }
-    } finally {
-      setSaving(false);
-    }
-  }
 
   async function handleDeleteAccount() {
     if (userId === null) return;
@@ -132,71 +75,74 @@ export function ProfilePage() {
       {!loading && user && (
         <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 w-full max-w-md">
           {isEditing ? (
-            <form onSubmit={handleSave} className="space-y-4">
-              <Field label="Username *">
-                <input
-                  type="text"
-                  value={userName}
-                  onChange={(e) => setUserName(e.target.value)}
-                  required
-                  maxLength={50}
-                  className={inputClass}
-                />
-              </Field>
-              <Field label="First name">
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  maxLength={100}
-                  className={inputClass}
-                />
-              </Field>
-              <Field label="Surname">
-                <input
-                  type="text"
-                  value={surname}
-                  onChange={(e) => setSurname(e.target.value)}
-                  maxLength={100}
-                  className={inputClass}
-                />
-              </Field>
-              <Field label="Phone">
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  maxLength={20}
-                  className={inputClass}
-                />
-              </Field>
-              <Field label="Birthday">
-                <input
-                  type="date"
-                  value={birthday}
-                  onChange={(e) => setBirthday(e.target.value)}
-                  className={inputClass}
-                />
-              </Field>
+            <Formik
+              initialValues={{
+                userName: user.userName,
+                name: user.name ?? "",
+                surname: user.surname ?? "",
+                phone: user.phone ?? "",
+                birthday: user.birthday ?? "",
+              }}
+              validationSchema={profileSchema}
+              onSubmit={async (values, { setStatus }) => {
+                if (userId === null) return;
+                setStatus(null);
+                const payload = {
+                  userName: values.userName.trim(),
+                  name: values.name.trim() || undefined,
+                  surname: values.surname.trim() || undefined,
+                  phone: values.phone.trim() || undefined,
+                  birthday: values.birthday || undefined,
+                };
+                try {
+                  await updateUser(userId, payload);
+                  setUser((prev) => (prev ? { ...prev, ...payload } : prev));
+                  setIsEditing(false);
+                } catch (err) {
+                  const axiosErr = err as AxiosError<{ errors?: Record<string, string[]> }>;
+                  const data = axiosErr.response?.data;
+                  setStatus(
+                    data?.errors
+                      ? Object.values(data.errors).flat().join(" ")
+                      : "Failed to save profile"
+                  );
+                }
+              }}
+            >
+              {({ isSubmitting, status }) => (
+                <Form className="space-y-4">
+                  <FormField label="Username *" name="userName" maxLength={50} />
+                  <FormField label="First name" name="name" maxLength={100} />
+                  <FormField label="Surname" name="surname" maxLength={100} />
+                  <FormField label="Phone" name="phone" type="tel" maxLength={20} />
+                  <FormField label="Birthday" name="birthday" type="date" />
 
-              <div className="flex gap-2 pt-2">
-                <button
-                  type="submit"
-                  disabled={saving || !userName.trim()}
-                  className="px-4 py-2 rounded bg-amber-600 hover:bg-amber-500 text-white font-medium disabled:opacity-50 transition"
-                >
-                  {saving ? "Saving..." : "Save"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsEditing(false)}
-                  disabled={saving}
-                  className="px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-slate-100 disabled:opacity-50 transition"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
+                  {status && (
+                    <div className="text-sm text-red-400 bg-red-950 border border-red-900 rounded p-2">
+                      {status}
+                    </div>
+                  )}
+
+                  <div className="flex gap-2 pt-2">
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="px-4 py-2 rounded bg-amber-600 hover:bg-amber-500 text-white font-medium disabled:opacity-50 transition"
+                    >
+                      {isSubmitting ? "Saving..." : "Save"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditing(false)}
+                      disabled={isSubmitting}
+                      className="px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-slate-100 disabled:opacity-50 transition"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </Form>
+              )}
+            </Formik>
           ) : (
             <div className="space-y-3">
               <Row label="Username" value={user.userName} />
@@ -208,7 +154,10 @@ export function ProfilePage() {
               <div className="pt-4 flex flex-col gap-2">
                 <button
                   type="button"
-                  onClick={startEdit}
+                  onClick={() => {
+                    setError(null);
+                    setIsEditing(true);
+                  }}
                   className="w-full px-4 py-2 rounded bg-amber-600 hover:bg-amber-500 text-white font-medium transition"
                 >
                   ✏️ Edit profile
@@ -246,24 +195,6 @@ export function ProfilePage() {
       )}
 
       <BottomNav />
-    </div>
-  );
-}
-
-const inputClass =
-  "w-full px-3 py-2 rounded bg-slate-900 border border-slate-600 text-slate-100 focus:outline-none focus:border-amber-500";
-
-function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <label className="block text-sm text-slate-300 mb-1">{label}</label>
-      {children}
     </div>
   );
 }
