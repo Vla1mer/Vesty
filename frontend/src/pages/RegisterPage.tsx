@@ -2,8 +2,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { Formik, Form } from "formik";
 import { register } from "../api/auth";
 import { FormField } from "../components/FormField";
+import { FormError } from "../components/FormError";
 import { registerSchema } from "../validation/authSchemas";
-import type { AxiosError } from "axios";
+import { parseApiErrors } from "../utils/apiError";
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ export function RegisterPage() {
       <Formik
         initialValues={{ userName: "", password: "", name: "", surname: "" }}
         validationSchema={registerSchema}
-        onSubmit={async (values, { setStatus }) => {
+        onSubmit={async (values, { setStatus, setFieldError }) => {
           setStatus(null);
           try {
             await register({
@@ -24,14 +25,14 @@ export function RegisterPage() {
             });
             navigate("/login");
           } catch (err) {
-            const axiosErr = err as AxiosError<{ errors?: Record<string, string[]> }>;
-            const responseData = axiosErr.response?.data;
-            if (responseData?.errors) {
-              const messages = Object.values(responseData.errors).flat();
-              setStatus(messages.join(" "));
-            } else {
-              setStatus("Registration failed. Please try again.");
-            }
+            const { fieldErrors, generalError } = parseApiErrors(
+              err,
+              "Registration failed. Please try again."
+            );
+            Object.entries(fieldErrors).forEach(([field, msg]) =>
+              setFieldError(field, msg)
+            );
+            setStatus(generalError ?? null);
           }
         }}
       >
@@ -62,11 +63,8 @@ export function RegisterPage() {
             <FormField label="First name" name="name" maxLength={100} />
             <FormField label="Surname" name="surname" maxLength={100} />
 
-            {status && (
-              <div className="text-sm text-red-400 bg-red-950 border border-red-900 rounded p-2">
-                {status}
-              </div>
-            )}
+            <FormError message={status} />
+
 
             <button
               type="submit"

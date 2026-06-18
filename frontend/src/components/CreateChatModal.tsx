@@ -2,9 +2,10 @@ import { useEffect } from "react";
 import { Formik, Form } from "formik";
 import { createChat } from "../api/chats";
 import { FormField } from "./FormField";
+import { FormError } from "./FormError";
 import { chatNameSchema } from "../validation/chatSchemas";
+import { getApiErrorMessage } from "../utils/apiError";
 import type { ChatDto } from "../types/api";
-import type { AxiosError } from "axios";
 
 interface Props {
   onClose: () => void;
@@ -51,13 +52,7 @@ export function CreateChatModal({ onClose, onCreated }: Props) {
               onCreated(chat);
               onClose();
             } catch (err) {
-              const axiosErr = err as AxiosError<{ errors?: Record<string, string[]> }>;
-              const responseData = axiosErr.response?.data;
-              setStatus(
-                responseData?.errors
-                  ? Object.values(responseData.errors).flat().join(" ")
-                  : "Failed to create chat. Please try again."
-              );
+              setStatus(getApiErrorMessage(err, "Failed to create chat. Please try again."));
             }
           }}
         >
@@ -70,11 +65,8 @@ export function CreateChatModal({ onClose, onCreated }: Props) {
                 maxLength={200}
               />
 
-              {status && (
-                <div className="text-sm text-red-400 bg-red-950 border border-red-900 rounded p-2">
-                  {status}
-                </div>
-              )}
+              <FormError message={status} />
+
 
               <div className="flex gap-2 justify-end">
                 <button

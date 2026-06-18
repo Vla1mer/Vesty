@@ -3,6 +3,7 @@ import { Formik, Form } from "formik";
 import { login } from "../api/auth";
 import { useAuth } from "../context/useAuth";
 import { FormField } from "../components/FormField";
+import { FormError } from "../components/FormError";
 import { loginSchema } from "../validation/authSchemas";
 import type { AxiosError } from "axios";
 
@@ -54,11 +55,8 @@ export function LoginPage() {
               autoComplete="current-password"
             />
 
-            {status && (
-              <div className="text-sm text-red-400 bg-red-950 border border-red-900 rounded p-2">
-                {status}
-              </div>
-            )}
+            <FormError message={status} />
+
 
             <button
               type="submit"

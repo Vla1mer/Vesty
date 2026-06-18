@@ -6,9 +6,10 @@ import { useAuth } from "../context/useAuth";
 import { BottomNav } from "../components/BottomNav";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { FormField } from "../components/FormField";
+import { FormError } from "../components/FormError";
 import { profileSchema } from "../validation/profileSchema";
+import { parseApiErrors } from "../utils/apiError";
 import type { UserDto } from "../types/api";
-import type { AxiosError } from "axios";
 
 export function ProfilePage() {
   const navigate = useNavigate();
@@ -84,7 +85,7 @@ export function ProfilePage() {
                 birthday: user.birthday ?? "",
               }}
               validationSchema={profileSchema}
-              onSubmit={async (values, { setStatus }) => {
+              onSubmit={async (values, { setStatus, setFieldError }) => {
                 if (userId === null) return;
                 setStatus(null);
                 const payload = {
@@ -99,13 +100,14 @@ export function ProfilePage() {
                   setUser((prev) => (prev ? { ...prev, ...payload } : prev));
                   setIsEditing(false);
                 } catch (err) {
-                  const axiosErr = err as AxiosError<{ errors?: Record<string, string[]> }>;
-                  const data = axiosErr.response?.data;
-                  setStatus(
-                    data?.errors
-                      ? Object.values(data.errors).flat().join(" ")
-                      : "Failed to save profile"
+                  const { fieldErrors, generalError } = parseApiErrors(
+                    err,
+                    "Failed to save profile"
                   );
+                  Object.entries(fieldErrors).forEach(([field, msg]) =>
+                    setFieldError(field, msg)
+                  );
+                  setStatus(generalError ?? null);
                 }
               }}
             >
@@ -117,11 +119,8 @@ export function ProfilePage() {
                   <FormField label="Phone" name="phone" type="tel" maxLength={20} />
                   <FormField label="Birthday" name="birthday" type="date" />
 
-                  {status && (
-                    <div className="text-sm text-red-400 bg-red-950 border border-red-900 rounded p-2">
-                      {status}
-                    </div>
-                  )}
+                  <FormError message={status} />
+
 
                   <div className="flex gap-2 pt-2">
                     <button
