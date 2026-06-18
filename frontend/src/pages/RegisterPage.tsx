@@ -12,7 +12,7 @@ export function RegisterPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <Formik
-        initialValues={{ userName: "", password: "", name: "", surname: "" }}
+        initialValues={{ userName: "", password: "", confirmPassword: "", name: "", surname: "" }}
         validationSchema={registerSchema}
         onSubmit={async (values, { setStatus, setFieldError }) => {
           setStatus(null);
@@ -59,6 +59,12 @@ export function RegisterPage() {
               type="password"
               autoComplete="new-password"
               hint="Min 6 characters, at least 1 digit"
+            />
+            <FormField
+              label="Confirm password *"
+              name="confirmPassword"
+              type="password"
+              autoComplete="new-password"
             />
             <FormField label="First name" name="name" maxLength={100} />
             <FormField label="Surname" name="surname" maxLength={100} />
