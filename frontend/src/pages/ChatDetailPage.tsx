@@ -3,25 +3,18 @@ import type { FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getChatById, getChatMembers } from "../api/chats";
 import {
-  getMessagesByChat,
-  createMessage,
-  updateMessage,
-  deleteMessage,
-} from "../api/messages";
+  useGetMessagesByChatQuery,
+  useCreateMessageMutation,
+  useUpdateMessageMutation,
+  useDeleteMessageMutation,
+} from "../store/messageApi";
 import { useAuth } from "../context/useAuth";
 import { MessageBubble } from "../components/MessageBubble";
 import { ChatInfoModal } from "../components/ChatInfoModal";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { getChatDisplayName } from "../utils/chats";
-import {
-  onMessageReceived,
-  onMessageUpdated,
-  onMessageDeleted,
-  onChatDeleted,
-  onChatRenamed,
-  onReconnected,
-} from "../lib/signalr";
-import type { ChatDto, MessageDto, ChatMemberWithRoleDto } from "../types/api";
+import { onChatDeleted, onChatRenamed, onReconnected } from "../lib/signalr";
+import type { ChatDto, ChatMemberWithRoleDto } from "../types/api";
 import type { AxiosError } from "axios";
 
 export function ChatDetailPage() {
@@ -29,20 +22,28 @@ export function ChatDetailPage() {
   const navigate = useNavigate();
   const { userId } = useAuth();
   const chatId = Number(id);
+  const isValidChat = Number.isFinite(chatId);
 
   const [chat, setChat] = useState<ChatDto | null>(null);
-  const [messages, setMessages] = useState<MessageDto[]>([]);
   const [members, setMembers] = useState<ChatMemberWithRoleDto[]>([]);
-  const [loading, setLoading] = useState(Number.isFinite(chatId));
+  const [loading, setLoading] = useState(isValidChat);
   const [error, setError] = useState<string | null>(
-    Number.isFinite(chatId) ? null : "Invalid chat id"
+    isValidChat ? null : "Invalid chat id"
   );
   const [input, setInput] = useState("");
-  const [sending, setSending] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
-  const [deletingMessage, setDeletingMessage] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+
+  const {
+    data: messages = [],
+    isLoading: messagesLoading,
+    isError: messagesError,
+  } = useGetMessagesByChatQuery(chatId, { skip: !isValidChat });
+  const [createMessage, { isLoading: sending }] = useCreateMessageMutation();
+  const [updateMessage] = useUpdateMessageMutation();
+  const [deleteMessage, { isLoading: deletingMessage }] =
+    useDeleteMessageMutation();
 
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -53,21 +54,19 @@ export function ChatDetailPage() {
   }, [members]);
 
   useEffect(() => {
-    if (!Number.isFinite(chatId)) {
+    if (!isValidChat) {
       return;
     }
 
     let cancelled = false;
     (async () => {
       try {
-        const [chatData, messagesData, membersData] = await Promise.all([
+        const [chatData, membersData] = await Promise.all([
           getChatById(chatId),
-          getMessagesByChat(chatId),
           getChatMembers(chatId),
         ]);
         if (!cancelled) {
           setChat(chatData);
-          setMessages(messagesData);
           setMembers(membersData);
         }
       } catch (err) {
@@ -88,33 +87,14 @@ export function ChatDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [chatId, reloadKey]);
+  }, [chatId, isValidChat, reloadKey]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   useEffect(() => {
-    if (!Number.isFinite(chatId)) return;
-
-    const unsubscribeReceived = onMessageReceived((message) => {
-      if (message.chatId !== chatId) return;
-      setMessages((prev) =>
-        prev.some((m) => m.id === message.id) ? prev : [...prev, message]
-      );
-    });
-
-    const unsubscribeUpdated = onMessageUpdated((message) => {
-      if (message.chatId !== chatId) return;
-      setMessages((prev) =>
-        prev.map((m) => (m.id === message.id ? message : m))
-      );
-    });
-
-    const unsubscribeDeleted = onMessageDeleted(({ chatId: eventChatId, messageId }) => {
-      if (eventChatId !== chatId) return;
-      setMessages((prev) => prev.filter((m) => m.id !== messageId));
-    });
+    if (!isValidChat) return;
 
     const unsubscribeChatDeleted = onChatDeleted(({ chatId: deletedChatId }) => {
       if (deletedChatId !== chatId) return;
@@ -131,52 +111,36 @@ export function ChatDetailPage() {
     });
 
     return () => {
-      unsubscribeReceived();
-      unsubscribeUpdated();
-      unsubscribeDeleted();
       unsubscribeChatDeleted();
       unsubscribeChatRenamed();
       unsubscribeReconnected();
     };
-  }, [chatId, navigate]);
+  }, [chatId, isValidChat, navigate]);
 
   async function handleSend(e: FormEvent) {
     e.preventDefault();
     const content = input.trim();
     if (!content || sending) return;
 
-    setSending(true);
     try {
-      const created = await createMessage(chatId, { content });
-      setMessages((prev) =>
-        prev.some((m) => m.id === created.id) ? prev : [...prev, created]
-      );
+      await createMessage({ chatId, content }).unwrap();
       setInput("");
     } catch {
       setError("Failed to send message");
-    } finally {
-      setSending(false);
     }
   }
 
   async function handleEditMessage(id: number, content: string) {
-    await updateMessage(chatId, id, content);
-    setMessages((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, content } : m))
-    );
+    await updateMessage({ chatId, id, content }).unwrap();
   }
 
   async function confirmDeleteMessage() {
     if (deleteTargetId === null) return;
-    setDeletingMessage(true);
     try {
-      await deleteMessage(deleteTargetId);
-      setMessages((prev) => prev.filter((m) => m.id !== deleteTargetId));
+      await deleteMessage({ chatId, id: deleteTargetId }).unwrap();
       setDeleteTargetId(null);
     } catch {
       setError("Failed to delete message");
-    } finally {
-      setDeletingMessage(false);
     }
   }
 
@@ -220,19 +184,25 @@ export function ChatDetailPage() {
       </header>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {loading && <p className="text-slate-400 text-center">Loading...</p>}
+        {(loading || messagesLoading) && (
+          <p className="text-slate-400 text-center">Loading...</p>
+        )}
 
-        {error && (
+        {(error || messagesError) && (
           <div className="text-sm text-red-400 bg-red-950 border border-red-900 rounded p-3">
-            {error}
+            {error ?? "Failed to load messages"}
           </div>
         )}
 
-        {!loading && !error && messages.length === 0 && (
-          <div className="text-center py-12 text-slate-400">
-            <p>No messages yet. Be the first to write something!</p>
-          </div>
-        )}
+        {!loading &&
+          !messagesLoading &&
+          !error &&
+          !messagesError &&
+          messages.length === 0 && (
+            <div className="text-center py-12 text-slate-400">
+              <p>No messages yet. Be the first to write something!</p>
+            </div>
+          )}
 
         {messages.map((msg) => (
           <MessageBubble

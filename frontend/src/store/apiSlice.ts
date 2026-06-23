@@ -4,6 +4,6 @@ import { axiosBaseQuery } from "../api/axiosBaseQuery";
 export const apiSlice = createApi({
   reducerPath: "api",
   baseQuery: axiosBaseQuery(),
-  tagTypes: ["Chat"],
+  tagTypes: ["Chat", "Message"],
   endpoints: () => ({}),
 });

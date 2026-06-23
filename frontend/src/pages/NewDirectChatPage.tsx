@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getUserById } from "../api/users";
-import { createDirectChatAndSendMessage } from "../api/messages";
+import { useCreateDirectChatAndSendMessageMutation } from "../store/messageApi";
 import type { UserDto } from "../types/api";
 import type { AxiosError } from "axios";
 
@@ -17,7 +17,8 @@ export function NewDirectChatPage() {
     Number.isFinite(otherUserId) ? null : "Invalid user id"
   );
   const [input, setInput] = useState("");
-  const [sending, setSending] = useState(false);
+  const [createDirectChatAndSendMessage, { isLoading: sending }] =
+    useCreateDirectChatAndSendMessageMutation();
 
   useEffect(() => {
     if (!Number.isFinite(otherUserId)) {
@@ -52,16 +53,14 @@ export function NewDirectChatPage() {
     const content = input.trim();
     if (!content || sending) return;
 
-    setSending(true);
     try {
       const message = await createDirectChatAndSendMessage({
         otherUserId,
         content,
-      });
+      }).unwrap();
       navigate(`/chats/${message.chatId}`, { replace: true });
     } catch {
       setError("Failed to send message");
-      setSending(false);
     }
   }
 
