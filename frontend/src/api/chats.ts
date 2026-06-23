@@ -1,31 +1,9 @@
 import { api } from "./client";
-import type {
-  ChatDto,
-  ChatForCreationDto,
-  ChatMemberWithRoleDto,
-} from "../types/api";
-
-export async function getChats(): Promise<ChatDto[]> {
-  const response = await api.get<ChatDto[]>("/api/Chat");
-  return response.data;
-}
+import type { ChatDto, ChatMemberWithRoleDto } from "../types/api";
 
 export async function getChatById(id: number): Promise<ChatDto> {
   const response = await api.get<ChatDto>(`/api/Chat/${id}`);
   return response.data;
-}
-
-export async function createChat(dto: ChatForCreationDto): Promise<ChatDto> {
-  const response = await api.post<ChatDto>("/api/Chat", dto);
-  return response.data;
-}
-
-export async function deleteChat(chatId: number): Promise<void> {
-  await api.delete(`/api/Chat/${chatId}`);
-}
-
-export async function renameChat(chatId: number, name: string): Promise<void> {
-  await api.put(`/api/Chat/${chatId}`, { name });
 }
 
 export async function getChatMembers(

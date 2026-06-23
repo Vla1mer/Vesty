@@ -1,18 +1,18 @@
 import { useEffect } from "react";
 import { Formik, Form } from "formik";
-import { createChat } from "../api/chats";
+import { useCreateChatMutation } from "../store/chatApi";
 import { FormField } from "./FormField";
 import { FormError } from "./FormError";
 import { chatNameSchema } from "../validation/chatSchemas";
 import { getApiErrorMessage } from "../utils/apiError";
-import type { ChatDto } from "../types/api";
 
 interface Props {
   onClose: () => void;
-  onCreated: (chat: ChatDto) => void;
 }
 
-export function CreateChatModal({ onClose, onCreated }: Props) {
+export function CreateChatModal({ onClose }: Props) {
+  const [createChat] = useCreateChatMutation();
+
   useEffect(() => {
     function handleEsc(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
@@ -48,8 +48,7 @@ export function CreateChatModal({ onClose, onCreated }: Props) {
           onSubmit={async (values, { setStatus }) => {
             setStatus(null);
             try {
-              const chat = await createChat({ name: values.name.trim() });
-              onCreated(chat);
+              await createChat({ name: values.name.trim() }).unwrap();
               onClose();
             } catch (err) {
               setStatus(getApiErrorMessage(err, "Failed to create chat. Please try again."));

@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   addChatMember,
-  deleteChat,
   getChatMembers,
   removeChatMember,
-  renameChat,
   updateMemberRole,
 } from "../api/chats";
 import { getAllUsers } from "../api/users";
+import { useDeleteChatMutation, useRenameChatMutation } from "../store/chatApi";
 import { useAuth } from "../context/useAuth";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { isDirectChat, UserRole } from "../types/api";
@@ -16,12 +15,12 @@ import { chatNameSchema } from "../validation/chatSchemas";
 import { ValidationError } from "yup";
 import type { ChatDto, UserDto, ChatMemberWithRoleDto } from "../types/api";
 import type { AxiosError } from "axios";
+import type { AxiosBaseQueryError } from "../api/axiosBaseQuery";
 
 interface Props {
   chat: ChatDto;
   onClose: () => void;
   onDeleted: () => void;
-  onRenamed?: (newName: string) => void;
 }
 
 const roleLabel: Record<number, string> = {
@@ -30,8 +29,10 @@ const roleLabel: Record<number, string> = {
   [UserRole.User]: "Member",
 };
 
-export function ChatInfoModal({ chat, onClose, onDeleted, onRenamed }: Props) {
+export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
   const { userId: currentUserId } = useAuth();
+  const [deleteChat] = useDeleteChatMutation();
+  const [renameChat] = useRenameChatMutation();
   const [members, setMembers] = useState<ChatMemberWithRoleDto[]>([]);
   const [allUsers, setAllUsers] = useState<UserDto[]>([]);
   const [search, setSearch] = useState("");
@@ -170,12 +171,12 @@ export function ChatInfoModal({ chat, onClose, onDeleted, onRenamed }: Props) {
   async function handleDelete() {
     setDeleting(true);
     try {
-      await deleteChat(chat.id);
+      await deleteChat(chat.id).unwrap();
       onDeleted();
     } catch (err) {
-      const axiosErr = err as AxiosError;
+      const status = (err as AxiosBaseQueryError).status;
       setError(
-        axiosErr.response?.status === 403
+        status === 403
           ? "You don't have permission to delete this chat"
           : "Failed to delete chat"
       );
@@ -198,13 +199,12 @@ export function ChatInfoModal({ chat, onClose, onDeleted, onRenamed }: Props) {
     setRenaming(true);
     setError(null);
     try {
-      await renameChat(chat.id, newName);
-      onRenamed?.(newName);
+      await renameChat({ chatId: chat.id, name: newName }).unwrap();
       setIsRenaming(false);
     } catch (err) {
-      const axiosErr = err as AxiosError;
+      const status = (err as AxiosBaseQueryError).status;
       setError(
-        axiosErr.response?.status === 403
+        status === 403
           ? "Only the owner can rename this chat"
           : "Failed to rename chat"
       );

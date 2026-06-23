@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getChats } from "../api/chats";
+import { useGetChatsQuery } from "../store/chatApi";
 import { useAuth } from "../context/useAuth";
 import { ChatListItem } from "../components/ChatListItem";
 import { CreateChatModal } from "../components/CreateChatModal";
@@ -9,80 +9,18 @@ import { SearchBar } from "../components/SearchBar";
 import { SearchResults } from "../components/SearchResults";
 import { FloatingActionButton } from "../components/FloatingActionButton";
 import { BottomNav } from "../components/BottomNav";
-import {
-  onChatCreated,
-  onChatDeleted,
-  onChatRenamed,
-  onReconnected,
-} from "../lib/signalr";
-import type { ChatDto } from "../types/api";
 
 export function ChatsPage() {
   const navigate = useNavigate();
   const { userName, logout } = useAuth();
-  const [chats, setChats] = useState<ChatDto[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: chats = [], isLoading, isError } = useGetChatsQuery();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isSelectUserOpen, setIsSelectUserOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [reloadKey, setReloadKey] = useState(0);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const data = await getChats();
-        if (!cancelled) setChats(data);
-      } catch {
-        if (!cancelled) setError("Failed to load chats");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [reloadKey]);
-
-  useEffect(() => {
-    const unsubscribeCreated = onChatCreated((chat) => {
-      setChats((prev) =>
-        prev.some((c) => c.id === chat.id) ? prev : [chat, ...prev]
-      );
-    });
-
-    const unsubscribeDeleted = onChatDeleted(({ chatId }) => {
-      setChats((prev) => prev.filter((c) => c.id !== chatId));
-    });
-
-    const unsubscribeRenamed = onChatRenamed(({ chatId, name }) => {
-      setChats((prev) =>
-        prev.map((c) => (c.id === chatId ? { ...c, name } : c))
-      );
-    });
-
-    const unsubscribeReconnected = onReconnected(() => {
-      setReloadKey((key) => key + 1);
-    });
-
-    return () => {
-      unsubscribeCreated();
-      unsubscribeDeleted();
-      unsubscribeRenamed();
-      unsubscribeReconnected();
-    };
-  }, []);
 
   function handleLogout() {
     logout();
     navigate("/login");
-  }
-
-  function handleChatCreated(chat: ChatDto) {
-    setChats((prev) =>
-      prev.some((c) => c.id === chat.id) ? prev : [chat, ...prev]
-    );
   }
 
   const isSearching = searchQuery.trim().length > 0;
@@ -108,15 +46,15 @@ export function ChatsPage() {
 
       <SearchBar value={searchQuery} onChange={setSearchQuery} />
 
-      {loading && <p className="text-slate-400">Loading...</p>}
+      {isLoading && <p className="text-slate-400">Loading...</p>}
 
-      {error && (
+      {isError && (
         <div className="text-sm text-red-400 bg-red-950 border border-red-900 rounded p-3 mb-4">
-          {error}
+          Failed to load chats
         </div>
       )}
 
-      {!loading && !error && (
+      {!isLoading && !isError && (
         <div className="pb-32">
           {isSearching ? (
             <SearchResults query={searchQuery} chats={chats} />
@@ -155,10 +93,7 @@ export function ChatsPage() {
       />
 
       {isCreateModalOpen && (
-        <CreateChatModal
-          onClose={() => setIsCreateModalOpen(false)}
-          onCreated={handleChatCreated}
-        />
+        <CreateChatModal onClose={() => setIsCreateModalOpen(false)} />
       )}
 
       {isSelectUserOpen && (
