@@ -12,6 +12,8 @@ import { useAuth } from "../context/useAuth";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { isDirectChat, UserRole } from "../types/api";
 import { getChatDisplayName } from "../utils/chats";
+import { chatNameSchema } from "../validation/chatSchemas";
+import { ValidationError } from "yup";
 import type { ChatDto, UserDto, ChatMemberWithRoleDto } from "../types/api";
 import type { AxiosError } from "axios";
 
@@ -183,8 +185,15 @@ export function ChatInfoModal({ chat, onClose, onDeleted, onRenamed }: Props) {
   }
 
   async function handleRename() {
+    if (renaming) return;
     const newName = nameDraft.trim();
-    if (!newName || renaming) return;
+
+    try {
+      await chatNameSchema.validate({ name: newName });
+    } catch (validationErr) {
+      setError((validationErr as ValidationError).message);
+      return;
+    }
 
     setRenaming(true);
     setError(null);
