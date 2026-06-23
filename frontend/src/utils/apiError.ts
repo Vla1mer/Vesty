@@ -41,8 +41,9 @@ function extractErrorDict(data: unknown): Record<string, string[]> | null {
 }
 
 export function parseApiErrors(err: unknown, fallback: string): ParsedApiErrors {
-  const axiosErr = err as AxiosError;
-  const errors = extractErrorDict(axiosErr.response?.data);
+  const data =
+    (err as AxiosError).response?.data ?? (err as { data?: unknown }).data;
+  const errors = extractErrorDict(data);
   if (!errors) return { fieldErrors: {}, generalError: fallback };
 
   const fieldErrors: Record<string, string> = {};

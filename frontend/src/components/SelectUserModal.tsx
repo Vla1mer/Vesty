@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAllUsers } from "../api/users";
+import { useGetAllUsersQuery } from "../store/userApi";
 import { useAuth } from "../context/useAuth";
 import type { UserDto } from "../types/api";
 
@@ -11,27 +11,9 @@ interface Props {
 export function SelectUserModal({ onClose }: Props) {
   const navigate = useNavigate();
   const { userId: currentUserId } = useAuth();
-  const [users, setUsers] = useState<UserDto[]>([]);
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    getAllUsers()
-      .then((data) => {
-        if (!cancelled) setUsers(data);
-      })
-      .catch(() => {
-        if (!cancelled) setError("Failed to load users");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { data: users = [], isLoading: loading, isError } =
+    useGetAllUsersQuery();
 
   useEffect(() => {
     function handleEsc(e: KeyboardEvent) {
@@ -82,9 +64,9 @@ export function SelectUserModal({ onClose }: Props) {
           className="w-full px-3 py-2 rounded bg-slate-900 border border-slate-600 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500 mb-3"
         />
 
-        {error && (
+        {isError && (
           <div className="text-sm text-red-400 bg-red-950 border border-red-900 rounded p-2 mb-3">
-            {error}
+            Failed to load users
           </div>
         )}
 

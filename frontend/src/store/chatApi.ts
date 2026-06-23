@@ -5,7 +5,11 @@ import {
   onChatRenamed,
   onReconnected,
 } from "../lib/signalr";
-import type { ChatDto, ChatForCreationDto } from "../types/api";
+import type {
+  ChatDto,
+  ChatForCreationDto,
+  ChatMemberWithRoleDto,
+} from "../types/api";
 
 export const chatApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
@@ -87,6 +91,106 @@ export const chatApi = apiSlice.injectEndpoints({
         { type: "Chat", id: chatId },
       ],
     }),
+
+    getChatById: builder.query<ChatDto, number>({
+      query: (chatId) => ({ url: `/api/Chat/${chatId}` }),
+      providesTags: (_result, _error, chatId) => [{ type: "Chat", id: chatId }],
+      async onCacheEntryAdded(
+        chatId,
+        { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch }
+      ) {
+        const subscriptions: Array<() => void> = [];
+        try {
+          await cacheDataLoaded;
+
+          subscriptions.push(
+            onChatRenamed(({ chatId: renamedChatId, name }) => {
+              if (renamedChatId !== chatId) return;
+              updateCachedData((draft) => {
+                draft.name = name;
+              });
+            })
+          );
+
+          subscriptions.push(
+            onReconnected(() => {
+              dispatch(
+                apiSlice.util.invalidateTags([{ type: "Chat", id: chatId }])
+              );
+            })
+          );
+
+          await cacheEntryRemoved;
+        } finally {
+          subscriptions.forEach((unsubscribe) => unsubscribe());
+        }
+      },
+    }),
+
+    getChatMembers: builder.query<ChatMemberWithRoleDto[], number>({
+      query: (chatId) => ({ url: `/api/Chat/${chatId}/users` }),
+      providesTags: (_result, _error, chatId) => [
+        { type: "ChatMember", id: chatId },
+      ],
+      async onCacheEntryAdded(
+        chatId,
+        { cacheDataLoaded, cacheEntryRemoved, dispatch }
+      ) {
+        const subscriptions: Array<() => void> = [];
+        try {
+          await cacheDataLoaded;
+
+          subscriptions.push(
+            onReconnected(() => {
+              dispatch(
+                apiSlice.util.invalidateTags([
+                  { type: "ChatMember", id: chatId },
+                ])
+              );
+            })
+          );
+
+          await cacheEntryRemoved;
+        } finally {
+          subscriptions.forEach((unsubscribe) => unsubscribe());
+        }
+      },
+    }),
+
+    addChatMember: builder.mutation<void, { chatId: number; userId: number }>({
+      query: ({ chatId, userId }) => ({
+        url: `/api/Chat/${chatId}/users`,
+        method: "post",
+        data: { userId },
+      }),
+      invalidatesTags: (_result, _error, { chatId }) => [
+        { type: "ChatMember", id: chatId },
+      ],
+    }),
+
+    removeChatMember: builder.mutation<void, { chatId: number; userId: number }>({
+      query: ({ chatId, userId }) => ({
+        url: `/api/Chat/${chatId}/users/${userId}`,
+        method: "delete",
+      }),
+      invalidatesTags: (_result, _error, { chatId }) => [
+        { type: "ChatMember", id: chatId },
+      ],
+    }),
+
+    updateMemberRole: builder.mutation<
+      void,
+      { chatId: number; userId: number; roleId: number }
+    >({
+      query: ({ chatId, userId, roleId }) => ({
+        url: `/api/Chat/${chatId}/users/${userId}/role`,
+        method: "patch",
+        data: { roleId },
+      }),
+      invalidatesTags: (_result, _error, { chatId }) => [
+        { type: "ChatMember", id: chatId },
+      ],
+    }),
   }),
 });
 
@@ -95,4 +199,9 @@ export const {
   useCreateChatMutation,
   useDeleteChatMutation,
   useRenameChatMutation,
+  useGetChatByIdQuery,
+  useGetChatMembersQuery,
+  useAddChatMemberMutation,
+  useRemoveChatMemberMutation,
+  useUpdateMemberRoleMutation,
 } = chatApi;

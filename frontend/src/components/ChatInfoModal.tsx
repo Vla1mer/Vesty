@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  addChatMember,
-  getChatMembers,
-  removeChatMember,
-  updateMemberRole,
-} from "../api/chats";
-import { getAllUsers } from "../api/users";
-import { useDeleteChatMutation, useRenameChatMutation } from "../store/chatApi";
+  useDeleteChatMutation,
+  useRenameChatMutation,
+  useGetChatMembersQuery,
+  useAddChatMemberMutation,
+  useRemoveChatMemberMutation,
+  useUpdateMemberRoleMutation,
+} from "../store/chatApi";
+import { useGetAllUsersQuery } from "../store/userApi";
 import { useAuth } from "../context/useAuth";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { isDirectChat, UserRole } from "../types/api";
@@ -14,7 +15,6 @@ import { getChatDisplayName } from "../utils/chats";
 import { chatNameSchema } from "../validation/chatSchemas";
 import { ValidationError } from "yup";
 import type { ChatDto, UserDto, ChatMemberWithRoleDto } from "../types/api";
-import type { AxiosError } from "axios";
 import type { AxiosBaseQueryError } from "../api/axiosBaseQuery";
 
 interface Props {
@@ -33,10 +33,10 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
   const { userId: currentUserId } = useAuth();
   const [deleteChat] = useDeleteChatMutation();
   const [renameChat] = useRenameChatMutation();
-  const [members, setMembers] = useState<ChatMemberWithRoleDto[]>([]);
-  const [allUsers, setAllUsers] = useState<UserDto[]>([]);
+  const [addChatMember] = useAddChatMemberMutation();
+  const [removeChatMember] = useRemoveChatMemberMutation();
+  const [updateMemberRole] = useUpdateMemberRoleMutation();
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
   const [busyUserId, setBusyUserId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -49,6 +49,15 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
   const canDelete = chat.isPrivate || chat.creatorId === currentUserId;
   const canRename = isGroup && chat.creatorId === currentUserId;
 
+  const {
+    data: members = [],
+    isLoading: loading,
+    isError: membersError,
+  } = useGetChatMembersQuery(chat.id);
+  const { data: allUsers = [] } = useGetAllUsersQuery(undefined, {
+    skip: !isGroup,
+  });
+
   const isCallerOwner = useMemo(
     () =>
       members.some(
@@ -56,30 +65,6 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
       ),
     [members, currentUserId]
   );
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const requests: [
-          Promise<ChatMemberWithRoleDto[]>,
-          Promise<UserDto[]>?
-        ] = [getChatMembers(chat.id)];
-        if (isGroup) requests[1] = getAllUsers();
-        const [m, u] = await Promise.all(requests);
-        if (cancelled) return;
-        setMembers(m);
-        if (isGroup && u) setAllUsers(u);
-      } catch {
-        if (!cancelled) setError("Failed to load chat info");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [chat.id, isGroup]);
 
   useEffect(() => {
     function handleEsc(e: KeyboardEvent) {
@@ -105,21 +90,11 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
     setBusyUserId(user.id);
     setError(null);
     try {
-      await addChatMember(chat.id, user.id);
-      setMembers((prev) => [
-        ...prev,
-        {
-          userId: user.id,
-          userName: user.userName,
-          name: user.name,
-          surname: user.surname,
-          roleId: UserRole.User,
-        },
-      ]);
+      await addChatMember({ chatId: chat.id, userId: user.id }).unwrap();
     } catch (err) {
-      const axiosErr = err as AxiosError;
+      const status = (err as AxiosBaseQueryError).status;
       setError(
-        axiosErr.response?.status === 403
+        status === 403
           ? "Only owners or admins can add members"
           : "Failed to add member"
       );
@@ -132,12 +107,11 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
     setBusyUserId(member.userId);
     setError(null);
     try {
-      await removeChatMember(chat.id, member.userId);
-      setMembers((prev) => prev.filter((m) => m.userId !== member.userId));
+      await removeChatMember({ chatId: chat.id, userId: member.userId }).unwrap();
     } catch (err) {
-      const axiosErr = err as AxiosError;
+      const status = (err as AxiosBaseQueryError).status;
       setError(
-        axiosErr.response?.status === 403
+        status === 403
           ? "You don't have permission to remove this member"
           : "Failed to remove member"
       );
@@ -150,16 +124,15 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
     setBusyUserId(member.userId);
     setError(null);
     try {
-      await updateMemberRole(chat.id, member.userId, newRole);
-      setMembers((prev) =>
-        prev.map((m) =>
-          m.userId === member.userId ? { ...m, roleId: newRole } : m
-        )
-      );
+      await updateMemberRole({
+        chatId: chat.id,
+        userId: member.userId,
+        roleId: newRole,
+      }).unwrap();
     } catch (err) {
-      const axiosErr = err as AxiosError;
+      const status = (err as AxiosBaseQueryError).status;
       setError(
-        axiosErr.response?.status === 403
+        status === 403
           ? "Only the owner can change roles"
           : "Failed to change role"
       );
@@ -298,9 +271,9 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
             </button>
           </div>
 
-          {error && (
+          {(error || membersError) && (
             <div className="text-sm text-red-400 bg-red-950 border border-red-900 rounded p-2 mb-3">
-              {error}
+              {error ?? "Failed to load chat info"}
             </div>
           )}
 

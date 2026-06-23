@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getChatById, getChatMembers } from "../api/chats";
+import { useGetChatByIdQuery, useGetChatMembersQuery } from "../store/chatApi";
 import {
   useGetMessagesByChatQuery,
   useCreateMessageMutation,
@@ -13,9 +13,8 @@ import { MessageBubble } from "../components/MessageBubble";
 import { ChatInfoModal } from "../components/ChatInfoModal";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { getChatDisplayName } from "../utils/chats";
-import { onChatDeleted, onChatRenamed, onReconnected } from "../lib/signalr";
-import type { ChatDto, ChatMemberWithRoleDto } from "../types/api";
-import type { AxiosError } from "axios";
+import { onChatDeleted } from "../lib/signalr";
+import type { AxiosBaseQueryError } from "../api/axiosBaseQuery";
 
 export function ChatDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -24,17 +23,16 @@ export function ChatDetailPage() {
   const chatId = Number(id);
   const isValidChat = Number.isFinite(chatId);
 
-  const [chat, setChat] = useState<ChatDto | null>(null);
-  const [members, setMembers] = useState<ChatMemberWithRoleDto[]>([]);
-  const [loading, setLoading] = useState(isValidChat);
-  const [error, setError] = useState<string | null>(
-    isValidChat ? null : "Invalid chat id"
-  );
   const [input, setInput] = useState("");
+  const [actionError, setActionError] = useState<string | null>(null);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
-  const [reloadKey, setReloadKey] = useState(0);
 
+  const { data: chat, isLoading: chatLoading, error: chatError } =
+    useGetChatByIdQuery(chatId, { skip: !isValidChat });
+  const { data: members = [] } = useGetChatMembersQuery(chatId, {
+    skip: !isValidChat,
+  });
   const {
     data: messages = [],
     isLoading: messagesLoading,
@@ -53,41 +51,14 @@ export function ChatDetailPage() {
     return map;
   }, [members]);
 
-  useEffect(() => {
-    if (!isValidChat) {
-      return;
-    }
-
-    let cancelled = false;
-    (async () => {
-      try {
-        const [chatData, membersData] = await Promise.all([
-          getChatById(chatId),
-          getChatMembers(chatId),
-        ]);
-        if (!cancelled) {
-          setChat(chatData);
-          setMembers(membersData);
-        }
-      } catch (err) {
-        const axiosErr = err as AxiosError;
-        if (!cancelled) {
-          if (axiosErr.response?.status === 403) {
-            setError("You don't have access to this chat");
-          } else if (axiosErr.response?.status === 404) {
-            setError("Chat not found");
-          } else {
-            setError("Failed to load chat");
-          }
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [chatId, isValidChat, reloadKey]);
+  const loadError = useMemo(() => {
+    if (!isValidChat) return "Invalid chat id";
+    if (!chatError) return null;
+    const status = (chatError as AxiosBaseQueryError).status;
+    if (status === 403) return "You don't have access to this chat";
+    if (status === 404) return "Chat not found";
+    return "Failed to load chat";
+  }, [isValidChat, chatError]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -101,19 +72,8 @@ export function ChatDetailPage() {
       navigate("/chats", { replace: true });
     });
 
-    const unsubscribeChatRenamed = onChatRenamed(({ chatId: renamedChatId, name }) => {
-      if (renamedChatId !== chatId) return;
-      setChat((prev) => (prev ? { ...prev, name } : prev));
-    });
-
-    const unsubscribeReconnected = onReconnected(() => {
-      setReloadKey((key) => key + 1);
-    });
-
     return () => {
       unsubscribeChatDeleted();
-      unsubscribeChatRenamed();
-      unsubscribeReconnected();
     };
   }, [chatId, isValidChat, navigate]);
 
@@ -126,7 +86,7 @@ export function ChatDetailPage() {
       await createMessage({ chatId, content }).unwrap();
       setInput("");
     } catch {
-      setError("Failed to send message");
+      setActionError("Failed to send message");
     }
   }
 
@@ -140,7 +100,7 @@ export function ChatDetailPage() {
       await deleteMessage({ chatId, id: deleteTargetId }).unwrap();
       setDeleteTargetId(null);
     } catch {
-      setError("Failed to delete message");
+      setActionError("Failed to delete message");
     }
   }
 
@@ -184,19 +144,20 @@ export function ChatDetailPage() {
       </header>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {(loading || messagesLoading) && (
+        {(chatLoading || messagesLoading) && (
           <p className="text-slate-400 text-center">Loading...</p>
         )}
 
-        {(error || messagesError) && (
+        {(loadError || actionError || messagesError) && (
           <div className="text-sm text-red-400 bg-red-950 border border-red-900 rounded p-3">
-            {error ?? "Failed to load messages"}
+            {loadError ?? actionError ?? "Failed to load messages"}
           </div>
         )}
 
-        {!loading &&
+        {!chatLoading &&
           !messagesLoading &&
-          !error &&
+          !loadError &&
+          !actionError &&
           !messagesError &&
           messages.length === 0 && (
             <div className="text-center py-12 text-slate-400">
@@ -239,7 +200,7 @@ export function ChatDetailPage() {
         />
       )}
 
-      {!error && (
+      {!loadError && !actionError && (
         <form
           onSubmit={handleSend}
           className="flex gap-2 p-4 border-t border-slate-700 bg-slate-900 sticky bottom-0"

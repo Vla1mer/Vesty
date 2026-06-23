@@ -1,7 +1,11 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Formik, Form } from "formik";
-import { getUserById, updateUser, deleteUser } from "../api/users";
+import {
+  useGetUserByIdQuery,
+  useUpdateUserMutation,
+  useDeleteUserMutation,
+} from "../store/userApi";
 import { useAuth } from "../context/useAuth";
 import { BottomNav } from "../components/BottomNav";
 import { ConfirmDialog } from "../components/ConfirmDialog";
@@ -9,50 +13,32 @@ import { FormField } from "../components/FormField";
 import { FormError } from "../components/FormError";
 import { profileSchema } from "../validation/profileSchema";
 import { parseApiErrors } from "../utils/apiError";
-import type { UserDto } from "../types/api";
 
 export function ProfilePage() {
   const navigate = useNavigate();
   const { userId, logout } = useAuth();
 
-  const [user, setUser] = useState<UserDto | null>(null);
-  const [loading, setLoading] = useState(userId !== null);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
-    if (userId === null) {
-      return;
-    }
-    let cancelled = false;
-    getUserById(userId)
-      .then((data) => {
-        if (!cancelled) setUser(data);
-      })
-      .catch(() => {
-        if (!cancelled) setError("Failed to load profile");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [userId]);
+  const {
+    data: user,
+    isLoading: loading,
+    isError,
+  } = useGetUserByIdQuery(userId as number, { skip: userId === null });
+  const [updateUser] = useUpdateUserMutation();
+  const [deleteUser, { isLoading: deleting }] = useDeleteUserMutation();
 
   async function handleDeleteAccount() {
     if (userId === null) return;
-    setDeleting(true);
     try {
-      await deleteUser(userId);
+      await deleteUser(userId).unwrap();
       logout();
       navigate("/login", { replace: true });
     } catch {
       setError("Failed to delete account");
       setIsDeleteOpen(false);
-      setDeleting(false);
     }
   }
 
@@ -67,9 +53,9 @@ export function ProfilePage() {
 
       {loading && <p className="text-slate-400">Loading...</p>}
 
-      {error && (
+      {(error || isError) && (
         <div className="text-sm text-red-400 bg-red-950 border border-red-900 rounded p-3 mb-4 w-full max-w-md">
-          {error}
+          {error ?? "Failed to load profile"}
         </div>
       )}
 
@@ -96,8 +82,7 @@ export function ProfilePage() {
                   birthday: values.birthday || undefined,
                 };
                 try {
-                  await updateUser(userId, payload);
-                  setUser((prev) => (prev ? { ...prev, ...payload } : prev));
+                  await updateUser({ id: userId, dto: payload }).unwrap();
                   setIsEditing(false);
                 } catch (err) {
                   const { fieldErrors, generalError } = parseApiErrors(
