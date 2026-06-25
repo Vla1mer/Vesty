@@ -54,9 +54,10 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
     isLoading: loading,
     isError: membersError,
   } = useGetChatMembersQuery(chat.id);
-  const { data: allUsers = [] } = useGetAllUsersQuery(undefined, {
-    skip: !isGroup,
-  });
+  const { data: allUsers = [], isFetching: usersFetching } = useGetAllUsersQuery(
+    undefined,
+    { skip: !isGroup || search.trim().length === 0 }
+  );
 
   const isCallerOwner = useMemo(
     () =>
@@ -81,9 +82,10 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
 
   const filteredCandidates = useMemo(() => {
     const term = search.trim().toLowerCase();
+    if (!term) return [];
     return allUsers
       .filter((u) => !memberIds.has(u.id))
-      .filter((u) => (term ? u.userName.toLowerCase().includes(term) : true));
+      .filter((u) => u.userName.toLowerCase().includes(term));
   }, [allUsers, memberIds, search]);
 
   async function handleAdd(user: UserDto) {
@@ -388,9 +390,13 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                     placeholder="Search by username..."
                     className="w-full px-3 py-2 rounded bg-slate-900 border border-slate-600 text-slate-100 text-sm focus:outline-none focus:border-amber-500 mb-2"
                   />
-                  {filteredCandidates.length === 0 ? (
+                  {search.trim().length === 0 ? (
                     <p className="text-sm text-slate-500 py-2 text-center">
-                      {search ? "No users match your search" : "No more users to add"}
+                      Start typing to find users
+                    </p>
+                  ) : filteredCandidates.length === 0 ? (
+                    <p className="text-sm text-slate-500 py-2 text-center">
+                      {usersFetching ? "Searching..." : "No users match your search"}
                     </p>
                   ) : (
                     <ul className="space-y-1">

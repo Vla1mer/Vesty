@@ -12,8 +12,10 @@ export function SelectUserModal({ onClose }: Props) {
   const navigate = useNavigate();
   const { userId: currentUserId } = useAuth();
   const [search, setSearch] = useState("");
-  const { data: users = [], isLoading: loading, isError } =
-    useGetAllUsersQuery();
+  const { data: users = [], isFetching, isError } = useGetAllUsersQuery(
+    undefined,
+    { skip: search.trim().length === 0 }
+  );
 
   useEffect(() => {
     function handleEsc(e: KeyboardEvent) {
@@ -25,9 +27,10 @@ export function SelectUserModal({ onClose }: Props) {
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
+    if (!term) return [];
     return users
       .filter((u) => u.id !== currentUserId)
-      .filter((u) => (term ? u.userName.toLowerCase().includes(term) : true));
+      .filter((u) => u.userName.toLowerCase().includes(term));
   }, [users, search, currentUserId]);
 
   function handleSelect(user: UserDto) {
@@ -71,11 +74,15 @@ export function SelectUserModal({ onClose }: Props) {
         )}
 
         <div className="flex-1 overflow-y-auto">
-          {loading ? (
-            <p className="text-slate-400 text-center py-8">Loading...</p>
+          {search.trim().length === 0 ? (
+            <p className="text-sm text-slate-500 text-center py-6">
+              Start typing to find someone
+            </p>
+          ) : isFetching ? (
+            <p className="text-slate-400 text-center py-8">Searching...</p>
           ) : filtered.length === 0 ? (
             <p className="text-sm text-slate-500 text-center py-6">
-              {search ? "No users match your search" : "No other users yet"}
+              No users match your search
             </p>
           ) : (
             <ul className="space-y-1">
