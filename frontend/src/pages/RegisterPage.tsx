@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Formik, Form } from "formik";
-import { register } from "../api/auth";
+import { register, login } from "../api/auth";
+import { useAuth } from "../context/useAuth";
 import { FormField } from "../components/FormField";
 import { FormError } from "../components/FormError";
 import { registerSchema } from "../validation/authSchemas";
@@ -8,6 +9,7 @@ import { parseApiErrors } from "../utils/apiError";
 
 export function RegisterPage() {
   const navigate = useNavigate();
+  const { setAuthenticated } = useAuth();
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
@@ -23,7 +25,6 @@ export function RegisterPage() {
               name: values.name || undefined,
               surname: values.surname || undefined,
             });
-            navigate("/login");
           } catch (err) {
             const { fieldErrors, generalError } = parseApiErrors(
               err,
@@ -33,6 +34,18 @@ export function RegisterPage() {
               setFieldError(field, msg)
             );
             setStatus(generalError ?? null);
+            return;
+          }
+
+          try {
+            await login({
+              userName: values.userName,
+              password: values.password,
+            });
+            setAuthenticated();
+            navigate("/chats");
+          } catch {
+            navigate("/login");
           }
         }}
       >
