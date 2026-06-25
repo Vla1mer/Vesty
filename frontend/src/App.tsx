@@ -1,9 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { ChatLayout } from "./components/ChatLayout";
+import { ChatEmptyState } from "./components/ChatEmptyState";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
-import { ChatsPage } from "./pages/ChatsPage";
 import { ChatDetailPage } from "./pages/ChatDetailPage";
 import { NewDirectChatPage } from "./pages/NewDirectChatPage";
 import { ProfilePage } from "./pages/ProfilePage";
@@ -20,10 +21,14 @@ function App() {
             path="/chats"
             element={
               <ProtectedRoute>
-                <ChatsPage />
+                <ChatLayout />
               </ProtectedRoute>
             }
-          />
+          >
+            <Route index element={<ChatEmptyState />} />
+            <Route path="new/:userId" element={<NewDirectChatPage />} />
+            <Route path=":id" element={<ChatDetailPage />} />
+          </Route>
           <Route
             path="/profile"
             element={
@@ -37,22 +42,6 @@ function App() {
             element={
               <ProtectedRoute>
                 <SettingsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/chats/new/:userId"
-            element={
-              <ProtectedRoute>
-                <NewDirectChatPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/chats/:id"
-            element={
-              <ProtectedRoute>
-                <ChatDetailPage />
               </ProtectedRoute>
             }
           />

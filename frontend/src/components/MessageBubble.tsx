@@ -1,12 +1,18 @@
-import { useState } from "react";
-import type { FormEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import type { MouseEvent } from "react";
 import type { MessageDto } from "../types/api";
 
 interface Props {
   message: MessageDto;
   isOwn: boolean;
   authorName?: string;
-  onEdit?: (id: number, content: string) => Promise<void>;
+  showAuthor?: boolean;
+  isEditing?: boolean;
+  selectionMode?: boolean;
+  selected?: boolean;
+  onSelectStart?: (id: number) => void;
+  onToggleSelect?: (id: number) => void;
+  onEdit?: (id: number, content: string) => void;
   onDelete?: (id: number) => void;
 }
 
@@ -14,12 +20,134 @@ export function MessageBubble({
   message,
   isOwn,
   authorName,
+  showAuthor = true,
+  isEditing,
+  selectionMode = false,
+  selected = false,
+  onSelectStart,
+  onToggleSelect,
   onEdit,
   onDelete,
 }: Props) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [draft, setDraft] = useState(message.content ?? "");
-  const [saving, setSaving] = useState(false);
+  const [menu, setMenu] = useState(false);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+  const [pressing, setPressing] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const bubbleRef = useRef<HTMLDivElement>(null);
+  const anchorRef = useRef({ x: 0, y: 0 });
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressFired = useRef(false);
+  const moved = useRef(false);
+  const lastTouchRef = useRef(0);
+
+  const canManage = Boolean(onEdit || onDelete);
+
+  useLayoutEffect(() => {
+    if (!menu || !menuRef.current || !bubbleRef.current) return;
+    const m = menuRef.current.getBoundingClientRect();
+    const scroller = bubbleRef.current.closest(".overflow-y-auto");
+    const bounds = scroller
+      ? scroller.getBoundingClientRect()
+      : new DOMRect(0, 0, window.innerWidth, window.innerHeight);
+    const { x, y } = anchorRef.current;
+
+    let top = y - m.height - 4;
+    if (top < bounds.top + 8) {
+      top = y + 4;
+    }
+    top = Math.max(bounds.top + 8, Math.min(top, bounds.bottom - m.height - 8));
+
+    const left = Math.max(
+      bounds.left + 8,
+      Math.min(x, bounds.right - m.width - 8)
+    );
+
+    setMenuPos({ top, left });
+  }, [menu]);
+
+  useEffect(() => {
+    if (!menu) return;
+    const openedAt = Date.now();
+    const close = () => {
+      if (Date.now() - openedAt < 250) return;
+      setMenu(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenu(false);
+    };
+    const closeOther = () => setMenu(false);
+    window.addEventListener("click", close);
+    window.addEventListener("scroll", close, true);
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("message-menu-open", closeOther);
+    return () => {
+      window.removeEventListener("click", close);
+      window.removeEventListener("scroll", close, true);
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("message-menu-open", closeOther);
+    };
+  }, [menu]);
+
+  function openMenu(x: number, y: number) {
+    anchorRef.current = { x, y };
+    window.dispatchEvent(new Event("message-menu-open"));
+    setMenu(true);
+  }
+
+  function handleCopy() {
+    if (message.content) navigator.clipboard?.writeText(message.content);
+    setMenu(false);
+  }
+
+  function handleContextMenu(e: MouseEvent) {
+    if (!message.content && !canManage) return;
+    e.preventDefault();
+    if (Date.now() - lastTouchRef.current < 700) return;
+    if (menu) {
+      setMenu(false);
+      return;
+    }
+    openMenu(e.clientX, e.clientY);
+  }
+
+  function clearLongPress() {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }
+
+  function handleTouchStart() {
+    lastTouchRef.current = Date.now();
+    longPressFired.current = false;
+    moved.current = false;
+    setPressing(true);
+    longPressTimer.current = setTimeout(() => {
+      longPressFired.current = true;
+      setPressing(false);
+      onSelectStart?.(message.id);
+    }, 500);
+  }
+
+  function handleTouchMove() {
+    moved.current = true;
+    setPressing(false);
+    clearLongPress();
+  }
+
+  function handleTouchEnd() {
+    lastTouchRef.current = Date.now();
+    setPressing(false);
+    const fired = longPressFired.current;
+    const didMove = moved.current;
+    clearLongPress();
+    if (!fired && !didMove && selectionMode) onToggleSelect?.(message.id);
+  }
+
+  function cancelTouch() {
+    setPressing(false);
+    clearLongPress();
+  }
 
   const time = new Date(message.createdAt).toLocaleTimeString([], {
     hour: "2-digit",
@@ -28,110 +156,113 @@ export function MessageBubble({
 
   const displayName = authorName ?? `User #${message.userId}`;
 
-  async function handleSave(e: FormEvent) {
-    e.preventDefault();
-    const content = draft.trim();
-    if (!content || saving || !onEdit) return;
-
-    setSaving(true);
-    try {
-      await onEdit(message.id, content);
-      setIsEditing(false);
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  function startEdit() {
-    setDraft(message.content ?? "");
-    setIsEditing(true);
-  }
-
   return (
-    <div className={`group flex ${isOwn ? "justify-end" : "justify-start"}`}>
-      <div className="flex flex-col max-w-md">
-        {/* Hover-меню — только для своих сообщений и не в режиме редактирования */}
-        {isOwn && !isEditing && (onEdit || onDelete) && (
-          <div className="flex gap-1 justify-end mb-1 opacity-0 group-hover:opacity-100 transition">
-            {onEdit && (
-              <button
-                type="button"
-                onClick={startEdit}
-                className="text-xs px-2 py-0.5 rounded bg-slate-700 hover:bg-slate-600 text-slate-200 transition"
-              >
-                ✏️ Edit
-              </button>
-            )}
-            {onDelete && (
-              <button
-                type="button"
-                onClick={() => onDelete(message.id)}
-                className="text-xs px-2 py-0.5 rounded bg-red-900 hover:bg-red-800 text-red-100 transition"
-              >
-                🗑️ Delete
-              </button>
-            )}
-          </div>
+    <>
+      <div
+        className={`flex items-center gap-2 transition ${
+          selected ? "bg-amber-500/10" : ""
+        }`}
+      >
+        {selectionMode && (
+          <span
+            className={`shrink-0 w-5 h-5 rounded-full border flex items-center justify-center text-[10px] ${
+              selected
+                ? "bg-amber-500 border-amber-500 text-white"
+                : "border-slate-500 text-transparent"
+            }`}
+          >
+            ✓
+          </span>
         )}
-
         <div
-          className={`rounded-2xl px-4 py-2 ${
-            isOwn
-              ? "bg-amber-600 text-white rounded-br-sm"
-              : "bg-slate-700 text-slate-100 rounded-bl-sm"
+          className={`group flex flex-1 min-w-0 ${
+            isOwn ? "justify-end md:justify-start" : "justify-start"
           }`}
         >
-          {!isOwn && (
-            <p className="text-xs text-amber-300 font-medium mb-1">{displayName}</p>
-          )}
-
-          {isEditing ? (
-            <form onSubmit={handleSave} className="space-y-2">
-              <textarea
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                autoFocus
-                rows={2}
-                maxLength={2000}
-                onKeyDown={(e) => {
-                  if (e.key === "Escape") setIsEditing(false);
-                  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) handleSave(e);
-                }}
-                className="w-full px-2 py-1 rounded bg-amber-700 text-white placeholder-amber-200 focus:outline-none resize-none text-sm"
-              />
-              <div className="flex gap-2 justify-end">
-                <button
-                  type="button"
-                  onClick={() => setIsEditing(false)}
-                  disabled={saving}
-                  className="text-xs px-2 py-1 rounded bg-amber-800 hover:bg-amber-900 text-white disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving || !draft.trim()}
-                  className="text-xs px-2 py-1 rounded bg-white text-amber-700 font-medium hover:bg-amber-100 disabled:opacity-50"
-                >
-                  {saving ? "..." : "Save"}
-                </button>
-              </div>
-            </form>
-          ) : (
-            <p className="break-words whitespace-pre-wrap">{message.content}</p>
-          )}
-
-          {!isEditing && (
-            <p
-              className={`text-xs mt-1 ${
-                isOwn ? "text-amber-100" : "text-slate-400"
-              } text-right`}
+          <div className="relative flex flex-col max-w-[78%] md:max-w-md">
+            <div
+              ref={bubbleRef}
+              onContextMenu={handleContextMenu}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+              onTouchMove={handleTouchMove}
+              onTouchCancel={cancelTouch}
+              style={{ WebkitTouchCallout: "none" }}
+              className={`rounded-2xl px-4 py-2 select-none md:select-text transition ${
+                menu || isEditing || pressing || selected
+                  ? "ring-2 ring-amber-400"
+                  : ""
+              } ${
+                isOwn
+                  ? "bg-amber-600 text-white rounded-br-sm md:rounded-br-2xl md:rounded-bl-sm"
+                  : "bg-slate-700 text-slate-100 rounded-bl-sm"
+              }`}
             >
-              {time}
-            </p>
-          )}
+              {!isOwn && showAuthor && (
+                <p className="text-xs text-amber-300 font-medium mb-1">
+                  {displayName}
+                </p>
+              )}
+
+              <div className="flex items-end gap-2">
+                <p className="min-w-0 break-words whitespace-pre-wrap">
+                  {message.content}
+                </p>
+                <span
+                  className={`shrink-0 self-end text-[10px] leading-none pb-0.5 whitespace-nowrap ${
+                    isOwn ? "text-amber-100" : "text-slate-400"
+                  }`}
+                >
+                  {message.isEdited ? `edited ${time}` : time}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+
+      {menu && (
+        <div
+          ref={menuRef}
+          className="fixed z-50 min-w-32 rounded-lg border border-slate-700 bg-slate-800 py-1 shadow-xl"
+          style={{ top: menuPos.top, left: menuPos.left }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {message.content && (
+            <button
+              type="button"
+              onClick={handleCopy}
+              className="w-full px-4 py-2 text-left text-sm text-slate-200 hover:bg-slate-700 transition"
+            >
+              📋 Copy
+            </button>
+          )}
+          {onEdit && (
+            <button
+              type="button"
+              onClick={() => {
+                setMenu(false);
+                onEdit(message.id, message.content ?? "");
+              }}
+              className="w-full px-4 py-2 text-left text-sm text-slate-200 hover:bg-slate-700 transition"
+            >
+              ✏️ Edit
+            </button>
+          )}
+          {onDelete && (
+            <button
+              type="button"
+              onClick={() => {
+                setMenu(false);
+                onDelete(message.id);
+              }}
+              className="w-full px-4 py-2 text-left text-sm text-red-300 hover:bg-slate-700 transition"
+            >
+              🗑️ Delete
+            </button>
+          )}
+        </div>
+      )}
+    </>
   );
 }

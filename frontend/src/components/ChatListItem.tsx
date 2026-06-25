@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { getChatDisplayName } from "../utils/chats";
 import type { ChatDto } from "../types/api";
 
@@ -10,11 +10,17 @@ export function ChatListItem({ chat }: Props) {
   const title = getChatDisplayName(chat);
 
   return (
-    <Link
+    <NavLink
       to={`/chats/${chat.id}`}
-      className="block rounded-lg border border-slate-700 bg-slate-800 p-4 hover:bg-slate-700 hover:border-amber-500 transition cursor-pointer"
+      className={({ isActive }) =>
+        `block border-l-4 border-b border-slate-800 p-4 transition cursor-pointer ${
+          isActive
+            ? "border-l-amber-500 bg-slate-800"
+            : "border-l-transparent hover:bg-slate-800/50"
+        }`
+      }
     >
       <h3 className="text-lg font-semibold text-slate-100">{title}</h3>
-    </Link>
+    </NavLink>
   );
 }

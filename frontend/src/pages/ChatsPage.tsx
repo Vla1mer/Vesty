@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useGetChatsQuery } from "../store/chatApi";
 import { useAuth } from "../context/useAuth";
 import { ChatListItem } from "../components/ChatListItem";
@@ -8,7 +8,6 @@ import { SelectUserModal } from "../components/SelectUserModal";
 import { SearchBar } from "../components/SearchBar";
 import { SearchResults } from "../components/SearchResults";
 import { FloatingActionButton } from "../components/FloatingActionButton";
-import { BottomNav } from "../components/BottomNav";
 
 export function ChatsPage() {
   const navigate = useNavigate();
@@ -16,7 +15,17 @@ export function ChatsPage() {
   const { data: chats = [], isLoading, isError } = useGetChatsQuery();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isSelectUserOpen, setIsSelectUserOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    function handleEsc(e: KeyboardEvent) {
+      if (e.key === "Escape") setIsMenuOpen(false);
+    }
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [isMenuOpen]);
 
   function handleLogout() {
     logout();
@@ -26,71 +35,130 @@ export function ChatsPage() {
   const isSearching = searchQuery.trim().length > 0;
 
   return (
-    <div className="min-h-screen p-6 max-w-4xl mx-auto">
-      <header className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-100">
-            <span className="text-amber-400">ChatApp</span> Messenger
-          </h1>
-          {userName && (
-            <p className="text-sm text-slate-400 mt-1">Signed in as {userName}</p>
-          )}
+    <div className="relative h-full flex flex-col">
+      <header className="flex items-center justify-between gap-2 p-4 border-b border-slate-700">
+        <div className="flex items-center gap-3 min-w-0">
+          <button
+            type="button"
+            onClick={() => setIsMenuOpen(true)}
+            aria-label="Menu"
+            className="text-2xl leading-none text-slate-300 hover:text-amber-400 transition"
+          >
+            ☰
+          </button>
+          <div className="min-w-0">
+            <h1 className="text-xl font-bold text-slate-100 truncate">
+              <span className="text-amber-400">ChatApp</span>
+            </h1>
+            {userName && (
+              <p className="text-xs text-slate-400 truncate">{userName}</p>
+            )}
+          </div>
         </div>
-        <button
-          onClick={handleLogout}
-          className="px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-slate-100 transition"
-        >
-          Logout
-        </button>
+
+        <FloatingActionButton
+          actions={[
+            {
+              icon: "💬",
+              label: "New direct message",
+              description: "Start a private conversation with someone",
+              onClick: () => setIsSelectUserOpen(true),
+            },
+            {
+              icon: "👥",
+              label: "New group chat",
+              description: "Create a chat for multiple people",
+              onClick: () => setIsCreateModalOpen(true),
+            },
+          ]}
+        />
       </header>
 
-      <SearchBar value={searchQuery} onChange={setSearchQuery} />
+      <div className="px-4 pt-4 pb-2">
+        <SearchBar value={searchQuery} onChange={setSearchQuery} />
+      </div>
 
-      {isLoading && <p className="text-slate-400">Loading...</p>}
+      <div className="flex-1 overflow-y-auto pb-4">
+        {isLoading && <p className="text-slate-400 px-4">Loading...</p>}
 
-      {isError && (
-        <div className="text-sm text-red-400 bg-red-950 border border-red-900 rounded p-3 mb-4">
-          Failed to load chats
+        {isError && (
+          <div className="text-sm text-red-400 bg-red-950 border border-red-900 rounded p-3 mx-4 mb-4">
+            Failed to load chats
+          </div>
+        )}
+
+        {!isLoading && !isError && (
+          <>
+            {isSearching ? (
+              <div className="px-4">
+                <SearchResults query={searchQuery} chats={chats} />
+              </div>
+            ) : chats.length === 0 ? (
+              <div className="text-center py-12 text-slate-400 px-4">
+                <p className="text-lg">No chats yet</p>
+                <p className="text-sm mt-2">
+                  Tap the 💬 button to start a conversation.
+                </p>
+              </div>
+            ) : (
+              <div>
+                {chats.map((chat) => (
+                  <ChatListItem key={chat.id} chat={chat} />
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      <div
+        className={`fixed inset-0 z-40 ${
+          isMenuOpen ? "" : "pointer-events-none"
+        }`}
+      >
+        <div
+          className={`absolute inset-0 bg-black/50 transition-opacity ${
+            isMenuOpen ? "opacity-100" : "opacity-0"
+          }`}
+          onClick={() => setIsMenuOpen(false)}
+        />
+        <div
+          className={`absolute top-0 left-0 bottom-0 w-72 max-w-[80%] bg-slate-900 border-r border-slate-700 flex flex-col transition-transform duration-200 ${
+            isMenuOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          <div className="p-4 border-b border-slate-700">
+            <p className="text-lg font-bold text-slate-100 truncate">
+              {userName ?? "Account"}
+            </p>
+          </div>
+          <nav className="flex-1 p-2 space-y-1">
+            <Link
+              to="/profile"
+              onClick={() => setIsMenuOpen(false)}
+              className="flex items-center gap-3 px-3 py-3 rounded text-slate-200 hover:bg-slate-800 transition"
+            >
+              <span className="text-xl">👤</span> Profile
+            </Link>
+            <Link
+              to="/settings"
+              onClick={() => setIsMenuOpen(false)}
+              className="flex items-center gap-3 px-3 py-3 rounded text-slate-200 hover:bg-slate-800 transition"
+            >
+              <span className="text-xl">⚙️</span> Settings
+            </Link>
+          </nav>
+          <div className="p-2 border-t border-slate-700">
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-3 py-3 rounded text-red-300 hover:bg-slate-800 transition"
+            >
+              <span className="text-xl">🚪</span> Logout
+            </button>
+          </div>
         </div>
-      )}
-
-      {!isLoading && !isError && (
-        <div className="pb-32">
-          {isSearching ? (
-            <SearchResults query={searchQuery} chats={chats} />
-          ) : chats.length === 0 ? (
-            <div className="text-center py-12 text-slate-400">
-              <p className="text-lg">No chats yet</p>
-              <p className="text-sm mt-2">
-                Tap the 💬 button to start a conversation.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {chats.map((chat) => (
-                <ChatListItem key={chat.id} chat={chat} />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      <FloatingActionButton
-        actions={[
-          {
-            icon: "💬",
-            label: "New direct message",
-            description: "Start a private conversation with someone",
-            onClick: () => setIsSelectUserOpen(true),
-          },
-          {
-            icon: "👥",
-            label: "New group chat",
-            description: "Create a chat for multiple people",
-            onClick: () => setIsCreateModalOpen(true),
-          },
-        ]}
-      />
+      </div>
 
       {isCreateModalOpen && (
         <CreateChatModal onClose={() => setIsCreateModalOpen(false)} />
@@ -99,8 +167,6 @@ export function ChatsPage() {
       {isSelectUserOpen && (
         <SelectUserModal onClose={() => setIsSelectUserOpen(false)} />
       )}
-
-      <BottomNav />
     </div>
   );
 }

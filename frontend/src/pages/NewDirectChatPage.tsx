@@ -45,11 +45,11 @@ export function NewDirectChatPage() {
   const title = partner?.userName ?? "Loading...";
 
   return (
-    <div className="min-h-screen flex flex-col max-w-4xl mx-auto">
+    <div className="h-full flex flex-col">
       <header className="flex items-center gap-4 p-4 border-b border-slate-700 bg-slate-900 sticky top-0 z-10">
         <button
           onClick={() => navigate("/chats")}
-          className="text-slate-400 hover:text-slate-100 text-2xl"
+          className="md:hidden text-slate-400 hover:text-slate-100 text-2xl"
           aria-label="Back"
         >
           ←

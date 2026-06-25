@@ -98,7 +98,10 @@ export const messageApi = apiSlice.injectEndpoints({
         const patch = dispatch(
           messageApi.util.updateQueryData("getMessagesByChat", chatId, (draft) => {
             const message = draft.find((m) => m.id === id);
-            if (message) message.content = content;
+            if (message) {
+              message.content = content;
+              message.isEdited = true;
+            }
           })
         );
         try {

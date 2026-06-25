@@ -79,6 +79,7 @@ export interface MessageDto {
   userId: number;
   content: string | null;
   createdAt: string;
+  isEdited: boolean;
 }
 
 export interface MessageForCreationDto {

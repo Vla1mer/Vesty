@@ -106,6 +106,7 @@ namespace Services
             if (message.UserId != _currentUser.UserId)
                 throw new MessageOwnershipException(id);
             message.Content = _cipher.Encrypt(content);
+            message.IsEdited = true;
             await _repository.SaveAsync();
             message.Content = content;
 

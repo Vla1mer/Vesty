@@ -7,5 +7,6 @@
         public int UserId { get; init; }
         public string? Content { get; init; }
         public DateTime CreatedAt { get; init; }
+        public bool IsEdited { get; init; }
     }
 }
