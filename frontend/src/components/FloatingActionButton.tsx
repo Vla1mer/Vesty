@@ -34,7 +34,7 @@ export function FloatingActionButton({ actions }: Props) {
         type="button"
         onClick={() => setIsOpen(true)}
         aria-label="New chat"
-        className="absolute right-4 bottom-4 z-30 w-14 h-14 shadow-xl text-2xl rounded-full bg-amber-600 hover:bg-amber-500 text-white flex items-center justify-center transition md:static md:shrink-0 md:w-9 md:h-9 md:shadow-none md:text-lg"
+        className="absolute right-4 bottom-20 z-30 w-14 h-14 shadow-xl text-2xl rounded-full bg-amber-600 hover:bg-amber-500 text-white flex items-center justify-center transition md:static md:shrink-0 md:w-9 md:h-9 md:shadow-none md:text-lg"
       >
         💬
       </button>

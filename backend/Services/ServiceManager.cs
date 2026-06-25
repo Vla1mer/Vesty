@@ -20,7 +20,7 @@ namespace Services
             ICurrentUserService currentUser, IChatNotifier chatNotifier)
         {
             _userService = new Lazy<IUserService>(() => new UserService(repositoryManager, logger, mapper, userManager, configuration, currentUser));
-            _chatService = new Lazy<IChatService>(() => new ChatService(repositoryManager, logger, mapper, currentUser, chatNotifier));
+            _chatService = new Lazy<IChatService>(() => new ChatService(repositoryManager, logger, mapper, currentUser, chatNotifier, messageCipher));
             _chatMemberService = new Lazy<IChatMemberService>(() => new ChatMemberService(repositoryManager, logger, mapper, currentUser, chatNotifier));
             _messageService = new Lazy<IMessageService>(() => new MessageService(repositoryManager, logger, mapper, messageCipher, currentUser, _chatService.Value, chatNotifier));
         }

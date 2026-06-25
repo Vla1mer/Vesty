@@ -10,5 +10,9 @@ namespace Services.DataTransferObjects
         public int? CreatorId { get; init; }
         public bool IsPrivate { get; init; }
         public DateTime CreatedAt { get; init; }
+        public string? LastMessageContent { get; init; }
+        public string? LastMessageSenderName { get; init; }
+        public int? LastMessageSenderId { get; init; }
+        public DateTime? LastMessageAt { get; init; }
     }
 }

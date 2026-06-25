@@ -40,6 +40,10 @@ export interface ChatDto {
   creatorId: number | null;
   isPrivate: boolean;
   createdAt: string;
+  lastMessageContent?: string | null;
+  lastMessageSenderName?: string | null;
+  lastMessageSenderId?: number | null;
+  lastMessageAt?: string | null;
 }
 
 export interface DirectChatDto extends ChatDto {

@@ -3,6 +3,7 @@ import {
   onChatCreated,
   onChatDeleted,
   onChatRenamed,
+  onMessageReceived,
   onReconnected,
 } from "../lib/signalr";
 import type {
@@ -52,6 +53,19 @@ export const chatApi = apiSlice.injectEndpoints({
               updateCachedData((draft) => {
                 const chat = draft.find((c) => c.id === chatId);
                 if (chat) chat.name = name;
+              });
+            })
+          );
+
+          subscriptions.push(
+            onMessageReceived((message) => {
+              updateCachedData((draft) => {
+                const chat = draft.find((c) => c.id === message.chatId);
+                if (!chat) return;
+                chat.lastMessageContent = message.content;
+                chat.lastMessageSenderId = message.userId;
+                chat.lastMessageAt = message.createdAt;
+                chat.lastMessageSenderName = undefined;
               });
             })
           );

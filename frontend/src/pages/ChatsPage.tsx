@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useGetChatsQuery } from "../store/chatApi";
 import { useAuth } from "../context/useAuth";
 import { ChatListItem } from "../components/ChatListItem";
@@ -8,6 +8,9 @@ import { SelectUserModal } from "../components/SelectUserModal";
 import { SearchBar } from "../components/SearchBar";
 import { SearchResults } from "../components/SearchResults";
 import { FloatingActionButton } from "../components/FloatingActionButton";
+import { ProfileModal } from "../components/ProfileModal";
+import { SettingsModal } from "../components/SettingsModal";
+import { BottomNav } from "../components/BottomNav";
 
 export function ChatsPage() {
   const navigate = useNavigate();
@@ -16,7 +19,27 @@ export function ChatsPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isSelectUserOpen, setIsSelectUserOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  function openProfile() {
+    setIsMenuOpen(false);
+    if (window.matchMedia("(min-width: 768px)").matches) {
+      setIsProfileOpen(true);
+    } else {
+      navigate("/profile");
+    }
+  }
+
+  function openSettings() {
+    setIsMenuOpen(false);
+    if (window.matchMedia("(min-width: 768px)").matches) {
+      setIsSettingsOpen(true);
+    } else {
+      navigate("/settings");
+    }
+  }
 
   useEffect(() => {
     if (!isMenuOpen) return;
@@ -42,7 +65,7 @@ export function ChatsPage() {
             type="button"
             onClick={() => setIsMenuOpen(true)}
             aria-label="Menu"
-            className="text-2xl leading-none text-slate-300 hover:text-amber-400 transition"
+            className="hidden md:block text-2xl leading-none text-slate-300 hover:text-amber-400 transition"
           >
             ☰
           </button>
@@ -78,7 +101,7 @@ export function ChatsPage() {
         <SearchBar value={searchQuery} onChange={setSearchQuery} />
       </div>
 
-      <div className="flex-1 overflow-y-auto pb-4">
+      <div className="flex-1 overflow-y-auto pb-20 md:pb-4">
         {isLoading && <p className="text-slate-400 px-4">Loading...</p>}
 
         {isError && (
@@ -133,20 +156,20 @@ export function ChatsPage() {
             </p>
           </div>
           <nav className="flex-1 p-2 space-y-1">
-            <Link
-              to="/profile"
-              onClick={() => setIsMenuOpen(false)}
-              className="flex items-center gap-3 px-3 py-3 rounded text-slate-200 hover:bg-slate-800 transition"
+            <button
+              type="button"
+              onClick={openProfile}
+              className="w-full flex items-center gap-3 px-3 py-3 rounded text-slate-200 hover:bg-slate-800 transition text-left"
             >
               <span className="text-xl">👤</span> Profile
-            </Link>
-            <Link
-              to="/settings"
-              onClick={() => setIsMenuOpen(false)}
-              className="flex items-center gap-3 px-3 py-3 rounded text-slate-200 hover:bg-slate-800 transition"
+            </button>
+            <button
+              type="button"
+              onClick={openSettings}
+              className="w-full flex items-center gap-3 px-3 py-3 rounded text-slate-200 hover:bg-slate-800 transition text-left"
             >
               <span className="text-xl">⚙️</span> Settings
-            </Link>
+            </button>
           </nav>
           <div className="p-2 border-t border-slate-700">
             <button
@@ -167,6 +190,18 @@ export function ChatsPage() {
       {isSelectUserOpen && (
         <SelectUserModal onClose={() => setIsSelectUserOpen(false)} />
       )}
+
+      {isProfileOpen && (
+        <ProfileModal onClose={() => setIsProfileOpen(false)} />
+      )}
+
+      {isSettingsOpen && (
+        <SettingsModal onClose={() => setIsSettingsOpen(false)} />
+      )}
+
+      <div className="md:hidden">
+        <BottomNav />
+      </div>
     </div>
   );
 }

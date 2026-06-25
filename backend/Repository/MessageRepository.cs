@@ -24,6 +24,15 @@ namespace Repository
             return PagedList<Message>.ToPagedList(messages, messageParameters.PageNumber, messageParameters.PageSize);
         }
 
+        public async Task<IEnumerable<Message>> GetLastMessagesByChatIdsAsync(IEnumerable<int> chatIds) =>
+            await FindByCondition(m => chatIds.Contains(m.ChatId), trackChanges: false)
+                .Where(m => !RepositoryContext.Set<Message>().Any(x =>
+                    x.ChatId == m.ChatId &&
+                    (x.CreatedAt > m.CreatedAt ||
+                        (x.CreatedAt == m.CreatedAt && x.Id > m.Id))))
+                .Include(m => m.User)
+                .ToListAsync();
+
         public async Task<Message?> GetMessageAsync(int id, bool trackChanges) =>
             await FindByCondition(m => m.Id == id, trackChanges).FirstOrDefaultAsync();
 

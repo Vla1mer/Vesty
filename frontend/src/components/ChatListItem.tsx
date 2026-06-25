@@ -1,5 +1,7 @@
 import { NavLink } from "react-router-dom";
+import { useAuth } from "../context/useAuth";
 import { getChatDisplayName } from "../utils/chats";
+import { formatListTime } from "../utils/date";
 import type { ChatDto } from "../types/api";
 
 interface Props {
@@ -7,7 +9,15 @@ interface Props {
 }
 
 export function ChatListItem({ chat }: Props) {
+  const { userId } = useAuth();
   const title = getChatDisplayName(chat);
+
+  const sender =
+    !chat.isPrivate && chat.lastMessageContent
+      ? chat.lastMessageSenderId === userId
+        ? "You"
+        : chat.lastMessageSenderName
+      : null;
 
   return (
     <NavLink
@@ -20,7 +30,22 @@ export function ChatListItem({ chat }: Props) {
         }`
       }
     >
-      <h3 className="text-lg font-semibold text-slate-100">{title}</h3>
+      <div className="flex items-baseline justify-between gap-2">
+        <h3 className="text-lg font-semibold text-slate-100 truncate">{title}</h3>
+        {chat.lastMessageAt && (
+          <span className="shrink-0 text-xs text-slate-500">
+            {formatListTime(chat.lastMessageAt)}
+          </span>
+        )}
+      </div>
+      {chat.lastMessageContent && (
+        <p className="text-sm text-slate-400 truncate mt-0.5">
+          {sender && (
+            <span className="text-amber-400 font-medium">{sender}: </span>
+          )}
+          {chat.lastMessageContent}
+        </p>
+      )}
     </NavLink>
   );
 }
