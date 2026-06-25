@@ -14,7 +14,14 @@ import { ChatInfoModal } from "../components/ChatInfoModal";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { getChatDisplayName } from "../utils/chats";
 import { onChatDeleted } from "../lib/signalr";
+import { useTypingIndicator } from "../hooks/useTypingIndicator";
 import type { AxiosBaseQueryError } from "../api/axiosBaseQuery";
+
+function typingText(names: string[]): string {
+  if (names.length === 1) return `${names[0]} is typing`;
+  if (names.length === 2) return `${names[0]} and ${names[1]} are typing`;
+  return "Several people are typing";
+}
 
 export function ChatDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -42,6 +49,7 @@ export function ChatDetailPage() {
   const [updateMessage] = useUpdateMessageMutation();
   const [deleteMessage, { isLoading: deletingMessage }] =
     useDeleteMessageMutation();
+  const { typingNames, notifyTyping } = useTypingIndicator(chatId, isValidChat);
 
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -201,27 +209,35 @@ export function ChatDetailPage() {
       )}
 
       {!loadError && !actionError && (
-        <form
-          onSubmit={handleSend}
-          className="flex gap-2 p-4 border-t border-slate-700 bg-slate-900 sticky bottom-0"
-        >
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Type a message..."
-            maxLength={2000}
-            disabled={sending}
-            className="flex-1 px-3 py-2 rounded bg-slate-800 border border-slate-600 text-slate-100 focus:outline-none focus:border-amber-500 disabled:opacity-50"
-          />
-          <button
-            type="submit"
-            disabled={sending || !input.trim()}
-            className="px-5 py-2 rounded bg-amber-600 hover:bg-amber-500 text-white disabled:bg-slate-700 disabled:cursor-not-allowed font-medium transition"
-          >
-            {sending ? "..." : "Send"}
-          </button>
-        </form>
+        <div className="relative border-t border-slate-700 bg-slate-900 sticky bottom-0">
+          {typingNames.length > 0 && (
+            <p className="absolute bottom-full mb-1 left-0 right-0 px-4 py-1 text-xs text-amber-400 italic bg-slate-950">
+              {typingText(typingNames)}
+              <span className="typing-dots" />
+            </p>
+          )}
+          <form onSubmit={handleSend} className="flex gap-2 p-4">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => {
+                setInput(e.target.value);
+                notifyTyping();
+              }}
+              placeholder="Type a message..."
+              maxLength={2000}
+              disabled={sending}
+              className="flex-1 px-3 py-2 rounded bg-slate-800 border border-slate-600 text-slate-100 focus:outline-none focus:border-amber-500 disabled:opacity-50"
+            />
+            <button
+              type="submit"
+              disabled={sending || !input.trim()}
+              className="px-5 py-2 rounded bg-amber-600 hover:bg-amber-500 text-white disabled:bg-slate-700 disabled:cursor-not-allowed font-medium transition"
+            >
+              {sending ? "..." : "Send"}
+            </button>
+          </form>
+        </div>
       )}
     </div>
   );

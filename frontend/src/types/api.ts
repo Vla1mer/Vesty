@@ -99,6 +99,12 @@ export interface ChatRenamedSignalrDto {
   name: string;
 }
 
+export interface UserTypingSignalrDto {
+  chatId: number;
+  userId: number;
+  userName: string;
+}
+
 
 export interface CreateDirectChatMessageDto {
   otherUserId: number;

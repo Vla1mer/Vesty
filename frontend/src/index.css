@@ -12,3 +12,14 @@ body {
   background-color: #020617;
   color: #e2e8f0;
 }
+
+@keyframes typing-dots {
+  0%, 100% { content: "..."; }
+  33% { content: ".."; }
+  66% { content: "."; }
+}
+
+.typing-dots::after {
+  content: "...";
+  animation: typing-dots 1.2s steps(1, end) infinite;
+}
