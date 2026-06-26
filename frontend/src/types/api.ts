@@ -44,6 +44,7 @@ export interface ChatDto {
   lastMessageSenderName?: string | null;
   lastMessageSenderId?: number | null;
   lastMessageAt?: string | null;
+  unreadCount?: number;
 }
 
 export interface DirectChatDto extends ChatDto {
@@ -81,6 +82,7 @@ export interface MessageDto {
   id: number;
   chatId: number;
   userId: number;
+  userName?: string | null;
   content: string | null;
   createdAt: string;
   isEdited: boolean;

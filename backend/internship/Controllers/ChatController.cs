@@ -147,5 +147,15 @@ namespace ChatApp.Controllers
             await _service.Chat.RenameAsync(id, chat);
             return NoContent();
         }
+
+        [HttpPost("{id:int}/read")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> MarkRead(int id)
+        {
+            await _service.Chat.MarkReadAsync(id);
+            return NoContent();
+        }
     }
 }

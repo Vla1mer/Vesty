@@ -8,6 +8,7 @@ namespace Repository.Interfaces
         Task<PagedList<Message>> GetAllMessagesAsync(MessageParameters messageParameters, IEnumerable<int> allowedChatIds, bool trackChanges);
         Task<IEnumerable<Message>> GetMessagesByChatAsync(int chatId, bool trackChanges);
         Task<IEnumerable<Message>> GetLastMessagesByChatIdsAsync(IEnumerable<int> chatIds);
+        Task<Dictionary<int, int>> GetUnreadCountsAsync(int userId, IEnumerable<int> chatIds);
         Task<Message?> GetMessageAsync(int id, bool trackChanges);
         void CreateMessage(Message message);
         void CreateMessageForChat(int chatId, Message message);

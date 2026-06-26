@@ -38,14 +38,23 @@ export function ChatListItem({ chat }: Props) {
           </span>
         )}
       </div>
-      {chat.lastMessageContent && (
-        <p className="text-sm text-slate-400 truncate mt-0.5">
-          {sender && (
-            <span className="text-amber-400 font-medium">{sender}: </span>
-          )}
-          {chat.lastMessageContent}
-        </p>
-      )}
+      <div className="flex items-center justify-between gap-2 mt-0.5">
+        {chat.lastMessageContent ? (
+          <p className="text-sm text-slate-400 truncate">
+            {sender && (
+              <span className="text-amber-400 font-medium">{sender}: </span>
+            )}
+            {chat.lastMessageContent}
+          </p>
+        ) : (
+          <span />
+        )}
+        {!!chat.unreadCount && chat.unreadCount > 0 && (
+          <span className="shrink-0 min-w-5 h-5 px-1.5 flex items-center justify-center rounded-full bg-amber-500 text-slate-900 text-xs font-bold">
+            {chat.unreadCount > 99 ? "99+" : chat.unreadCount}
+          </span>
+        )}
+      </div>
     </NavLink>
   );
 }

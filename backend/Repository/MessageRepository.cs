@@ -33,6 +33,19 @@ namespace Repository
                 .Include(m => m.User)
                 .ToListAsync();
 
+        public async Task<Dictionary<int, int>> GetUnreadCountsAsync(int userId, IEnumerable<int> chatIds)
+        {
+            var counts = await FindByCondition(m => chatIds.Contains(m.ChatId) && m.UserId != userId, trackChanges: false)
+                .Where(m => RepositoryContext.Set<ChatMember>().Any(cm =>
+                    cm.ChatId == m.ChatId && cm.UserId == userId &&
+                    (cm.LastReadAt == null || m.CreatedAt > cm.LastReadAt)))
+                .GroupBy(m => m.ChatId)
+                .Select(g => new { ChatId = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            return counts.ToDictionary(x => x.ChatId, x => x.Count);
+        }
+
         public async Task<Message?> GetMessageAsync(int id, bool trackChanges) =>
             await FindByCondition(m => m.Id == id, trackChanges).FirstOrDefaultAsync();
 

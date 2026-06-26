@@ -14,5 +14,6 @@ namespace Services.DataTransferObjects
         public string? LastMessageSenderName { get; init; }
         public int? LastMessageSenderId { get; init; }
         public DateTime? LastMessageAt { get; init; }
+        public int UnreadCount { get; init; }
     }
 }

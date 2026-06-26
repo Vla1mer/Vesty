@@ -1,7 +1,11 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useGetChatByIdQuery, useGetChatMembersQuery } from "../store/chatApi";
+import {
+  useGetChatByIdQuery,
+  useGetChatMembersQuery,
+  useMarkChatReadMutation,
+} from "../store/chatApi";
 import {
   useGetMessagesByChatQuery,
   useCreateMessageMutation,
@@ -15,6 +19,7 @@ import { ConfirmDialog } from "../components/ConfirmDialog";
 import { getChatDisplayName } from "../utils/chats";
 import { formatDateSeparator, isSameDay } from "../utils/date";
 import { onChatDeleted } from "../lib/signalr";
+import { setActiveChat } from "../lib/activeChat";
 import { useTypingIndicator } from "../hooks/useTypingIndicator";
 import type { AxiosBaseQueryError } from "../api/axiosBaseQuery";
 
@@ -60,6 +65,7 @@ export function ChatDetailPage() {
   const [updateMessage, { isLoading: saving }] = useUpdateMessageMutation();
   const [deleteMessage, { isLoading: deletingMessage }] =
     useDeleteMessageMutation();
+  const [markChatRead] = useMarkChatReadMutation();
   const { typingNames, notifyTyping } = useTypingIndicator(chatId, isValidChat);
 
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -95,6 +101,16 @@ export function ChatDetailPage() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    if (!isValidChat) return;
+    setActiveChat(chatId);
+    return () => setActiveChat(null);
+  }, [chatId, isValidChat]);
+
+  useEffect(() => {
+    if (isValidChat) markChatRead(chatId);
+  }, [chatId, isValidChat, messages.length, markChatRead]);
 
   useEffect(() => {
     if (!isValidChat) return;

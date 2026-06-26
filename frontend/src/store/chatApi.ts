@@ -1,4 +1,6 @@
 import { apiSlice } from "./apiSlice";
+import { getCurrentUserId } from "../api/client";
+import { getActiveChat } from "../lib/activeChat";
 import {
   onChatCreated,
   onChatDeleted,
@@ -16,6 +18,12 @@ export const chatApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getChats: builder.query<ChatDto[], void>({
       query: () => ({ url: "/api/Chat", params: { pageSize: 50 } }),
+      transformResponse: (response: ChatDto[]) =>
+        [...response].sort(
+          (a, b) =>
+            new Date(b.lastMessageAt ?? b.createdAt).getTime() -
+            new Date(a.lastMessageAt ?? a.createdAt).getTime()
+        ),
       providesTags: (result) =>
         result
           ? [
@@ -60,12 +68,20 @@ export const chatApi = apiSlice.injectEndpoints({
           subscriptions.push(
             onMessageReceived((message) => {
               updateCachedData((draft) => {
-                const chat = draft.find((c) => c.id === message.chatId);
-                if (!chat) return;
+                const index = draft.findIndex((c) => c.id === message.chatId);
+                if (index === -1) return;
+                const [chat] = draft.splice(index, 1);
                 chat.lastMessageContent = message.content;
                 chat.lastMessageSenderId = message.userId;
                 chat.lastMessageAt = message.createdAt;
-                chat.lastMessageSenderName = undefined;
+                chat.lastMessageSenderName = message.userName ?? undefined;
+                if (
+                  message.userId !== getCurrentUserId() &&
+                  message.chatId !== getActiveChat()
+                ) {
+                  chat.unreadCount = (chat.unreadCount ?? 0) + 1;
+                }
+                draft.unshift(chat);
               });
             })
           );
@@ -205,6 +221,23 @@ export const chatApi = apiSlice.injectEndpoints({
         { type: "ChatMember", id: chatId },
       ],
     }),
+
+    markChatRead: builder.mutation<void, number>({
+      query: (chatId) => ({ url: `/api/Chat/${chatId}/read`, method: "post" }),
+      async onQueryStarted(chatId, { dispatch, queryFulfilled }) {
+        const patch = dispatch(
+          chatApi.util.updateQueryData("getChats", undefined, (draft) => {
+            const chat = draft.find((c) => c.id === chatId);
+            if (chat) chat.unreadCount = 0;
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patch.undo();
+        }
+      },
+    }),
   }),
 });
 
@@ -218,4 +251,5 @@ export const {
   useAddChatMemberMutation,
   useRemoveChatMemberMutation,
   useUpdateMemberRoleMutation,
+  useMarkChatReadMutation,
 } = chatApi;
