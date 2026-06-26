@@ -11,6 +11,11 @@ export const messageApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getMessagesByChat: builder.query<MessageDto[], number>({
       query: (chatId) => ({ url: `/api/Chat/${chatId}/messages` }),
+      transformResponse: (response: MessageDto[]) =>
+        [...response].sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        ),
       providesTags: (_result, _error, chatId) => [
         { type: "Message", id: chatId },
       ],

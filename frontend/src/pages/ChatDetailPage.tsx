@@ -40,15 +40,22 @@ export function ChatDetailPage() {
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
   const { data: chat, isLoading: chatLoading, error: chatError } =
-    useGetChatByIdQuery(chatId, { skip: !isValidChat });
+    useGetChatByIdQuery(chatId, {
+      skip: !isValidChat,
+      refetchOnMountOrArgChange: true,
+    });
   const { data: members = [] } = useGetChatMembersQuery(chatId, {
     skip: !isValidChat,
+    refetchOnMountOrArgChange: true,
   });
   const {
     data: messages = [],
     isLoading: messagesLoading,
     isError: messagesError,
-  } = useGetMessagesByChatQuery(chatId, { skip: !isValidChat });
+  } = useGetMessagesByChatQuery(chatId, {
+    skip: !isValidChat,
+    refetchOnMountOrArgChange: true,
+  });
   const [createMessage, { isLoading: sending }] = useCreateMessageMutation();
   const [updateMessage, { isLoading: saving }] = useUpdateMessageMutation();
   const [deleteMessage, { isLoading: deletingMessage }] =

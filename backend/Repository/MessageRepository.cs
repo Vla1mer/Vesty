@@ -37,7 +37,10 @@ namespace Repository
             await FindByCondition(m => m.Id == id, trackChanges).FirstOrDefaultAsync();
 
         public async Task<IEnumerable<Message>> GetMessagesByChatAsync(int chatId, bool trackChanges) =>
-            await FindByCondition(m => m.ChatId == chatId, trackChanges).ToListAsync();
+            await FindByCondition(m => m.ChatId == chatId, trackChanges)
+                .OrderBy(m => m.CreatedAt)
+                .ThenBy(m => m.Id)
+                .ToListAsync();
 
         public void CreateMessage(Message message) => Create(message);
 
