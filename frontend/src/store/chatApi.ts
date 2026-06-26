@@ -15,7 +15,7 @@ import type {
 export const chatApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getChats: builder.query<ChatDto[], void>({
-      query: () => ({ url: "/api/Chat" }),
+      query: () => ({ url: "/api/Chat", params: { pageSize: 50 } }),
       providesTags: (result) =>
         result
           ? [

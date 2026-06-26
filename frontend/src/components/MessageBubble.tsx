@@ -153,6 +153,7 @@ export function MessageBubble({
     hour: "2-digit",
     minute: "2-digit",
   });
+  const timeLabel = message.isEdited ? `edited ${time}` : time;
 
   const displayName = authorName ?? `User #${message.userId}`;
 
@@ -204,16 +205,22 @@ export function MessageBubble({
                 </p>
               )}
 
-              <div className="flex items-end gap-2">
-                <p className="min-w-0 break-words whitespace-pre-wrap">
+              <div className="relative">
+                <p className="break-words whitespace-pre-wrap">
                   {message.content}
+                  <span
+                    className="invisible select-none ml-2 text-[10px]"
+                    aria-hidden="true"
+                  >
+                    {timeLabel}
+                  </span>
                 </p>
                 <span
-                  className={`shrink-0 self-end text-[10px] leading-none pb-0.5 whitespace-nowrap ${
+                  className={`absolute bottom-0 right-0 text-[10px] leading-none whitespace-nowrap ${
                     isOwn ? "text-amber-100" : "text-slate-400"
                   }`}
                 >
-                  {message.isEdited ? `edited ${time}` : time}
+                  {timeLabel}
                 </span>
               </div>
             </div>

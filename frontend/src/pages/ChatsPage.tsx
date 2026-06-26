@@ -58,7 +58,7 @@ export function ChatsPage() {
   const isSearching = searchQuery.trim().length > 0;
 
   return (
-    <div className="relative h-full flex flex-col">
+    <div className="relative flex-1 min-h-0 flex flex-col bg-slate-900">
       <header className="flex items-center justify-between gap-2 p-4 border-b border-slate-700">
         <div className="flex items-center gap-3 min-w-0">
           <button
@@ -101,7 +101,7 @@ export function ChatsPage() {
         <SearchBar value={searchQuery} onChange={setSearchQuery} />
       </div>
 
-      <div className="flex-1 overflow-y-auto pb-20 md:pb-4">
+      <div className="flex-1 min-h-0 overflow-y-auto pb-20 md:pb-4 scrollbar-none">
         {isLoading && <p className="text-slate-400 px-4">Loading...</p>}
 
         {isError && (

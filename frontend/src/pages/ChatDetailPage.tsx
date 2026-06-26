@@ -281,7 +281,7 @@ export function ChatDetailPage() {
         </header>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-4 pt-[88px] flex flex-col">
+      <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-4 pt-[88px] flex flex-col">
         <div className="mt-auto space-y-3">
         {(chatLoading || messagesLoading) && (
           <p className="text-slate-400 text-center">Loading...</p>
