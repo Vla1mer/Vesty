@@ -1,4 +1,7 @@
 import { apiSlice } from "./apiSlice";
+import { endpoints } from "../api/endpoints";
+import { CHAT_API_TAGS, TAG_ID } from "../api/constants";
+import { HTTP_METHOD } from "../utils/http";
 import { getCurrentUserId } from "../api/client";
 import { getActiveChat } from "../lib/activeChat";
 import {
@@ -17,7 +20,7 @@ import type {
 export const chatApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getChats: builder.query<ChatDto[], void>({
-      query: () => ({ url: "/api/Chat", params: { pageSize: 50 } }),
+      query: () => ({ url: endpoints.chat.base, params: { pageSize: 50 } }),
       transformResponse: (response: ChatDto[]) =>
         [...response].sort(
           (a, b) =>
@@ -27,10 +30,10 @@ export const chatApi = apiSlice.injectEndpoints({
       providesTags: (result) =>
         result
           ? [
-              ...result.map((chat) => ({ type: "Chat" as const, id: chat.id })),
-              { type: "Chat" as const, id: "LIST" },
+              ...result.map((chat) => ({ type: CHAT_API_TAGS.CHAT, id: chat.id })),
+              { type: CHAT_API_TAGS.CHAT, id: TAG_ID.LIST },
             ]
-          : [{ type: "Chat" as const, id: "LIST" }],
+          : [{ type: CHAT_API_TAGS.CHAT, id: TAG_ID.LIST }],
       async onCacheEntryAdded(
         _arg,
         { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch }
@@ -89,7 +92,7 @@ export const chatApi = apiSlice.injectEndpoints({
           subscriptions.push(
             onReconnected(() => {
               dispatch(
-                apiSlice.util.invalidateTags([{ type: "Chat", id: "LIST" }])
+                apiSlice.util.invalidateTags([{ type: CHAT_API_TAGS.CHAT, id: TAG_ID.LIST }])
               );
             })
           );
@@ -102,29 +105,29 @@ export const chatApi = apiSlice.injectEndpoints({
     }),
 
     createChat: builder.mutation<ChatDto, ChatForCreationDto>({
-      query: (dto) => ({ url: "/api/Chat", method: "post", data: dto }),
-      invalidatesTags: [{ type: "Chat", id: "LIST" }],
+      query: (dto) => ({ url: endpoints.chat.base, method: HTTP_METHOD.POST, data: dto }),
+      invalidatesTags: [{ type: CHAT_API_TAGS.CHAT, id: TAG_ID.LIST }],
     }),
 
     deleteChat: builder.mutation<void, number>({
-      query: (chatId) => ({ url: `/api/Chat/${chatId}`, method: "delete" }),
-      invalidatesTags: [{ type: "Chat", id: "LIST" }],
+      query: (chatId) => ({ url: endpoints.chat.byId(chatId), method: HTTP_METHOD.DELETE }),
+      invalidatesTags: [{ type: CHAT_API_TAGS.CHAT, id: TAG_ID.LIST }],
     }),
 
     renameChat: builder.mutation<void, { chatId: number; name: string }>({
       query: ({ chatId, name }) => ({
-        url: `/api/Chat/${chatId}`,
-        method: "put",
+        url: endpoints.chat.byId(chatId),
+        method: HTTP_METHOD.PUT,
         data: { name },
       }),
       invalidatesTags: (_result, _error, { chatId }) => [
-        { type: "Chat", id: chatId },
+        { type: CHAT_API_TAGS.CHAT, id: chatId },
       ],
     }),
 
     getChatById: builder.query<ChatDto, number>({
-      query: (chatId) => ({ url: `/api/Chat/${chatId}` }),
-      providesTags: (_result, _error, chatId) => [{ type: "Chat", id: chatId }],
+      query: (chatId) => ({ url: endpoints.chat.byId(chatId) }),
+      providesTags: (_result, _error, chatId) => [{ type: CHAT_API_TAGS.CHAT, id: chatId }],
       async onCacheEntryAdded(
         chatId,
         { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch }
@@ -145,7 +148,7 @@ export const chatApi = apiSlice.injectEndpoints({
           subscriptions.push(
             onReconnected(() => {
               dispatch(
-                apiSlice.util.invalidateTags([{ type: "Chat", id: chatId }])
+                apiSlice.util.invalidateTags([{ type: CHAT_API_TAGS.CHAT, id: chatId }])
               );
             })
           );
@@ -158,9 +161,9 @@ export const chatApi = apiSlice.injectEndpoints({
     }),
 
     getChatMembers: builder.query<ChatMemberWithRoleDto[], number>({
-      query: (chatId) => ({ url: `/api/Chat/${chatId}/users` }),
+      query: (chatId) => ({ url: endpoints.chat.members(chatId) }),
       providesTags: (_result, _error, chatId) => [
-        { type: "ChatMember", id: chatId },
+        { type: CHAT_API_TAGS.CHAT_MEMBER, id: chatId },
       ],
       async onCacheEntryAdded(
         chatId,
@@ -174,7 +177,7 @@ export const chatApi = apiSlice.injectEndpoints({
             onReconnected(() => {
               dispatch(
                 apiSlice.util.invalidateTags([
-                  { type: "ChatMember", id: chatId },
+                  { type: CHAT_API_TAGS.CHAT_MEMBER, id: chatId },
                 ])
               );
             })
@@ -189,22 +192,22 @@ export const chatApi = apiSlice.injectEndpoints({
 
     addChatMember: builder.mutation<void, { chatId: number; userId: number }>({
       query: ({ chatId, userId }) => ({
-        url: `/api/Chat/${chatId}/users`,
-        method: "post",
+        url: endpoints.chat.members(chatId),
+        method: HTTP_METHOD.POST,
         data: { userId },
       }),
       invalidatesTags: (_result, _error, { chatId }) => [
-        { type: "ChatMember", id: chatId },
+        { type: CHAT_API_TAGS.CHAT_MEMBER, id: chatId },
       ],
     }),
 
     removeChatMember: builder.mutation<void, { chatId: number; userId: number }>({
       query: ({ chatId, userId }) => ({
-        url: `/api/Chat/${chatId}/users/${userId}`,
-        method: "delete",
+        url: endpoints.chat.member(chatId, userId),
+        method: HTTP_METHOD.DELETE,
       }),
       invalidatesTags: (_result, _error, { chatId }) => [
-        { type: "ChatMember", id: chatId },
+        { type: CHAT_API_TAGS.CHAT_MEMBER, id: chatId },
       ],
     }),
 
@@ -213,17 +216,17 @@ export const chatApi = apiSlice.injectEndpoints({
       { chatId: number; userId: number; roleId: number }
     >({
       query: ({ chatId, userId, roleId }) => ({
-        url: `/api/Chat/${chatId}/users/${userId}/role`,
-        method: "patch",
+        url: endpoints.chat.memberRole(chatId, userId),
+        method: HTTP_METHOD.PATCH,
         data: { roleId },
       }),
       invalidatesTags: (_result, _error, { chatId }) => [
-        { type: "ChatMember", id: chatId },
+        { type: CHAT_API_TAGS.CHAT_MEMBER, id: chatId },
       ],
     }),
 
     markChatRead: builder.mutation<void, number>({
-      query: (chatId) => ({ url: `/api/Chat/${chatId}/read`, method: "post" }),
+      query: (chatId) => ({ url: endpoints.chat.read(chatId), method: HTTP_METHOD.POST }),
       async onQueryStarted(chatId, { dispatch, queryFulfilled }) {
         const patch = dispatch(
           chatApi.util.updateQueryData("getChats", undefined, (draft) => {

@@ -1,4 +1,7 @@
 import { apiSlice } from "./apiSlice";
+import { endpoints } from "../api/endpoints";
+import { CHAT_API_TAGS, MESSAGE_API_TAGS, TAG_ID } from "../api/constants";
+import { HTTP_METHOD } from "../utils/http";
 import {
   onMessageReceived,
   onMessageUpdated,
@@ -10,14 +13,14 @@ import type { MessageDto, CreateDirectChatMessageDto } from "../types/api";
 export const messageApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getMessagesByChat: builder.query<MessageDto[], number>({
-      query: (chatId) => ({ url: `/api/Chat/${chatId}/messages` }),
+      query: (chatId) => ({ url: endpoints.chat.messages(chatId) }),
       transformResponse: (response: MessageDto[]) =>
         [...response].sort(
           (a, b) =>
             new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
         ),
       providesTags: (_result, _error, chatId) => [
-        { type: "Message", id: chatId },
+        { type: MESSAGE_API_TAGS.MESSAGE, id: chatId },
       ],
       async onCacheEntryAdded(
         chatId,
@@ -59,7 +62,7 @@ export const messageApi = apiSlice.injectEndpoints({
           subscriptions.push(
             onReconnected(() => {
               dispatch(
-                apiSlice.util.invalidateTags([{ type: "Message", id: chatId }])
+                apiSlice.util.invalidateTags([{ type: MESSAGE_API_TAGS.MESSAGE, id: chatId }])
               );
             })
           );
@@ -76,8 +79,8 @@ export const messageApi = apiSlice.injectEndpoints({
       { chatId: number; content: string }
     >({
       query: ({ chatId, content }) => ({
-        url: `/api/Message/${chatId}/messages`,
-        method: "post",
+        url: endpoints.message.forChat(chatId),
+        method: HTTP_METHOD.POST,
         data: { content },
       }),
       async onQueryStarted({ chatId }, { dispatch, queryFulfilled }) {
@@ -95,8 +98,8 @@ export const messageApi = apiSlice.injectEndpoints({
       { chatId: number; id: number; content: string }
     >({
       query: ({ chatId, id, content }) => ({
-        url: `/api/Message/${chatId}/messages/${id}`,
-        method: "put",
+        url: endpoints.message.inChat(chatId, id),
+        method: HTTP_METHOD.PUT,
         data: { content },
       }),
       async onQueryStarted({ chatId, id, content }, { dispatch, queryFulfilled }) {
@@ -118,7 +121,7 @@ export const messageApi = apiSlice.injectEndpoints({
     }),
 
     deleteMessage: builder.mutation<void, { chatId: number; id: number }>({
-      query: ({ id }) => ({ url: `/api/Message/${id}`, method: "delete" }),
+      query: ({ id }) => ({ url: endpoints.message.byId(id), method: HTTP_METHOD.DELETE }),
       async onQueryStarted({ chatId, id }, { dispatch, queryFulfilled }) {
         const patch = dispatch(
           messageApi.util.updateQueryData("getMessagesByChat", chatId, (draft) => {
@@ -138,8 +141,8 @@ export const messageApi = apiSlice.injectEndpoints({
       MessageDto,
       CreateDirectChatMessageDto
     >({
-      query: (dto) => ({ url: "/api/Message/direct", method: "post", data: dto }),
-      invalidatesTags: [{ type: "Chat", id: "LIST" }],
+      query: (dto) => ({ url: endpoints.message.direct, method: HTTP_METHOD.POST, data: dto }),
+      invalidatesTags: [{ type: CHAT_API_TAGS.CHAT, id: TAG_ID.LIST }],
     }),
   }),
 });

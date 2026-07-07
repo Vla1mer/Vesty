@@ -35,10 +35,13 @@ namespace Services
 
         public async Task<IEnumerable<int>> GetTypingRecipientsAsync(int chatId, int typingUserId)
         {
-            var members = await _repository.ChatMember.GetMembersByChatIdAsync(chatId, trackChanges: false);
-            var memberIds = members.Select(m => m.UserId).ToList();
+            var memberIds = (await _repository.ChatMember.GetMembersByChatIdAsync(chatId, trackChanges: false))
+                .Select(m => m.UserId)
+                .ToList();
+
             if (!memberIds.Contains(typingUserId))
                 return Enumerable.Empty<int>();
+
             return memberIds.Where(id => id != typingUserId).ToList();
         }
 
