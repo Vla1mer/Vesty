@@ -2,7 +2,7 @@
 using Entities.Models;
 using Services.DataTransferObjects;
 
-namespace ChatApp.Mappings
+namespace Vesty.Mappings
 {
     public class ChatMemberProfile : Profile
     {

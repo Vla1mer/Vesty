@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36705.20
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChatApp", "internship\ChatApp.csproj", "{EB329866-561B-4C7E-B1DF-BFDC041960D5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vesty", "Vesty\Vesty.csproj", "{EB329866-561B-4C7E-B1DF-BFDC041960D5}"
 	ProjectSection(ProjectDependencies) = postProject
 		{75AFA0D3-7E20-4DDC-BFF4-3DADEE812744} = {75AFA0D3-7E20-4DDC-BFF4-3DADEE812744}
 	EndProjectSection

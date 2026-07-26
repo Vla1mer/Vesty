@@ -1,4 +1,4 @@
-using ChatApp.ModelBinders;
+using Vesty.ModelBinders;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
@@ -7,7 +7,7 @@ using Services.Interfaces;
 using Shared.RequestFeatures;
 using System.Text.Json;
 
-namespace ChatApp.Controllers
+namespace Vesty.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

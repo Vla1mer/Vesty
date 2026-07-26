@@ -4,8 +4,8 @@ import type { TokenDto } from "../types/api";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "https://localhost:7033";
 
-export const ACCESS_TOKEN_KEY = "chatapp.accessToken";
-export const REFRESH_TOKEN_KEY = "chatapp.refreshToken";
+export const ACCESS_TOKEN_KEY = "vesty.accessToken";
+export const REFRESH_TOKEN_KEY = "vesty.refreshToken";
 
 export const getAccessToken = () => localStorage.getItem(ACCESS_TOKEN_KEY);
 export const getRefreshToken = () => localStorage.getItem(REFRESH_TOKEN_KEY);

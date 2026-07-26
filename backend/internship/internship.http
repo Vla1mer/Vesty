@@ -1,6 +1,0 @@
-@internship_HostAddress = http://localhost:5005
-
-GET {{internship_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

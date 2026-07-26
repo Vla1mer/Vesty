@@ -6,7 +6,7 @@ using Services.Interfaces;
 using Shared.RequestFeatures;
 using System.Text.Json;
 
-namespace ChatApp.Controllers
+namespace Vesty.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

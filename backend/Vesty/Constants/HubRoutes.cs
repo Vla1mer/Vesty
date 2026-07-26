@@ -1,4 +1,4 @@
-namespace ChatApp.Constants
+namespace Vesty.Constants
 {
     public static class HubRoutes
     {

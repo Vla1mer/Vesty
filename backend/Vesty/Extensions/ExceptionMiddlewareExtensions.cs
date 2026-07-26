@@ -4,7 +4,7 @@ using Shared.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Services.Interfaces;
 
-namespace ChatApp.Extensions
+namespace Vesty.Extensions
 {
     public static class ExceptionMiddlewareExtensions
     {

@@ -1,6 +1,6 @@
 ﻿using System.Text;
-using ChatApp.Constants;
-using ChatApp.Hubs;
+using Vesty.Constants;
+using Vesty.Hubs;
 using Entities.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -11,7 +11,7 @@ using Services;
 using Services.Cryptography;
 using Services.Interfaces;
 
-namespace ChatApp.Extensions
+namespace Vesty.Extensions
 {
     public static class ServiceExtensions
     {

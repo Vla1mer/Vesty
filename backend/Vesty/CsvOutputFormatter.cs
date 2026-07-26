@@ -3,7 +3,7 @@ using Microsoft.Net.Http.Headers;
 using Services.DataTransferObjects;
 using System.Text;
 
-namespace ChatApp
+namespace Vesty
 {
     public class CsvOutputFormatter : TextOutputFormatter
     {

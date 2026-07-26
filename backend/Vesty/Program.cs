@@ -1,6 +1,6 @@
-﻿using ChatApp.Constants;
-using ChatApp.Extensions;
-using ChatApp.Hubs;
+﻿using Vesty.Constants;
+using Vesty.Extensions;
+using Vesty.Hubs;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.SignalR;
 using Services.DataTransferObjects;
 using Services.Interfaces;
 
-namespace ChatApp.Hubs
+namespace Vesty.Hubs
 {
     [Authorize]
     public class ChatHub : Hub

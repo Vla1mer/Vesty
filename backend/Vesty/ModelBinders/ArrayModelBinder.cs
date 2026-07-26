@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using System.Reflection;
 
-namespace ChatApp.ModelBinders
+namespace Vesty.ModelBinders
 {
     public class ArrayModelBinder : IModelBinder
     {

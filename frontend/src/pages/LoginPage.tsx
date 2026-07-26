@@ -36,7 +36,7 @@ export function LoginPage() {
           <Form className="w-full max-w-sm bg-slate-800 border border-slate-700 rounded-xl p-6 space-y-4">
             <div className="text-center">
               <h1 className="text-2xl font-bold">
-                <span className="text-amber-400">ChatApp</span>{" "}
+                <span className="text-amber-400">Vesty</span>{" "}
                 <span className="text-slate-100">Messenger</span>
               </h1>
               <p className="text-sm text-slate-400 mt-1">Sign in to your account</p>
