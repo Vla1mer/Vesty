@@ -10,6 +10,7 @@ import type {
   ChatRenamedSignalrDto,
   MessageDto,
   MessageDeletedSignalrDto,
+  UserTypingSignalrDto,
 } from "../types/api";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "https://localhost:7033";
@@ -32,6 +33,7 @@ const messageDeleted = createEvent<MessageDeletedSignalrDto>("MessageDeleted");
 const chatCreated = createEvent<ChatDto>("ChatCreated");
 const chatDeleted = createEvent<ChatDeletedSignalrDto>("ChatDeleted");
 const chatRenamed = createEvent<ChatRenamedSignalrDto>("ChatRenamed");
+const userTyping = createEvent<UserTypingSignalrDto>("UserTyping");
 const reconnected = createEvent<void>("reconnected");
 
 function subscribe<T>(event: HubEvent<T>) {
@@ -49,6 +51,7 @@ export const onMessageDeleted = subscribe(messageDeleted);
 export const onChatCreated = subscribe(chatCreated);
 export const onChatDeleted = subscribe(chatDeleted);
 export const onChatRenamed = subscribe(chatRenamed);
+export const onUserTyping = subscribe(userTyping);
 export const onReconnected = subscribe(reconnected);
 
 let connection: HubConnection | null = null;
@@ -74,6 +77,7 @@ function buildConnection(token: string): HubConnection {
   attach(conn, chatCreated);
   attach(conn, chatDeleted);
   attach(conn, chatRenamed);
+  attach(conn, userTyping);
 
   conn.onreconnected(() => {
     console.log("[SignalR] Reconnected");
@@ -117,4 +121,9 @@ export function getConnection(): HubConnection | null {
 
 export function isConnected(): boolean {
   return connection?.state === HubConnectionState.Connected;
+}
+
+export function sendTyping(chatId: number): void {
+  if (connection?.state !== HubConnectionState.Connected) return;
+  connection.invoke("Typing", chatId).catch(() => {});
 }

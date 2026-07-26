@@ -40,6 +40,11 @@ export interface ChatDto {
   creatorId: number | null;
   isPrivate: boolean;
   createdAt: string;
+  lastMessageContent?: string | null;
+  lastMessageSenderName?: string | null;
+  lastMessageSenderId?: number | null;
+  lastMessageAt?: string | null;
+  unreadCount?: number;
 }
 
 export interface DirectChatDto extends ChatDto {
@@ -77,8 +82,10 @@ export interface MessageDto {
   id: number;
   chatId: number;
   userId: number;
+  userName?: string | null;
   content: string | null;
   createdAt: string;
+  isEdited: boolean;
 }
 
 export interface MessageForCreationDto {
@@ -97,6 +104,12 @@ export interface ChatDeletedSignalrDto {
 export interface ChatRenamedSignalrDto {
   chatId: number;
   name: string;
+}
+
+export interface UserTypingSignalrDto {
+  chatId: number;
+  userId: number;
+  userName: string;
 }
 
 

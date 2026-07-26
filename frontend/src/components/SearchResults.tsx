@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { getAllUsers } from "../api/users";
+import { useGetAllUsersQuery } from "../store/userApi";
 import { useAuth } from "../context/useAuth";
 import { getChatDisplayName } from "../utils/chats";
 import { isDirectChat } from "../types/api";
-import type { ChatDto, UserDto } from "../types/api";
+import type { ChatDto } from "../types/api";
 
 interface Props {
   query: string;
@@ -14,23 +14,7 @@ interface Props {
 export function SearchResults({ query, chats }: Props) {
   const navigate = useNavigate();
   const { userId: currentUserId } = useAuth();
-  const [allUsers, setAllUsers] = useState<UserDto[]>([]);
-  const [loadingUsers, setLoadingUsers] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-    getAllUsers()
-      .then((data) => {
-        if (!cancelled) setAllUsers(data);
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (!cancelled) setLoadingUsers(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { data: allUsers = [], isLoading: loadingUsers } = useGetAllUsersQuery();
 
   const term = query.trim().toLowerCase();
 

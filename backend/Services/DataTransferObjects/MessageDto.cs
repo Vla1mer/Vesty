@@ -5,7 +5,9 @@
         public int Id { get; init; }
         public int ChatId { get; init; }
         public int UserId { get; init; }
+        public string? UserName { get; init; }
         public string? Content { get; init; }
         public DateTime CreatedAt { get; init; }
+        public bool IsEdited { get; init; }
     }
 }

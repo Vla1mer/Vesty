@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  addChatMember,
-  deleteChat,
-  getChatMembers,
-  removeChatMember,
-  renameChat,
-  updateMemberRole,
-} from "../api/chats";
-import { getAllUsers } from "../api/users";
+  useDeleteChatMutation,
+  useRenameChatMutation,
+  useGetChatMembersQuery,
+  useAddChatMemberMutation,
+  useRemoveChatMemberMutation,
+  useUpdateMemberRoleMutation,
+} from "../store/chatApi";
+import { useGetAllUsersQuery } from "../store/userApi";
 import { useAuth } from "../context/useAuth";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { isDirectChat, UserRole } from "../types/api";
@@ -15,13 +15,12 @@ import { getChatDisplayName } from "../utils/chats";
 import { chatNameSchema } from "../validation/chatSchemas";
 import { ValidationError } from "yup";
 import type { ChatDto, UserDto, ChatMemberWithRoleDto } from "../types/api";
-import type { AxiosError } from "axios";
+import type { AxiosBaseQueryError } from "../api/axiosBaseQuery";
 
 interface Props {
   chat: ChatDto;
   onClose: () => void;
   onDeleted: () => void;
-  onRenamed?: (newName: string) => void;
 }
 
 const roleLabel: Record<number, string> = {
@@ -30,12 +29,14 @@ const roleLabel: Record<number, string> = {
   [UserRole.User]: "Member",
 };
 
-export function ChatInfoModal({ chat, onClose, onDeleted, onRenamed }: Props) {
+export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
   const { userId: currentUserId } = useAuth();
-  const [members, setMembers] = useState<ChatMemberWithRoleDto[]>([]);
-  const [allUsers, setAllUsers] = useState<UserDto[]>([]);
+  const [deleteChat] = useDeleteChatMutation();
+  const [renameChat] = useRenameChatMutation();
+  const [addChatMember] = useAddChatMemberMutation();
+  const [removeChatMember] = useRemoveChatMemberMutation();
+  const [updateMemberRole] = useUpdateMemberRoleMutation();
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
   const [busyUserId, setBusyUserId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -48,6 +49,16 @@ export function ChatInfoModal({ chat, onClose, onDeleted, onRenamed }: Props) {
   const canDelete = chat.isPrivate || chat.creatorId === currentUserId;
   const canRename = isGroup && chat.creatorId === currentUserId;
 
+  const {
+    data: members = [],
+    isLoading: loading,
+    isError: membersError,
+  } = useGetChatMembersQuery(chat.id);
+  const { data: allUsers = [], isFetching: usersFetching } = useGetAllUsersQuery(
+    undefined,
+    { skip: !isGroup || search.trim().length === 0 }
+  );
+
   const isCallerOwner = useMemo(
     () =>
       members.some(
@@ -55,30 +66,6 @@ export function ChatInfoModal({ chat, onClose, onDeleted, onRenamed }: Props) {
       ),
     [members, currentUserId]
   );
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const requests: [
-          Promise<ChatMemberWithRoleDto[]>,
-          Promise<UserDto[]>?
-        ] = [getChatMembers(chat.id)];
-        if (isGroup) requests[1] = getAllUsers();
-        const [m, u] = await Promise.all(requests);
-        if (cancelled) return;
-        setMembers(m);
-        if (isGroup && u) setAllUsers(u);
-      } catch {
-        if (!cancelled) setError("Failed to load chat info");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [chat.id, isGroup]);
 
   useEffect(() => {
     function handleEsc(e: KeyboardEvent) {
@@ -95,30 +82,21 @@ export function ChatInfoModal({ chat, onClose, onDeleted, onRenamed }: Props) {
 
   const filteredCandidates = useMemo(() => {
     const term = search.trim().toLowerCase();
+    if (!term) return [];
     return allUsers
       .filter((u) => !memberIds.has(u.id))
-      .filter((u) => (term ? u.userName.toLowerCase().includes(term) : true));
+      .filter((u) => u.userName.toLowerCase().includes(term));
   }, [allUsers, memberIds, search]);
 
   async function handleAdd(user: UserDto) {
     setBusyUserId(user.id);
     setError(null);
     try {
-      await addChatMember(chat.id, user.id);
-      setMembers((prev) => [
-        ...prev,
-        {
-          userId: user.id,
-          userName: user.userName,
-          name: user.name,
-          surname: user.surname,
-          roleId: UserRole.User,
-        },
-      ]);
+      await addChatMember({ chatId: chat.id, userId: user.id }).unwrap();
     } catch (err) {
-      const axiosErr = err as AxiosError;
+      const status = (err as AxiosBaseQueryError).status;
       setError(
-        axiosErr.response?.status === 403
+        status === 403
           ? "Only owners or admins can add members"
           : "Failed to add member"
       );
@@ -131,12 +109,11 @@ export function ChatInfoModal({ chat, onClose, onDeleted, onRenamed }: Props) {
     setBusyUserId(member.userId);
     setError(null);
     try {
-      await removeChatMember(chat.id, member.userId);
-      setMembers((prev) => prev.filter((m) => m.userId !== member.userId));
+      await removeChatMember({ chatId: chat.id, userId: member.userId }).unwrap();
     } catch (err) {
-      const axiosErr = err as AxiosError;
+      const status = (err as AxiosBaseQueryError).status;
       setError(
-        axiosErr.response?.status === 403
+        status === 403
           ? "You don't have permission to remove this member"
           : "Failed to remove member"
       );
@@ -149,16 +126,15 @@ export function ChatInfoModal({ chat, onClose, onDeleted, onRenamed }: Props) {
     setBusyUserId(member.userId);
     setError(null);
     try {
-      await updateMemberRole(chat.id, member.userId, newRole);
-      setMembers((prev) =>
-        prev.map((m) =>
-          m.userId === member.userId ? { ...m, roleId: newRole } : m
-        )
-      );
+      await updateMemberRole({
+        chatId: chat.id,
+        userId: member.userId,
+        roleId: newRole,
+      }).unwrap();
     } catch (err) {
-      const axiosErr = err as AxiosError;
+      const status = (err as AxiosBaseQueryError).status;
       setError(
-        axiosErr.response?.status === 403
+        status === 403
           ? "Only the owner can change roles"
           : "Failed to change role"
       );
@@ -170,12 +146,12 @@ export function ChatInfoModal({ chat, onClose, onDeleted, onRenamed }: Props) {
   async function handleDelete() {
     setDeleting(true);
     try {
-      await deleteChat(chat.id);
+      await deleteChat(chat.id).unwrap();
       onDeleted();
     } catch (err) {
-      const axiosErr = err as AxiosError;
+      const status = (err as AxiosBaseQueryError).status;
       setError(
-        axiosErr.response?.status === 403
+        status === 403
           ? "You don't have permission to delete this chat"
           : "Failed to delete chat"
       );
@@ -198,13 +174,12 @@ export function ChatInfoModal({ chat, onClose, onDeleted, onRenamed }: Props) {
     setRenaming(true);
     setError(null);
     try {
-      await renameChat(chat.id, newName);
-      onRenamed?.(newName);
+      await renameChat({ chatId: chat.id, name: newName }).unwrap();
       setIsRenaming(false);
     } catch (err) {
-      const axiosErr = err as AxiosError;
+      const status = (err as AxiosBaseQueryError).status;
       setError(
-        axiosErr.response?.status === 403
+        status === 403
           ? "Only the owner can rename this chat"
           : "Failed to rename chat"
       );
@@ -298,9 +273,9 @@ export function ChatInfoModal({ chat, onClose, onDeleted, onRenamed }: Props) {
             </button>
           </div>
 
-          {error && (
+          {(error || membersError) && (
             <div className="text-sm text-red-400 bg-red-950 border border-red-900 rounded p-2 mb-3">
-              {error}
+              {error ?? "Failed to load chat info"}
             </div>
           )}
 
@@ -415,9 +390,13 @@ export function ChatInfoModal({ chat, onClose, onDeleted, onRenamed }: Props) {
                     placeholder="Search by username..."
                     className="w-full px-3 py-2 rounded bg-slate-900 border border-slate-600 text-slate-100 text-sm focus:outline-none focus:border-amber-500 mb-2"
                   />
-                  {filteredCandidates.length === 0 ? (
+                  {search.trim().length === 0 ? (
                     <p className="text-sm text-slate-500 py-2 text-center">
-                      {search ? "No users match your search" : "No more users to add"}
+                      Start typing to find users
+                    </p>
+                  ) : filteredCandidates.length === 0 ? (
+                    <p className="text-sm text-slate-500 py-2 text-center">
+                      {usersFetching ? "Searching..." : "No users match your search"}
                     </p>
                   ) : (
                     <ul className="space-y-1">

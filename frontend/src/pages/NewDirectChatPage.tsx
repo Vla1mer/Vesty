@@ -1,78 +1,55 @@
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getUserById } from "../api/users";
-import { createDirectChatAndSendMessage } from "../api/messages";
-import type { UserDto } from "../types/api";
-import type { AxiosError } from "axios";
+import { useGetUserByIdQuery } from "../store/userApi";
+import { useCreateDirectChatAndSendMessageMutation } from "../store/messageApi";
+import type { AxiosBaseQueryError } from "../api/axiosBaseQuery";
 
 export function NewDirectChatPage() {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const otherUserId = Number(userId);
+  const isValidUser = Number.isFinite(otherUserId);
 
-  const [partner, setPartner] = useState<UserDto | null>(null);
-  const [loading, setLoading] = useState(Number.isFinite(otherUserId));
-  const [error, setError] = useState<string | null>(
-    Number.isFinite(otherUserId) ? null : "Invalid user id"
-  );
   const [input, setInput] = useState("");
-  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!Number.isFinite(otherUserId)) {
-      return;
-    }
+  const { data: partner, isLoading: loading, error: partnerError } =
+    useGetUserByIdQuery(otherUserId, { skip: !isValidUser });
+  const [createDirectChatAndSendMessage, { isLoading: sending }] =
+    useCreateDirectChatAndSendMessageMutation();
 
-    let cancelled = false;
-    (async () => {
-      try {
-        const user = await getUserById(otherUserId);
-        if (!cancelled) setPartner(user);
-      } catch (err) {
-        const axiosErr = err as AxiosError;
-        if (!cancelled) {
-          setError(
-            axiosErr.response?.status === 404
-              ? "User not found"
-              : "Failed to load user"
-          );
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [otherUserId]);
+  const loadError = useMemo(() => {
+    if (!isValidUser) return "Invalid user id";
+    if (!partnerError) return null;
+    const status = (partnerError as AxiosBaseQueryError).status;
+    return status === 404 ? "User not found" : "Failed to load user";
+  }, [isValidUser, partnerError]);
 
   async function handleSend(e: FormEvent) {
     e.preventDefault();
     const content = input.trim();
     if (!content || sending) return;
 
-    setSending(true);
     try {
       const message = await createDirectChatAndSendMessage({
         otherUserId,
         content,
-      });
+      }).unwrap();
       navigate(`/chats/${message.chatId}`, { replace: true });
     } catch {
-      setError("Failed to send message");
-      setSending(false);
+      setSendError("Failed to send message");
     }
   }
 
   const title = partner?.userName ?? "Loading...";
 
   return (
-    <div className="min-h-screen flex flex-col max-w-4xl mx-auto">
+    <div className="h-full flex flex-col">
       <header className="flex items-center gap-4 p-4 border-b border-slate-700 bg-slate-900 sticky top-0 z-10">
         <button
           onClick={() => navigate("/chats")}
-          className="text-slate-400 hover:text-slate-100 text-2xl"
+          className="md:hidden text-slate-400 hover:text-slate-100 text-2xl"
           aria-label="Back"
         >
           ←
@@ -85,20 +62,20 @@ export function NewDirectChatPage() {
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {loading && <p className="text-slate-400 text-center">Loading...</p>}
 
-        {error && (
+        {(loadError || sendError) && (
           <div className="text-sm text-red-400 bg-red-950 border border-red-900 rounded p-3">
-            {error}
+            {loadError ?? sendError}
           </div>
         )}
 
-        {!loading && !error && (
+        {!loading && !loadError && !sendError && (
           <div className="text-center py-12 text-slate-400">
             <p>No messages yet. Write something to start the conversation!</p>
           </div>
         )}
       </div>
 
-      {!error && !loading && (
+      {!loadError && !sendError && !loading && (
         <form
           onSubmit={handleSend}
           className="flex gap-2 p-4 border-t border-slate-700 bg-slate-900 sticky bottom-0"

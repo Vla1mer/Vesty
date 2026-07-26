@@ -5,6 +5,7 @@
         public int ChatId { get; set; }
         public int UserId { get; set; }
         public string Content { get; set; } = null!;
+        public bool IsEdited { get; set; }
 
         public Chat Chat { get; set; } = null!;
         public User User { get; set; } = null!;

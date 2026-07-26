@@ -1,6 +1,8 @@
 import { useMemo, useState, useEffect } from "react";
 import type { ReactNode } from "react";
+import { useDispatch } from "react-redux";
 import { getAccessToken, clearTokens } from "../api/client";
+import { apiSlice } from "../store/apiSlice";
 import { AuthContext } from "./authContextInternal";
 import { startConnection, stopConnection } from "../lib/signalr";
 
@@ -36,6 +38,7 @@ function readUserFromToken(): { id: number | null; name: string | null } {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const dispatch = useDispatch();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(!!getAccessToken());
 
   useEffect(() => {
@@ -50,6 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [isAuthenticated]);
 
   const setAuthenticated = () => {
+    dispatch(apiSlice.util.resetApiState());
     setIsAuthenticated(true);
     const token = getAccessToken();
     if (token) startConnection(token).catch(console.error);
@@ -58,6 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     stopConnection().catch(console.error);
     clearTokens();
+    dispatch(apiSlice.util.resetApiState());
     setIsAuthenticated(false);
   };
 

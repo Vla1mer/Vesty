@@ -3,6 +3,7 @@ using Shared.Exceptions;
 using Entities.Models;
 using Shared.RequestFeatures;
 using Repository.Interfaces;
+using Services.Cryptography;
 using Services.DataTransferObjects;
 using Services.Interfaces;
 
@@ -15,15 +16,17 @@ namespace Services
         private readonly IMapper _mapper;
         private readonly ICurrentUserService _currentUser;
         private readonly IChatNotifier _notifier;
+        private readonly IMessageCipher _cipher;
 
         public ChatService(IRepositoryManager repository, ILoggerManager logger, IMapper mapper,
-            ICurrentUserService currentUser, IChatNotifier notifier)
+            ICurrentUserService currentUser, IChatNotifier notifier, IMessageCipher cipher)
         {
             _repository = repository;
             _logger = logger;
             _mapper = mapper;
             _currentUser = currentUser;
             _notifier = notifier;
+            _cipher = cipher;
         }
 
         public async Task<(IEnumerable<ChatDto> chats, MetaData metaData)> GetAllAsync(ChatParameters chatParameters)
@@ -32,6 +35,8 @@ namespace Services
             var chatsWithMetaData = await _repository.Chat.GetAllChatsAsync(chatParameters, allowedChatIds, trackChanges: false);
             var chatsDto = _mapper.Map<IEnumerable<ChatDto>>(chatsWithMetaData).ToList();
             var result = await ConvertDirectChatsAsync(chatsDto);
+            result = await AttachLastMessagesAsync(result);
+            result = await AttachUnreadCountsAsync(result);
             return (chats: result, metaData: chatsWithMetaData.MetaData);
         }
 
@@ -204,6 +209,51 @@ namespace Services
                 }
             }
             return result;
+        }
+
+        private async Task<List<ChatDto>> AttachLastMessagesAsync(List<ChatDto> chats)
+        {
+            if (chats.Count == 0) return chats;
+
+            var lastMessages = await _repository.Message.GetLastMessagesByChatIdsAsync(
+                chats.Select(c => c.Id));
+            var lastByChat = lastMessages.ToDictionary(m => m.ChatId);
+
+            return chats.Select(c =>
+                lastByChat.TryGetValue(c.Id, out var lm)
+                    ? c with
+                    {
+                        LastMessageContent = _cipher.Decrypt(lm.Content),
+                        LastMessageSenderName = lm.User?.UserName,
+                        LastMessageSenderId = lm.UserId,
+                        LastMessageAt = lm.CreatedAt
+                    }
+                    : c
+            ).ToList();
+        }
+
+        private async Task<List<ChatDto>> AttachUnreadCountsAsync(List<ChatDto> chats)
+        {
+            if (chats.Count == 0) return chats;
+
+            var counts = await _repository.Message.GetUnreadCountsAsync(
+                _currentUser.UserId, chats.Select(c => c.Id));
+
+            return chats.Select(c =>
+                counts.TryGetValue(c.Id, out var n) ? c with { UnreadCount = n } : c
+            ).ToList();
+        }
+
+        public async Task MarkReadAsync(int chatId)
+        {
+            await GetChatOrThrowAsync(chatId, trackChanges: false);
+            var member = await _repository.ChatMember.GetMemberAsync(
+                chatId, _currentUser.UserId, trackChanges: true);
+            if (member is null)
+                throw new ChatAccessDeniedException(chatId, _currentUser.UserId);
+
+            member.LastReadAt = DateTime.UtcNow;
+            await _repository.SaveAsync();
         }
 
         private void AddMember(int chatId, int userId, int roleId) =>

@@ -1,18 +1,31 @@
-import { useEffect } from "react";
-import { Formik, Form } from "formik";
-import { createChat } from "../api/chats";
-import { FormField } from "./FormField";
+import { useEffect, useMemo, useState } from "react";
+import { ValidationError } from "yup";
+import { useCreateChatMutation } from "../store/chatApi";
+import { useGetAllUsersQuery } from "../store/userApi";
+import { useAuth } from "../context/useAuth";
 import { FormError } from "./FormError";
 import { chatNameSchema } from "../validation/chatSchemas";
 import { getApiErrorMessage } from "../utils/apiError";
-import type { ChatDto } from "../types/api";
+import type { UserDto } from "../types/api";
 
 interface Props {
   onClose: () => void;
-  onCreated: (chat: ChatDto) => void;
 }
 
-export function CreateChatModal({ onClose, onCreated }: Props) {
+export function CreateChatModal({ onClose }: Props) {
+  const { userId: currentUserId } = useAuth();
+  const [createChat, { isLoading: creating }] = useCreateChatMutation();
+  const [step, setStep] = useState<1 | 2>(1);
+  const [name, setName] = useState("");
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [selected, setSelected] = useState<UserDto[]>([]);
+  const [search, setSearch] = useState("");
+
+  const { data: users = [], isFetching } = useGetAllUsersQuery(undefined, {
+    skip: step !== 2 || search.trim().length === 0,
+  });
+
   useEffect(() => {
     function handleEsc(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
@@ -21,17 +34,64 @@ export function CreateChatModal({ onClose, onCreated }: Props) {
     return () => window.removeEventListener("keydown", handleEsc);
   }, [onClose]);
 
+  const candidates = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return [];
+    return users
+      .filter((u) => u.id !== currentUserId)
+      .filter((u) => !selected.some((s) => s.id === u.id))
+      .filter((u) => u.userName.toLowerCase().includes(term));
+  }, [users, search, currentUserId, selected]);
+
+  async function handleNext() {
+    const trimmed = name.trim();
+    try {
+      await chatNameSchema.validate({ name: trimmed });
+    } catch (err) {
+      setNameError((err as ValidationError).message);
+      return;
+    }
+    setNameError(null);
+    setStep(2);
+  }
+
+  async function handleCreate() {
+    setError(null);
+    try {
+      await createChat({
+        name: name.trim(),
+        members: selected.map((u) => ({ userId: u.id })),
+      }).unwrap();
+      onClose();
+    } catch (err) {
+      setError(
+        getApiErrorMessage(err, "Failed to create chat. Please try again.")
+      );
+    }
+  }
+
+  function addUser(user: UserDto) {
+    setSelected((prev) => [...prev, user]);
+    setSearch("");
+  }
+
+  function removeUser(id: number) {
+    setSelected((prev) => prev.filter((u) => u.id !== id));
+  }
+
   return (
     <div
       className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
       onClick={onClose}
     >
       <div
-        className="bg-slate-800 border border-slate-700 rounded-xl p-6 w-full max-w-sm space-y-4"
+        className="bg-slate-800 border border-slate-700 rounded-xl p-6 w-full max-w-sm max-h-[85vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-slate-100">New chat</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold text-slate-100">
+            {step === 1 ? "New group chat" : "Add members"}
+          </h2>
           <button
             type="button"
             onClick={onClose}
@@ -42,52 +102,149 @@ export function CreateChatModal({ onClose, onCreated }: Props) {
           </button>
         </div>
 
-        <Formik
-          initialValues={{ name: "" }}
-          validationSchema={chatNameSchema}
-          onSubmit={async (values, { setStatus }) => {
-            setStatus(null);
-            try {
-              const chat = await createChat({ name: values.name.trim() });
-              onCreated(chat);
-              onClose();
-            } catch (err) {
-              setStatus(getApiErrorMessage(err, "Failed to create chat. Please try again."));
-            }
-          }}
-        >
-          {({ isSubmitting, status }) => (
-            <Form className="space-y-4">
-              <FormField
-                label="Chat name"
-                name="name"
+        {step === 1 ? (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm text-slate-300 mb-1">
+                Chat name
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleNext();
+                }}
                 autoFocus
                 maxLength={200}
+                className={`w-full px-3 py-2 rounded bg-slate-900 border text-slate-100 focus:outline-none ${
+                  nameError
+                    ? "border-red-500 focus:border-red-500"
+                    : "border-slate-600 focus:border-amber-500"
+                }`}
               />
+              {nameError && (
+                <p className="text-xs text-red-400 mt-1">{nameError}</p>
+              )}
+            </div>
 
-              <FormError message={status} />
+            <div className="flex gap-2 justify-end">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-slate-100 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleNext}
+                className="px-4 py-2 rounded bg-amber-600 hover:bg-amber-500 text-white font-medium transition"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4 min-h-0">
+            <p className="text-sm text-slate-400">
+              Add people to <span className="text-slate-200">{name.trim()}</span>{" "}
+              — or skip and add them later.
+            </p>
 
-
-              <div className="flex gap-2 justify-end">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  disabled={isSubmitting}
-                  className="px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-slate-100 transition disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-4 py-2 rounded bg-amber-600 hover:bg-amber-500 text-white disabled:bg-slate-700 disabled:cursor-not-allowed font-medium transition"
-                >
-                  {isSubmitting ? "Creating..." : "Create"}
-                </button>
+            {selected.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {selected.map((u) => (
+                  <span
+                    key={u.id}
+                    className="flex items-center gap-1 px-2 py-1 rounded bg-slate-700 text-slate-100 text-sm"
+                  >
+                    {u.userName}
+                    <button
+                      type="button"
+                      onClick={() => removeUser(u.id)}
+                      className="text-slate-400 hover:text-slate-100"
+                      aria-label={`Remove ${u.userName}`}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
               </div>
-            </Form>
-          )}
-        </Formik>
+            )}
+
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by username..."
+              autoFocus
+              className="w-full px-3 py-2 rounded bg-slate-900 border border-slate-600 text-slate-100 text-sm focus:outline-none focus:border-amber-500"
+            />
+
+            {search.trim().length > 0 && (
+              <div className="max-h-40 overflow-y-auto">
+                {isFetching ? (
+                  <p className="text-sm text-slate-500 py-2 text-center">
+                    Searching...
+                  </p>
+                ) : candidates.length === 0 ? (
+                  <p className="text-sm text-slate-500 py-2 text-center">
+                    No users match your search
+                  </p>
+                ) : (
+                  <ul className="space-y-1">
+                    {candidates.map((u) => (
+                      <li
+                        key={u.id}
+                        className="flex items-center justify-between rounded bg-slate-900 px-3 py-2"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-slate-100 text-sm truncate">
+                            {u.userName}
+                          </p>
+                          {(u.name || u.surname) && (
+                            <p className="text-xs text-slate-400 truncate">
+                              {[u.name, u.surname].filter(Boolean).join(" ")}
+                            </p>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => addUser(u)}
+                          className="text-xs px-2 py-1 rounded bg-amber-600 hover:bg-amber-500 text-white transition"
+                        >
+                          + Add
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+
+            <FormError message={error} />
+
+            <div className="flex gap-2 justify-end">
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                disabled={creating}
+                className="px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-slate-100 transition disabled:opacity-50"
+              >
+                Back
+              </button>
+              <button
+                type="button"
+                onClick={handleCreate}
+                disabled={creating}
+                className="px-4 py-2 rounded bg-amber-600 hover:bg-amber-500 text-white disabled:bg-slate-700 disabled:cursor-not-allowed font-medium transition"
+              >
+                {creating ? "Creating..." : "Create"}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

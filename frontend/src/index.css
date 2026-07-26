@@ -12,3 +12,47 @@ body {
   background-color: #020617;
   color: #e2e8f0;
 }
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #334155 transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  background: transparent;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #334155;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #475569;
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+@keyframes typing-dots {
+  0%, 100% { content: "..."; }
+  33% { content: ".."; }
+  66% { content: "."; }
+}
+
+.typing-dots::after {
+  content: "...";
+  animation: typing-dots 1.2s steps(1, end) infinite;
+}

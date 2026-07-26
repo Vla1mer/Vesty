@@ -33,6 +33,18 @@ namespace Services
             return _mapper.Map<IEnumerable<ChatMemberWithRoleDto>>(members);
         }
 
+        public async Task<IEnumerable<int>> GetTypingRecipientsAsync(int chatId, int typingUserId)
+        {
+            var memberIds = (await _repository.ChatMember.GetMembersByChatIdAsync(chatId, trackChanges: false))
+                .Select(m => m.UserId)
+                .ToList();
+
+            if (!memberIds.Contains(typingUserId))
+                return Enumerable.Empty<int>();
+
+            return memberIds.Where(id => id != typingUserId).ToList();
+        }
+
         public async Task<ChatMemberDto> AddUserToChatAsync(int chatId, ChatMemberForCreationDto memberDto)
         {
             var chat = await GetChatOrThrowAsync(chatId, mustBeGroupChat: "add members");

@@ -8,5 +8,6 @@ namespace Services.Interfaces
         Task<ChatMemberDto> AddUserToChatAsync(int chatId, ChatMemberForCreationDto memberDto);
         Task RemoveUserFromChatAsync(int chatId, int targetUserId);
         Task UpdateMemberRoleAsync(int chatId, int targetUserId, ChatMemberRoleForUpdateDto roleDto);
+        Task<IEnumerable<int>> GetTypingRecipientsAsync(int chatId, int typingUserId);
     }
 }

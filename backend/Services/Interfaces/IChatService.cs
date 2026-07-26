@@ -12,5 +12,6 @@ namespace Services.Interfaces
         Task<DirectChatDto> CreateDirectChatAsync(int otherUserId);
         Task DeleteAsync(int id);
         Task RenameAsync(int id, ChatForRenameDto chatDto);
+        Task MarkReadAsync(int id);
     }
 }

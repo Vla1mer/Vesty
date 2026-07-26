@@ -1,12 +1,23 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using Services.DataTransferObjects;
+using Services.Interfaces;
 
 namespace ChatApp.Hubs
 {
     [Authorize]
     public class ChatHub : Hub
     {
+        public const string UserTyping = "UserTyping";
+
+        private readonly IServiceManager _service;
+
+        public ChatHub(IServiceManager service)
+        {
+            _service = service;
+        }
+
         public static string UserGroup(int userId) => $"user-{userId}";
 
         public override async Task OnConnectedAsync()
@@ -21,10 +32,25 @@ namespace ChatApp.Hubs
             await base.OnDisconnectedAsync(exception);
         }
 
-        private string CurrentUserGroup()
+        public async Task Typing(int chatId)
         {
-            var userId = int.Parse(Context.User!.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            return UserGroup(userId);
+            var userId = CurrentUserId();
+            var recipients = (await _service.ChatMember.GetTypingRecipientsAsync(chatId, userId)).ToList();
+            if (recipients.Count == 0)
+                return;
+
+            var payload = new UserTypingSignalrDto
+            {
+                ChatId = chatId,
+                UserId = userId,
+                UserName = Context.User!.FindFirst(ClaimTypes.Name)?.Value ?? string.Empty
+            };
+            await Clients.Groups(recipients.Select(UserGroup).ToList()).SendAsync(UserTyping, payload);
         }
+
+        private int CurrentUserId() =>
+            int.Parse(Context.User!.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+        private string CurrentUserGroup() => UserGroup(CurrentUserId());
     }
 }

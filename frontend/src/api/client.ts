@@ -10,6 +10,22 @@ export const REFRESH_TOKEN_KEY = "chatapp.refreshToken";
 export const getAccessToken = () => localStorage.getItem(ACCESS_TOKEN_KEY);
 export const getRefreshToken = () => localStorage.getItem(REFRESH_TOKEN_KEY);
 
+export function getCurrentUserId(): number | null {
+  const token = getAccessToken();
+  if (!token) return null;
+  try {
+    const base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    const payload = JSON.parse(atob(base64)) as Record<string, unknown>;
+    const claim =
+      payload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"] ??
+      payload["nameid"] ??
+      payload["sub"];
+    return claim ? Number(claim) : null;
+  } catch {
+    return null;
+  }
+}
+
 export const saveTokens = (tokens: TokenDto) => {
   localStorage.setItem(ACCESS_TOKEN_KEY, tokens.accessToken);
   localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);

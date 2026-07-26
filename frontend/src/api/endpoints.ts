@@ -1,0 +1,29 @@
+// Central place for backend API paths. Keep these in sync with the server routes.
+export const endpoints = {
+  auth: {
+    register: "/api/User/register",
+    login: "/api/User/login",
+  },
+  user: {
+    base: "/api/User",
+    byId: (id: number) => `/api/User/${id}`,
+  },
+  chat: {
+    base: "/api/Chat",
+    byId: (chatId: number) => `/api/Chat/${chatId}`,
+    read: (chatId: number) => `/api/Chat/${chatId}/read`,
+    messages: (chatId: number) => `/api/Chat/${chatId}/messages`,
+    members: (chatId: number) => `/api/Chat/${chatId}/users`,
+    member: (chatId: number, userId: number) =>
+      `/api/Chat/${chatId}/users/${userId}`,
+    memberRole: (chatId: number, userId: number) =>
+      `/api/Chat/${chatId}/users/${userId}/role`,
+  },
+  message: {
+    byId: (id: number) => `/api/Message/${id}`,
+    direct: "/api/Message/direct",
+    forChat: (chatId: number) => `/api/Message/${chatId}/messages`,
+    inChat: (chatId: number, id: number) =>
+      `/api/Message/${chatId}/messages/${id}`,
+  },
+} as const;

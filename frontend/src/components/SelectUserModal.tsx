@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAllUsers } from "../api/users";
+import { useGetAllUsersQuery } from "../store/userApi";
 import { useAuth } from "../context/useAuth";
 import type { UserDto } from "../types/api";
 
@@ -11,27 +11,11 @@ interface Props {
 export function SelectUserModal({ onClose }: Props) {
   const navigate = useNavigate();
   const { userId: currentUserId } = useAuth();
-  const [users, setUsers] = useState<UserDto[]>([]);
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    getAllUsers()
-      .then((data) => {
-        if (!cancelled) setUsers(data);
-      })
-      .catch(() => {
-        if (!cancelled) setError("Failed to load users");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { data: users = [], isFetching, isError } = useGetAllUsersQuery(
+    undefined,
+    { skip: search.trim().length === 0 }
+  );
 
   useEffect(() => {
     function handleEsc(e: KeyboardEvent) {
@@ -43,9 +27,10 @@ export function SelectUserModal({ onClose }: Props) {
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
+    if (!term) return [];
     return users
       .filter((u) => u.id !== currentUserId)
-      .filter((u) => (term ? u.userName.toLowerCase().includes(term) : true));
+      .filter((u) => u.userName.toLowerCase().includes(term));
   }, [users, search, currentUserId]);
 
   function handleSelect(user: UserDto) {
@@ -82,18 +67,22 @@ export function SelectUserModal({ onClose }: Props) {
           className="w-full px-3 py-2 rounded bg-slate-900 border border-slate-600 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500 mb-3"
         />
 
-        {error && (
+        {isError && (
           <div className="text-sm text-red-400 bg-red-950 border border-red-900 rounded p-2 mb-3">
-            {error}
+            Failed to load users
           </div>
         )}
 
         <div className="flex-1 overflow-y-auto">
-          {loading ? (
-            <p className="text-slate-400 text-center py-8">Loading...</p>
+          {search.trim().length === 0 ? (
+            <p className="text-sm text-slate-500 text-center py-6">
+              Start typing to find someone
+            </p>
+          ) : isFetching ? (
+            <p className="text-slate-400 text-center py-8">Searching...</p>
           ) : filtered.length === 0 ? (
             <p className="text-sm text-slate-500 text-center py-6">
-              {search ? "No users match your search" : "No other users yet"}
+              No users match your search
             </p>
           ) : (
             <ul className="space-y-1">

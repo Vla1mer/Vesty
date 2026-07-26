@@ -75,7 +75,7 @@ namespace Services
             await _repository.SaveAsync();
             message.Content = _cipher.Decrypt(message.Content);
 
-            var messageDto = _mapper.Map<MessageDto>(message);
+            var messageDto = _mapper.Map<MessageDto>(message) with { UserName = _currentUser.UserName };
             await _notifier.MessageReceivedAsync(await GetMemberIdsAsync(chatId), messageDto);
             return messageDto;
         }
@@ -106,10 +106,11 @@ namespace Services
             if (message.UserId != _currentUser.UserId)
                 throw new MessageOwnershipException(id);
             message.Content = _cipher.Encrypt(content);
+            message.IsEdited = true;
             await _repository.SaveAsync();
             message.Content = content;
 
-            var messageDto = _mapper.Map<MessageDto>(message);
+            var messageDto = _mapper.Map<MessageDto>(message) with { UserName = _currentUser.UserName };
             await _notifier.MessageUpdatedAsync(await GetMemberIdsAsync(chatId), messageDto);
         }
 

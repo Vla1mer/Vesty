@@ -30,18 +30,14 @@ export function FloatingActionButton({ actions }: Props) {
 
   return (
     <>
-      <div className="fixed inset-x-0 bottom-20 z-30 pointer-events-none px-6">
-        <div className="max-w-4xl mx-auto flex justify-end">
-          <button
-            type="button"
-            onClick={() => setIsOpen(true)}
-            aria-label="Open menu"
-            className="pointer-events-auto w-14 h-14 rounded-full bg-amber-600 hover:bg-amber-500 text-white shadow-xl flex items-center justify-center transition text-2xl"
-          >
-            💬
-          </button>
-        </div>
-      </div>
+      <button
+        type="button"
+        onClick={() => setIsOpen(true)}
+        aria-label="New chat"
+        className="absolute right-4 bottom-20 z-30 w-14 h-14 shadow-xl text-2xl rounded-full bg-amber-600 hover:bg-amber-500 text-white flex items-center justify-center transition md:static md:shrink-0 md:w-9 md:h-9 md:shadow-none md:text-lg"
+      >
+        💬
+      </button>
 
       {isOpen && (
         <div
