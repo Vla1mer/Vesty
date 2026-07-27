@@ -7,6 +7,7 @@ export const endpoints = {
   user: {
     base: "/api/User",
     byId: (id: number) => `/api/User/${id}`,
+    avatar: (id: number) => `/api/User/${id}/avatar`,
   },
   chat: {
     base: "/api/Chat",

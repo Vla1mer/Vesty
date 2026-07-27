@@ -22,6 +22,7 @@ import { onChatDeleted } from "../lib/signalr";
 import { setActiveChat } from "../lib/activeChat";
 import { useTypingIndicator } from "../hooks/useTypingIndicator";
 import type { AxiosBaseQueryError } from "../api/axiosBaseQuery";
+import type { ChatMemberWithRoleDto } from "../types/api";
 
 function typingText(names: string[]): string {
   if (names.length === 1) return `${names[0]} is typing`;
@@ -83,9 +84,9 @@ export function ChatDetailPage() {
     .filter((m) => m.userId === userId)
     .map((m) => m.id);
 
-  const userNameById = useMemo(() => {
-    const map = new Map<number, string>();
-    for (const m of members) map.set(m.userId, m.userName);
+  const memberById = useMemo(() => {
+    const map = new Map<number, ChatMemberWithRoleDto>();
+    for (const m of members) map.set(m.userId, m);
     return map;
   }, [members]);
 
@@ -343,7 +344,8 @@ export function ChatDetailPage() {
               <MessageBubble
                 message={msg}
                 isOwn={msg.userId === userId}
-                authorName={userNameById.get(msg.userId)}
+                authorName={memberById.get(msg.userId)?.userName}
+                authorAvatarUpdatedAt={memberById.get(msg.userId)?.avatarUpdatedAt}
                 showAuthor={chat ? !chat.isPrivate : false}
                 isEditing={editingId === msg.id}
                 selectionMode={selectionMode}

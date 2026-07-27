@@ -7,5 +7,6 @@ namespace Services.DataTransferObjects
         public string? Name { get; init; }
         public string? Surname { get; init; }
         public int RoleId { get; init; }
+        public DateTime? AvatarUpdatedAt { get; init; }
     }
 }

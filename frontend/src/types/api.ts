@@ -24,6 +24,7 @@ export interface UserDto {
   surname?: string;
   phone?: string;
   birthday?: string;
+  avatarUpdatedAt?: string | null;
 }
 
 export interface UserForUpdateDto {
@@ -49,6 +50,8 @@ export interface ChatDto {
 
 export interface DirectChatDto extends ChatDto {
   partnerUserName: string | null;
+  partnerUserId?: number | null;
+  partnerAvatarUpdatedAt?: string | null;
 }
 
 export function isDirectChat(chat: ChatDto): chat is DirectChatDto {
@@ -71,6 +74,7 @@ export interface ChatMemberWithRoleDto {
   name?: string;
   surname?: string;
   roleId: number;
+  avatarUpdatedAt?: string | null;
 }
 
 export interface ChatForCreationDto {

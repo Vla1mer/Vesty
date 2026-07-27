@@ -48,19 +48,11 @@ namespace Services
             if (!chat.IsPrivate)
                 return _mapper.Map<ChatDto>(chat);
 
-            var partnerNames = await _repository.ChatMember.GetDirectChatPartnerNamesAsync(
+            var partners = await _repository.ChatMember.GetDirectChatPartnersAsync(
                 new[] { chat.Id }, _currentUser.UserId);
-            partnerNames.TryGetValue(chat.Id, out var partnerName);
+            partners.TryGetValue(chat.Id, out var partner);
 
-            return new DirectChatDto
-            {
-                Id = chat.Id,
-                Name = chat.Name,
-                CreatorId = chat.CreatorId,
-                IsPrivate = chat.IsPrivate,
-                CreatedAt = chat.CreatedAt,
-                PartnerUserName = partnerName
-            };
+            return MapToDirectChatDto(chat, partner);
         }
 
         public async Task<ChatDto> CreateAsync(ChatForCreationDto chatDto)
@@ -103,7 +95,7 @@ namespace Services
 
             var existing = await _repository.Chat.GetPrivateChatBetweenAsync(currentUserId, otherUserId);
             if (existing is not null)
-                return MapToDirectChatDto(existing, otherUser.UserName);
+                return MapToDirectChatDto(existing, ToPartner(otherUser));
 
             var chat = new Chat
             {
@@ -118,13 +110,19 @@ namespace Services
             AddMember(chat.Id, otherUserId, UserRole.User);
             await _repository.SaveAsync();
 
-            await _notifier.ChatCreatedAsync(new[] { currentUserId }, MapToDirectChatDto(chat, otherUser.UserName));
-            await _notifier.ChatCreatedAsync(new[] { otherUserId }, MapToDirectChatDto(chat, _currentUser.UserName));
+            var currentUser = await _repository.User.GetUserAsync(currentUserId, trackChanges: false);
 
-            return MapToDirectChatDto(chat, otherUser.UserName);
+            await _notifier.ChatCreatedAsync(new[] { currentUserId }, MapToDirectChatDto(chat, ToPartner(otherUser)));
+            await _notifier.ChatCreatedAsync(new[] { otherUserId },
+                MapToDirectChatDto(chat, currentUser is null ? null : ToPartner(currentUser)));
+
+            return MapToDirectChatDto(chat, ToPartner(otherUser));
         }
 
-        private static DirectChatDto MapToDirectChatDto(Chat chat, string? partnerUserName) =>
+        private DirectChatDto MapToDirectChatDto(Chat chat, DirectChatPartner? partner) =>
+            MapToDirectChatDto(_mapper.Map<ChatDto>(chat), partner);
+
+        private static DirectChatDto MapToDirectChatDto(ChatDto chat, DirectChatPartner? partner) =>
             new DirectChatDto
             {
                 Id = chat.Id,
@@ -132,7 +130,22 @@ namespace Services
                 CreatorId = chat.CreatorId,
                 IsPrivate = chat.IsPrivate,
                 CreatedAt = chat.CreatedAt,
-                PartnerUserName = partnerUserName
+                LastMessageContent = chat.LastMessageContent,
+                LastMessageSenderName = chat.LastMessageSenderName,
+                LastMessageSenderId = chat.LastMessageSenderId,
+                LastMessageAt = chat.LastMessageAt,
+                UnreadCount = chat.UnreadCount,
+                PartnerUserName = partner?.UserName,
+                PartnerUserId = partner?.UserId,
+                PartnerAvatarUpdatedAt = partner?.AvatarUpdatedAt
+            };
+
+        private static DirectChatPartner ToPartner(User user) =>
+            new DirectChatPartner
+            {
+                UserId = user.Id,
+                UserName = user.UserName,
+                AvatarUpdatedAt = user.AvatarUpdatedAt
             };
 
         public async Task DeleteAsync(int id)
@@ -184,7 +197,7 @@ namespace Services
             var directChatIds = chats.Where(c => c.IsPrivate).Select(c => c.Id).ToList();
             if (directChatIds.Count == 0) return chats;
 
-            var partnerNames = await _repository.ChatMember.GetDirectChatPartnerNamesAsync(
+            var partners = await _repository.ChatMember.GetDirectChatPartnersAsync(
                 directChatIds, _currentUser.UserId);
 
             var result = new List<ChatDto>(chats.Count);
@@ -192,16 +205,8 @@ namespace Services
             {
                 if (chat.IsPrivate)
                 {
-                    partnerNames.TryGetValue(chat.Id, out var partnerName);
-                    result.Add(new DirectChatDto
-                    {
-                        Id = chat.Id,
-                        Name = chat.Name,
-                        CreatorId = chat.CreatorId,
-                        IsPrivate = chat.IsPrivate,
-                        CreatedAt = chat.CreatedAt,
-                        PartnerUserName = partnerName
-                    });
+                    partners.TryGetValue(chat.Id, out var partner);
+                    result.Add(MapToDirectChatDto(chat, partner));
                 }
                 else
                 {

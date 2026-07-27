@@ -9,6 +9,7 @@ import {
 } from "../store/chatApi";
 import { useGetAllUsersQuery } from "../store/userApi";
 import { useAuth } from "../context/useAuth";
+import { Avatar } from "./Avatar";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { isDirectChat, UserRole } from "../types/api";
 import { getChatDisplayName } from "../utils/chats";
@@ -296,7 +297,16 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                         key={m.userId}
                         className="flex items-center justify-between rounded bg-slate-900 px-3 py-2 gap-2"
                       >
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex items-center gap-2.5">
+                          <Avatar
+                            userId={m.userId}
+                            userName={m.userName}
+                            name={m.name}
+                            surname={m.surname}
+                            avatarUpdatedAt={m.avatarUpdatedAt}
+                            size="sm"
+                          />
+                          <div className="min-w-0">
                           <p className="text-slate-100 text-sm truncate">
                             {m.userName}
                             {m.userId === currentUserId && (
@@ -310,6 +320,7 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                               {[m.name, m.surname].filter(Boolean).join(" ")}
                             </p>
                           )}
+                          </div>
                         </div>
 
                         <div className="flex items-center gap-1 shrink-0">

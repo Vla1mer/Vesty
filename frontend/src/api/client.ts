@@ -2,7 +2,7 @@ import axios from "axios";
 import type { AxiosError, AxiosRequestConfig } from "axios";
 import type { TokenDto } from "../types/api";
 
-const API_URL = import.meta.env.VITE_API_URL ?? "https://localhost:7033";
+export const API_URL = import.meta.env.VITE_API_URL ?? "https://localhost:7033";
 
 export const ACCESS_TOKEN_KEY = "vesty.accessToken";
 export const REFRESH_TOKEN_KEY = "vesty.refreshToken";
@@ -46,6 +46,9 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers = config.headers ?? {};
     (config.headers as Record<string, string>).Authorization = `Bearer ${token}`;
+  }
+  if (config.data instanceof FormData) {
+    delete (config.headers as Record<string, string>)["Content-Type"];
   }
   return config;
 });

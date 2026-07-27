@@ -7,6 +7,7 @@ import {
   useDeleteUserMutation,
 } from "../store/userApi";
 import { useAuth } from "../context/useAuth";
+import { AvatarEditor } from "./AvatarEditor";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { FormField } from "./FormField";
 import { FormError } from "./FormError";
@@ -58,6 +59,8 @@ export function ProfileContent() {
 
       {!loading && user && (
         <>
+          <AvatarEditor user={user} />
+
           {isEditing ? (
             <Formik
               initialValues={{

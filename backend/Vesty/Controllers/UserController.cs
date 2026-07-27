@@ -2,6 +2,7 @@ using Vesty.ModelBinders;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Net.Http.Headers;
 using Services.DataTransferObjects;
 using Services.Interfaces;
 using Shared.RequestFeatures;
@@ -143,6 +144,46 @@ namespace Vesty.Controllers
             if (!ModelState.IsValid)
                 return UnprocessableEntity(ModelState);
             await _service.User.SaveChangesForPatchAsync(userToPatch, userEntity);
+            return NoContent();
+        }
+
+        [HttpGet("{id:int}/avatar")]
+        [AllowAnonymous]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetAvatar(int id)
+        {
+            var avatar = await _service.Avatar.GetAsync(id);
+            if (avatar is null)
+                return NotFound();
+
+            var entityTag = new EntityTagHeaderValue($"\"{avatar.UpdatedAt.Ticks}\"");
+            Response.Headers.CacheControl = "private, max-age=86400";
+            return File(avatar.Data, avatar.ContentType, avatar.UpdatedAt, entityTag);
+        }
+
+        [HttpPost("{id:int}/avatar")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UploadAvatar(int id, IFormFile file)
+        {
+            if (file is null)
+                return BadRequest("Avatar file is required.");
+
+            await using var content = file.OpenReadStream();
+            await _service.Avatar.SetAsync(id, content, file.ContentType, file.Length);
+            return NoContent();
+        }
+
+        [HttpDelete("{id:int}/avatar")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeleteAvatar(int id)
+        {
+            await _service.Avatar.DeleteAsync(id);
             return NoContent();
         }
     }
