@@ -17,6 +17,7 @@ namespace Repository
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<Message> Messages { get; set; }
         public DbSet<UserAvatar> UserAvatars { get; set; }
+        public DbSet<ChatAvatar> ChatAvatars { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -43,6 +44,16 @@ namespace Repository
                 e.HasOne(a => a.User)
                  .WithOne(u => u.Avatar)
                  .HasForeignKey<UserAvatar>(a => a.UserId)
+                 .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<ChatAvatar>(e => {
+                e.HasKey(a => a.ChatId);
+                e.Property(a => a.Data).IsRequired();
+                e.Property(a => a.ContentType).HasMaxLength(50).IsRequired();
+                e.HasOne(a => a.Chat)
+                 .WithOne(c => c.Avatar)
+                 .HasForeignKey<ChatAvatar>(a => a.ChatId)
                  .OnDelete(DeleteBehavior.Cascade);
             });
 

@@ -225,6 +225,33 @@ export const chatApi = apiSlice.injectEndpoints({
       ],
     }),
 
+    uploadChatAvatar: builder.mutation<void, { chatId: number; file: Blob }>({
+      query: ({ chatId, file }) => {
+        const form = new FormData();
+        form.append("file", file, "avatar");
+        return {
+          url: endpoints.chat.avatar(chatId),
+          method: HTTP_METHOD.POST,
+          data: form,
+        };
+      },
+      invalidatesTags: (_result, _error, { chatId }) => [
+        { type: CHAT_API_TAGS.CHAT, id: chatId },
+        { type: CHAT_API_TAGS.CHAT, id: TAG_ID.LIST },
+      ],
+    }),
+
+    deleteChatAvatar: builder.mutation<void, number>({
+      query: (chatId) => ({
+        url: endpoints.chat.avatar(chatId),
+        method: HTTP_METHOD.DELETE,
+      }),
+      invalidatesTags: (_result, _error, chatId) => [
+        { type: CHAT_API_TAGS.CHAT, id: chatId },
+        { type: CHAT_API_TAGS.CHAT, id: TAG_ID.LIST },
+      ],
+    }),
+
     markChatRead: builder.mutation<void, number>({
       query: (chatId) => ({ url: endpoints.chat.read(chatId), method: HTTP_METHOD.POST }),
       async onQueryStarted(chatId, { dispatch, queryFulfilled }) {
@@ -255,4 +282,6 @@ export const {
   useRemoveChatMemberMutation,
   useUpdateMemberRoleMutation,
   useMarkChatReadMutation,
+  useUploadChatAvatarMutation,
+  useDeleteChatAvatarMutation,
 } = chatApi;

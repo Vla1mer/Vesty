@@ -135,6 +135,7 @@ namespace Services
                 LastMessageSenderId = chat.LastMessageSenderId,
                 LastMessageAt = chat.LastMessageAt,
                 UnreadCount = chat.UnreadCount,
+                AvatarUpdatedAt = chat.AvatarUpdatedAt,
                 PartnerUserName = partner?.UserName,
                 PartnerUserId = partner?.UserId,
                 PartnerAvatarUpdatedAt = partner?.AvatarUpdatedAt

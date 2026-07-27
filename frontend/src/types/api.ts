@@ -46,6 +46,7 @@ export interface ChatDto {
   lastMessageSenderId?: number | null;
   lastMessageAt?: string | null;
   unreadCount?: number;
+  avatarUpdatedAt?: string | null;
 }
 
 export interface DirectChatDto extends ChatDto {

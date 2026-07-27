@@ -13,6 +13,7 @@ export const endpoints = {
     base: "/api/Chat",
     byId: (chatId: number) => `/api/Chat/${chatId}`,
     read: (chatId: number) => `/api/Chat/${chatId}/read`,
+    avatar: (chatId: number) => `/api/Chat/${chatId}/avatar`,
     messages: (chatId: number) => `/api/Chat/${chatId}/messages`,
     members: (chatId: number) => `/api/Chat/${chatId}/users`,
     member: (chatId: number, userId: number) =>

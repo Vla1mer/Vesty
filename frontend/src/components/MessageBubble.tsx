@@ -183,15 +183,14 @@ export function MessageBubble({
             isOwn ? "justify-end md:justify-start" : "justify-start"
           }`}
         >
-          {!isOwn && showAuthor && (
+          <span className="hidden md:block self-end mb-0.5">
             <Avatar
               userId={message.userId}
               userName={authorName}
               avatarUpdatedAt={authorAvatarUpdatedAt}
               size="sm"
-              className="self-end mb-0.5"
             />
-          )}
+          </span>
           <div className="relative flex flex-col max-w-[78%] md:max-w-md">
             <div
               ref={bubbleRef}

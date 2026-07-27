@@ -10,6 +10,7 @@ import {
 import { useGetAllUsersQuery } from "../store/userApi";
 import { useAuth } from "../context/useAuth";
 import { Avatar } from "./Avatar";
+import { ChatAvatarEditor } from "./ChatAvatarEditor";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { isDirectChat, UserRole } from "../types/api";
 import { getChatDisplayName } from "../utils/chats";
@@ -66,6 +67,17 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
         (m) => m.userId === currentUserId && m.roleId === UserRole.Owner
       ),
     [members, currentUserId]
+  );
+
+  const canManageAvatar = useMemo(
+    () =>
+      isGroup &&
+      members.some(
+        (m) =>
+          m.userId === currentUserId &&
+          (m.roleId === UserRole.Owner || m.roleId === UserRole.Admin)
+      ),
+    [isGroup, members, currentUserId]
   );
 
   useEffect(() => {
@@ -261,6 +273,15 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                 <p className="text-sm text-slate-400 mt-1">
                   {loading ? "Loading..." : `Members (${members.length})`}
                 </p>
+              )}
+              {canManageAvatar && (
+                <div className="mt-4">
+                  <ChatAvatarEditor
+                    chatId={chat.id}
+                    name={title}
+                    avatarUpdatedAt={chat.avatarUpdatedAt}
+                  />
+                </div>
               )}
             </div>
             <button

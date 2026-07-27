@@ -8,11 +8,6 @@ namespace Services
 {
     public class AvatarService : IAvatarService
     {
-        public const int MaxSizeInBytes = 300 * 1024;
-
-        private static readonly HashSet<string> AllowedContentTypes =
-            new(StringComparer.OrdinalIgnoreCase) { "image/jpeg", "image/png", "image/webp" };
-
         private readonly IRepositoryManager _repository;
         private readonly ICurrentUserService _currentUser;
 
@@ -43,19 +38,10 @@ namespace Services
         public async Task SetAsync(int userId, Stream content, string? contentType, long length)
         {
             EnsureCallerOwnsAccount(userId);
-
-            if (length <= 0)
-                throw new InvalidAvatarException("file is empty.");
-            if (length > MaxSizeInBytes)
-                throw new InvalidAvatarException($"maximum size is {MaxSizeInBytes / 1024} KB.");
-            if (contentType is null || !AllowedContentTypes.Contains(contentType))
-                throw new InvalidAvatarException("allowed formats are JPEG, PNG and WebP.");
+            AvatarContent.EnsureValid(contentType, length);
 
             var user = await GetUserOrThrowAsync(userId, trackChanges: true);
-            var data = await ReadAllBytesAsync(content);
-
-            if (data.Length > MaxSizeInBytes)
-                throw new InvalidAvatarException($"maximum size is {MaxSizeInBytes / 1024} KB.");
+            var data = await AvatarContent.ReadAsync(content);
 
             var avatar = await _repository.Avatar.GetAvatarAsync(userId, trackChanges: true);
             if (avatar is null)
@@ -102,13 +88,6 @@ namespace Services
             if (user is null)
                 throw new UserNotFoundException(userId);
             return user;
-        }
-
-        private static async Task<byte[]> ReadAllBytesAsync(Stream content)
-        {
-            using var buffer = new MemoryStream();
-            await content.CopyToAsync(buffer);
-            return buffer.ToArray();
         }
     }
 }

@@ -13,6 +13,7 @@ import {
   useDeleteMessageMutation,
 } from "../store/messageApi";
 import { useAuth } from "../context/useAuth";
+import { Avatar, ChatAvatar } from "../components/Avatar";
 import { MessageBubble } from "../components/MessageBubble";
 import { ChatInfoModal } from "../components/ChatInfoModal";
 import { ConfirmDialog } from "../components/ConfirmDialog";
@@ -22,7 +23,7 @@ import { onChatDeleted } from "../lib/signalr";
 import { setActiveChat } from "../lib/activeChat";
 import { useTypingIndicator } from "../hooks/useTypingIndicator";
 import type { AxiosBaseQueryError } from "../api/axiosBaseQuery";
-import type { ChatMemberWithRoleDto } from "../types/api";
+import { isDirectChat, type ChatMemberWithRoleDto } from "../types/api";
 
 function typingText(names: string[]): string {
   if (names.length === 1) return `${names[0]} is typing`;
@@ -241,8 +242,22 @@ export function ChatDetailPage() {
             disabled={!chat}
             className="group flex-1 flex items-center gap-2 text-left rounded px-2 -mx-2 hover:bg-slate-800 transition disabled:cursor-default disabled:hover:bg-transparent"
           >
-            <div className="flex-1">
-              <h1 className="text-xl font-bold text-slate-100">{title}</h1>
+            {chat &&
+              (isDirectChat(chat) && chat.partnerUserId ? (
+                <Avatar
+                  userId={chat.partnerUserId}
+                  userName={chat.partnerUserName ?? undefined}
+                  avatarUpdatedAt={chat.partnerAvatarUpdatedAt}
+                />
+              ) : (
+                <ChatAvatar
+                  chatId={chat.id}
+                  name={title}
+                  avatarUpdatedAt={chat.avatarUpdatedAt}
+                />
+              ))}
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl font-bold text-slate-100 truncate">{title}</h1>
               {chat &&
                 (typingNames.length > 0 ? (
                   <p className="text-xs text-amber-400 italic">

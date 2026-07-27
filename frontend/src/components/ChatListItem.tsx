@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
-import { Avatar } from "./Avatar";
+import { Avatar, ChatAvatar } from "./Avatar";
 import { getChatDisplayName } from "../utils/chats";
 import { formatListTime } from "../utils/date";
 import { isDirectChat, type ChatDto } from "../types/api";
@@ -39,9 +39,11 @@ export function ChatListItem({ chat }: Props) {
             avatarUpdatedAt={chat.partnerAvatarUpdatedAt}
           />
         ) : (
-          <div className="shrink-0 w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-sm font-semibold text-slate-200">
-            {title.charAt(0).toUpperCase()}
-          </div>
+          <ChatAvatar
+            chatId={chat.id}
+            name={title}
+            avatarUpdatedAt={chat.avatarUpdatedAt}
+          />
         )}
 
         <div className="min-w-0 flex-1">
