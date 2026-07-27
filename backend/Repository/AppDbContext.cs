@@ -16,6 +16,8 @@ namespace Repository
         public DbSet<ChatMember> ChatMembers { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<Message> Messages { get; set; }
+        public DbSet<UserAvatar> UserAvatars { get; set; }
+        public DbSet<ChatAvatar> ChatAvatars { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -33,6 +35,26 @@ namespace Repository
                 e.Property(u => u.Surname).HasMaxLength(100);
                 e.Property(u => u.Phone).HasMaxLength(20);
                 e.Property(u => u.CreatedAt);
+            });
+
+            modelBuilder.Entity<UserAvatar>(e => {
+                e.HasKey(a => a.UserId);
+                e.Property(a => a.Data).IsRequired();
+                e.Property(a => a.ContentType).HasMaxLength(50).IsRequired();
+                e.HasOne(a => a.User)
+                 .WithOne(u => u.Avatar)
+                 .HasForeignKey<UserAvatar>(a => a.UserId)
+                 .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<ChatAvatar>(e => {
+                e.HasKey(a => a.ChatId);
+                e.Property(a => a.Data).IsRequired();
+                e.Property(a => a.ContentType).HasMaxLength(50).IsRequired();
+                e.HasOne(a => a.Chat)
+                 .WithOne(c => c.Avatar)
+                 .HasForeignKey<ChatAvatar>(a => a.ChatId)
+                 .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<Chat>(e => {

@@ -25,6 +25,7 @@ namespace Vesty.Extensions
                             NotFoundException => StatusCodes.Status404NotFound,
                             BadRequestException => StatusCodes.Status400BadRequest,
                             ForbiddenException => StatusCodes.Status403Forbidden,
+                            ConflictException => StatusCodes.Status409Conflict,
                             _ => StatusCodes.Status500InternalServerError
                         };
 

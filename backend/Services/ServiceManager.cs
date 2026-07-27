@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using AutoMapper;
 using Entities.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
@@ -11,6 +11,8 @@ namespace Services
     public sealed class ServiceManager : IServiceManager
     {
         private readonly Lazy<IUserService> _userService;
+        private readonly Lazy<IAvatarService> _avatarService;
+        private readonly Lazy<IChatAvatarService> _chatAvatarService;
         private readonly Lazy<IChatService> _chatService;
         private readonly Lazy<IChatMemberService> _chatMemberService;
         private readonly Lazy<IMessageService> _messageService;
@@ -20,12 +22,16 @@ namespace Services
             ICurrentUserService currentUser, IChatNotifier chatNotifier)
         {
             _userService = new Lazy<IUserService>(() => new UserService(repositoryManager, logger, mapper, userManager, configuration, currentUser));
+            _avatarService = new Lazy<IAvatarService>(() => new AvatarService(repositoryManager, currentUser));
+            _chatAvatarService = new Lazy<IChatAvatarService>(() => new ChatAvatarService(repositoryManager, currentUser));
             _chatService = new Lazy<IChatService>(() => new ChatService(repositoryManager, logger, mapper, currentUser, chatNotifier, messageCipher));
             _chatMemberService = new Lazy<IChatMemberService>(() => new ChatMemberService(repositoryManager, logger, mapper, currentUser, chatNotifier));
             _messageService = new Lazy<IMessageService>(() => new MessageService(repositoryManager, logger, mapper, messageCipher, currentUser, _chatService.Value, chatNotifier));
         }
 
         public IUserService User => _userService.Value;
+        public IAvatarService Avatar => _avatarService.Value;
+        public IChatAvatarService ChatAvatar => _chatAvatarService.Value;
         public IChatService Chat => _chatService.Value;
         public IChatMemberService ChatMember => _chatMemberService.Value;
         public IMessageService Message => _messageService.Value;

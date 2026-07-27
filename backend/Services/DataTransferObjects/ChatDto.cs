@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace Services.DataTransferObjects
 {
@@ -15,5 +15,6 @@ namespace Services.DataTransferObjects
         public int? LastMessageSenderId { get; init; }
         public DateTime? LastMessageAt { get; init; }
         public int UnreadCount { get; init; }
+        public DateTime? AvatarUpdatedAt { get; init; }
     }
 }

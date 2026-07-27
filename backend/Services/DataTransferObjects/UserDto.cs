@@ -7,5 +7,6 @@
         public string? Name { get; init; }
         public string? Surname { get; init; }
         public string? Phone { get; init; }
+        public DateTime? AvatarUpdatedAt { get; init; }
     }
 }

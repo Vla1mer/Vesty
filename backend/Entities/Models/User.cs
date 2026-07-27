@@ -11,7 +11,9 @@ namespace Entities.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public string? RefreshToken { get; set; }
         public DateTime RefreshTokenExpiryTime { get; set; }
+        public DateTime? AvatarUpdatedAt { get; set; }
 
+        public UserAvatar? Avatar { get; set; }
         public ICollection<Chat> CreatedChats { get; set; } = [];
         public ICollection<ChatMember> ChatMembers { get; set; } = [];
         public ICollection<Message> Messages { get; set; } = [];

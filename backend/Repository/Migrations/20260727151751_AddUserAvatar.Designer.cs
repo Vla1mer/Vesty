@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Repository;
@@ -11,9 +12,11 @@ using Repository;
 namespace Repository.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260727151751_AddUserAvatar")]
+    partial class AddUserAvatar
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -29,9 +32,6 @@ namespace Repository.Migrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime?>("AvatarUpdatedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -64,25 +64,6 @@ namespace Repository.Migrations
                             IsPrivate = false,
                             Name = "Общий чат"
                         });
-                });
-
-            modelBuilder.Entity("Entities.Models.ChatAvatar", b =>
-                {
-                    b.Property<int>("ChatId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("ContentType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<byte[]>("Data")
-                        .IsRequired()
-                        .HasColumnType("bytea");
-
-                    b.HasKey("ChatId");
-
-                    b.ToTable("ChatAvatars");
                 });
 
             modelBuilder.Entity("Entities.Models.ChatMember", b =>
@@ -310,17 +291,6 @@ namespace Repository.Migrations
                     b.Navigation("Creator");
                 });
 
-            modelBuilder.Entity("Entities.Models.ChatAvatar", b =>
-                {
-                    b.HasOne("Entities.Models.Chat", "Chat")
-                        .WithOne("Avatar")
-                        .HasForeignKey("Entities.Models.ChatAvatar", "ChatId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Chat");
-                });
-
             modelBuilder.Entity("Entities.Models.ChatMember", b =>
                 {
                     b.HasOne("Entities.Models.Chat", "Chat")
@@ -380,8 +350,6 @@ namespace Repository.Migrations
 
             modelBuilder.Entity("Entities.Models.Chat", b =>
                 {
-                    b.Navigation("Avatar");
-
                     b.Navigation("ChatMembers");
 
                     b.Navigation("Messages");

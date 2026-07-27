@@ -5,7 +5,9 @@ namespace Entities.Models
         public string? Name { get; set; }
         public int? CreatorId { get; set; }
         public bool IsPrivate { get; set; }
+        public DateTime? AvatarUpdatedAt { get; set; }
 
+        public ChatAvatar? Avatar { get; set; }
         public User? Creator { get; set; } = null!;
         public ICollection<ChatMember> ChatMembers { get; set; } = [];
         public ICollection<Message> Messages { get; set; } = [];

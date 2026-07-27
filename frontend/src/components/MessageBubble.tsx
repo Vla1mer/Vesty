@@ -1,11 +1,13 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { MouseEvent } from "react";
+import { Avatar } from "./Avatar";
 import type { MessageDto } from "../types/api";
 
 interface Props {
   message: MessageDto;
   isOwn: boolean;
   authorName?: string;
+  authorAvatarUpdatedAt?: string | null;
   showAuthor?: boolean;
   isEditing?: boolean;
   selectionMode?: boolean;
@@ -20,6 +22,7 @@ export function MessageBubble({
   message,
   isOwn,
   authorName,
+  authorAvatarUpdatedAt,
   showAuthor = true,
   isEditing,
   selectionMode = false,
@@ -176,10 +179,18 @@ export function MessageBubble({
           </span>
         )}
         <div
-          className={`group flex flex-1 min-w-0 ${
+          className={`group flex flex-1 min-w-0 gap-2 ${
             isOwn ? "justify-end md:justify-start" : "justify-start"
           }`}
         >
+          <span className="hidden md:block self-end mb-0.5">
+            <Avatar
+              userId={message.userId}
+              userName={authorName}
+              avatarUpdatedAt={authorAvatarUpdatedAt}
+              size="sm"
+            />
+          </span>
           <div className="relative flex flex-col max-w-[78%] md:max-w-md">
             <div
               ref={bubbleRef}

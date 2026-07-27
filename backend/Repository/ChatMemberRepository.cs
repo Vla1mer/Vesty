@@ -1,6 +1,7 @@
 using Entities.Models;
 using Microsoft.EntityFrameworkCore;
 using Repository.Interfaces;
+using Shared.RequestFeatures;
 
 namespace Repository
 {
@@ -26,23 +27,32 @@ namespace Repository
                 .Include(cm => cm.User)
                 .ToListAsync();
 
-        public async Task<Dictionary<int, string>> GetDirectChatPartnerNamesAsync(IEnumerable<int> chatIds, int currentUserId)
+        public async Task<Dictionary<int, DirectChatPartner>> GetDirectChatPartnersAsync(IEnumerable<int> chatIds, int currentUserId)
         {
             var ids = chatIds.ToList();
             if (ids.Count == 0)
-                return new Dictionary<int, string>();
+                return new Dictionary<int, DirectChatPartner>();
 
             var pairs = await FindByCondition(
                     cm => ids.Contains(cm.ChatId) && cm.UserId != currentUserId,
                     trackChanges: false)
                 .Include(cm => cm.User)
-                .Select(cm => new { cm.ChatId, cm.User.UserName })
+                .Select(cm => new
+                {
+                    cm.ChatId,
+                    Partner = new DirectChatPartner
+                    {
+                        UserId = cm.UserId,
+                        UserName = cm.User.UserName,
+                        AvatarUpdatedAt = cm.User.AvatarUpdatedAt
+                    }
+                })
                 .ToListAsync();
 
             return pairs
-                .Where(p => p.UserName != null)
+                .Where(p => p.Partner.UserName != null)
                 .GroupBy(p => p.ChatId)
-                .ToDictionary(g => g.Key, g => g.First().UserName!);
+                .ToDictionary(g => g.Key, g => g.First().Partner);
         }
 
         public void CreateMember(ChatMember member) => Create(member);

@@ -1,11 +1,18 @@
-﻿using Repository.Interfaces;
+﻿using Microsoft.EntityFrameworkCore;
+using Npgsql;
+using Repository.Interfaces;
+using Shared.Exceptions;
 
 namespace Repository
 {
     public sealed class RepositoryManager : IRepositoryManager
     {
+        private const string UniqueViolation = "23505";
+
         private readonly AppDbContext _context;
         private readonly Lazy<IUserRepository> _userRepository;
+        private readonly Lazy<IAvatarRepository> _avatarRepository;
+        private readonly Lazy<IChatAvatarRepository> _chatAvatarRepository;
         private readonly Lazy<IChatRepository> _chatRepository;
         private readonly Lazy<IChatMemberRepository> _chatMemberRepository;
         private readonly Lazy<IMessageRepository> _messageRepository;
@@ -14,16 +21,30 @@ namespace Repository
         {
             _context = context;
             _userRepository = new Lazy<IUserRepository>(() => new UserRepository(context));
+            _avatarRepository = new Lazy<IAvatarRepository>(() => new AvatarRepository(context));
+            _chatAvatarRepository = new Lazy<IChatAvatarRepository>(() => new ChatAvatarRepository(context));
             _chatRepository = new Lazy<IChatRepository>(() => new ChatRepository(context));
             _chatMemberRepository = new Lazy<IChatMemberRepository>(() => new ChatMemberRepository(context));
             _messageRepository = new Lazy<IMessageRepository>(() => new MessageRepository(context));
         }
 
         public IUserRepository User => _userRepository.Value;
+        public IAvatarRepository Avatar => _avatarRepository.Value;
+        public IChatAvatarRepository ChatAvatar => _chatAvatarRepository.Value;
         public IChatRepository Chat => _chatRepository.Value;
         public IChatMemberRepository ChatMember => _chatMemberRepository.Value;
         public IMessageRepository Message => _messageRepository.Value;
 
-        public async Task SaveAsync() => await _context.SaveChangesAsync();
+        public async Task SaveAsync()
+        {
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: UniqueViolation })
+            {
+                throw new DuplicateResourceException();
+            }
+        }
     }
 }
