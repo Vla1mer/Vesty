@@ -47,15 +47,15 @@ function AvatarView({
   size,
   className,
 }: AvatarViewProps) {
-  const [failed, setFailed] = useState(false);
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const base = `${SIZES[size]} shrink-0 rounded-full overflow-hidden select-none ${className}`;
 
-  if (src && !failed) {
+  if (src && src !== failedSrc) {
     return (
       <img
         src={src}
         alt={alt}
-        onError={() => setFailed(true)}
+        onError={() => setFailedSrc(src)}
         className={`${base} object-cover bg-slate-700`}
       />
     );

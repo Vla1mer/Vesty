@@ -37,12 +37,14 @@ export function ChatListItem({ chat }: Props) {
             userId={chat.partnerUserId}
             userName={chat.partnerUserName ?? undefined}
             avatarUpdatedAt={chat.partnerAvatarUpdatedAt}
+            size="lg"
           />
         ) : (
           <ChatAvatar
             chatId={chat.id}
             name={title}
             avatarUpdatedAt={chat.avatarUpdatedAt}
+            size="lg"
           />
         )}
 

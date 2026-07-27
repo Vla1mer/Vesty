@@ -437,13 +437,25 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                           key={u.id}
                           className="flex items-center justify-between rounded bg-slate-900 px-3 py-2"
                         >
-                          <div>
-                            <p className="text-slate-100 text-sm">{u.userName}</p>
-                            {(u.name || u.surname) && (
-                              <p className="text-xs text-slate-400">
-                                {[u.name, u.surname].filter(Boolean).join(" ")}
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <Avatar
+                              userId={u.id}
+                              userName={u.userName}
+                              name={u.name}
+                              surname={u.surname}
+                              avatarUpdatedAt={u.avatarUpdatedAt}
+                              size="sm"
+                            />
+                            <div className="min-w-0">
+                              <p className="text-slate-100 text-sm truncate">
+                                {u.userName}
                               </p>
-                            )}
+                              {(u.name || u.surname) && (
+                                <p className="text-xs text-slate-400 truncate">
+                                  {[u.name, u.surname].filter(Boolean).join(" ")}
+                                </p>
+                              )}
+                            </div>
                           </div>
                           <button
                             type="button"

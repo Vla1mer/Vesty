@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGetChatsQuery } from "../store/chatApi";
+import { useGetUserByIdQuery } from "../store/userApi";
 import { useAuth } from "../context/useAuth";
+import { Avatar } from "../components/Avatar";
 import { ChatListItem } from "../components/ChatListItem";
 import { CreateChatModal } from "../components/CreateChatModal";
 import { SelectUserModal } from "../components/SelectUserModal";
@@ -14,7 +16,10 @@ import { BottomNav } from "../components/BottomNav";
 
 export function ChatsPage() {
   const navigate = useNavigate();
-  const { userName, logout } = useAuth();
+  const { userName, userId, logout } = useAuth();
+  const { data: currentUser } = useGetUserByIdQuery(userId as number, {
+    skip: userId === null,
+  });
   const { data: chats = [], isLoading, isError } = useGetChatsQuery();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isSelectUserOpen, setIsSelectUserOpen] = useState(false);
@@ -150,7 +155,17 @@ export function ChatsPage() {
             isMenuOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
-          <div className="p-4 border-b border-slate-700">
+          <div className="p-4 border-b border-slate-700 flex items-center gap-3">
+            {userId !== null && (
+              <Avatar
+                userId={userId}
+                userName={currentUser?.userName ?? userName ?? undefined}
+                name={currentUser?.name}
+                surname={currentUser?.surname}
+                avatarUpdatedAt={currentUser?.avatarUpdatedAt}
+                size="lg"
+              />
+            )}
             <p className="text-lg font-bold text-slate-100 truncate">
               {userName ?? "Account"}
             </p>
