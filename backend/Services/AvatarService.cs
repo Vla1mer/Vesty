@@ -50,13 +50,13 @@ namespace Services
                 {
                     UserId = userId,
                     Data = data,
-                    ContentType = contentType
+                    ContentType = contentType!
                 });
             }
             else
             {
                 avatar.Data = data;
-                avatar.ContentType = contentType;
+                avatar.ContentType = contentType!;
             }
 
             user.AvatarUpdatedAt = DateTime.UtcNow;

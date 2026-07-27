@@ -1,9 +1,14 @@
-﻿using Repository.Interfaces;
+﻿using Microsoft.EntityFrameworkCore;
+using Npgsql;
+using Repository.Interfaces;
+using Shared.Exceptions;
 
 namespace Repository
 {
     public sealed class RepositoryManager : IRepositoryManager
     {
+        private const string UniqueViolation = "23505";
+
         private readonly AppDbContext _context;
         private readonly Lazy<IUserRepository> _userRepository;
         private readonly Lazy<IAvatarRepository> _avatarRepository;
@@ -30,6 +35,16 @@ namespace Repository
         public IChatMemberRepository ChatMember => _chatMemberRepository.Value;
         public IMessageRepository Message => _messageRepository.Value;
 
-        public async Task SaveAsync() => await _context.SaveChangesAsync();
+        public async Task SaveAsync()
+        {
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: UniqueViolation })
+            {
+                throw new DuplicateResourceException();
+            }
+        }
     }
 }
