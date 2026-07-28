@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.SignalR;
 using Services.DataTransferObjects;
 using Services.Interfaces;
 
@@ -12,6 +12,7 @@ namespace Vesty.Hubs
         public const string ChatCreated = "ChatCreated";
         public const string ChatDeleted = "ChatDeleted";
         public const string ChatRenamed = "ChatRenamed";
+        public const string MessageReactionsUpdated = "MessageReactionsUpdated";
 
         private readonly IHubContext<ChatHub> _hubContext;
 
@@ -37,6 +38,9 @@ namespace Vesty.Hubs
 
         public Task ChatRenamedAsync(IEnumerable<int> recipientUserIds, ChatRenamedSignalrDto renamed) =>
             SendToUsersAsync(recipientUserIds, ChatRenamed, renamed);
+
+        public Task MessageReactionsUpdatedAsync(IEnumerable<int> recipientUserIds, MessageReactionsSignalrDto reactions) =>
+            SendToUsersAsync(recipientUserIds, MessageReactionsUpdated, reactions);
 
         private Task SendToUsersAsync(IEnumerable<int> recipientUserIds, string eventName, object payload)
         {

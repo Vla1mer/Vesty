@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using AutoMapper;
 using Shared.Exceptions;
 using Entities.Models;
 using Shared.RequestFeatures;
@@ -60,11 +60,17 @@ namespace Services
             DecryptInPlace(messages);
 
             var byId = messages.ToDictionary(m => m.Id);
+            var reactions = await _repository.Reaction.GetByMessageIdsAsync(messages.Select(m => m.Id));
+            var reactionsByMessage = reactions
+                .GroupBy(r => r.MessageId)
+                .ToDictionary(g => g.Key, g => ReactionMapper.Group(g));
+
             return messages.Select(m => _mapper.Map<MessageDto>(m) with
             {
                 ReplyTo = m.ReplyToMessageId is int replyId && byId.TryGetValue(replyId, out var target)
                     ? ToReplyDto(target)
-                    : null
+                    : null,
+                Reactions = reactionsByMessage.TryGetValue(m.Id, out var rs) ? rs : []
             });
         }
 

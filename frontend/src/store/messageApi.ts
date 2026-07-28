@@ -1,8 +1,10 @@
 import { apiSlice } from "./apiSlice";
 import { endpoints } from "../api/endpoints";
+import { getCurrentUserId } from "../api/client";
 import { CHAT_API_TAGS, MESSAGE_API_TAGS, TAG_ID } from "../api/constants";
 import { HTTP_METHOD } from "../utils/http";
 import {
+  onMessageReactionsUpdated,
   onMessageReceived,
   onMessageUpdated,
   onMessageDeleted,
@@ -55,6 +57,16 @@ export const messageApi = apiSlice.injectEndpoints({
               updateCachedData((draft) => {
                 const index = draft.findIndex((m) => m.id === messageId);
                 if (index !== -1) draft.splice(index, 1);
+              });
+            })
+          );
+
+          subscriptions.push(
+            onMessageReactionsUpdated((event) => {
+              if (event.chatId !== chatId) return;
+              updateCachedData((draft) => {
+                const message = draft.find((m) => m.id === event.messageId);
+                if (message) message.reactions = event.reactions;
               });
             })
           );
@@ -137,6 +149,61 @@ export const messageApi = apiSlice.injectEndpoints({
       },
     }),
 
+    toggleReaction: builder.mutation<
+      void,
+      { chatId: number; messageId: number; emoji: string; active: boolean }
+    >({
+      query: ({ messageId, emoji, active }) =>
+        active
+          ? {
+              url: endpoints.message.reaction(messageId, emoji),
+              method: HTTP_METHOD.DELETE,
+            }
+          : {
+              url: endpoints.message.reactions(messageId),
+              method: HTTP_METHOD.POST,
+              data: { emoji },
+            },
+      async onQueryStarted(
+        { chatId, messageId, emoji, active },
+        { dispatch, queryFulfilled }
+      ) {
+        const currentUserId = getCurrentUserId();
+        if (currentUserId === null) return;
+
+        const patch = dispatch(
+          messageApi.util.updateQueryData("getMessagesByChat", chatId, (draft) => {
+            const message = draft.find((m) => m.id === messageId);
+            if (!message) return;
+
+            const reactions = message.reactions ?? [];
+            const existing = reactions.find((r) => r.emoji === emoji);
+
+            if (active) {
+              if (!existing) return;
+              existing.userIds = existing.userIds.filter((id) => id !== currentUserId);
+              message.reactions = reactions.filter((r) => r.userIds.length > 0);
+              return;
+            }
+
+            if (existing) {
+              if (!existing.userIds.includes(currentUserId)) {
+                existing.userIds.push(currentUserId);
+              }
+            } else {
+              reactions.push({ emoji, userIds: [currentUserId] });
+              message.reactions = reactions;
+            }
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patch.undo();
+        }
+      },
+    }),
+
     createDirectChatAndSendMessage: builder.mutation<
       MessageDto,
       CreateDirectChatMessageDto
@@ -153,4 +220,5 @@ export const {
   useUpdateMessageMutation,
   useDeleteMessageMutation,
   useCreateDirectChatAndSendMessageMutation,
+  useToggleReactionMutation,
 } = messageApi;

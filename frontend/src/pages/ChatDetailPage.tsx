@@ -11,6 +11,7 @@ import {
   useCreateMessageMutation,
   useUpdateMessageMutation,
   useDeleteMessageMutation,
+  useToggleReactionMutation,
 } from "../store/messageApi";
 import { useAuth } from "../context/useAuth";
 import { Avatar, ChatAvatar } from "../components/Avatar";
@@ -68,6 +69,7 @@ export function ChatDetailPage() {
   const [deleteMessage, { isLoading: deletingMessage }] =
     useDeleteMessageMutation();
   const [markChatRead] = useMarkChatReadMutation();
+  const [toggleReaction] = useToggleReactionMutation();
   const { typingNames, notifyTyping } = useTypingIndicator(chatId, isValidChat);
 
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -382,6 +384,10 @@ export function ChatDetailPage() {
                     : undefined
                 }
                 onReply={setReplyTo}
+                currentUserId={userId}
+                onToggleReaction={(messageId, emoji, active) =>
+                  toggleReaction({ chatId, messageId, emoji, active })
+                }
                 onJumpToMessage={jumpToMessage}
                 highlighted={highlightedId === msg.id}
                 showAuthor={chat ? !chat.isPrivate : false}

@@ -11,5 +11,6 @@
         public Chat Chat { get; set; } = null!;
         public User User { get; set; } = null!;
         public Message? ReplyToMessage { get; set; }
+        public ICollection<MessageReaction> Reactions { get; set; } = [];
     }
 }

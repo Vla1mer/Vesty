@@ -93,5 +93,28 @@ namespace Vesty.Controllers
             await _service.Message.UpdateMessageForChatAsync(chatId, id, message.Content);
             return NoContent();
         }
-    }
+    
+        [HttpPost("{id:int}/reactions")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> AddReaction(int id, [FromBody] ReactionForCreationDto reaction)
+        {
+            if (reaction is null)
+                return BadRequest("ReactionForCreationDto object is null");
+            await _service.Reaction.AddAsync(id, reaction.Emoji);
+            return NoContent();
+        }
+
+        [HttpDelete("{id:int}/reactions/{emoji}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> RemoveReaction(int id, string emoji)
+        {
+            await _service.Reaction.RemoveAsync(id, Uri.UnescapeDataString(emoji));
+            return NoContent();
+        }
+}
 }

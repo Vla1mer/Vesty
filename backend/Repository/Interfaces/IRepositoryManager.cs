@@ -8,6 +8,7 @@
         IChatRepository Chat { get; }
         IChatMemberRepository ChatMember { get; }
         IMessageRepository Message { get; }
+        IReactionRepository Reaction { get; }
         Task SaveAsync();
     }
 }

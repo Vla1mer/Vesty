@@ -3,6 +3,8 @@ import type { MouseEvent } from "react";
 import { Avatar } from "./Avatar";
 import type { MessageDto } from "../types/api";
 
+const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🔥"];
+
 interface Props {
   message: MessageDto;
   isOwn: boolean;
@@ -20,6 +22,8 @@ interface Props {
   onReply?: (message: MessageDto) => void;
   onJumpToMessage?: (id: number) => void;
   highlighted?: boolean;
+  currentUserId?: number | null;
+  onToggleReaction?: (messageId: number, emoji: string, active: boolean) => void;
 }
 
 export function MessageBubble({
@@ -39,6 +43,8 @@ export function MessageBubble({
   onReply,
   onJumpToMessage,
   highlighted = false,
+  currentUserId,
+  onToggleReaction,
 }: Props) {
   const [menu, setMenu] = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
@@ -267,6 +273,34 @@ export function MessageBubble({
                 </span>
               </div>
             </div>
+
+            {!!message.reactions?.length && (
+              <div
+                className={`flex flex-wrap gap-1 mt-1 ${
+                  isOwn ? "justify-end md:justify-start" : "justify-start"
+                }`}
+              >
+                {message.reactions.map((r) => {
+                  const mine =
+                    currentUserId != null && r.userIds.includes(currentUserId);
+                  return (
+                    <button
+                      key={r.emoji}
+                      type="button"
+                      onClick={() => onToggleReaction?.(message.id, r.emoji, mine)}
+                      title={`${r.userIds.length}`}
+                      className={`px-1.5 py-0.5 rounded-full text-xs border transition ${
+                        mine
+                          ? "bg-amber-500/20 border-amber-500 text-amber-200"
+                          : "bg-slate-800 border-slate-600 text-slate-300 hover:bg-slate-700"
+                      }`}
+                    >
+                      {r.emoji} {r.userIds.length}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -278,6 +312,33 @@ export function MessageBubble({
           style={{ top: menuPos.top, left: menuPos.left }}
           onClick={(e) => e.stopPropagation()}
         >
+          {onToggleReaction && (
+            <div className="flex gap-1 px-2 py-1.5 border-b border-slate-700">
+              {QUICK_REACTIONS.map((emoji) => {
+                const mine = Boolean(
+                  currentUserId != null &&
+                    message.reactions?.some(
+                      (r) => r.emoji === emoji && r.userIds.includes(currentUserId)
+                    )
+                );
+                return (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => {
+                      setMenu(false);
+                      onToggleReaction(message.id, emoji, mine);
+                    }}
+                    className={`w-7 h-7 rounded-full text-base leading-none transition ${
+                      mine ? "bg-amber-500/30" : "hover:bg-slate-700"
+                    }`}
+                  >
+                    {emoji}
+                  </button>
+                );
+              })}
+            </div>
+          )}
           {onReply && (
             <button
               type="button"

@@ -16,6 +16,7 @@ namespace Services
         private readonly Lazy<IChatService> _chatService;
         private readonly Lazy<IChatMemberService> _chatMemberService;
         private readonly Lazy<IMessageService> _messageService;
+        private readonly Lazy<IReactionService> _reactionService;
 
         public ServiceManager(IRepositoryManager repositoryManager, ILoggerManager logger, IMapper mapper,
             UserManager<User> userManager, IConfiguration configuration, IMessageCipher messageCipher,
@@ -27,6 +28,7 @@ namespace Services
             _chatService = new Lazy<IChatService>(() => new ChatService(repositoryManager, logger, mapper, currentUser, chatNotifier, messageCipher));
             _chatMemberService = new Lazy<IChatMemberService>(() => new ChatMemberService(repositoryManager, logger, mapper, currentUser, chatNotifier));
             _messageService = new Lazy<IMessageService>(() => new MessageService(repositoryManager, logger, mapper, messageCipher, currentUser, _chatService.Value, chatNotifier));
+            _reactionService = new Lazy<IReactionService>(() => new ReactionService(repositoryManager, currentUser, chatNotifier));
         }
 
         public IUserService User => _userService.Value;
@@ -35,5 +37,6 @@ namespace Services
         public IChatService Chat => _chatService.Value;
         public IChatMemberService ChatMember => _chatMemberService.Value;
         public IMessageService Message => _messageService.Value;
+        public IReactionService Reaction => _reactionService.Value;
     }
 }

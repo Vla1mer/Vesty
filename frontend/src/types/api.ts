@@ -90,6 +90,11 @@ export interface MessageReplyDto {
   content: string | null;
 }
 
+export interface MessageReactionDto {
+  emoji: string;
+  userIds: number[];
+}
+
 export interface MessageDto {
   id: number;
   chatId: number;
@@ -99,11 +104,18 @@ export interface MessageDto {
   createdAt: string;
   isEdited: boolean;
   replyTo?: MessageReplyDto | null;
+  reactions?: MessageReactionDto[];
 }
 
 export interface MessageForCreationDto {
   content: string;
   replyToMessageId?: number | null;
+}
+
+export interface MessageReactionsSignalrDto {
+  chatId: number;
+  messageId: number;
+  reactions: MessageReactionDto[];
 }
 
 export interface MessageDeletedSignalrDto {
