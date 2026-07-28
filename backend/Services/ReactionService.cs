@@ -38,7 +38,14 @@ namespace Services
                 UserId = _currentUser.UserId,
                 Emoji = emoji
             });
-            await _repository.SaveAsync();
+
+            try
+            {
+                await _repository.SaveAsync();
+            }
+            catch (DuplicateResourceException)
+            {
+            }
 
             await NotifyAsync(message.ChatId, messageId);
         }

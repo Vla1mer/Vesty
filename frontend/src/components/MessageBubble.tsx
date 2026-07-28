@@ -60,7 +60,9 @@ export function MessageBubble({
   const pointerTypeRef = useRef<string>("mouse");
   const menuOpenedAtRef = useRef(0);
 
-  const canManage = Boolean(onEdit || onDelete);
+  const hasActions = Boolean(
+    onEdit || onDelete || onReply || onTogglePin || onToggleReaction
+  );
 
   useLayoutEffect(() => {
     if (!menu || !menuRef.current || !bubbleRef.current) return;
@@ -123,7 +125,7 @@ export function MessageBubble({
   function handleContextMenu(e: MouseEvent) {
     e.preventDefault();
     if (pointerTypeRef.current === "touch") return;
-    if (!message.content && !canManage) return;
+    if (!message.content && !hasActions) return;
     if (menu) {
       setMenu(false);
       return;

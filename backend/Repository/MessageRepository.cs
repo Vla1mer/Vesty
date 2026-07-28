@@ -1,4 +1,4 @@
-using Entities.Models;
+﻿using Entities.Models;
 using Microsoft.EntityFrameworkCore;
 using Repository.Interfaces;
 using Shared.RequestFeatures;
@@ -47,7 +47,9 @@ namespace Repository
         }
 
         public async Task<Message?> GetMessageAsync(int id, bool trackChanges) =>
-            await FindByCondition(m => m.Id == id, trackChanges).FirstOrDefaultAsync();
+            await FindByCondition(m => m.Id == id, trackChanges)
+                .Include(m => m.User)
+                .FirstOrDefaultAsync();
 
         public async Task<IEnumerable<Message>> GetMessagesByChatAsync(int chatId, bool trackChanges) =>
             await FindByCondition(m => m.ChatId == chatId, trackChanges)

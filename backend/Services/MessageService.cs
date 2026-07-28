@@ -139,11 +139,13 @@ namespace Services
             message.Content = content;
 
             var replyTo = await GetReplyTargetOrThrowAsync(chatId, message.ReplyToMessageId);
+            var reactions = await _repository.Reaction.GetByMessageIdsAsync(new[] { message.Id });
 
             var messageDto = _mapper.Map<MessageDto>(message) with
             {
                 UserName = _currentUser.UserName,
-                ReplyTo = ToReplyDto(replyTo)
+                ReplyTo = ToReplyDto(replyTo),
+                Reactions = ReactionMapper.Group(reactions)
             };
             await _notifier.MessageUpdatedAsync(await GetMemberIdsAsync(chatId), messageDto);
         }
