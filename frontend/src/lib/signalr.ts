@@ -11,6 +11,7 @@ import type {
   MessageDto,
   MessageDeletedSignalrDto,
   MessageReactionsSignalrDto,
+  MessagePinnedSignalrDto,
   UserTypingSignalrDto,
 } from "../types/api";
 
@@ -33,6 +34,7 @@ const messageUpdated = createEvent<MessageDto>("MessageUpdated");
 const messageReactionsUpdated = createEvent<MessageReactionsSignalrDto>(
   "MessageReactionsUpdated"
 );
+const messagePinned = createEvent<MessagePinnedSignalrDto>("MessagePinned");
 const messageDeleted = createEvent<MessageDeletedSignalrDto>("MessageDeleted");
 const chatCreated = createEvent<ChatDto>("ChatCreated");
 const chatDeleted = createEvent<ChatDeletedSignalrDto>("ChatDeleted");
@@ -52,6 +54,7 @@ function subscribe<T>(event: HubEvent<T>) {
 export const onMessageReceived = subscribe(messageReceived);
 export const onMessageUpdated = subscribe(messageUpdated);
 export const onMessageReactionsUpdated = subscribe(messageReactionsUpdated);
+export const onMessagePinned = subscribe(messagePinned);
 export const onMessageDeleted = subscribe(messageDeleted);
 export const onChatCreated = subscribe(chatCreated);
 export const onChatDeleted = subscribe(chatDeleted);

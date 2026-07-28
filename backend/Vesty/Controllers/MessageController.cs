@@ -116,5 +116,25 @@ namespace Vesty.Controllers
             await _service.Reaction.RemoveAsync(id, Uri.UnescapeDataString(emoji));
             return NoContent();
         }
+
+        [HttpPost("{id:int}/pin")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> PinMessage(int id)
+        {
+            await _service.Message.SetPinnedAsync(id, pinned: true);
+            return NoContent();
+        }
+
+        [HttpDelete("{id:int}/pin")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UnpinMessage(int id)
+        {
+            await _service.Message.SetPinnedAsync(id, pinned: false);
+            return NoContent();
+        }
 }
 }

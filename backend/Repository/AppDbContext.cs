@@ -108,6 +108,7 @@ namespace Repository
                 e.HasOne(m => m.User)
                  .WithMany(u => u.Messages)
                  .HasForeignKey(m => m.UserId);
+                e.HasIndex(m => new { m.ChatId, m.PinnedAt });
                 e.HasOne(m => m.ReplyToMessage)
                  .WithMany()
                  .HasForeignKey(m => m.ReplyToMessageId)

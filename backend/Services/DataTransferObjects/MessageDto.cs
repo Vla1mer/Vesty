@@ -10,6 +10,7 @@
         public DateTime CreatedAt { get; init; }
         public bool IsEdited { get; init; }
         public MessageReplyDto? ReplyTo { get; init; }
+        public DateTime? PinnedAt { get; init; }
         public IEnumerable<MessageReactionDto> Reactions { get; init; } = [];
     }
 }

@@ -7,6 +7,7 @@
         public string Content { get; set; } = null!;
         public bool IsEdited { get; set; }
         public int? ReplyToMessageId { get; set; }
+        public DateTime? PinnedAt { get; set; }
 
         public Chat Chat { get; set; } = null!;
         public User User { get; set; } = null!;

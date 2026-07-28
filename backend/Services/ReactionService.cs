@@ -1,4 +1,4 @@
-using Entities.Models;
+﻿using Entities.Models;
 using Repository.Interfaces;
 using Services.DataTransferObjects;
 using Services.Interfaces;
@@ -29,16 +29,16 @@ namespace Services
             var existing = await _repository.Reaction.GetReactionAsync(
                 messageId, _currentUser.UserId, emoji, trackChanges: false);
 
-            if (existing is null)
+            if (existing is not null)
+                return;
+
+            _repository.Reaction.CreateReaction(new MessageReaction
             {
-                _repository.Reaction.CreateReaction(new MessageReaction
-                {
-                    MessageId = messageId,
-                    UserId = _currentUser.UserId,
-                    Emoji = emoji
-                });
-                await _repository.SaveAsync();
-            }
+                MessageId = messageId,
+                UserId = _currentUser.UserId,
+                Emoji = emoji
+            });
+            await _repository.SaveAsync();
 
             await NotifyAsync(message.ChatId, messageId);
         }
@@ -50,11 +50,11 @@ namespace Services
             var existing = await _repository.Reaction.GetReactionAsync(
                 messageId, _currentUser.UserId, emoji, trackChanges: true);
 
-            if (existing is not null)
-            {
-                _repository.Reaction.DeleteReaction(existing);
-                await _repository.SaveAsync();
-            }
+            if (existing is null)
+                return;
+
+            _repository.Reaction.DeleteReaction(existing);
+            await _repository.SaveAsync();
 
             await NotifyAsync(message.ChatId, messageId);
         }

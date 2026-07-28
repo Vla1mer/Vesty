@@ -49,7 +49,15 @@ namespace Services
             var message = await GetMessageOrThrowAsync(id, trackChanges: false);
             await EnsureCallerIsChatMember(message.ChatId);
             message.Content = _cipher.Decrypt(message.Content);
-            return _mapper.Map<MessageDto>(message);
+
+            var replyTo = await GetReplyTargetOrThrowAsync(message.ChatId, message.ReplyToMessageId);
+            var reactions = await _repository.Reaction.GetByMessageIdsAsync(new[] { message.Id });
+
+            return _mapper.Map<MessageDto>(message) with
+            {
+                ReplyTo = ToReplyDto(replyTo),
+                Reactions = ReactionMapper.Group(reactions)
+            };
         }
 
         public async Task<IEnumerable<MessageDto>> GetMessagesByChatAsync(int chatId, bool trackChanges)
@@ -138,6 +146,38 @@ namespace Services
                 ReplyTo = ToReplyDto(replyTo)
             };
             await _notifier.MessageUpdatedAsync(await GetMemberIdsAsync(chatId), messageDto);
+        }
+
+        public async Task SetPinnedAsync(int messageId, bool pinned)
+        {
+            var message = await GetMessageOrThrowAsync(messageId, trackChanges: true);
+            await EnsureCallerCanPinAsync(message.ChatId);
+
+            message.PinnedAt = pinned ? DateTime.UtcNow : null;
+            await _repository.SaveAsync();
+
+            await _notifier.MessagePinnedAsync(
+                await GetMemberIdsAsync(message.ChatId),
+                new MessagePinnedSignalrDto
+                {
+                    ChatId = message.ChatId,
+                    MessageId = message.Id,
+                    PinnedAt = message.PinnedAt
+                });
+        }
+
+        private async Task EnsureCallerCanPinAsync(int chatId)
+        {
+            var chat = await GetChatOrThrowAsync(chatId);
+            var member = await _currentUser.GetMembershipAsync(chatId);
+            if (member is null)
+                throw new ChatAccessDeniedException(chatId, _currentUser.UserId);
+
+            if (chat.IsPrivate)
+                return;
+
+            if (member.RoleId != UserRole.Owner && member.RoleId != UserRole.Admin)
+                throw new InsufficientChatPermissionException("pin messages", chatId);
         }
 
         private const int ReplyPreviewLength = 120;

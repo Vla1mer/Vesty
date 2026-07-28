@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { MouseEvent } from "react";
+import type { MouseEvent, TouchEvent as ReactTouchEvent } from "react";
 import { Avatar } from "./Avatar";
 import type { MessageDto } from "../types/api";
 
@@ -24,6 +24,7 @@ interface Props {
   highlighted?: boolean;
   currentUserId?: number | null;
   onToggleReaction?: (messageId: number, emoji: string, active: boolean) => void;
+  onTogglePin?: (messageId: number, pinned: boolean) => void;
 }
 
 export function MessageBubble({
@@ -45,6 +46,7 @@ export function MessageBubble({
   highlighted = false,
   currentUserId,
   onToggleReaction,
+  onTogglePin,
 }: Props) {
   const [menu, setMenu] = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
@@ -55,7 +57,8 @@ export function MessageBubble({
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressFired = useRef(false);
   const moved = useRef(false);
-  const lastTouchRef = useRef(0);
+  const pointerTypeRef = useRef<string>("mouse");
+  const menuOpenedAtRef = useRef(0);
 
   const canManage = Boolean(onEdit || onDelete);
 
@@ -106,6 +109,7 @@ export function MessageBubble({
   }, [menu]);
 
   function openMenu(x: number, y: number) {
+    menuOpenedAtRef.current = Date.now();
     anchorRef.current = { x, y };
     window.dispatchEvent(new Event("message-menu-open"));
     setMenu(true);
@@ -117,9 +121,9 @@ export function MessageBubble({
   }
 
   function handleContextMenu(e: MouseEvent) {
-    if (!message.content && !canManage) return;
     e.preventDefault();
-    if (Date.now() - lastTouchRef.current < 700) return;
+    if (pointerTypeRef.current === "touch") return;
+    if (!message.content && !canManage) return;
     if (menu) {
       setMenu(false);
       return;
@@ -135,7 +139,6 @@ export function MessageBubble({
   }
 
   function handleTouchStart() {
-    lastTouchRef.current = Date.now();
     longPressFired.current = false;
     moved.current = false;
     setPressing(true);
@@ -152,13 +155,23 @@ export function MessageBubble({
     clearLongPress();
   }
 
-  function handleTouchEnd() {
-    lastTouchRef.current = Date.now();
+  function handleTouchEnd(e: ReactTouchEvent) {
     setPressing(false);
     const fired = longPressFired.current;
     const didMove = moved.current;
     clearLongPress();
-    if (!fired && !didMove && selectionMode) onToggleSelect?.(message.id);
+    if (fired || didMove) return;
+
+    if (selectionMode) {
+      onToggleSelect?.(message.id);
+      return;
+    }
+
+    const touch = e.changedTouches[0];
+    if (!touch) return;
+
+    e.preventDefault();
+    openMenu(touch.clientX, touch.clientY);
   }
 
   function cancelTouch() {
@@ -209,6 +222,9 @@ export function MessageBubble({
           <div className="relative flex flex-col max-w-[78%] md:max-w-md">
             <div
               ref={bubbleRef}
+              onPointerDown={(e) => {
+                pointerTypeRef.current = e.pointerType;
+              }}
               onContextMenu={handleContextMenu}
               onTouchStart={handleTouchStart}
               onTouchEnd={handleTouchEnd}
@@ -229,6 +245,10 @@ export function MessageBubble({
                 <p className="text-xs text-amber-300 font-medium mb-1">
                   {displayName}
                 </p>
+              )}
+
+              {message.pinnedAt && (
+                <p className="text-[11px] text-amber-300 mb-1">📌 Pinned</p>
               )}
 
               {message.replyTo && (
@@ -308,12 +328,18 @@ export function MessageBubble({
       {menu && (
         <div
           ref={menuRef}
-          className="fixed z-50 min-w-32 rounded-lg border border-slate-700 bg-slate-800 py-1 shadow-xl"
+          className="fixed z-50 w-max max-w-[13rem] rounded-lg border border-slate-700 bg-slate-800 py-1 shadow-xl"
           style={{ top: menuPos.top, left: menuPos.left }}
+          onClickCapture={(e) => {
+            if (Date.now() - menuOpenedAtRef.current < 400) {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+          }}
           onClick={(e) => e.stopPropagation()}
         >
           {onToggleReaction && (
-            <div className="flex gap-1 px-2 py-1.5 border-b border-slate-700">
+            <div className="flex gap-0.5 px-1.5 py-1.5 border-b border-slate-700">
               {QUICK_REACTIONS.map((emoji) => {
                 const mine = Boolean(
                   currentUserId != null &&
@@ -346,7 +372,7 @@ export function MessageBubble({
                 setMenu(false);
                 onReply(message);
               }}
-              className="w-full px-4 py-2 text-left text-sm text-slate-200 hover:bg-slate-700 transition"
+              className="w-full px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-700 transition"
             >
               ↩️ Reply
             </button>
@@ -355,9 +381,21 @@ export function MessageBubble({
             <button
               type="button"
               onClick={handleCopy}
-              className="w-full px-4 py-2 text-left text-sm text-slate-200 hover:bg-slate-700 transition"
+              className="w-full px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-700 transition"
             >
               📋 Copy
+            </button>
+          )}
+          {onTogglePin && (
+            <button
+              type="button"
+              onClick={() => {
+                setMenu(false);
+                onTogglePin(message.id, Boolean(message.pinnedAt));
+              }}
+              className="w-full px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-700 transition"
+            >
+              {message.pinnedAt ? "📌 Unpin" : "📌 Pin"}
             </button>
           )}
           {onEdit && (
@@ -367,7 +405,7 @@ export function MessageBubble({
                 setMenu(false);
                 onEdit(message.id, message.content ?? "");
               }}
-              className="w-full px-4 py-2 text-left text-sm text-slate-200 hover:bg-slate-700 transition"
+              className="w-full px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-700 transition"
             >
               ✏️ Edit
             </button>
@@ -379,7 +417,7 @@ export function MessageBubble({
                 setMenu(false);
                 onDelete(message.id);
               }}
-              className="w-full px-4 py-2 text-left text-sm text-red-300 hover:bg-slate-700 transition"
+              className="w-full px-3 py-2 text-left text-sm text-red-300 hover:bg-slate-700 transition"
             >
               🗑️ Delete
             </button>

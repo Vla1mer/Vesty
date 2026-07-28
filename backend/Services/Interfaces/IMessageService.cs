@@ -12,5 +12,6 @@ namespace Services.Interfaces
         Task<MessageDto> CreateDirectChatAndSendMessageAsync(int otherUserId, string content);
         Task DeleteAsync(int id);
         Task UpdateMessageForChatAsync(int chatId, int id, string content);
+        Task SetPinnedAsync(int messageId, bool pinned);
     }
 }

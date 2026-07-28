@@ -12,6 +12,7 @@ import {
   useUpdateMessageMutation,
   useDeleteMessageMutation,
   useToggleReactionMutation,
+  useTogglePinMutation,
 } from "../store/messageApi";
 import { useAuth } from "../context/useAuth";
 import { Avatar, ChatAvatar } from "../components/Avatar";
@@ -24,7 +25,7 @@ import { onChatDeleted } from "../lib/signalr";
 import { setActiveChat } from "../lib/activeChat";
 import { useTypingIndicator } from "../hooks/useTypingIndicator";
 import type { AxiosBaseQueryError } from "../api/axiosBaseQuery";
-import { isDirectChat, type ChatMemberWithRoleDto, type MessageDto } from "../types/api";
+import { isDirectChat, UserRole, type ChatMemberWithRoleDto, type MessageDto } from "../types/api";
 
 function typingText(names: string[]): string {
   if (names.length === 1) return `${names[0]} is typing`;
@@ -70,11 +71,13 @@ export function ChatDetailPage() {
     useDeleteMessageMutation();
   const [markChatRead] = useMarkChatReadMutation();
   const [toggleReaction] = useToggleReactionMutation();
+  const [togglePin] = useTogglePinMutation();
   const { typingNames, notifyTyping } = useTypingIndicator(chatId, isValidChat);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const [replyTo, setReplyTo] = useState<MessageDto | null>(null);
   const [highlightedId, setHighlightedId] = useState<number | null>(null);
+  const [pinnedIndex, setPinnedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const editingMessage =
@@ -95,6 +98,34 @@ export function ChatDetailPage() {
     return map;
   }, [members]);
 
+  const canPin = useMemo(() => {
+    if (!chat) return false;
+    if (chat.isPrivate) return true;
+    const me = members.find((m) => m.userId === userId);
+    return me?.roleId === UserRole.Owner || me?.roleId === UserRole.Admin;
+  }, [chat, members, userId]);
+
+  const pinnedMessages = useMemo(
+    () =>
+      messages
+        .filter((m) => m.pinnedAt)
+        .sort((a, b) => (a.pinnedAt! < b.pinnedAt! ? 1 : -1)),
+    [messages]
+  );
+
+  const activePinned =
+    pinnedMessages.length > 0
+      ? pinnedMessages[pinnedIndex % pinnedMessages.length]
+      : undefined;
+
+  function showNextPinned() {
+    if (!activePinned) return;
+    jumpToMessage(activePinned.id);
+    if (pinnedMessages.length > 1) {
+      setPinnedIndex((prev) => (prev + 1) % pinnedMessages.length);
+    }
+  }
+
   const loadError = useMemo(() => {
     if (!isValidChat) return "Invalid chat id";
     if (!chatError) return null;
@@ -113,6 +144,10 @@ export function ChatDetailPage() {
     setActiveChat(chatId);
     return () => setActiveChat(null);
   }, [chatId, isValidChat]);
+
+  useEffect(() => {
+    setPinnedIndex(0);
+  }, [chatId]);
 
   useEffect(() => {
     if (isValidChat) markChatRead(chatId);
@@ -337,7 +372,31 @@ export function ChatDetailPage() {
         </header>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-4 pt-[88px] flex flex-col">
+      {activePinned && !selectionMode && (
+        <button
+          type="button"
+          onClick={showNextPinned}
+          className="absolute top-[88px] inset-x-0 z-10 flex items-center gap-3 px-4 py-2 border-b border-slate-700 bg-slate-900/95 backdrop-blur text-left hover:bg-slate-800 transition"
+        >
+          <span className="text-amber-400 leading-none">📌</span>
+          <div className="min-w-0 flex-1 border-l-2 border-amber-500 pl-3">
+            <p className="text-xs font-medium text-amber-400">
+              {pinnedMessages.length > 1
+                ? `Pinned message ${(pinnedIndex % pinnedMessages.length) + 1} of ${pinnedMessages.length}`
+                : "Pinned message"}
+            </p>
+            <p className="text-sm text-slate-300 truncate">
+              {activePinned.content}
+            </p>
+          </div>
+        </button>
+      )}
+
+      <div
+        className={`flex-1 min-h-0 overflow-y-auto px-4 pb-4 flex flex-col ${
+          activePinned && !selectionMode ? "pt-[140px]" : "pt-[88px]"
+        }`}
+      >
         <div className="mt-auto space-y-3">
         {(chatLoading || messagesLoading) && (
           <p className="text-slate-400 text-center">Loading...</p>
@@ -387,6 +446,12 @@ export function ChatDetailPage() {
                 currentUserId={userId}
                 onToggleReaction={(messageId, emoji, active) =>
                   toggleReaction({ chatId, messageId, emoji, active })
+                }
+                onTogglePin={
+                  canPin
+                    ? (messageId, pinned) =>
+                        togglePin({ chatId, messageId, pinned })
+                    : undefined
                 }
                 onJumpToMessage={jumpToMessage}
                 highlighted={highlightedId === msg.id}

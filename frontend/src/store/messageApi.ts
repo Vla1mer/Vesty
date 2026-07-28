@@ -4,6 +4,7 @@ import { getCurrentUserId } from "../api/client";
 import { CHAT_API_TAGS, MESSAGE_API_TAGS, TAG_ID } from "../api/constants";
 import { HTTP_METHOD } from "../utils/http";
 import {
+  onMessagePinned,
   onMessageReactionsUpdated,
   onMessageReceived,
   onMessageUpdated,
@@ -67,6 +68,16 @@ export const messageApi = apiSlice.injectEndpoints({
               updateCachedData((draft) => {
                 const message = draft.find((m) => m.id === event.messageId);
                 if (message) message.reactions = event.reactions;
+              });
+            })
+          );
+
+          subscriptions.push(
+            onMessagePinned((event) => {
+              if (event.chatId !== chatId) return;
+              updateCachedData((draft) => {
+                const message = draft.find((m) => m.id === event.messageId);
+                if (message) message.pinnedAt = event.pinnedAt ?? null;
               });
             })
           );
@@ -204,6 +215,29 @@ export const messageApi = apiSlice.injectEndpoints({
       },
     }),
 
+    togglePin: builder.mutation<
+      void,
+      { chatId: number; messageId: number; pinned: boolean }
+    >({
+      query: ({ messageId, pinned }) => ({
+        url: endpoints.message.pin(messageId),
+        method: pinned ? HTTP_METHOD.DELETE : HTTP_METHOD.POST,
+      }),
+      async onQueryStarted({ chatId, messageId, pinned }, { dispatch, queryFulfilled }) {
+        const patch = dispatch(
+          messageApi.util.updateQueryData("getMessagesByChat", chatId, (draft) => {
+            const message = draft.find((m) => m.id === messageId);
+            if (message) message.pinnedAt = pinned ? null : new Date().toISOString();
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patch.undo();
+        }
+      },
+    }),
+
     createDirectChatAndSendMessage: builder.mutation<
       MessageDto,
       CreateDirectChatMessageDto
@@ -221,4 +255,5 @@ export const {
   useDeleteMessageMutation,
   useCreateDirectChatAndSendMessageMutation,
   useToggleReactionMutation,
+  useTogglePinMutation,
 } = messageApi;

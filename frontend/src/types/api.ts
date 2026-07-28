@@ -105,6 +105,7 @@ export interface MessageDto {
   isEdited: boolean;
   replyTo?: MessageReplyDto | null;
   reactions?: MessageReactionDto[];
+  pinnedAt?: string | null;
 }
 
 export interface MessageForCreationDto {
@@ -116,6 +117,12 @@ export interface MessageReactionsSignalrDto {
   chatId: number;
   messageId: number;
   reactions: MessageReactionDto[];
+}
+
+export interface MessagePinnedSignalrDto {
+  chatId: number;
+  messageId: number;
+  pinnedAt?: string | null;
 }
 
 export interface MessageDeletedSignalrDto {
