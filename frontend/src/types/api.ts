@@ -83,6 +83,13 @@ export interface ChatForCreationDto {
   members?: ChatMemberForCreationDto[];
 }
 
+export interface MessageReplyDto {
+  id: number;
+  userId: number;
+  userName?: string | null;
+  content: string | null;
+}
+
 export interface MessageDto {
   id: number;
   chatId: number;
@@ -91,10 +98,12 @@ export interface MessageDto {
   content: string | null;
   createdAt: string;
   isEdited: boolean;
+  replyTo?: MessageReplyDto | null;
 }
 
 export interface MessageForCreationDto {
   content: string;
+  replyToMessageId?: number | null;
 }
 
 export interface MessageDeletedSignalrDto {

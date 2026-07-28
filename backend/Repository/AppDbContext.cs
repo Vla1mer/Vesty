@@ -107,6 +107,10 @@ namespace Repository
                 e.HasOne(m => m.User)
                  .WithMany(u => u.Messages)
                  .HasForeignKey(m => m.UserId);
+                e.HasOne(m => m.ReplyToMessage)
+                 .WithMany()
+                 .HasForeignKey(m => m.ReplyToMessageId)
+                 .OnDelete(DeleteBehavior.SetNull);
             });
 
             modelBuilder.Entity<Chat>().HasData(

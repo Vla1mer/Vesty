@@ -23,7 +23,7 @@ import { onChatDeleted } from "../lib/signalr";
 import { setActiveChat } from "../lib/activeChat";
 import { useTypingIndicator } from "../hooks/useTypingIndicator";
 import type { AxiosBaseQueryError } from "../api/axiosBaseQuery";
-import { isDirectChat, type ChatMemberWithRoleDto } from "../types/api";
+import { isDirectChat, type ChatMemberWithRoleDto, type MessageDto } from "../types/api";
 
 function typingText(names: string[]): string {
   if (names.length === 1) return `${names[0]} is typing`;
@@ -71,6 +71,8 @@ export function ChatDetailPage() {
   const { typingNames, notifyTyping } = useTypingIndicator(chatId, isValidChat);
 
   const bottomRef = useRef<HTMLDivElement>(null);
+  const [replyTo, setReplyTo] = useState<MessageDto | null>(null);
+  const [highlightedId, setHighlightedId] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const editingMessage =
@@ -158,8 +160,13 @@ export function ChatDetailPage() {
     }
 
     try {
-      await createMessage({ chatId, content }).unwrap();
+      await createMessage({
+        chatId,
+        content,
+        replyToMessageId: replyTo?.id,
+      }).unwrap();
       setInput("");
+      setReplyTo(null);
     } catch {
       setActionError("Failed to send message");
     }
@@ -173,6 +180,14 @@ export function ChatDetailPage() {
     } catch {
       setActionError("Failed to delete message");
     }
+  }
+
+  function jumpToMessage(id: number) {
+    const node = document.getElementById(`message-${id}`);
+    if (!node) return;
+    node.scrollIntoView({ behavior: "smooth", block: "center" });
+    setHighlightedId(id);
+    window.setTimeout(() => setHighlightedId(null), 1600);
   }
 
   function selectStart(id: number) {
@@ -361,6 +376,14 @@ export function ChatDetailPage() {
                 isOwn={msg.userId === userId}
                 authorName={memberById.get(msg.userId)?.userName}
                 authorAvatarUpdatedAt={memberById.get(msg.userId)?.avatarUpdatedAt}
+                replyAuthorName={
+                  msg.replyTo
+                    ? memberById.get(msg.replyTo.userId)?.userName
+                    : undefined
+                }
+                onReply={setReplyTo}
+                onJumpToMessage={jumpToMessage}
+                highlighted={highlightedId === msg.id}
                 showAuthor={chat ? !chat.isPrivate : false}
                 isEditing={editingId === msg.id}
                 selectionMode={selectionMode}
@@ -430,6 +453,27 @@ export function ChatDetailPage() {
                 type="button"
                 onClick={cancelEdit}
                 aria-label="Cancel editing"
+                className="text-slate-400 hover:text-slate-100 text-2xl leading-none"
+              >
+                ×
+              </button>
+            </div>
+          )}
+          {replyTo && !editingMessage && (
+            <div className="flex items-center gap-3 px-4 pt-3 -mb-1">
+              <span className="text-amber-400 text-lg leading-none">↩️</span>
+              <div className="flex-1 min-w-0 border-l-2 border-amber-500 pl-3">
+                <p className="text-xs font-medium text-amber-400">
+                  Reply to {memberById.get(replyTo.userId)?.userName ?? `User #${replyTo.userId}`}
+                </p>
+                <p className="text-sm text-slate-300 truncate">
+                  {replyTo.content}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setReplyTo(null)}
+                aria-label="Cancel reply"
                 className="text-slate-400 hover:text-slate-100 text-2xl leading-none"
               >
                 ×

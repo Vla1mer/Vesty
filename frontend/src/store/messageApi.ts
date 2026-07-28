@@ -76,12 +76,12 @@ export const messageApi = apiSlice.injectEndpoints({
 
     createMessage: builder.mutation<
       MessageDto,
-      { chatId: number; content: string }
+      { chatId: number; content: string; replyToMessageId?: number }
     >({
-      query: ({ chatId, content }) => ({
+      query: ({ chatId, content, replyToMessageId }) => ({
         url: endpoints.message.forChat(chatId),
         method: HTTP_METHOD.POST,
-        data: { content },
+        data: { content, replyToMessageId },
       }),
       async onQueryStarted({ chatId }, { dispatch, queryFulfilled }) {
         const { data } = await queryFulfilled;

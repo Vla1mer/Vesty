@@ -8,6 +8,7 @@ interface Props {
   isOwn: boolean;
   authorName?: string;
   authorAvatarUpdatedAt?: string | null;
+  replyAuthorName?: string;
   showAuthor?: boolean;
   isEditing?: boolean;
   selectionMode?: boolean;
@@ -16,6 +17,9 @@ interface Props {
   onToggleSelect?: (id: number) => void;
   onEdit?: (id: number, content: string) => void;
   onDelete?: (id: number) => void;
+  onReply?: (message: MessageDto) => void;
+  onJumpToMessage?: (id: number) => void;
+  highlighted?: boolean;
 }
 
 export function MessageBubble({
@@ -23,6 +27,7 @@ export function MessageBubble({
   isOwn,
   authorName,
   authorAvatarUpdatedAt,
+  replyAuthorName,
   showAuthor = true,
   isEditing,
   selectionMode = false,
@@ -31,6 +36,9 @@ export function MessageBubble({
   onToggleSelect,
   onEdit,
   onDelete,
+  onReply,
+  onJumpToMessage,
+  highlighted = false,
 }: Props) {
   const [menu, setMenu] = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
@@ -163,8 +171,9 @@ export function MessageBubble({
   return (
     <>
       <div
-        className={`flex items-center gap-2 transition ${
-          selected ? "bg-amber-500/10" : ""
+        id={`message-${message.id}`}
+        className={`flex items-center gap-2 rounded-lg transition-colors duration-500 ${
+          selected ? "bg-amber-500/10" : highlighted ? "bg-amber-400/20" : ""
         }`}
       >
         {selectionMode && (
@@ -216,6 +225,29 @@ export function MessageBubble({
                 </p>
               )}
 
+              {message.replyTo && (
+                <button
+                  type="button"
+                  onClick={() => onJumpToMessage?.(message.replyTo!.id)}
+                  className={`w-full text-left mb-1.5 pl-2 border-l-2 rounded-sm py-0.5 transition ${
+                    isOwn
+                      ? "border-amber-200 bg-amber-700/40 hover:bg-amber-700/60"
+                      : "border-amber-400 bg-slate-800/60 hover:bg-slate-800"
+                  }`}
+                >
+                  <span className="block text-xs font-medium text-amber-300 truncate">
+                    {replyAuthorName ?? `User #${message.replyTo.userId}`}
+                  </span>
+                  <span
+                    className={`block text-xs truncate ${
+                      isOwn ? "text-amber-100" : "text-slate-300"
+                    }`}
+                  >
+                    {message.replyTo.content}
+                  </span>
+                </button>
+              )}
+
               <div className="relative">
                 <p className="break-words whitespace-pre-wrap">
                   {message.content}
@@ -246,6 +278,18 @@ export function MessageBubble({
           style={{ top: menuPos.top, left: menuPos.left }}
           onClick={(e) => e.stopPropagation()}
         >
+          {onReply && (
+            <button
+              type="button"
+              onClick={() => {
+                setMenu(false);
+                onReply(message);
+              }}
+              className="w-full px-4 py-2 text-left text-sm text-slate-200 hover:bg-slate-700 transition"
+            >
+              ↩️ Reply
+            </button>
+          )}
           {message.content && (
             <button
               type="button"

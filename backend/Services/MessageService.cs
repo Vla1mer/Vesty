@@ -56,26 +56,40 @@ namespace Services
         {
             await GetChatOrThrowAsync(chatId);
             await EnsureCallerIsChatMember(chatId);
-            var messages = await _repository.Message.GetMessagesByChatAsync(chatId, trackChanges);
+            var messages = (await _repository.Message.GetMessagesByChatAsync(chatId, trackChanges)).ToList();
             DecryptInPlace(messages);
-            return _mapper.Map<IEnumerable<MessageDto>>(messages);
+
+            var byId = messages.ToDictionary(m => m.Id);
+            return messages.Select(m => _mapper.Map<MessageDto>(m) with
+            {
+                ReplyTo = m.ReplyToMessageId is int replyId && byId.TryGetValue(replyId, out var target)
+                    ? ToReplyDto(target)
+                    : null
+            });
         }
 
-        public async Task<MessageDto> CreateMessageForChatAsync(int chatId, string content)
+        public async Task<MessageDto> CreateMessageForChatAsync(int chatId, string content, int? replyToMessageId = null)
         {
             await GetChatOrThrowAsync(chatId);
             await EnsureCallerIsChatMember(chatId);
 
+            var replyTo = await GetReplyTargetOrThrowAsync(chatId, replyToMessageId);
+
             var message = new Message
             {
                 UserId = _currentUser.UserId,
-                Content = _cipher.Encrypt(content)
+                Content = _cipher.Encrypt(content),
+                ReplyToMessageId = replyTo?.Id
             };
             _repository.Message.CreateMessageForChat(chatId, message);
             await _repository.SaveAsync();
             message.Content = _cipher.Decrypt(message.Content);
 
-            var messageDto = _mapper.Map<MessageDto>(message) with { UserName = _currentUser.UserName };
+            var messageDto = _mapper.Map<MessageDto>(message) with
+            {
+                UserName = _currentUser.UserName,
+                ReplyTo = ToReplyDto(replyTo)
+            };
             await _notifier.MessageReceivedAsync(await GetMemberIdsAsync(chatId), messageDto);
             return messageDto;
         }
@@ -110,8 +124,46 @@ namespace Services
             await _repository.SaveAsync();
             message.Content = content;
 
-            var messageDto = _mapper.Map<MessageDto>(message) with { UserName = _currentUser.UserName };
+            var replyTo = await GetReplyTargetOrThrowAsync(chatId, message.ReplyToMessageId);
+
+            var messageDto = _mapper.Map<MessageDto>(message) with
+            {
+                UserName = _currentUser.UserName,
+                ReplyTo = ToReplyDto(replyTo)
+            };
             await _notifier.MessageUpdatedAsync(await GetMemberIdsAsync(chatId), messageDto);
+        }
+
+        private const int ReplyPreviewLength = 120;
+
+        private async Task<Message?> GetReplyTargetOrThrowAsync(int chatId, int? replyToMessageId)
+        {
+            if (replyToMessageId is null)
+                return null;
+
+            var target = await _repository.Message.GetMessageAsync(replyToMessageId.Value, trackChanges: false);
+            if (target is null || target.ChatId != chatId)
+                throw new MessageNotFoundException(replyToMessageId.Value);
+
+            target.Content = _cipher.Decrypt(target.Content);
+            return target;
+        }
+
+        private static MessageReplyDto? ToReplyDto(Message? message)
+        {
+            if (message is null)
+                return null;
+
+            var content = message.Content ?? string.Empty;
+            return new MessageReplyDto
+            {
+                Id = message.Id,
+                UserId = message.UserId,
+                UserName = message.User?.UserName,
+                Content = content.Length > ReplyPreviewLength
+                    ? content[..ReplyPreviewLength]
+                    : content
+            };
         }
 
         private async Task<IEnumerable<int>> GetMemberIdsAsync(int chatId)

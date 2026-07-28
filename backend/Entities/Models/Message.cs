@@ -6,8 +6,10 @@
         public int UserId { get; set; }
         public string Content { get; set; } = null!;
         public bool IsEdited { get; set; }
+        public int? ReplyToMessageId { get; set; }
 
         public Chat Chat { get; set; } = null!;
         public User User { get; set; } = null!;
+        public Message? ReplyToMessage { get; set; }
     }
 }

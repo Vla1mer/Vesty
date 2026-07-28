@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services;
 using Services.DataTransferObjects;
@@ -40,7 +40,7 @@ namespace Vesty.Controllers
                 return BadRequest("MessageForCreationDto object is null");
             if (!ModelState.IsValid)
                 return UnprocessableEntity(ModelState);
-            var created = await _service.Message.CreateMessageForChatAsync(chatId, message.Content);
+            var created = await _service.Message.CreateMessageForChatAsync(chatId, message.Content, message.ReplyToMessageId);
             return CreatedAtRoute("GetMessagesForChat", new { chatId }, created);
         }
 
