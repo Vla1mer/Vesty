@@ -24,6 +24,10 @@ export const endpoints = {
   message: {
     byId: (id: number) => `/api/Message/${id}`,
     direct: "/api/Message/direct",
+    reactions: (id: number) => `/api/Message/${id}/reactions`,
+    pin: (id: number) => `/api/Message/${id}/pin`,
+    reaction: (id: number, emoji: string) =>
+      `/api/Message/${id}/reactions/${encodeURIComponent(emoji)}`,
     forChat: (chatId: number) => `/api/Message/${chatId}/messages`,
     inChat: (chatId: number, id: number) =>
       `/api/Message/${chatId}/messages/${id}`,

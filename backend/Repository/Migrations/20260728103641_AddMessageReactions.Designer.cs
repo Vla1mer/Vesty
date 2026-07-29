@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Repository;
@@ -11,9 +12,11 @@ using Repository;
 namespace Repository.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260728103641_AddMessageReactions")]
+    partial class AddMessageReactions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -140,9 +143,6 @@ namespace Repository.Migrations
                     b.Property<bool>("IsEdited")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTime?>("PinnedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<int?>("ReplyToMessageId")
                         .HasColumnType("integer");
 
@@ -151,11 +151,11 @@ namespace Repository.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ChatId");
+
                     b.HasIndex("ReplyToMessageId");
 
                     b.HasIndex("UserId");
-
-                    b.HasIndex("ChatId", "PinnedAt");
 
                     b.ToTable("Messages");
                 });

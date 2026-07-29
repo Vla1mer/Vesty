@@ -83,6 +83,18 @@ export interface ChatForCreationDto {
   members?: ChatMemberForCreationDto[];
 }
 
+export interface MessageReplyDto {
+  id: number;
+  userId: number;
+  userName?: string | null;
+  content: string | null;
+}
+
+export interface MessageReactionDto {
+  emoji: string;
+  userIds: number[];
+}
+
 export interface MessageDto {
   id: number;
   chatId: number;
@@ -91,10 +103,26 @@ export interface MessageDto {
   content: string | null;
   createdAt: string;
   isEdited: boolean;
+  replyTo?: MessageReplyDto | null;
+  reactions?: MessageReactionDto[];
+  pinnedAt?: string | null;
 }
 
 export interface MessageForCreationDto {
   content: string;
+  replyToMessageId?: number | null;
+}
+
+export interface MessageReactionsSignalrDto {
+  chatId: number;
+  messageId: number;
+  reactions: MessageReactionDto[];
+}
+
+export interface MessagePinnedSignalrDto {
+  chatId: number;
+  messageId: number;
+  pinnedAt?: string | null;
 }
 
 export interface MessageDeletedSignalrDto {

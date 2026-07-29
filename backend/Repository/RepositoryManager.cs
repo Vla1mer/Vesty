@@ -16,6 +16,7 @@ namespace Repository
         private readonly Lazy<IChatRepository> _chatRepository;
         private readonly Lazy<IChatMemberRepository> _chatMemberRepository;
         private readonly Lazy<IMessageRepository> _messageRepository;
+        private readonly Lazy<IReactionRepository> _reactionRepository;
 
         public RepositoryManager(AppDbContext context)
         {
@@ -26,6 +27,7 @@ namespace Repository
             _chatRepository = new Lazy<IChatRepository>(() => new ChatRepository(context));
             _chatMemberRepository = new Lazy<IChatMemberRepository>(() => new ChatMemberRepository(context));
             _messageRepository = new Lazy<IMessageRepository>(() => new MessageRepository(context));
+            _reactionRepository = new Lazy<IReactionRepository>(() => new ReactionRepository(context));
         }
 
         public IUserRepository User => _userRepository.Value;
@@ -34,6 +36,7 @@ namespace Repository
         public IChatRepository Chat => _chatRepository.Value;
         public IChatMemberRepository ChatMember => _chatMemberRepository.Value;
         public IMessageRepository Message => _messageRepository.Value;
+        public IReactionRepository Reaction => _reactionRepository.Value;
 
         public async Task SaveAsync()
         {

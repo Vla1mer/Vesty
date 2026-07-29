@@ -8,5 +8,6 @@
         IChatService Chat { get; }
         IChatMemberService ChatMember { get; }
         IMessageService Message { get; }
+        IReactionService Reaction { get; }
     }
 }

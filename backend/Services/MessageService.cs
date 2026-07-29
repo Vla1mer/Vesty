@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using AutoMapper;
 using Shared.Exceptions;
 using Entities.Models;
 using Shared.RequestFeatures;
@@ -49,33 +49,61 @@ namespace Services
             var message = await GetMessageOrThrowAsync(id, trackChanges: false);
             await EnsureCallerIsChatMember(message.ChatId);
             message.Content = _cipher.Decrypt(message.Content);
-            return _mapper.Map<MessageDto>(message);
+
+            var replyTo = await GetReplyTargetOrThrowAsync(message.ChatId, message.ReplyToMessageId);
+            var reactions = await _repository.Reaction.GetByMessageIdsAsync(new[] { message.Id });
+
+            return _mapper.Map<MessageDto>(message) with
+            {
+                ReplyTo = ToReplyDto(replyTo),
+                Reactions = ReactionMapper.Group(reactions)
+            };
         }
 
         public async Task<IEnumerable<MessageDto>> GetMessagesByChatAsync(int chatId, bool trackChanges)
         {
             await GetChatOrThrowAsync(chatId);
             await EnsureCallerIsChatMember(chatId);
-            var messages = await _repository.Message.GetMessagesByChatAsync(chatId, trackChanges);
+            var messages = (await _repository.Message.GetMessagesByChatAsync(chatId, trackChanges)).ToList();
             DecryptInPlace(messages);
-            return _mapper.Map<IEnumerable<MessageDto>>(messages);
+
+            var byId = messages.ToDictionary(m => m.Id);
+            var reactions = await _repository.Reaction.GetByMessageIdsAsync(messages.Select(m => m.Id));
+            var reactionsByMessage = reactions
+                .GroupBy(r => r.MessageId)
+                .ToDictionary(g => g.Key, g => ReactionMapper.Group(g));
+
+            return messages.Select(m => _mapper.Map<MessageDto>(m) with
+            {
+                ReplyTo = m.ReplyToMessageId is int replyId && byId.TryGetValue(replyId, out var target)
+                    ? ToReplyDto(target)
+                    : null,
+                Reactions = reactionsByMessage.TryGetValue(m.Id, out var rs) ? rs : []
+            });
         }
 
-        public async Task<MessageDto> CreateMessageForChatAsync(int chatId, string content)
+        public async Task<MessageDto> CreateMessageForChatAsync(int chatId, string content, int? replyToMessageId = null)
         {
             await GetChatOrThrowAsync(chatId);
             await EnsureCallerIsChatMember(chatId);
 
+            var replyTo = await GetReplyTargetOrThrowAsync(chatId, replyToMessageId);
+
             var message = new Message
             {
                 UserId = _currentUser.UserId,
-                Content = _cipher.Encrypt(content)
+                Content = _cipher.Encrypt(content),
+                ReplyToMessageId = replyTo?.Id
             };
             _repository.Message.CreateMessageForChat(chatId, message);
             await _repository.SaveAsync();
             message.Content = _cipher.Decrypt(message.Content);
 
-            var messageDto = _mapper.Map<MessageDto>(message) with { UserName = _currentUser.UserName };
+            var messageDto = _mapper.Map<MessageDto>(message) with
+            {
+                UserName = _currentUser.UserName,
+                ReplyTo = ToReplyDto(replyTo)
+            };
             await _notifier.MessageReceivedAsync(await GetMemberIdsAsync(chatId), messageDto);
             return messageDto;
         }
@@ -110,8 +138,80 @@ namespace Services
             await _repository.SaveAsync();
             message.Content = content;
 
-            var messageDto = _mapper.Map<MessageDto>(message) with { UserName = _currentUser.UserName };
+            var replyTo = await GetReplyTargetOrThrowAsync(chatId, message.ReplyToMessageId);
+            var reactions = await _repository.Reaction.GetByMessageIdsAsync(new[] { message.Id });
+
+            var messageDto = _mapper.Map<MessageDto>(message) with
+            {
+                UserName = _currentUser.UserName,
+                ReplyTo = ToReplyDto(replyTo),
+                Reactions = ReactionMapper.Group(reactions)
+            };
             await _notifier.MessageUpdatedAsync(await GetMemberIdsAsync(chatId), messageDto);
+        }
+
+        public async Task SetPinnedAsync(int messageId, bool pinned)
+        {
+            var message = await GetMessageOrThrowAsync(messageId, trackChanges: true);
+            await EnsureCallerCanPinAsync(message.ChatId);
+
+            message.PinnedAt = pinned ? DateTime.UtcNow : null;
+            await _repository.SaveAsync();
+
+            await _notifier.MessagePinnedAsync(
+                await GetMemberIdsAsync(message.ChatId),
+                new MessagePinnedSignalrDto
+                {
+                    ChatId = message.ChatId,
+                    MessageId = message.Id,
+                    PinnedAt = message.PinnedAt
+                });
+        }
+
+        private async Task EnsureCallerCanPinAsync(int chatId)
+        {
+            var chat = await GetChatOrThrowAsync(chatId);
+            var member = await _currentUser.GetMembershipAsync(chatId);
+            if (member is null)
+                throw new ChatAccessDeniedException(chatId, _currentUser.UserId);
+
+            if (chat.IsPrivate)
+                return;
+
+            if (member.RoleId != UserRole.Owner && member.RoleId != UserRole.Admin)
+                throw new InsufficientChatPermissionException("pin messages", chatId);
+        }
+
+        private const int ReplyPreviewLength = 120;
+
+        private async Task<Message?> GetReplyTargetOrThrowAsync(int chatId, int? replyToMessageId)
+        {
+            if (replyToMessageId is null)
+                return null;
+
+            var target = await _repository.Message.GetMessageAsync(replyToMessageId.Value, trackChanges: false);
+            if (target is null || target.ChatId != chatId)
+                throw new MessageNotFoundException(replyToMessageId.Value);
+
+            target.Content = _cipher.Decrypt(target.Content);
+            return target;
+        }
+
+        private static MessageReplyDto? ToReplyDto(Message? message)
+        {
+            if (message is null)
+                return null;
+
+            var content = message.Content ?? string.Empty;
+            return new MessageReplyDto
+            {
+                Id = message.Id,
+                UserId = message.UserId,
+                UserName = message.User?.UserName,
+                Content = content.Length > ReplyPreviewLength
+                    ? content[..ReplyPreviewLength]
+                    : content
+            };
         }
 
         private async Task<IEnumerable<int>> GetMemberIdsAsync(int chatId)

@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Services.DataTransferObjects
 {
@@ -7,5 +7,7 @@ namespace Services.DataTransferObjects
         [Required(ErrorMessage = "Content is a required field.")]
         [MaxLength(2000, ErrorMessage = "Maximum length for Content is 2000 characters.")]
         public string Content { get; init; }
+
+        public int? ReplyToMessageId { get; init; }
     }
 }

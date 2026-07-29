@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Repository;
@@ -11,9 +12,11 @@ using Repository;
 namespace Repository.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260728094643_AddMessageReply")]
+    partial class AddMessageReply
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -140,9 +143,6 @@ namespace Repository.Migrations
                     b.Property<bool>("IsEdited")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTime?>("PinnedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<int?>("ReplyToMessageId")
                         .HasColumnType("integer");
 
@@ -151,35 +151,13 @@ namespace Repository.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ChatId");
+
                     b.HasIndex("ReplyToMessageId");
 
                     b.HasIndex("UserId");
 
-                    b.HasIndex("ChatId", "PinnedAt");
-
                     b.ToTable("Messages");
-                });
-
-            modelBuilder.Entity("Entities.Models.MessageReaction", b =>
-                {
-                    b.Property<int>("MessageId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Emoji")
-                        .HasMaxLength(16)
-                        .HasColumnType("character varying(16)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("MessageId", "UserId", "Emoji");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("MessageReactions");
                 });
 
             modelBuilder.Entity("Entities.Models.User", b =>
@@ -404,25 +382,6 @@ namespace Repository.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Entities.Models.MessageReaction", b =>
-                {
-                    b.HasOne("Entities.Models.Message", "Message")
-                        .WithMany("Reactions")
-                        .HasForeignKey("MessageId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Entities.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Message");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Entities.Models.UserAvatar", b =>
                 {
                     b.HasOne("Entities.Models.User", "User")
@@ -441,11 +400,6 @@ namespace Repository.Migrations
                     b.Navigation("ChatMembers");
 
                     b.Navigation("Messages");
-                });
-
-            modelBuilder.Entity("Entities.Models.Message", b =>
-                {
-                    b.Navigation("Reactions");
                 });
 
             modelBuilder.Entity("Entities.Models.User", b =>

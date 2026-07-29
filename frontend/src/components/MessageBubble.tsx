@@ -1,13 +1,16 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { MouseEvent } from "react";
+import type { MouseEvent, TouchEvent as ReactTouchEvent } from "react";
 import { Avatar } from "./Avatar";
 import type { MessageDto } from "../types/api";
+
+const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🔥"];
 
 interface Props {
   message: MessageDto;
   isOwn: boolean;
   authorName?: string;
   authorAvatarUpdatedAt?: string | null;
+  replyAuthorName?: string;
   showAuthor?: boolean;
   isEditing?: boolean;
   selectionMode?: boolean;
@@ -16,6 +19,12 @@ interface Props {
   onToggleSelect?: (id: number) => void;
   onEdit?: (id: number, content: string) => void;
   onDelete?: (id: number) => void;
+  onReply?: (message: MessageDto) => void;
+  onJumpToMessage?: (id: number) => void;
+  highlighted?: boolean;
+  currentUserId?: number | null;
+  onToggleReaction?: (messageId: number, emoji: string, active: boolean) => void;
+  onTogglePin?: (messageId: number, pinned: boolean) => void;
 }
 
 export function MessageBubble({
@@ -23,6 +32,7 @@ export function MessageBubble({
   isOwn,
   authorName,
   authorAvatarUpdatedAt,
+  replyAuthorName,
   showAuthor = true,
   isEditing,
   selectionMode = false,
@@ -31,6 +41,12 @@ export function MessageBubble({
   onToggleSelect,
   onEdit,
   onDelete,
+  onReply,
+  onJumpToMessage,
+  highlighted = false,
+  currentUserId,
+  onToggleReaction,
+  onTogglePin,
 }: Props) {
   const [menu, setMenu] = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
@@ -41,9 +57,12 @@ export function MessageBubble({
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressFired = useRef(false);
   const moved = useRef(false);
-  const lastTouchRef = useRef(0);
+  const pointerTypeRef = useRef<string>("mouse");
+  const menuOpenedAtRef = useRef(0);
 
-  const canManage = Boolean(onEdit || onDelete);
+  const hasActions = Boolean(
+    onEdit || onDelete || onReply || onTogglePin || onToggleReaction
+  );
 
   useLayoutEffect(() => {
     if (!menu || !menuRef.current || !bubbleRef.current) return;
@@ -92,6 +111,7 @@ export function MessageBubble({
   }, [menu]);
 
   function openMenu(x: number, y: number) {
+    menuOpenedAtRef.current = Date.now();
     anchorRef.current = { x, y };
     window.dispatchEvent(new Event("message-menu-open"));
     setMenu(true);
@@ -103,9 +123,9 @@ export function MessageBubble({
   }
 
   function handleContextMenu(e: MouseEvent) {
-    if (!message.content && !canManage) return;
     e.preventDefault();
-    if (Date.now() - lastTouchRef.current < 700) return;
+    if (pointerTypeRef.current === "touch") return;
+    if (!message.content && !hasActions) return;
     if (menu) {
       setMenu(false);
       return;
@@ -121,7 +141,6 @@ export function MessageBubble({
   }
 
   function handleTouchStart() {
-    lastTouchRef.current = Date.now();
     longPressFired.current = false;
     moved.current = false;
     setPressing(true);
@@ -138,13 +157,23 @@ export function MessageBubble({
     clearLongPress();
   }
 
-  function handleTouchEnd() {
-    lastTouchRef.current = Date.now();
+  function handleTouchEnd(e: ReactTouchEvent) {
     setPressing(false);
     const fired = longPressFired.current;
     const didMove = moved.current;
     clearLongPress();
-    if (!fired && !didMove && selectionMode) onToggleSelect?.(message.id);
+    if (fired || didMove) return;
+
+    if (selectionMode) {
+      onToggleSelect?.(message.id);
+      return;
+    }
+
+    const touch = e.changedTouches[0];
+    if (!touch) return;
+
+    e.preventDefault();
+    openMenu(touch.clientX, touch.clientY);
   }
 
   function cancelTouch() {
@@ -163,8 +192,9 @@ export function MessageBubble({
   return (
     <>
       <div
-        className={`flex items-center gap-2 transition ${
-          selected ? "bg-amber-500/10" : ""
+        id={`message-${message.id}`}
+        className={`flex items-center gap-2 rounded-lg transition-colors duration-500 ${
+          selected ? "bg-amber-500/10" : highlighted ? "bg-amber-400/20" : ""
         }`}
       >
         {selectionMode && (
@@ -194,6 +224,9 @@ export function MessageBubble({
           <div className="relative flex flex-col max-w-[78%] md:max-w-md">
             <div
               ref={bubbleRef}
+              onPointerDown={(e) => {
+                pointerTypeRef.current = e.pointerType;
+              }}
               onContextMenu={handleContextMenu}
               onTouchStart={handleTouchStart}
               onTouchEnd={handleTouchEnd}
@@ -216,6 +249,33 @@ export function MessageBubble({
                 </p>
               )}
 
+              {message.pinnedAt && (
+                <p className="text-[11px] text-amber-300 mb-1">📌 Pinned</p>
+              )}
+
+              {message.replyTo && (
+                <button
+                  type="button"
+                  onClick={() => onJumpToMessage?.(message.replyTo!.id)}
+                  className={`w-full text-left mb-1.5 pl-2 border-l-2 rounded-sm py-0.5 transition ${
+                    isOwn
+                      ? "border-amber-200 bg-amber-700/40 hover:bg-amber-700/60"
+                      : "border-amber-400 bg-slate-800/60 hover:bg-slate-800"
+                  }`}
+                >
+                  <span className="block text-xs font-medium text-amber-300 truncate">
+                    {replyAuthorName ?? `User #${message.replyTo.userId}`}
+                  </span>
+                  <span
+                    className={`block text-xs truncate ${
+                      isOwn ? "text-amber-100" : "text-slate-300"
+                    }`}
+                  >
+                    {message.replyTo.content}
+                  </span>
+                </button>
+              )}
+
               <div className="relative">
                 <p className="break-words whitespace-pre-wrap">
                   {message.content}
@@ -235,6 +295,34 @@ export function MessageBubble({
                 </span>
               </div>
             </div>
+
+            {!!message.reactions?.length && (
+              <div
+                className={`flex flex-wrap gap-1 mt-1 ${
+                  isOwn ? "justify-end md:justify-start" : "justify-start"
+                }`}
+              >
+                {message.reactions.map((r) => {
+                  const mine =
+                    currentUserId != null && r.userIds.includes(currentUserId);
+                  return (
+                    <button
+                      key={r.emoji}
+                      type="button"
+                      onClick={() => onToggleReaction?.(message.id, r.emoji, mine)}
+                      title={`${r.userIds.length}`}
+                      className={`px-1.5 py-0.5 rounded-full text-xs border transition ${
+                        mine
+                          ? "bg-amber-500/20 border-amber-500 text-amber-200"
+                          : "bg-slate-800 border-slate-600 text-slate-300 hover:bg-slate-700"
+                      }`}
+                    >
+                      {r.emoji} {r.userIds.length}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -242,17 +330,74 @@ export function MessageBubble({
       {menu && (
         <div
           ref={menuRef}
-          className="fixed z-50 min-w-32 rounded-lg border border-slate-700 bg-slate-800 py-1 shadow-xl"
+          className="fixed z-50 w-max max-w-[13rem] rounded-lg border border-slate-700 bg-slate-800 py-1 shadow-xl"
           style={{ top: menuPos.top, left: menuPos.left }}
+          onClickCapture={(e) => {
+            if (Date.now() - menuOpenedAtRef.current < 400) {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+          }}
           onClick={(e) => e.stopPropagation()}
         >
+          {onToggleReaction && (
+            <div className="flex gap-0.5 px-1.5 py-1.5 border-b border-slate-700">
+              {QUICK_REACTIONS.map((emoji) => {
+                const mine = Boolean(
+                  currentUserId != null &&
+                    message.reactions?.some(
+                      (r) => r.emoji === emoji && r.userIds.includes(currentUserId)
+                    )
+                );
+                return (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => {
+                      setMenu(false);
+                      onToggleReaction(message.id, emoji, mine);
+                    }}
+                    className={`w-7 h-7 rounded-full text-base leading-none transition ${
+                      mine ? "bg-amber-500/30" : "hover:bg-slate-700"
+                    }`}
+                  >
+                    {emoji}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          {onReply && (
+            <button
+              type="button"
+              onClick={() => {
+                setMenu(false);
+                onReply(message);
+              }}
+              className="w-full px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-700 transition"
+            >
+              ↩️ Reply
+            </button>
+          )}
           {message.content && (
             <button
               type="button"
               onClick={handleCopy}
-              className="w-full px-4 py-2 text-left text-sm text-slate-200 hover:bg-slate-700 transition"
+              className="w-full px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-700 transition"
             >
               📋 Copy
+            </button>
+          )}
+          {onTogglePin && (
+            <button
+              type="button"
+              onClick={() => {
+                setMenu(false);
+                onTogglePin(message.id, Boolean(message.pinnedAt));
+              }}
+              className="w-full px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-700 transition"
+            >
+              {message.pinnedAt ? "📌 Unpin" : "📌 Pin"}
             </button>
           )}
           {onEdit && (
@@ -262,7 +407,7 @@ export function MessageBubble({
                 setMenu(false);
                 onEdit(message.id, message.content ?? "");
               }}
-              className="w-full px-4 py-2 text-left text-sm text-slate-200 hover:bg-slate-700 transition"
+              className="w-full px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-700 transition"
             >
               ✏️ Edit
             </button>
@@ -274,7 +419,7 @@ export function MessageBubble({
                 setMenu(false);
                 onDelete(message.id);
               }}
-              className="w-full px-4 py-2 text-left text-sm text-red-300 hover:bg-slate-700 transition"
+              className="w-full px-3 py-2 text-left text-sm text-red-300 hover:bg-slate-700 transition"
             >
               🗑️ Delete
             </button>

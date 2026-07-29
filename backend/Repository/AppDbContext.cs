@@ -1,4 +1,4 @@
-using Entities.Models;
+﻿using Entities.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +18,7 @@ namespace Repository
         public DbSet<Message> Messages { get; set; }
         public DbSet<UserAvatar> UserAvatars { get; set; }
         public DbSet<ChatAvatar> ChatAvatars { get; set; }
+        public DbSet<MessageReaction> MessageReactions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -107,6 +108,25 @@ namespace Repository
                 e.HasOne(m => m.User)
                  .WithMany(u => u.Messages)
                  .HasForeignKey(m => m.UserId);
+                e.HasIndex(m => new { m.ChatId, m.PinnedAt });
+                e.HasOne(m => m.ReplyToMessage)
+                 .WithMany()
+                 .HasForeignKey(m => m.ReplyToMessageId)
+                 .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<MessageReaction>(e => {
+                e.HasKey(r => new { r.MessageId, r.UserId, r.Emoji });
+                e.Property(r => r.Emoji).HasMaxLength(16).IsRequired();
+                e.Property(r => r.CreatedAt);
+                e.HasOne(r => r.Message)
+                 .WithMany(m => m.Reactions)
+                 .HasForeignKey(r => r.MessageId)
+                 .OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(r => r.User)
+                 .WithMany()
+                 .HasForeignKey(r => r.UserId)
+                 .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<Chat>().HasData(
