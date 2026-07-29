@@ -128,3 +128,5 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHub<ChatHub>(HubRoutes.ChatHub);
 app.Run();
+
+public partial class Program { }
