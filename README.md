@@ -22,9 +22,9 @@ To stop: `docker compose down`. Add `-v` to delete the database as well.
 
 ## Configuration
 
-The defaults in `docker-compose.yml` are enough to run the project locally, so no setup is needed to try it out.
+The defaults in `docker-compose.yml` are enough to run the project locally, so no setup is needed to try it out. They are development values and are public — **any deployment reachable from outside your machine must override them**, otherwise stored messages can be decrypted and tokens forged by anyone who has read this repository.
 
-For anything beyond local use, copy the template and set your own secrets:
+To set your own secrets, copy the template:
 
 ```bash
 cp .env.example .env
@@ -39,6 +39,8 @@ openssl rand -base64 32                                                         
 ```
 
 The same file also controls ports (`API_PORT`, `CLIENT_PORT`, `DB_PORT`) and database credentials.
+
+Set `MESSAGE_KEY` before storing any data and keep it unchanged: messages are encrypted with it, so replacing the key makes every existing message permanently unreadable.
 
 ## Development without Docker
 
