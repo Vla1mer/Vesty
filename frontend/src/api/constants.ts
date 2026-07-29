@@ -1,19 +1,16 @@
-// RTK Query cache tag types, grouped per API. Values must match the strings
-// registered in apiSlice's `tagTypes`.
-export enum CHAT_API_TAGS {
-  CHAT = "Chat",
-  CHAT_MEMBER = "ChatMember",
-}
+export const CHAT_API_TAGS = {
+  CHAT: "Chat",
+  CHAT_MEMBER: "ChatMember",
+} as const;
 
-export enum MESSAGE_API_TAGS {
-  MESSAGE = "Message",
-}
+export const MESSAGE_API_TAGS = {
+  MESSAGE: "Message",
+} as const;
 
-export enum USER_API_TAGS {
-  USER = "User",
-}
+export const USER_API_TAGS = {
+  USER: "User",
+} as const;
 
-// Shared special tag id for "the whole collection" invalidation.
 export const TAG_ID = {
   LIST: "LIST",
 } as const;

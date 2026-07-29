@@ -1,0 +1,55 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: vesty-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-vesty}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vesty}
+      POSTGRES_DB: ${POSTGRES_DB:-vesty}
+    ports:
+      - "${DB_PORT:-5433}:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vesty} -d ${POSTGRES_DB:-vesty}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./backend
+    container_name: vesty-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      UseHttpsRedirection: "false"
+      ConnectionStrings__DefaultConnection: >-
+        Host=db;Port=5432;Database=${POSTGRES_DB:-vesty};Username=${POSTGRES_USER:-vesty};Password=${POSTGRES_PASSWORD:-vesty};
+      JwtSettings__validIssuer: VestyAPI
+      JwtSettings__validAudience: ${API_URL:-http://localhost:8080}
+      JwtSettings__expires: "60"
+      JwtSettings__secretKey: ${JWT_SECRET:-vesty-local-development-jwt-secret-not-for-production}
+      MessageEncryption__Key: ${MESSAGE_KEY:-dmVzdHktbG9jYWwtZGV2ZWxvcG1lbnQta2V5LTAwMDE=}
+      Cors__AllowedOrigins__0: ${CLIENT_URL:-http://localhost:5173}
+    ports:
+      - "${API_PORT:-8080}:8080"
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ${API_URL:-http://localhost:8080}
+    container_name: vesty-web
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "${CLIENT_PORT:-5173}:80"
+
+volumes:
+  db-data:

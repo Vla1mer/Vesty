@@ -1,0 +1,8 @@
+**/bin/
+**/obj/
+**/.vs/
+**/logs/
+**/internal_logs/
+**/appsettings.json
+**/appsettings.Development.json
+**/appsettings.Production.json

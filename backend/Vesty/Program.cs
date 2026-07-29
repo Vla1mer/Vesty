@@ -86,6 +86,21 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 var app = builder.Build();
 
 var logger = app.Services.GetRequiredService<ILoggerManager>();
+
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    try
+    {
+        await context.Database.MigrateAsync();
+    }
+    catch (Exception ex)
+    {
+        logger.LogError($"Database migration failed: {ex}");
+        throw;
+    }
+}
+
 app.ConfigureExceptionHandler(logger);
 if (app.Environment.IsProduction())
     app.UseHsts();
@@ -100,7 +115,8 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseHttpsRedirection();
+if (builder.Configuration.GetValue("UseHttpsRedirection", true))
+    app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
