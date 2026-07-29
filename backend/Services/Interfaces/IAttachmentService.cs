@@ -1,4 +1,4 @@
-using Entities.Models;
+﻿using Entities.Models;
 using Services.DataTransferObjects;
 
 namespace Services.Interfaces
@@ -9,5 +9,7 @@ namespace Services.Interfaces
             string? contentType, long length);
         Task<(byte[] content, string contentType, string fileName)> DownloadAsync(int attachmentId);
         Task<IEnumerable<MessageAttachment>> ClaimForMessageAsync(IEnumerable<int> attachmentIds, int messageId);
+        Task DeleteUnclaimedAsync(int attachmentId);
+        Task<int> RemoveAbandonedAsync(TimeSpan olderThan);
     }
 }

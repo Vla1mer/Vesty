@@ -1,4 +1,4 @@
-using Entities.Models;
+﻿using Entities.Models;
 using Microsoft.EntityFrameworkCore;
 using Repository.Interfaces;
 
@@ -33,6 +33,14 @@ namespace Repository
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<MessageAttachment>> GetUnclaimedOlderThanAsync(DateTime threshold) =>
+            await FindByCondition(
+                    a => a.MessageId == null && a.CreatedAt < threshold,
+                    trackChanges: true)
+                .ToListAsync();
+
         public void CreateAttachment(MessageAttachment attachment) => Create(attachment);
+
+        public void DeleteAttachment(MessageAttachment attachment) => Delete(attachment);
     }
 }

@@ -1,4 +1,4 @@
-using Entities.Models;
+﻿using Entities.Models;
 using Repository.Interfaces;
 using Services.DataTransferObjects;
 using Services.Interfaces;
@@ -94,6 +94,46 @@ namespace Services
             }
 
             return attachments;
+        }
+
+        public async Task DeleteUnclaimedAsync(int attachmentId)
+        {
+            var attachment = await _repository.Attachment.GetAttachmentAsync(attachmentId, trackChanges: true);
+            if (attachment is null || attachment.UserId != _currentUser.UserId)
+                throw new AttachmentNotFoundException(attachmentId);
+
+            if (attachment.MessageId is not null)
+                throw new InvalidAttachmentException("attachment is already sent.");
+
+            await RemoveAsync(attachment);
+            await _repository.SaveAsync();
+        }
+
+        public async Task<int> RemoveAbandonedAsync(TimeSpan olderThan)
+        {
+            var abandoned = (await _repository.Attachment
+                .GetUnclaimedOlderThanAsync(DateTime.UtcNow - olderThan)).ToList();
+
+            foreach (var attachment in abandoned)
+                await RemoveAsync(attachment);
+
+            if (abandoned.Count > 0)
+                await _repository.SaveAsync();
+
+            return abandoned.Count;
+        }
+
+        private async Task RemoveAsync(MessageAttachment attachment)
+        {
+            try
+            {
+                await _storage.DeleteAsync(attachment.StorageKey);
+            }
+            catch (Exception)
+            {
+            }
+
+            _repository.Attachment.DeleteAttachment(attachment);
         }
 
         public static MessageAttachmentDto ToDto(MessageAttachment attachment) =>

@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import {
   MAX_ATTACHMENT_SIZE,
   MAX_ATTACHMENTS_PER_MESSAGE,
+  deleteAttachment,
   uploadAttachment,
 } from "../api/attachments";
 import type { MessageAttachmentDto } from "../types/api";
@@ -35,15 +36,21 @@ export function useAttachmentUploads(chatId: number) {
     setUploads((prev) => {
       const target = prev.find((u) => u.localId === localId);
       if (target?.previewUrl) URL.revokeObjectURL(target.previewUrl);
+      if (target?.attachment) void deleteAttachment(target.attachment.id).catch(() => {});
       return prev.filter((u) => u.localId !== localId);
     });
   }, []);
 
-  const clear = useCallback(() => {
+  const clear = useCallback((discardUploaded = false) => {
     controllers.current.forEach((controller) => controller.abort());
     controllers.current.clear();
     setUploads((prev) => {
-      prev.forEach((u) => u.previewUrl && URL.revokeObjectURL(u.previewUrl));
+      prev.forEach((u) => {
+        if (u.previewUrl) URL.revokeObjectURL(u.previewUrl);
+        if (discardUploaded && u.attachment) {
+          void deleteAttachment(u.attachment.id).catch(() => {});
+        }
+      });
       return [];
     });
   }, []);

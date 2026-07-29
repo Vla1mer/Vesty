@@ -26,6 +26,10 @@ export async function fetchAttachmentBlob(id: number): Promise<Blob> {
   return response.data;
 }
 
+export async function deleteAttachment(id: number): Promise<void> {
+  await api.delete(endpoints.message.attachment(id));
+}
+
 export async function uploadAttachment(
   chatId: number,
   file: File,

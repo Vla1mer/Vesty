@@ -162,5 +162,15 @@ namespace Vesty.Controllers
             var (content, contentType, fileName) = await _service.Attachment.DownloadAsync(id);
             return File(content, contentType, fileName);
         }
+
+        [HttpDelete("attachments/{id:int}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeleteAttachment(int id)
+        {
+            await _service.Attachment.DeleteUnclaimedAsync(id);
+            return NoContent();
+        }
 }
 }
