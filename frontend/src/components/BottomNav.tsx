@@ -17,7 +17,7 @@ export function BottomNav() {
             className={({ isActive }) =>
               `flex-1 flex flex-col items-center justify-center py-2 transition ${
                 isActive
-                  ? "text-accent"
+                  ? "text-accent-strong"
                   : "text-content-muted hover:text-content"
               }`
             }

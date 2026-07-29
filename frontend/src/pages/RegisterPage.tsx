@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
+import { ThemeToggle } from "../components/ThemeToggle";
 import { Formik, Form } from "formik";
 import { register, login } from "../api/auth";
 import { useAuth } from "../context/useAuth";
@@ -12,7 +13,10 @@ export function RegisterPage() {
   const { setAuthenticated } = useAuth();
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="relative min-h-screen flex items-center justify-center p-4">
+      <div className="absolute top-4 right-4 z-10">
+        <ThemeToggle />
+      </div>
       <Formik
         initialValues={{ userName: "", password: "", confirmPassword: "", name: "", surname: "" }}
         validationSchema={registerSchema}
@@ -50,10 +54,10 @@ export function RegisterPage() {
         }}
       >
         {({ isSubmitting, status }) => (
-          <Form className="w-full max-w-sm bg-surface-raised border border-line rounded-xl p-6 space-y-4">
+          <Form className="w-full max-w-sm bg-surface border border-line rounded-card shadow-float p-6 space-y-4">
             <div className="text-center">
               <h1 className="text-2xl font-bold">
-                <span className="text-accent">Vesty</span>{" "}
+                <span className="text-accent-strong">Vesty</span>{" "}
                 <span className="text-content">Messenger</span>
               </h1>
               <p className="text-sm text-content-muted mt-1">Create your account</p>
@@ -95,7 +99,7 @@ export function RegisterPage() {
 
             <p className="text-sm text-center text-content-muted">
               Already have an account?{" "}
-              <Link to="/login" className="text-accent hover:underline">
+              <Link to="/login" className="text-accent-strong hover:underline">
                 Sign in
               </Link>
             </p>

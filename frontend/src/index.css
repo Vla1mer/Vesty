@@ -11,6 +11,12 @@
     --surface-overlay: 33 47 68;
     --surface-sunken: 8 13 25;
 
+    --bubble-in: 33 47 68;
+    --bubble-out: 217 119 6;
+    --on-bubble: 255 255 255;
+    --on-bubble-muted: 254 243 199;
+    --on-bubble-accent: 255 255 255;
+
     --border: 38 52 74;
     --border-strong: 56 74 102;
 
@@ -18,10 +24,11 @@
     --text-muted: 148 163 184;
     --text-subtle: 132 148 171;
 
-    --accent: 245 165 36;
-    --accent-hover: 250 184 74;
+    --accent: 217 119 6;
+    --accent-hover: 180 83 9;
+    --accent-strong: 245 165 36;
     --accent-soft: 61 43 15;
-    --accent-contrast: 11 17 32;
+    --accent-contrast: 255 255 255;
 
     --danger: 248 113 113;
     --danger-soft: 60 20 24;
@@ -38,23 +45,30 @@
   }
 
   :root[data-theme="light"] {
-    --bg: 247 248 250;
+    --bg: 228 233 242;
     --surface: 255 255 255;
-    --surface-raised: 241 243 247;
+    --surface-raised: 240 244 250;
     --surface-overlay: 255 255 255;
-    --surface-sunken: 235 238 244;
+    --surface-sunken: 226 232 241;
 
-    --border: 226 232 240;
-    --border-strong: 203 213 225;
+    --bubble-in: 255 255 255;
+    --bubble-out: 250 221 166;
+    --on-bubble: 15 23 42;
+    --on-bubble-muted: 71 85 105;
+    --on-bubble-accent: 143 65 8;
+
+    --border: 211 219 232;
+    --border-strong: 172 184 202;
 
     --text: 15 23 42;
     --text-muted: 71 85 105;
     --text-subtle: 100 116 139;
 
-    --accent: 180 83 9;
-    --accent-hover: 146 64 14;
+    --accent: 250 221 166;
+    --accent-hover: 240 193 112;
+    --accent-strong: 180 83 9;
     --accent-soft: 254 243 219;
-    --accent-contrast: 255 255 255;
+    --accent-contrast: 15 23 42;
 
     --danger: 220 38 38;
     --danger-soft: 254 234 234;
@@ -65,9 +79,9 @@
 
     --scrim: 15 23 42;
 
-    --shadow-raised: 0 1px 2px rgb(15 23 42 / 0.08);
-    --shadow-float: 0 8px 24px -6px rgb(15 23 42 / 0.14);
-    --shadow-modal: 0 24px 60px -12px rgb(15 23 42 / 0.22);
+    --shadow-raised: 0 1px 1px rgb(15 23 42 / 0.06), 0 2px 4px -1px rgb(15 23 42 / 0.10);
+    --shadow-float: 0 10px 28px -8px rgb(15 23 42 / 0.24), 0 2px 6px -2px rgb(15 23 42 / 0.10);
+    --shadow-modal: 0 28px 70px -14px rgb(15 23 42 / 0.36);
   }
 
   html,

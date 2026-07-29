@@ -206,11 +206,11 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
   return (
     <>
       <div
-        className="fixed inset-0 bg-scrim bg-opacity-60 flex items-center justify-center z-40 p-4"
+        className="fixed inset-0 bg-scrim/70 flex items-center justify-center z-40 p-4"
         onClick={busyUserId !== null || deleting ? undefined : onClose}
       >
         <div
-          className="bg-surface-raised border border-line rounded-xl p-6 w-full max-w-md max-h-[85vh] flex flex-col"
+          className="bg-surface border border-line rounded-card shadow-modal p-6 w-full max-w-md max-h-[85vh] flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-start justify-between mb-4">
@@ -227,7 +227,7 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                       if (e.key === "Enter") handleRename();
                       if (e.key === "Escape") setIsRenaming(false);
                     }}
-                    className="text-xl font-bold bg-surface border border-line-strong rounded px-2 py-1 text-content focus:outline-none focus:border-accent"
+                    className="text-xl font-bold bg-surface border border-line-strong rounded px-2 py-1 text-content focus:outline-none focus:border-accent-strong"
                   />
                   <div className="flex gap-2">
                     <button
@@ -260,7 +260,7 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                         setNameDraft(chat.name ?? "");
                         setIsRenaming(true);
                       }}
-                      className="text-content-muted hover:text-accent transition text-sm"
+                      className="text-content-muted hover:text-accent-strong transition text-sm"
                       aria-label="Rename chat"
                       title="Rename chat"
                     >
@@ -331,7 +331,7 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                           <p className="text-content text-sm truncate">
                             {m.userName}
                             {m.userId === currentUserId && (
-                              <span className="text-xs text-accent ml-2">
+                              <span className="text-xs text-accent-strong ml-2">
                                 (you)
                               </span>
                             )}
@@ -349,7 +349,7 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                           <span
                             className={`text-xs px-2 py-0.5 rounded ${
                               m.roleId === UserRole.Owner
-                                ? "bg-accent-soft text-accent"
+                                ? "bg-accent-soft text-accent-strong"
                                 : m.roleId === UserRole.Admin
                                 ? "bg-info-soft text-info"
                                 : "bg-surface-overlay text-content-muted"
@@ -420,7 +420,7 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search by username..."
-                    className="w-full px-3 py-2 rounded bg-surface border border-line-strong text-content text-sm focus:outline-none focus:border-accent mb-2"
+                    className="w-full px-3 py-2 rounded bg-surface border border-line-strong text-content text-sm focus:outline-none focus:border-accent-strong mb-2"
                   />
                   {search.trim().length === 0 ? (
                     <p className="text-sm text-content-subtle py-2 text-center">

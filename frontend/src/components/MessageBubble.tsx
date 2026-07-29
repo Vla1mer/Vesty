@@ -202,7 +202,7 @@ export function MessageBubble({
           <span
             className={`shrink-0 w-5 h-5 rounded-full border flex items-center justify-center text-[10px] ${
               selected
-                ? "bg-accent border-accent text-accent-contrast"
+                ? "bg-accent border-accent-strong text-accent-contrast"
                 : "border-line-strong text-transparent"
             }`}
           >
@@ -234,24 +234,30 @@ export function MessageBubble({
               onTouchMove={handleTouchMove}
               onTouchCancel={cancelTouch}
               style={{ WebkitTouchCallout: "none" }}
-              className={`rounded-2xl px-4 py-2 select-none md:select-text transition ${
+              className={`rounded-bubble px-4 py-2 select-none md:select-text shadow-raised transition ${
                 menu || isEditing || pressing || selected
-                  ? "ring-2 ring-accent"
+                  ? "ring-2 ring-accent-strong"
                   : ""
               } ${
                 isOwn
-                  ? "bg-accent text-accent-contrast rounded-br-sm md:rounded-br-2xl md:rounded-bl-sm"
-                  : "bg-surface-overlay text-content rounded-bl-sm"
+                  ? "bg-bubble-out text-on-bubble rounded-br-sm md:rounded-br-bubble md:rounded-bl-sm"
+                  : "bg-bubble-in text-content rounded-bl-sm"
               }`}
             >
               {!isOwn && showAuthor && (
-                <p className="text-xs text-accent font-medium mb-1">
+                <p className="text-xs text-accent-strong font-medium mb-1">
                   {displayName}
                 </p>
               )}
 
               {message.pinnedAt && (
-                <p className="text-[11px] text-accent mb-1">📌 Pinned</p>
+                <p
+                  className={`text-[11px] mb-1 ${
+                    isOwn ? "text-on-bubble-accent" : "text-accent-strong"
+                  }`}
+                >
+                  📌 Pinned
+                </p>
               )}
 
               {message.replyTo && (
@@ -260,16 +266,20 @@ export function MessageBubble({
                   onClick={() => onJumpToMessage?.(message.replyTo!.id)}
                   className={`w-full text-left mb-1.5 pl-2 border-l-2 rounded-sm py-0.5 transition ${
                     isOwn
-                      ? "border-accent bg-accent/25 hover:bg-accent/35"
-                      : "border-accent bg-surface-raised/60 hover:bg-surface-raised"
+                      ? "border-on-bubble-accent bg-on-bubble/[0.08] hover:bg-on-bubble/[0.13]"
+                      : "border-accent-strong bg-content/[0.05] hover:bg-content/[0.09]"
                   }`}
                 >
-                  <span className="block text-xs font-medium text-accent truncate">
+                  <span
+                    className={`block text-xs font-medium truncate ${
+                      isOwn ? "text-on-bubble-accent" : "text-accent-strong"
+                    }`}
+                  >
                     {replyAuthorName ?? `User #${message.replyTo.userId}`}
                   </span>
                   <span
                     className={`block text-xs truncate ${
-                      isOwn ? "text-accent" : "text-content-muted"
+                      isOwn ? "text-on-bubble-muted" : "text-content-muted"
                     }`}
                   >
                     {message.replyTo.content}
@@ -285,15 +295,15 @@ export function MessageBubble({
                 <p className="break-words whitespace-pre-wrap">
                   {message.content}
                   <span
-                    className="invisible select-none ml-2 text-[10px]"
+                    className="invisible select-none ml-2.5 text-xs"
                     aria-hidden="true"
                   >
                     {timeLabel}
                   </span>
                 </p>
                 <span
-                  className={`absolute bottom-0 right-0 text-[10px] leading-none whitespace-nowrap ${
-                    isOwn ? "text-accent" : "text-content-muted"
+                  className={`absolute bottom-0 right-0 text-xs leading-none whitespace-nowrap ${
+                    isOwn ? "text-on-bubble-muted" : "text-content-muted"
                   }`}
                 >
                   {timeLabel}
@@ -318,7 +328,7 @@ export function MessageBubble({
                       title={`${r.userIds.length}`}
                       className={`px-1.5 py-0.5 rounded-full text-xs border transition ${
                         mine
-                          ? "bg-accent/20 border-accent text-accent"
+                          ? "bg-accent/20 border-accent-strong text-accent-strong"
                           : "bg-surface-raised border-line-strong text-content-muted hover:bg-surface-overlay"
                       }`}
                     >
@@ -335,7 +345,7 @@ export function MessageBubble({
       {menu && (
         <div
           ref={menuRef}
-          className="fixed z-50 w-max max-w-[13rem] rounded-lg border border-line bg-surface-raised py-1 shadow-xl"
+          className="fixed z-50 w-max max-w-[13rem] rounded-lg border border-line bg-surface-raised py-1 shadow-float"
           style={{ top: menuPos.top, left: menuPos.left }}
           onClickCapture={(e) => {
             if (Date.now() - menuOpenedAtRef.current < 400) {

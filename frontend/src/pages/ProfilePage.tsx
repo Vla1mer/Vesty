@@ -5,7 +5,7 @@ export function ProfilePage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 pb-28">
       <h1 className="text-3xl font-bold text-content mb-6">Profile</h1>
-      <div className="w-full max-w-md bg-surface-raised border border-line rounded-xl p-6">
+      <div className="w-full max-w-md bg-surface border border-line rounded-card shadow-float p-6">
         <ProfileContent />
       </div>
       <BottomNav />

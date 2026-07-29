@@ -20,7 +20,7 @@ export function ProfileModal({ onClose }: Props) {
       onClick={onClose}
     >
       <div
-        className="bg-surface-raised border border-line rounded-xl p-6 w-full max-w-md max-h-[85vh] overflow-y-auto"
+        className="bg-surface border border-line rounded-card shadow-modal p-6 w-full max-w-md max-h-[85vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">

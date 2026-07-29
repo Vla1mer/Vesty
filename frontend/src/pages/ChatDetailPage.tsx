@@ -305,8 +305,8 @@ export function ChatDetailPage() {
       }}
     >
       {isDraggingFile && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center border-2 border-dashed border-accent bg-surface/80 pointer-events-none">
-          <p className="text-lg font-medium text-accent">Drop files to attach</p>
+        <div className="absolute inset-0 z-30 flex items-center justify-center border-2 border-dashed border-accent-strong bg-surface/80 pointer-events-none">
+          <p className="text-lg font-medium text-accent-strong">Drop files to attach</p>
         </div>
       )}
       <div className="absolute top-0 inset-x-0 overflow-hidden min-h-[88px] z-10">
@@ -346,7 +346,7 @@ export function ChatDetailPage() {
               <h1 className="text-xl font-bold text-content truncate">{title}</h1>
               {chat &&
                 (typingNames.length > 0 ? (
-                  <p className="text-xs text-accent italic">
+                  <p className="text-xs text-accent-strong italic">
                     {typingText(typingNames)}
                     <span className="typing-dots" />
                   </p>
@@ -360,7 +360,7 @@ export function ChatDetailPage() {
             </div>
             {chat && (
               <span
-                className="text-content-subtle group-hover:text-accent transition text-3xl leading-none"
+                className="text-content-subtle group-hover:text-accent-strong transition text-3xl leading-none"
                 aria-hidden="true"
               >
                 ›
@@ -412,9 +412,9 @@ export function ChatDetailPage() {
           onClick={showNextPinned}
           className="absolute top-[88px] inset-x-0 z-10 flex items-center gap-3 px-4 py-2 border-b border-line bg-surface/95 backdrop-blur text-left hover:bg-surface-raised transition"
         >
-          <span className="text-accent leading-none">📌</span>
-          <div className="min-w-0 flex-1 border-l-2 border-accent pl-3">
-            <p className="text-xs font-medium text-accent">
+          <span className="text-accent-strong leading-none">📌</span>
+          <div className="min-w-0 flex-1 border-l-2 border-accent-strong pl-3">
+            <p className="text-xs font-medium text-accent-strong">
               {pinnedMessages.length > 1
                 ? `Pinned message ${(pinnedIndex % pinnedMessages.length) + 1} of ${pinnedMessages.length}`
                 : "Pinned message"}
@@ -547,9 +547,9 @@ export function ChatDetailPage() {
         <div className="relative border-t border-line bg-surface sticky bottom-0">
           {editingMessage && (
             <div className="flex items-center gap-3 px-4 pt-3 -mb-1">
-              <span className="text-accent text-lg leading-none">✏️</span>
-              <div className="flex-1 min-w-0 border-l-2 border-accent pl-3">
-                <p className="text-xs font-medium text-accent">Editing</p>
+              <span className="text-accent-strong text-lg leading-none">✏️</span>
+              <div className="flex-1 min-w-0 border-l-2 border-accent-strong pl-3">
+                <p className="text-xs font-medium text-accent-strong">Editing</p>
                 <p className="text-sm text-content-muted truncate">
                   {editingMessage.content}
                 </p>
@@ -566,9 +566,9 @@ export function ChatDetailPage() {
           )}
           {replyTo && !editingMessage && (
             <div className="flex items-center gap-3 px-4 pt-3 -mb-1">
-              <span className="text-accent text-lg leading-none">↩️</span>
-              <div className="flex-1 min-w-0 border-l-2 border-accent pl-3">
-                <p className="text-xs font-medium text-accent">
+              <span className="text-accent-strong text-lg leading-none">↩️</span>
+              <div className="flex-1 min-w-0 border-l-2 border-accent-strong pl-3">
+                <p className="text-xs font-medium text-accent-strong">
                   Reply to {memberById.get(replyTo.userId)?.userName ?? `User #${replyTo.userId}`}
                 </p>
                 <p className="text-sm text-content-muted truncate">
@@ -592,7 +592,7 @@ export function ChatDetailPage() {
               onClick={() => fileInputRef.current?.click()}
               aria-label="Attach file"
               title="Attach file"
-              className="shrink-0 px-2 text-2xl text-content-muted hover:text-accent transition"
+              className="shrink-0 px-2 text-2xl text-content-muted hover:text-accent-strong transition"
             >
               📎
             </button>
@@ -620,7 +620,7 @@ export function ChatDetailPage() {
               placeholder="Type a message..."
               maxLength={2000}
               disabled={sending || saving}
-              className="flex-1 px-3 py-2 rounded bg-surface-raised border border-line-strong text-content focus:outline-none focus:border-accent disabled:opacity-50"
+              className="flex-1 px-3 py-2 rounded bg-surface-raised border border-line-strong text-content focus:outline-none focus:border-accent-strong disabled:opacity-50"
             />
             <button
               type="submit"

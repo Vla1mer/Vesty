@@ -39,11 +39,11 @@ export function SelectUserModal({ onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 bg-scrim bg-opacity-60 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-scrim/70 flex items-center justify-center z-50 p-4"
       onClick={onClose}
     >
       <div
-        className="bg-surface-raised border border-line rounded-xl p-6 w-full max-w-md max-h-[80vh] flex flex-col"
+        className="bg-surface border border-line rounded-card shadow-modal p-6 w-full max-w-md max-h-[80vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
@@ -64,7 +64,7 @@ export function SelectUserModal({ onClose }: Props) {
           onChange={(e) => setSearch(e.target.value)}
           placeholder="🔍 Search by username..."
           autoFocus
-          className="w-full px-3 py-2 rounded bg-surface border border-line-strong text-content placeholder-content-subtle focus:outline-none focus:border-accent mb-3"
+          className="w-full px-3 py-2 rounded bg-surface border border-line-strong text-content placeholder-content-subtle focus:outline-none focus:border-accent-strong mb-3"
         />
 
         {isError && (
@@ -103,7 +103,7 @@ export function SelectUserModal({ onClose }: Props) {
                         </p>
                       )}
                     </div>
-                    <span className="text-xs text-accent">💬</span>
+                    <span className="text-xs text-accent-strong">💬</span>
                   </button>
                 </li>
               ))}

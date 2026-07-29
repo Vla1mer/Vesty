@@ -87,7 +87,7 @@ export function NewDirectChatPage() {
             placeholder="Type a message..."
             maxLength={2000}
             disabled={sending}
-            className="flex-1 px-3 py-2 rounded bg-surface-raised border border-line-strong text-content focus:outline-none focus:border-accent disabled:opacity-50"
+            className="flex-1 px-3 py-2 rounded bg-surface-raised border border-line-strong text-content focus:outline-none focus:border-accent-strong disabled:opacity-50"
           />
           <button
             type="submit"

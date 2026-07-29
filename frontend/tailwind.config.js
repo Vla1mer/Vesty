@@ -17,6 +17,15 @@ export default {
           overlay: token("surface-overlay"),
           sunken: token("surface-sunken"),
         },
+        bubble: {
+          in: token("bubble-in"),
+          out: token("bubble-out"),
+        },
+        "on-bubble": {
+          DEFAULT: token("on-bubble"),
+          muted: token("on-bubble-muted"),
+          accent: token("on-bubble-accent"),
+        },
         line: {
           DEFAULT: token("border"),
           strong: token("border-strong"),
@@ -29,6 +38,7 @@ export default {
         accent: {
           DEFAULT: token("accent"),
           hover: token("accent-hover"),
+          strong: token("accent-strong"),
           soft: token("accent-soft"),
           contrast: token("accent-contrast"),
         },

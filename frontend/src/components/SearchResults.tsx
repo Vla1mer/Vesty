@@ -66,7 +66,7 @@ export function SearchResults({ query, chats }: Props) {
               <Link
                 key={chat.id}
                 to={`/chats/${chat.id}`}
-                className="block rounded-lg border border-line bg-surface-raised p-3 hover:bg-surface-overlay hover:border-accent transition"
+                className="block rounded-lg border border-line bg-surface-raised p-3 hover:bg-surface-overlay hover:border-accent-strong transition"
               >
                 <h3 className="text-content font-medium">
                   {getChatDisplayName(chat)}
@@ -88,7 +88,7 @@ export function SearchResults({ query, chats }: Props) {
                 key={u.id}
                 type="button"
                 onClick={() => navigate(`/chats/new/${u.id}`)}
-                className="w-full flex items-center justify-between p-3 rounded-lg border border-line bg-surface-raised hover:bg-surface-overlay hover:border-accent transition text-left"
+                className="w-full flex items-center justify-between p-3 rounded-lg border border-line bg-surface-raised hover:bg-surface-overlay hover:border-accent-strong transition text-left"
               >
                 <div>
                   <p className="text-content font-medium">{u.userName}</p>
@@ -98,7 +98,7 @@ export function SearchResults({ query, chats }: Props) {
                     </p>
                   )}
                 </div>
-                <span className="text-xs text-accent">💬 Message</span>
+                <span className="text-xs text-accent-strong">💬 Message</span>
               </button>
             ))}
           </div>

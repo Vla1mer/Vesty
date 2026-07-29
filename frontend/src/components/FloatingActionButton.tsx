@@ -34,18 +34,18 @@ export function FloatingActionButton({ actions }: Props) {
         type="button"
         onClick={() => setIsOpen(true)}
         aria-label="New chat"
-        className="absolute right-4 bottom-20 z-30 w-14 h-14 shadow-xl text-2xl rounded-full bg-accent hover:bg-accent-hover text-accent-contrast flex items-center justify-center transition md:static md:shrink-0 md:w-9 md:h-9 md:shadow-none md:text-lg"
+        className="absolute right-4 bottom-20 z-30 w-14 h-14 shadow-float text-2xl rounded-full bg-accent hover:bg-accent-hover text-accent-contrast flex items-center justify-center transition md:static md:shrink-0 md:w-9 md:h-9 md:shadow-none md:text-lg"
       >
         💬
       </button>
 
       {isOpen && (
         <div
-          className="fixed inset-0 bg-scrim bg-opacity-60 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-scrim/70 flex items-center justify-center z-50 p-4"
           onClick={() => setIsOpen(false)}
         >
           <div
-            className="bg-surface-raised border border-line rounded-xl p-6 w-full max-w-sm space-y-4"
+            className="bg-surface border border-line rounded-card shadow-modal p-6 w-full max-w-sm space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
@@ -66,7 +66,7 @@ export function FloatingActionButton({ actions }: Props) {
                   key={idx}
                   type="button"
                   onClick={() => handleActionClick(action)}
-                  className="w-full flex items-center gap-4 p-4 rounded-lg bg-surface hover:bg-surface-overlay border border-line hover:border-accent transition text-left"
+                  className="w-full flex items-center gap-4 p-4 rounded-lg bg-surface hover:bg-surface-overlay border border-line hover:border-accent-strong transition text-left"
                 >
                   <span className="text-3xl">{action.icon}</span>
                   <div className="flex-1">

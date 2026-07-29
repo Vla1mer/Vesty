@@ -41,7 +41,7 @@ export function FormField({
           } rounded bg-surface border text-content focus:outline-none ${
             showError
               ? "border-danger focus:border-danger"
-              : "border-line-strong focus:border-accent"
+              : "border-line-strong focus:border-accent-strong"
           }`}
         />
         {isPassword && (

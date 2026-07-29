@@ -36,11 +36,11 @@ export function ConfirmDialog({
 
   return (
     <div
-      className="fixed inset-0 bg-scrim bg-opacity-60 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-scrim/70 flex items-center justify-center z-50 p-4"
       onClick={loading ? undefined : onCancel}
     >
       <div
-        className="bg-surface-raised border border-line rounded-xl p-6 w-full max-w-sm space-y-4"
+        className="bg-surface border border-line rounded-card shadow-modal p-6 w-full max-w-sm space-y-4"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-xl font-bold text-content">{title}</h2>

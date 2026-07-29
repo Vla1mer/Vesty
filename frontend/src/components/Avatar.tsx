@@ -16,7 +16,7 @@ const PALETTE = [
 const SIZES = {
   sm: "w-7 h-7 text-[11px]",
   md: "w-10 h-10 text-sm",
-  lg: "w-14 h-14 text-lg",
+  lg: "w-12 h-12 text-base",
   xl: "w-24 h-24 text-3xl",
 } as const;
 
@@ -48,7 +48,7 @@ function AvatarView({
   className,
 }: AvatarViewProps) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
-  const base = `${SIZES[size]} shrink-0 rounded-full overflow-hidden select-none ${className}`;
+  const base = `${SIZES[size]} shrink-0 rounded-full overflow-hidden select-none ring-1 ring-line-strong/60 ${className}`;
 
   if (src && src !== failedSrc) {
     return (
@@ -56,7 +56,7 @@ function AvatarView({
         src={src}
         alt={alt}
         onError={() => setFailedSrc(src)}
-        className={`${base} object-cover bg-surface-overlay`}
+        className={`${base} object-cover bg-surface-raised`}
       />
     );
   }
@@ -64,7 +64,7 @@ function AvatarView({
   return (
     <div
       aria-label={alt}
-      className={`${base} ${fallbackColor} flex items-center justify-center font-semibold text-accent-contrast`}
+      className={`${base} ${fallbackColor} flex items-center justify-center font-semibold text-slate-900`}
     >
       {fallbackText}
     </div>
@@ -132,7 +132,7 @@ export function ChatAvatar({
           : undefined
       }
       fallbackText={(name.charAt(0) || "#").toUpperCase()}
-      fallbackColor="bg-surface-overlay !text-content"
+      fallbackColor="bg-surface-raised !text-content-muted"
       alt={name}
       size={size}
       className={className}

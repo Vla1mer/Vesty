@@ -70,13 +70,13 @@ export function ChatsPage() {
             type="button"
             onClick={() => setIsMenuOpen(true)}
             aria-label="Menu"
-            className="hidden md:block text-2xl leading-none text-content-muted hover:text-accent transition"
+            className="hidden md:block text-2xl leading-none text-content-muted hover:text-accent-strong transition"
           >
             ☰
           </button>
           <div className="min-w-0">
             <h1 className="text-xl font-bold text-content truncate">
-              <span className="text-accent">Vesty</span>
+              <span className="text-accent-strong">Vesty</span>
             </h1>
             {userName && (
               <p className="text-xs text-content-muted truncate">{userName}</p>
@@ -145,7 +145,7 @@ export function ChatsPage() {
         }`}
       >
         <div
-          className={`absolute inset-0 bg-scrim/60 transition-opacity ${
+          className={`absolute inset-0 bg-scrim/70 transition-opacity ${
             isMenuOpen ? "opacity-100" : "opacity-0"
           }`}
           onClick={() => setIsMenuOpen(false)}
