@@ -54,11 +54,13 @@ namespace Services
 
             var replyTo = await GetReplyTargetOrThrowAsync(message.ChatId, message.ReplyToMessageId);
             var reactions = await _repository.Reaction.GetByMessageIdsAsync(new[] { message.Id });
+            var attachments = await _repository.Attachment.GetByMessageIdsAsync(new[] { message.Id });
 
             return _mapper.Map<MessageDto>(message) with
             {
                 ReplyTo = ToReplyDto(replyTo),
-                Reactions = ReactionMapper.Group(reactions)
+                Reactions = ReactionMapper.Group(reactions),
+                Attachments = attachments.Select(AttachmentService.ToDto).ToList()
             };
         }
 
@@ -103,6 +105,7 @@ namespace Services
                 throw new EmptyMessageException();
 
             var replyTo = await GetReplyTargetOrThrowAsync(chatId, replyToMessageId);
+            var attachments = await _attachments.ReserveAsync(attachmentIds ?? []);
 
             var message = new Message
             {
@@ -113,10 +116,13 @@ namespace Services
             _repository.Message.CreateMessageForChat(chatId, message);
             await _repository.SaveAsync();
 
-            var attachments = await _attachments.ClaimForMessageAsync(
-                attachmentIds ?? [], message.Id);
-            if (attachments.Any())
+            if (attachments.Count > 0)
+            {
+                foreach (var attachment in attachments)
+                    attachment.MessageId = message.Id;
+
                 await _repository.SaveAsync();
+            }
 
             var messageDto = _mapper.Map<MessageDto>(message) with
             {
@@ -139,6 +145,9 @@ namespace Services
         {
             var message = await GetMessageOrThrowAsync(id, trackChanges: false);
             await EnsureCallerCanModerateMessage(message);
+
+            await _attachments.DeleteForMessageAsync(message.Id);
+
             _repository.Message.DeleteMessage(message);
             await _repository.SaveAsync();
 
@@ -161,12 +170,15 @@ namespace Services
 
             var replyTo = await GetReplyTargetOrThrowAsync(chatId, message.ReplyToMessageId);
             var reactions = await _repository.Reaction.GetByMessageIdsAsync(new[] { message.Id });
+            var attachments = await _repository.Attachment.GetByMessageIdsAsync(new[] { message.Id });
 
             var messageDto = _mapper.Map<MessageDto>(message) with
             {
+                Content = content,
                 UserName = _currentUser.UserName,
                 ReplyTo = ToReplyDto(replyTo),
-                Reactions = ReactionMapper.Group(reactions)
+                Reactions = ReactionMapper.Group(reactions),
+                Attachments = attachments.Select(AttachmentService.ToDto).ToList()
             };
             await _notifier.MessageUpdatedAsync(await GetMemberIdsAsync(chatId), messageDto);
         }

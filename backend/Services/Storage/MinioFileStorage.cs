@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using Minio;
 using Minio.DataModel.Args;
 using Services.Cryptography;
@@ -74,10 +74,21 @@ namespace Services.Storage
             var exists = await _client.BucketExistsAsync(
                 new BucketExistsArgs().WithBucket(_bucket), cancellationToken);
 
-            if (!exists)
+            if (exists)
+                return;
+
+            try
             {
                 await _client.MakeBucketAsync(
                     new MakeBucketArgs().WithBucket(_bucket), cancellationToken);
+            }
+            catch (Exception)
+            {
+                var createdConcurrently = await _client.BucketExistsAsync(
+                    new BucketExistsArgs().WithBucket(_bucket), cancellationToken);
+
+                if (!createdConcurrently)
+                    throw;
             }
         }
     }

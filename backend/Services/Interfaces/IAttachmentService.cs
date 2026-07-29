@@ -8,7 +8,8 @@ namespace Services.Interfaces
         Task<MessageAttachmentDto> UploadAsync(int chatId, Stream content, string? fileName,
             string? contentType, long length);
         Task<(byte[] content, string contentType, string fileName)> DownloadAsync(int attachmentId);
-        Task<IEnumerable<MessageAttachment>> ClaimForMessageAsync(IEnumerable<int> attachmentIds, int messageId);
+        Task<IReadOnlyList<MessageAttachment>> ReserveAsync(IEnumerable<int> attachmentIds);
+        Task DeleteForMessageAsync(int messageId);
         Task DeleteUnclaimedAsync(int attachmentId);
         Task<int> RemoveAbandonedAsync(TimeSpan olderThan);
     }

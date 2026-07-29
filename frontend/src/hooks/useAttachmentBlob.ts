@@ -11,6 +11,9 @@ export function useAttachmentBlob(id: number, enabled: boolean) {
     let objectUrl: string | null = null;
     let cancelled = false;
 
+    setUrl(null);
+    setFailed(false);
+
     fetchAttachmentBlob(id)
       .then((blob) => {
         if (cancelled) return;

@@ -69,8 +69,7 @@ namespace Services
             return (data, attachment.ContentType, attachment.FileName);
         }
 
-        public async Task<IEnumerable<MessageAttachment>> ClaimForMessageAsync(
-            IEnumerable<int> attachmentIds, int messageId)
+        public async Task<IReadOnlyList<MessageAttachment>> ReserveAsync(IEnumerable<int> attachmentIds)
         {
             var ids = attachmentIds.Distinct().ToList();
             if (ids.Count == 0)
@@ -89,11 +88,25 @@ namespace Services
             {
                 if (attachment.UserId != _currentUser.UserId || attachment.MessageId is not null)
                     throw new InvalidAttachmentException("attachment is not available.");
-
-                attachment.MessageId = messageId;
             }
 
             return attachments;
+        }
+
+        public async Task DeleteForMessageAsync(int messageId)
+        {
+            var attachments = await _repository.Attachment.GetByMessageIdsAsync(new[] { messageId });
+
+            foreach (var attachment in attachments)
+            {
+                try
+                {
+                    await _storage.DeleteAsync(attachment.StorageKey);
+                }
+                catch (Exception)
+                {
+                }
+            }
         }
 
         public async Task DeleteUnclaimedAsync(int attachmentId)

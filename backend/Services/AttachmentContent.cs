@@ -1,4 +1,4 @@
-using Shared.Exceptions;
+﻿using Shared.Exceptions;
 
 namespace Services
 {
@@ -28,13 +28,19 @@ namespace Services
         public static async Task<byte[]> ReadAsync(Stream content)
         {
             using var buffer = new MemoryStream();
-            await content.CopyToAsync(buffer);
-            var data = buffer.ToArray();
+            var chunk = new byte[81920];
+            int read;
 
-            if (data.Length > MaxSizeInBytes)
-                throw new InvalidAttachmentException($"maximum size is {MaxSizeInBytes / (1024 * 1024)} MB.");
+            while ((read = await content.ReadAsync(chunk)) > 0)
+            {
+                if (buffer.Length + read > MaxSizeInBytes)
+                    throw new InvalidAttachmentException(
+                        $"maximum size is {MaxSizeInBytes / (1024 * 1024)} MB.");
 
-            return data;
+                await buffer.WriteAsync(chunk.AsMemory(0, read));
+            }
+
+            return buffer.ToArray();
         }
     }
 }

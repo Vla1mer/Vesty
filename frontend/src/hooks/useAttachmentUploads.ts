@@ -21,6 +21,7 @@ export interface PendingUpload {
 export function useAttachmentUploads(chatId: number) {
   const [uploads, setUploads] = useState<PendingUpload[]>([]);
   const controllers = useRef(new Map<string, AbortController>());
+  const discarded = useRef(new Set<string>());
 
   const update = useCallback(
     (localId: string, patch: Partial<PendingUpload>) =>
@@ -31,6 +32,7 @@ export function useAttachmentUploads(chatId: number) {
   );
 
   const remove = useCallback((localId: string) => {
+    if (controllers.current.has(localId)) discarded.current.add(localId);
     controllers.current.get(localId)?.abort();
     controllers.current.delete(localId);
     setUploads((prev) => {
@@ -42,6 +44,9 @@ export function useAttachmentUploads(chatId: number) {
   }, []);
 
   const clear = useCallback((discardUploaded = false) => {
+    if (discardUploaded) {
+      controllers.current.forEach((_, localId) => discarded.current.add(localId));
+    }
     controllers.current.forEach((controller) => controller.abort());
     controllers.current.clear();
     setUploads((prev) => {
@@ -75,7 +80,14 @@ export function useAttachmentUploads(chatId: number) {
               (progress) => update(localId, { progress }),
               controller.signal
             )
-              .then((attachment) => update(localId, { attachment, progress: 100 }))
+              .then((attachment) => {
+                if (discarded.current.has(localId)) {
+                  discarded.current.delete(localId);
+                  void deleteAttachment(attachment.id).catch(() => {});
+                  return;
+                }
+                update(localId, { attachment, progress: 100 });
+              })
               .catch((error) => {
                 if (controller.signal.aborted) return;
                 update(localId, { error: "Upload failed", progress: 0 });

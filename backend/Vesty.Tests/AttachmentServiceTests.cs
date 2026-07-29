@@ -154,63 +154,77 @@ namespace Vesty.Tests
         }
 
         [Fact]
-        public async Task ClaimForMessageAsync_WithNoIds_ReturnsEmpty()
+        public async Task ReserveAsync_WithNoIds_ReturnsEmpty()
         {
-            Assert.Empty(await _service.ClaimForMessageAsync([], 1));
+            Assert.Empty(await _service.ReserveAsync([]));
         }
 
         [Fact]
-        public async Task ClaimForMessageAsync_WhenTooMany_Throws()
+        public async Task ReserveAsync_WhenTooMany_Throws()
         {
             var ids = Enumerable.Range(1, 11).ToList();
 
             await Assert.ThrowsAsync<InvalidAttachmentException>(() =>
-                _service.ClaimForMessageAsync(ids, 1));
+                _service.ReserveAsync(ids));
         }
 
         [Fact]
-        public async Task ClaimForMessageAsync_WhenSomeMissing_Throws()
+        public async Task ReserveAsync_WhenSomeMissing_Throws()
         {
             _attachments.Setup(r => r.GetByIdsAsync(It.IsAny<IEnumerable<int>>(), true))
                 .ReturnsAsync([new MessageAttachment { Id = 1, UserId = CurrentUserId }]);
 
             await Assert.ThrowsAsync<InvalidAttachmentException>(() =>
-                _service.ClaimForMessageAsync([1, 2], 5));
+                _service.ReserveAsync([1, 2]));
         }
 
         [Fact]
-        public async Task ClaimForMessageAsync_ForAnotherUsersAttachment_Throws()
+        public async Task ReserveAsync_ForAnotherUsersAttachment_Throws()
         {
             _attachments.Setup(r => r.GetByIdsAsync(It.IsAny<IEnumerable<int>>(), true))
                 .ReturnsAsync([new MessageAttachment { Id = 1, UserId = OtherUserId }]);
 
             await Assert.ThrowsAsync<InvalidAttachmentException>(() =>
-                _service.ClaimForMessageAsync([1], 5));
+                _service.ReserveAsync([1]));
         }
 
         [Fact]
-        public async Task ClaimForMessageAsync_ForAlreadyAttachedFile_Throws()
+        public async Task ReserveAsync_ForAlreadyAttachedFile_Throws()
         {
             _attachments.Setup(r => r.GetByIdsAsync(It.IsAny<IEnumerable<int>>(), true))
                 .ReturnsAsync([new MessageAttachment { Id = 1, UserId = CurrentUserId, MessageId = 3 }]);
 
             await Assert.ThrowsAsync<InvalidAttachmentException>(() =>
-                _service.ClaimForMessageAsync([1], 5));
+                _service.ReserveAsync([1]));
         }
 
         [Fact]
-        public async Task ClaimForMessageAsync_LinksAttachmentsToMessage()
+        public async Task ReserveAsync_ReturnsOwnedUnsentAttachments()
         {
             var first = new MessageAttachment { Id = 1, UserId = CurrentUserId };
             var second = new MessageAttachment { Id = 2, UserId = CurrentUserId };
             _attachments.Setup(r => r.GetByIdsAsync(It.IsAny<IEnumerable<int>>(), true))
                 .ReturnsAsync([first, second]);
 
-            var claimed = await _service.ClaimForMessageAsync([1, 2], 5);
+            var reserved = await _service.ReserveAsync([1, 2]);
 
-            Assert.Equal(2, claimed.Count());
-            Assert.Equal(5, first.MessageId);
-            Assert.Equal(5, second.MessageId);
+            Assert.Equal(2, reserved.Count);
+            Assert.All(reserved, a => Assert.Null(a.MessageId));
+        }
+
+        [Fact]
+        public async Task DeleteForMessageAsync_RemovesStoredObjects()
+        {
+            _attachments.Setup(r => r.GetByMessageIdsAsync(It.IsAny<IEnumerable<int>>()))
+                .ReturnsAsync([
+                    new MessageAttachment { Id = 1, StorageKey = "a" },
+                    new MessageAttachment { Id = 2, StorageKey = "b" }
+                ]);
+
+            await _service.DeleteForMessageAsync(7);
+
+            _storage.Verify(s => s.DeleteAsync("a", It.IsAny<CancellationToken>()), Times.Once);
+            _storage.Verify(s => s.DeleteAsync("b", It.IsAny<CancellationToken>()), Times.Once);
         }
     }
 }
