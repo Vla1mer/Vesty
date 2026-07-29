@@ -8,7 +8,7 @@ namespace Vesty.Tests
     {
         private const string ValidKey = "dmVzdHktdW5pdC10ZXN0LWtleS0wMDAwMDAwMDAwMDE=";
 
-        private static AesGcmMessageCipher CipherWith(string? key)
+        private static AesGcmCipher CipherWith(string? key)
         {
             var configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(new Dictionary<string, string?>
@@ -17,10 +17,10 @@ namespace Vesty.Tests
                 })
                 .Build();
 
-            return new AesGcmMessageCipher(configuration);
+            return new AesGcmCipher(configuration);
         }
 
-        private static AesGcmMessageCipher Cipher() => CipherWith(ValidKey);
+        private static AesGcmCipher Cipher() => CipherWith(ValidKey);
 
         [Theory]
         [InlineData("Hello")]
