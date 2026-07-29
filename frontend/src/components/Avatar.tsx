@@ -56,7 +56,7 @@ function AvatarView({
         src={src}
         alt={alt}
         onError={() => setFailedSrc(src)}
-        className={`${base} object-cover bg-slate-700`}
+        className={`${base} object-cover bg-surface-overlay`}
       />
     );
   }
@@ -64,7 +64,7 @@ function AvatarView({
   return (
     <div
       aria-label={alt}
-      className={`${base} ${fallbackColor} flex items-center justify-center font-semibold text-slate-900`}
+      className={`${base} ${fallbackColor} flex items-center justify-center font-semibold text-accent-contrast`}
     >
       {fallbackText}
     </div>
@@ -132,7 +132,7 @@ export function ChatAvatar({
           : undefined
       }
       fallbackText={(name.charAt(0) || "#").toUpperCase()}
-      fallbackColor="bg-slate-700 !text-slate-200"
+      fallbackColor="bg-surface-overlay !text-content"
       alt={name}
       size={size}
       className={className}

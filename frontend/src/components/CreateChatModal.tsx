@@ -81,21 +81,21 @@ export function CreateChatModal({ onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-scrim bg-opacity-60 flex items-center justify-center z-50 p-4"
       onClick={onClose}
     >
       <div
-        className="bg-slate-800 border border-slate-700 rounded-xl p-6 w-full max-w-sm max-h-[85vh] flex flex-col"
+        className="bg-surface-raised border border-line rounded-xl p-6 w-full max-w-sm max-h-[85vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-slate-100">
+          <h2 className="text-xl font-bold text-content">
             {step === 1 ? "New group chat" : "Add members"}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-100 text-2xl leading-none"
+            className="text-content-muted hover:text-content text-2xl leading-none"
             aria-label="Close"
           >
             ×
@@ -105,7 +105,7 @@ export function CreateChatModal({ onClose }: Props) {
         {step === 1 ? (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm text-slate-300 mb-1">
+              <label className="block text-sm text-content-muted mb-1">
                 Chat name
               </label>
               <input
@@ -117,14 +117,14 @@ export function CreateChatModal({ onClose }: Props) {
                 }}
                 autoFocus
                 maxLength={200}
-                className={`w-full px-3 py-2 rounded bg-slate-900 border text-slate-100 focus:outline-none ${
+                className={`w-full px-3 py-2 rounded bg-surface border text-content focus:outline-none ${
                   nameError
-                    ? "border-red-500 focus:border-red-500"
-                    : "border-slate-600 focus:border-amber-500"
+                    ? "border-danger focus:border-danger"
+                    : "border-line-strong focus:border-accent"
                 }`}
               />
               {nameError && (
-                <p className="text-xs text-red-400 mt-1">{nameError}</p>
+                <p className="text-xs text-danger mt-1">{nameError}</p>
               )}
             </div>
 
@@ -132,14 +132,14 @@ export function CreateChatModal({ onClose }: Props) {
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-slate-100 transition"
+                className="px-4 py-2 rounded bg-surface-overlay hover:bg-line-strong text-content transition"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleNext}
-                className="px-4 py-2 rounded bg-amber-600 hover:bg-amber-500 text-white font-medium transition"
+                className="px-4 py-2 rounded bg-accent hover:bg-accent-hover text-accent-contrast font-medium transition"
               >
                 Next
               </button>
@@ -147,8 +147,8 @@ export function CreateChatModal({ onClose }: Props) {
           </div>
         ) : (
           <div className="flex flex-col gap-4 min-h-0">
-            <p className="text-sm text-slate-400">
-              Add people to <span className="text-slate-200">{name.trim()}</span>{" "}
+            <p className="text-sm text-content-muted">
+              Add people to <span className="text-content">{name.trim()}</span>{" "}
               — or skip and add them later.
             </p>
 
@@ -157,13 +157,13 @@ export function CreateChatModal({ onClose }: Props) {
                 {selected.map((u) => (
                   <span
                     key={u.id}
-                    className="flex items-center gap-1 px-2 py-1 rounded bg-slate-700 text-slate-100 text-sm"
+                    className="flex items-center gap-1 px-2 py-1 rounded bg-surface-overlay text-content text-sm"
                   >
                     {u.userName}
                     <button
                       type="button"
                       onClick={() => removeUser(u.id)}
-                      className="text-slate-400 hover:text-slate-100"
+                      className="text-content-muted hover:text-content"
                       aria-label={`Remove ${u.userName}`}
                     >
                       ×
@@ -179,17 +179,17 @@ export function CreateChatModal({ onClose }: Props) {
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by username..."
               autoFocus
-              className="w-full px-3 py-2 rounded bg-slate-900 border border-slate-600 text-slate-100 text-sm focus:outline-none focus:border-amber-500"
+              className="w-full px-3 py-2 rounded bg-surface border border-line-strong text-content text-sm focus:outline-none focus:border-accent"
             />
 
             {search.trim().length > 0 && (
               <div className="max-h-40 overflow-y-auto">
                 {isFetching ? (
-                  <p className="text-sm text-slate-500 py-2 text-center">
+                  <p className="text-sm text-content-subtle py-2 text-center">
                     Searching...
                   </p>
                 ) : candidates.length === 0 ? (
-                  <p className="text-sm text-slate-500 py-2 text-center">
+                  <p className="text-sm text-content-subtle py-2 text-center">
                     No users match your search
                   </p>
                 ) : (
@@ -197,14 +197,14 @@ export function CreateChatModal({ onClose }: Props) {
                     {candidates.map((u) => (
                       <li
                         key={u.id}
-                        className="flex items-center justify-between rounded bg-slate-900 px-3 py-2"
+                        className="flex items-center justify-between rounded bg-surface px-3 py-2"
                       >
                         <div className="min-w-0">
-                          <p className="text-slate-100 text-sm truncate">
+                          <p className="text-content text-sm truncate">
                             {u.userName}
                           </p>
                           {(u.name || u.surname) && (
-                            <p className="text-xs text-slate-400 truncate">
+                            <p className="text-xs text-content-muted truncate">
                               {[u.name, u.surname].filter(Boolean).join(" ")}
                             </p>
                           )}
@@ -212,7 +212,7 @@ export function CreateChatModal({ onClose }: Props) {
                         <button
                           type="button"
                           onClick={() => addUser(u)}
-                          className="text-xs px-2 py-1 rounded bg-amber-600 hover:bg-amber-500 text-white transition"
+                          className="text-xs px-2 py-1 rounded bg-accent hover:bg-accent-hover text-accent-contrast transition"
                         >
                           + Add
                         </button>
@@ -230,7 +230,7 @@ export function CreateChatModal({ onClose }: Props) {
                 type="button"
                 onClick={() => setStep(1)}
                 disabled={creating}
-                className="px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-slate-100 transition disabled:opacity-50"
+                className="px-4 py-2 rounded bg-surface-overlay hover:bg-line-strong text-content transition disabled:opacity-50"
               >
                 Back
               </button>
@@ -238,7 +238,7 @@ export function CreateChatModal({ onClose }: Props) {
                 type="button"
                 onClick={handleCreate}
                 disabled={creating}
-                className="px-4 py-2 rounded bg-amber-600 hover:bg-amber-500 text-white disabled:bg-slate-700 disabled:cursor-not-allowed font-medium transition"
+                className="px-4 py-2 rounded bg-accent hover:bg-accent-hover text-accent-contrast disabled:bg-surface-overlay disabled:cursor-not-allowed font-medium transition"
               >
                 {creating ? "Creating..." : "Create"}
               </button>

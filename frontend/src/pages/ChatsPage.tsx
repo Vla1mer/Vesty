@@ -63,23 +63,23 @@ export function ChatsPage() {
   const isSearching = searchQuery.trim().length > 0;
 
   return (
-    <div className="relative flex-1 min-h-0 flex flex-col bg-slate-900">
-      <header className="flex items-center justify-between gap-2 p-4 border-b border-slate-700">
+    <div className="relative flex-1 min-h-0 flex flex-col bg-surface">
+      <header className="flex items-center justify-between gap-2 p-4 border-b border-line">
         <div className="flex items-center gap-3 min-w-0">
           <button
             type="button"
             onClick={() => setIsMenuOpen(true)}
             aria-label="Menu"
-            className="hidden md:block text-2xl leading-none text-slate-300 hover:text-amber-400 transition"
+            className="hidden md:block text-2xl leading-none text-content-muted hover:text-accent transition"
           >
             ☰
           </button>
           <div className="min-w-0">
-            <h1 className="text-xl font-bold text-slate-100 truncate">
-              <span className="text-amber-400">Vesty</span>
+            <h1 className="text-xl font-bold text-content truncate">
+              <span className="text-accent">Vesty</span>
             </h1>
             {userName && (
-              <p className="text-xs text-slate-400 truncate">{userName}</p>
+              <p className="text-xs text-content-muted truncate">{userName}</p>
             )}
           </div>
         </div>
@@ -107,10 +107,10 @@ export function ChatsPage() {
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto pb-20 md:pb-4 scrollbar-none">
-        {isLoading && <p className="text-slate-400 px-4">Loading...</p>}
+        {isLoading && <p className="text-content-muted px-4">Loading...</p>}
 
         {isError && (
-          <div className="text-sm text-red-400 bg-red-950 border border-red-900 rounded p-3 mx-4 mb-4">
+          <div className="text-sm text-danger bg-danger-soft border border-danger/40 rounded p-3 mx-4 mb-4">
             Failed to load chats
           </div>
         )}
@@ -122,7 +122,7 @@ export function ChatsPage() {
                 <SearchResults query={searchQuery} chats={chats} />
               </div>
             ) : chats.length === 0 ? (
-              <div className="text-center py-12 text-slate-400 px-4">
+              <div className="text-center py-12 text-content-muted px-4">
                 <p className="text-lg">No chats yet</p>
                 <p className="text-sm mt-2">
                   Tap the 💬 button to start a conversation.
@@ -145,17 +145,17 @@ export function ChatsPage() {
         }`}
       >
         <div
-          className={`absolute inset-0 bg-black/50 transition-opacity ${
+          className={`absolute inset-0 bg-scrim/60 transition-opacity ${
             isMenuOpen ? "opacity-100" : "opacity-0"
           }`}
           onClick={() => setIsMenuOpen(false)}
         />
         <div
-          className={`absolute top-0 left-0 bottom-0 w-72 max-w-[80%] bg-slate-900 border-r border-slate-700 flex flex-col transition-transform duration-200 ${
+          className={`absolute top-0 left-0 bottom-0 w-72 max-w-[80%] bg-surface border-r border-line flex flex-col transition-transform duration-200 ${
             isMenuOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
-          <div className="p-4 border-b border-slate-700 flex items-center gap-3">
+          <div className="p-4 border-b border-line flex items-center gap-3">
             {userId !== null && (
               <Avatar
                 userId={userId}
@@ -166,7 +166,7 @@ export function ChatsPage() {
                 size="lg"
               />
             )}
-            <p className="text-lg font-bold text-slate-100 truncate">
+            <p className="text-lg font-bold text-content truncate">
               {userName ?? "Account"}
             </p>
           </div>
@@ -174,23 +174,23 @@ export function ChatsPage() {
             <button
               type="button"
               onClick={openProfile}
-              className="w-full flex items-center gap-3 px-3 py-3 rounded text-slate-200 hover:bg-slate-800 transition text-left"
+              className="w-full flex items-center gap-3 px-3 py-3 rounded text-content hover:bg-surface-raised transition text-left"
             >
               <span className="text-xl">👤</span> Profile
             </button>
             <button
               type="button"
               onClick={openSettings}
-              className="w-full flex items-center gap-3 px-3 py-3 rounded text-slate-200 hover:bg-slate-800 transition text-left"
+              className="w-full flex items-center gap-3 px-3 py-3 rounded text-content hover:bg-surface-raised transition text-left"
             >
               <span className="text-xl">⚙️</span> Settings
             </button>
           </nav>
-          <div className="p-2 border-t border-slate-700">
+          <div className="p-2 border-t border-line">
             <button
               type="button"
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-3 py-3 rounded text-red-300 hover:bg-slate-800 transition"
+              className="w-full flex items-center gap-3 px-3 py-3 rounded text-danger hover:bg-surface-raised transition"
             >
               <span className="text-xl">🚪</span> Logout
             </button>

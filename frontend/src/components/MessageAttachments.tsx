@@ -30,7 +30,7 @@ function ImageAttachment({
   if (failed) return <FileAttachment attachment={attachment} />;
 
   if (!url) {
-    return <div className="w-44 h-32 rounded bg-slate-800 animate-pulse" />;
+    return <div className="w-44 h-32 rounded bg-surface-raised animate-pulse" />;
   }
 
   return (
@@ -48,7 +48,7 @@ function AudioAttachment({ attachment }: { attachment: MessageAttachmentDto }) {
   const { url, failed } = useAttachmentBlob(attachment.id, true);
 
   if (failed) return <FileAttachment attachment={attachment} />;
-  if (!url) return <div className="w-56 h-10 rounded bg-slate-800 animate-pulse" />;
+  if (!url) return <div className="w-56 h-10 rounded bg-surface-raised animate-pulse" />;
 
   return <audio controls src={url} className="max-w-56" />;
 }
@@ -58,18 +58,18 @@ function FileAttachment({ attachment }: { attachment: MessageAttachmentDto }) {
     <button
       type="button"
       onClick={() => download(attachment)}
-      className="flex items-center gap-2 rounded bg-slate-800/80 hover:bg-slate-800 border border-slate-600 px-3 py-2 text-left transition"
+      className="flex items-center gap-2 rounded bg-surface-raised/80 hover:bg-surface-raised border border-line-strong px-3 py-2 text-left transition"
     >
       <span className="text-xl leading-none">📄</span>
       <span className="min-w-0">
-        <span className="block text-xs text-slate-100 truncate max-w-40">
+        <span className="block text-xs text-content truncate max-w-40">
           {attachment.fileName}
         </span>
-        <span className="block text-[10px] text-slate-400">
+        <span className="block text-[10px] text-content-muted">
           {formatSize(attachment.sizeInBytes)}
         </span>
       </span>
-      <span className="text-slate-400 text-sm">⬇</span>
+      <span className="text-content-muted text-sm">⬇</span>
     </button>
   );
 }
@@ -103,7 +103,7 @@ export function MessageAttachments({ attachments }: MessageAttachmentsProps) {
 
       {lightbox && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-scrim/80 p-4"
           onClick={() => setLightbox(null)}
         >
           <img

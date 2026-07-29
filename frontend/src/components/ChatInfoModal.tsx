@@ -206,11 +206,11 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
   return (
     <>
       <div
-        className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-40 p-4"
+        className="fixed inset-0 bg-scrim bg-opacity-60 flex items-center justify-center z-40 p-4"
         onClick={busyUserId !== null || deleting ? undefined : onClose}
       >
         <div
-          className="bg-slate-800 border border-slate-700 rounded-xl p-6 w-full max-w-md max-h-[85vh] flex flex-col"
+          className="bg-surface-raised border border-line rounded-xl p-6 w-full max-w-md max-h-[85vh] flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-start justify-between mb-4">
@@ -227,14 +227,14 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                       if (e.key === "Enter") handleRename();
                       if (e.key === "Escape") setIsRenaming(false);
                     }}
-                    className="text-xl font-bold bg-slate-900 border border-slate-600 rounded px-2 py-1 text-slate-100 focus:outline-none focus:border-amber-500"
+                    className="text-xl font-bold bg-surface border border-line-strong rounded px-2 py-1 text-content focus:outline-none focus:border-accent"
                   />
                   <div className="flex gap-2">
                     <button
                       type="button"
                       onClick={handleRename}
                       disabled={renaming || !nameDraft.trim()}
-                      className="text-xs px-3 py-1 rounded bg-amber-600 hover:bg-amber-500 text-white disabled:opacity-50"
+                      className="text-xs px-3 py-1 rounded bg-accent hover:bg-accent-hover text-accent-contrast disabled:opacity-50"
                     >
                       {renaming ? "..." : "Save"}
                     </button>
@@ -242,7 +242,7 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                       type="button"
                       onClick={() => setIsRenaming(false)}
                       disabled={renaming}
-                      className="text-xs px-3 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-100 disabled:opacity-50"
+                      className="text-xs px-3 py-1 rounded bg-surface-overlay hover:bg-line-strong text-content disabled:opacity-50"
                     >
                       Cancel
                     </button>
@@ -250,7 +250,7 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <h2 className="text-2xl font-bold text-slate-100 break-words">
+                  <h2 className="text-2xl font-bold text-content break-words">
                     {title}
                   </h2>
                   {canRename && (
@@ -260,7 +260,7 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                         setNameDraft(chat.name ?? "");
                         setIsRenaming(true);
                       }}
-                      className="text-slate-400 hover:text-amber-400 transition text-sm"
+                      className="text-content-muted hover:text-accent transition text-sm"
                       aria-label="Rename chat"
                       title="Rename chat"
                     >
@@ -270,7 +270,7 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                 </div>
               )}
               {!isRenaming && (
-                <p className="text-sm text-slate-400 mt-1">
+                <p className="text-sm text-content-muted mt-1">
                   {loading ? "Loading..." : `Members (${members.length})`}
                 </p>
               )}
@@ -288,7 +288,7 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
               type="button"
               onClick={onClose}
               disabled={busyUserId !== null || deleting}
-              className="text-slate-400 hover:text-slate-100 text-2xl leading-none disabled:opacity-50"
+              className="text-content-muted hover:text-content text-2xl leading-none disabled:opacity-50"
               aria-label="Close"
             >
               ×
@@ -296,27 +296,27 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
           </div>
 
           {(error || membersError) && (
-            <div className="text-sm text-red-400 bg-red-950 border border-red-900 rounded p-2 mb-3">
+            <div className="text-sm text-danger bg-danger-soft border border-danger/40 rounded p-2 mb-3">
               {error ?? "Failed to load chat info"}
             </div>
           )}
 
           {loading ? (
-            <p className="text-slate-400 text-center py-8">Loading...</p>
+            <p className="text-content-muted text-center py-8">Loading...</p>
           ) : (
             <div className="flex-1 overflow-y-auto space-y-4">
               <section>
-                <h3 className="text-sm font-semibold text-slate-300 mb-2">
+                <h3 className="text-sm font-semibold text-content-muted mb-2">
                   In this chat
                 </h3>
                 {members.length === 0 ? (
-                  <p className="text-sm text-slate-500">No members yet</p>
+                  <p className="text-sm text-content-subtle">No members yet</p>
                 ) : (
                   <ul className="space-y-1">
                     {members.map((m) => (
                       <li
                         key={m.userId}
-                        className="flex items-center justify-between rounded bg-slate-900 px-3 py-2 gap-2"
+                        className="flex items-center justify-between rounded bg-surface px-3 py-2 gap-2"
                       >
                         <div className="min-w-0 flex items-center gap-2.5">
                           <Avatar
@@ -328,16 +328,16 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                             size="sm"
                           />
                           <div className="min-w-0">
-                          <p className="text-slate-100 text-sm truncate">
+                          <p className="text-content text-sm truncate">
                             {m.userName}
                             {m.userId === currentUserId && (
-                              <span className="text-xs text-amber-400 ml-2">
+                              <span className="text-xs text-accent ml-2">
                                 (you)
                               </span>
                             )}
                           </p>
                           {(m.name || m.surname) && (
-                            <p className="text-xs text-slate-400 truncate">
+                            <p className="text-xs text-content-muted truncate">
                               {[m.name, m.surname].filter(Boolean).join(" ")}
                             </p>
                           )}
@@ -349,10 +349,10 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                           <span
                             className={`text-xs px-2 py-0.5 rounded ${
                               m.roleId === UserRole.Owner
-                                ? "bg-amber-900 text-amber-200"
+                                ? "bg-accent-soft text-accent"
                                 : m.roleId === UserRole.Admin
-                                ? "bg-blue-900 text-blue-200"
-                                : "bg-slate-700 text-slate-300"
+                                ? "bg-info-soft text-info"
+                                : "bg-surface-overlay text-content-muted"
                             }`}
                           >
                             {roleLabel[m.roleId]}
@@ -371,7 +371,7 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                                       handleChangeRole(m, UserRole.Admin)
                                     }
                                     disabled={busyUserId !== null}
-                                    className="text-xs px-2 py-0.5 rounded bg-blue-900 hover:bg-blue-800 text-blue-100 disabled:opacity-50 transition"
+                                    className="text-xs px-2 py-0.5 rounded bg-info-soft hover:bg-info/25 text-info disabled:opacity-50 transition"
                                     title="Make admin"
                                   >
                                     ↑ Admin
@@ -383,7 +383,7 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                                       handleChangeRole(m, UserRole.User)
                                     }
                                     disabled={busyUserId !== null}
-                                    className="text-xs px-2 py-0.5 rounded bg-slate-700 hover:bg-slate-600 text-slate-200 disabled:opacity-50 transition"
+                                    className="text-xs px-2 py-0.5 rounded bg-surface-overlay hover:bg-line-strong text-content disabled:opacity-50 transition"
                                     title="Remove admin"
                                   >
                                     ↓ Member
@@ -398,7 +398,7 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                               type="button"
                               onClick={() => handleRemove(m)}
                               disabled={busyUserId !== null}
-                              className="text-xs px-2 py-0.5 rounded bg-red-900 hover:bg-red-800 text-red-100 disabled:opacity-50 transition"
+                              className="text-xs px-2 py-0.5 rounded bg-danger-soft hover:bg-danger/25 text-danger disabled:opacity-50 transition"
                             >
                               {busyUserId === m.userId ? "..." : "✕"}
                             </button>
@@ -412,7 +412,7 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
 
               {isGroup && (
                 <section>
-                  <h3 className="text-sm font-semibold text-slate-300 mb-2">
+                  <h3 className="text-sm font-semibold text-content-muted mb-2">
                     Add a user
                   </h3>
                   <input
@@ -420,14 +420,14 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search by username..."
-                    className="w-full px-3 py-2 rounded bg-slate-900 border border-slate-600 text-slate-100 text-sm focus:outline-none focus:border-amber-500 mb-2"
+                    className="w-full px-3 py-2 rounded bg-surface border border-line-strong text-content text-sm focus:outline-none focus:border-accent mb-2"
                   />
                   {search.trim().length === 0 ? (
-                    <p className="text-sm text-slate-500 py-2 text-center">
+                    <p className="text-sm text-content-subtle py-2 text-center">
                       Start typing to find users
                     </p>
                   ) : filteredCandidates.length === 0 ? (
-                    <p className="text-sm text-slate-500 py-2 text-center">
+                    <p className="text-sm text-content-subtle py-2 text-center">
                       {usersFetching ? "Searching..." : "No users match your search"}
                     </p>
                   ) : (
@@ -435,7 +435,7 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                       {filteredCandidates.map((u) => (
                         <li
                           key={u.id}
-                          className="flex items-center justify-between rounded bg-slate-900 px-3 py-2"
+                          className="flex items-center justify-between rounded bg-surface px-3 py-2"
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
                             <Avatar
@@ -447,11 +447,11 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                               size="sm"
                             />
                             <div className="min-w-0">
-                              <p className="text-slate-100 text-sm truncate">
+                              <p className="text-content text-sm truncate">
                                 {u.userName}
                               </p>
                               {(u.name || u.surname) && (
-                                <p className="text-xs text-slate-400 truncate">
+                                <p className="text-xs text-content-muted truncate">
                                   {[u.name, u.surname].filter(Boolean).join(" ")}
                                 </p>
                               )}
@@ -461,7 +461,7 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                             type="button"
                             onClick={() => handleAdd(u)}
                             disabled={busyUserId !== null}
-                            className="text-xs px-2 py-1 rounded bg-amber-600 hover:bg-amber-500 text-white disabled:opacity-50 transition"
+                            className="text-xs px-2 py-1 rounded bg-accent hover:bg-accent-hover text-accent-contrast disabled:opacity-50 transition"
                           >
                             {busyUserId === u.id ? "..." : "+ Add"}
                           </button>
@@ -473,12 +473,12 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
               )}
 
               {canDelete && (
-                <section className="pt-2 border-t border-slate-700">
+                <section className="pt-2 border-t border-line">
                   <button
                     type="button"
                     onClick={() => setIsDeleteOpen(true)}
                     disabled={busyUserId !== null || deleting}
-                    className="w-full px-4 py-2 rounded bg-red-900 hover:bg-red-800 text-red-100 disabled:opacity-50 transition font-medium"
+                    className="w-full px-4 py-2 rounded bg-danger-soft hover:bg-danger/25 text-danger disabled:opacity-50 transition font-medium"
                   >
                     🗑️ Delete chat
                   </button>

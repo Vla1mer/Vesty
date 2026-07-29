@@ -305,19 +305,19 @@ export function ChatDetailPage() {
       }}
     >
       {isDraggingFile && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center border-2 border-dashed border-amber-500 bg-slate-900/80 pointer-events-none">
-          <p className="text-lg font-medium text-amber-400">Drop files to attach</p>
+        <div className="absolute inset-0 z-30 flex items-center justify-center border-2 border-dashed border-accent bg-surface/80 pointer-events-none">
+          <p className="text-lg font-medium text-accent">Drop files to attach</p>
         </div>
       )}
       <div className="absolute top-0 inset-x-0 overflow-hidden min-h-[88px] z-10">
         <header
-          className={`absolute inset-0 flex items-center gap-4 p-4 border-b border-slate-700 bg-slate-900/80 backdrop-blur transition-transform duration-200 ${
+          className={`absolute inset-0 flex items-center gap-4 p-4 border-b border-line bg-surface/80 backdrop-blur transition-transform duration-200 ${
             selectionMode ? "-translate-y-full" : "translate-y-0"
           }`}
         >
           <button
             onClick={() => navigate("/chats")}
-            className="md:hidden text-slate-400 hover:text-slate-100 text-2xl"
+            className="md:hidden text-content-muted hover:text-content text-2xl"
             aria-label="Back"
           >
             ←
@@ -326,7 +326,7 @@ export function ChatDetailPage() {
             type="button"
             onClick={() => chat && setIsInfoOpen(true)}
             disabled={!chat}
-            className="group flex-1 flex items-center gap-2 text-left rounded px-2 -mx-2 hover:bg-slate-800 transition disabled:cursor-default disabled:hover:bg-transparent"
+            className="group flex-1 flex items-center gap-2 text-left rounded px-2 -mx-2 hover:bg-surface-raised transition disabled:cursor-default disabled:hover:bg-transparent"
           >
             {chat &&
               (isDirectChat(chat) && chat.partnerUserId ? (
@@ -343,15 +343,15 @@ export function ChatDetailPage() {
                 />
               ))}
             <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-bold text-slate-100 truncate">{title}</h1>
+              <h1 className="text-xl font-bold text-content truncate">{title}</h1>
               {chat &&
                 (typingNames.length > 0 ? (
-                  <p className="text-xs text-amber-400 italic">
+                  <p className="text-xs text-accent italic">
                     {typingText(typingNames)}
                     <span className="typing-dots" />
                   </p>
                 ) : !chat.isPrivate ? (
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-content-muted">
                     {members.length > 0
                       ? `${members.length} ${members.length === 1 ? "member" : "members"}`
                       : "Loading..."}
@@ -360,7 +360,7 @@ export function ChatDetailPage() {
             </div>
             {chat && (
               <span
-                className="text-slate-500 group-hover:text-amber-400 transition text-3xl leading-none"
+                className="text-content-subtle group-hover:text-accent transition text-3xl leading-none"
                 aria-hidden="true"
               >
                 ›
@@ -370,18 +370,18 @@ export function ChatDetailPage() {
         </header>
 
         <header
-          className={`absolute inset-0 flex items-center gap-4 p-4 border-b border-slate-700 bg-slate-900/80 backdrop-blur transition-transform duration-200 ${
+          className={`absolute inset-0 flex items-center gap-4 p-4 border-b border-line bg-surface/80 backdrop-blur transition-transform duration-200 ${
             selectionMode ? "translate-y-0" : "-translate-y-full"
           }`}
         >
           <button
             onClick={clearSelection}
-            className="text-slate-400 hover:text-slate-100 text-2xl leading-none"
+            className="text-content-muted hover:text-content text-2xl leading-none"
             aria-label="Cancel selection"
           >
             ✕
           </button>
-          <span className="flex-1 font-semibold text-slate-100">
+          <span className="flex-1 font-semibold text-content">
             {selectedIds.size} selected
           </span>
           <div className="flex items-center gap-4 text-xl">
@@ -410,16 +410,16 @@ export function ChatDetailPage() {
         <button
           type="button"
           onClick={showNextPinned}
-          className="absolute top-[88px] inset-x-0 z-10 flex items-center gap-3 px-4 py-2 border-b border-slate-700 bg-slate-900/95 backdrop-blur text-left hover:bg-slate-800 transition"
+          className="absolute top-[88px] inset-x-0 z-10 flex items-center gap-3 px-4 py-2 border-b border-line bg-surface/95 backdrop-blur text-left hover:bg-surface-raised transition"
         >
-          <span className="text-amber-400 leading-none">📌</span>
-          <div className="min-w-0 flex-1 border-l-2 border-amber-500 pl-3">
-            <p className="text-xs font-medium text-amber-400">
+          <span className="text-accent leading-none">📌</span>
+          <div className="min-w-0 flex-1 border-l-2 border-accent pl-3">
+            <p className="text-xs font-medium text-accent">
               {pinnedMessages.length > 1
                 ? `Pinned message ${(pinnedIndex % pinnedMessages.length) + 1} of ${pinnedMessages.length}`
                 : "Pinned message"}
             </p>
-            <p className="text-sm text-slate-300 truncate">
+            <p className="text-sm text-content-muted truncate">
               {activePinned.content}
             </p>
           </div>
@@ -433,11 +433,11 @@ export function ChatDetailPage() {
       >
         <div className="mt-auto space-y-3">
         {(chatLoading || messagesLoading) && (
-          <p className="text-slate-400 text-center">Loading...</p>
+          <p className="text-content-muted text-center">Loading...</p>
         )}
 
         {(loadError || actionError || messagesError) && (
-          <div className="text-sm text-red-400 bg-red-950 border border-red-900 rounded p-3">
+          <div className="text-sm text-danger bg-danger-soft border border-danger/40 rounded p-3">
             {loadError ?? actionError ?? "Failed to load messages"}
           </div>
         )}
@@ -448,7 +448,7 @@ export function ChatDetailPage() {
           !actionError &&
           !messagesError &&
           messages.length === 0 && (
-            <div className="text-center py-12 text-slate-400">
+            <div className="text-center py-12 text-content-muted">
               <p>No messages yet. Be the first to write something!</p>
             </div>
           )}
@@ -461,7 +461,7 @@ export function ChatDetailPage() {
             <Fragment key={msg.id}>
               {showDate && (
                 <div className="flex justify-center my-2">
-                  <span className="text-xs text-slate-400 bg-slate-800 px-3 py-1 rounded-full">
+                  <span className="text-xs text-content-muted bg-surface-raised px-3 py-1 rounded-full">
                     {formatDateSeparator(msg.createdAt)}
                   </span>
                 </div>
@@ -544,13 +544,13 @@ export function ChatDetailPage() {
       )}
 
       {!loadError && !actionError && (
-        <div className="relative border-t border-slate-700 bg-slate-900 sticky bottom-0">
+        <div className="relative border-t border-line bg-surface sticky bottom-0">
           {editingMessage && (
             <div className="flex items-center gap-3 px-4 pt-3 -mb-1">
-              <span className="text-amber-400 text-lg leading-none">✏️</span>
-              <div className="flex-1 min-w-0 border-l-2 border-amber-500 pl-3">
-                <p className="text-xs font-medium text-amber-400">Editing</p>
-                <p className="text-sm text-slate-300 truncate">
+              <span className="text-accent text-lg leading-none">✏️</span>
+              <div className="flex-1 min-w-0 border-l-2 border-accent pl-3">
+                <p className="text-xs font-medium text-accent">Editing</p>
+                <p className="text-sm text-content-muted truncate">
                   {editingMessage.content}
                 </p>
               </div>
@@ -558,7 +558,7 @@ export function ChatDetailPage() {
                 type="button"
                 onClick={cancelEdit}
                 aria-label="Cancel editing"
-                className="text-slate-400 hover:text-slate-100 text-2xl leading-none"
+                className="text-content-muted hover:text-content text-2xl leading-none"
               >
                 ×
               </button>
@@ -566,12 +566,12 @@ export function ChatDetailPage() {
           )}
           {replyTo && !editingMessage && (
             <div className="flex items-center gap-3 px-4 pt-3 -mb-1">
-              <span className="text-amber-400 text-lg leading-none">↩️</span>
-              <div className="flex-1 min-w-0 border-l-2 border-amber-500 pl-3">
-                <p className="text-xs font-medium text-amber-400">
+              <span className="text-accent text-lg leading-none">↩️</span>
+              <div className="flex-1 min-w-0 border-l-2 border-accent pl-3">
+                <p className="text-xs font-medium text-accent">
                   Reply to {memberById.get(replyTo.userId)?.userName ?? `User #${replyTo.userId}`}
                 </p>
-                <p className="text-sm text-slate-300 truncate">
+                <p className="text-sm text-content-muted truncate">
                   {replyTo.content}
                 </p>
               </div>
@@ -579,7 +579,7 @@ export function ChatDetailPage() {
                 type="button"
                 onClick={() => setReplyTo(null)}
                 aria-label="Cancel reply"
-                className="text-slate-400 hover:text-slate-100 text-2xl leading-none"
+                className="text-content-muted hover:text-content text-2xl leading-none"
               >
                 ×
               </button>
@@ -592,7 +592,7 @@ export function ChatDetailPage() {
               onClick={() => fileInputRef.current?.click()}
               aria-label="Attach file"
               title="Attach file"
-              className="shrink-0 px-2 text-2xl text-slate-400 hover:text-amber-400 transition"
+              className="shrink-0 px-2 text-2xl text-content-muted hover:text-accent transition"
             >
               📎
             </button>
@@ -620,7 +620,7 @@ export function ChatDetailPage() {
               placeholder="Type a message..."
               maxLength={2000}
               disabled={sending || saving}
-              className="flex-1 px-3 py-2 rounded bg-slate-800 border border-slate-600 text-slate-100 focus:outline-none focus:border-amber-500 disabled:opacity-50"
+              className="flex-1 px-3 py-2 rounded bg-surface-raised border border-line-strong text-content focus:outline-none focus:border-accent disabled:opacity-50"
             />
             <button
               type="submit"
@@ -630,7 +630,7 @@ export function ChatDetailPage() {
                 attachments.isUploading ||
                 (!input.trim() && attachments.readyIds.length === 0)
               }
-              className="px-5 py-2 rounded bg-amber-600 hover:bg-amber-500 text-white disabled:bg-slate-700 disabled:cursor-not-allowed font-medium transition"
+              className="px-5 py-2 rounded bg-accent hover:bg-accent-hover text-accent-contrast disabled:bg-surface-overlay disabled:cursor-not-allowed font-medium transition"
             >
               {sending || saving ? "..." : editingId !== null ? "Save" : "Send"}
             </button>

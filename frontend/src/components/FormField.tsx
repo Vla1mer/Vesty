@@ -28,7 +28,7 @@ export function FormField({
 
   return (
     <div>
-      <label className="block text-sm text-slate-300 mb-1">{label}</label>
+      <label className="block text-sm text-content-muted mb-1">{label}</label>
       <div className="relative">
         <input
           {...field}
@@ -38,10 +38,10 @@ export function FormField({
           maxLength={maxLength}
           className={`w-full px-3 py-2 ${
             isPassword ? "pr-10" : ""
-          } rounded bg-slate-900 border text-slate-100 focus:outline-none ${
+          } rounded bg-surface border text-content focus:outline-none ${
             showError
-              ? "border-red-500 focus:border-red-500"
-              : "border-slate-600 focus:border-amber-500"
+              ? "border-danger focus:border-danger"
+              : "border-line-strong focus:border-accent"
           }`}
         />
         {isPassword && (
@@ -50,16 +50,16 @@ export function FormField({
             onClick={() => setShowPassword((visible) => !visible)}
             tabIndex={-1}
             aria-label={showPassword ? "Hide password" : "Show password"}
-            className="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-slate-200 transition"
+            className="absolute inset-y-0 right-0 px-3 flex items-center text-content-muted hover:text-content transition"
           >
             {showPassword ? "🙈" : "👁️"}
           </button>
         )}
       </div>
       {showError ? (
-        <p className="text-xs text-red-400 mt-1">{meta.error}</p>
+        <p className="text-xs text-danger mt-1">{meta.error}</p>
       ) : (
-        hint && <p className="text-xs text-slate-500 mt-1">{hint}</p>
+        hint && <p className="text-xs text-content-subtle mt-1">{hint}</p>
       )}
     </div>
   );

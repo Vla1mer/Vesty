@@ -2,20 +2,96 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body, #root {
-  height: 100%;
-  margin: 0;
-}
+@layer base {
+  :root,
+  :root[data-theme="dark"] {
+    --bg: 11 17 32;
+    --surface: 19 28 46;
+    --surface-raised: 27 39 57;
+    --surface-overlay: 33 47 68;
+    --surface-sunken: 8 13 25;
 
-body {
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  background-color: #020617;
-  color: #e2e8f0;
+    --border: 38 52 74;
+    --border-strong: 56 74 102;
+
+    --text: 232 237 245;
+    --text-muted: 148 163 184;
+    --text-subtle: 132 148 171;
+
+    --accent: 245 165 36;
+    --accent-hover: 250 184 74;
+    --accent-soft: 61 43 15;
+    --accent-contrast: 11 17 32;
+
+    --danger: 248 113 113;
+    --danger-soft: 60 20 24;
+    --danger-contrast: 11 17 32;
+    --success: 52 211 153;
+    --info: 96 165 250;
+    --info-soft: 23 37 60;
+
+    --scrim: 2 6 16;
+
+    --shadow-raised: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-float: 0 8px 24px -6px rgb(0 0 0 / 0.55);
+    --shadow-modal: 0 24px 60px -12px rgb(0 0 0 / 0.7);
+  }
+
+  :root[data-theme="light"] {
+    --bg: 247 248 250;
+    --surface: 255 255 255;
+    --surface-raised: 241 243 247;
+    --surface-overlay: 255 255 255;
+    --surface-sunken: 235 238 244;
+
+    --border: 226 232 240;
+    --border-strong: 203 213 225;
+
+    --text: 15 23 42;
+    --text-muted: 71 85 105;
+    --text-subtle: 100 116 139;
+
+    --accent: 180 83 9;
+    --accent-hover: 146 64 14;
+    --accent-soft: 254 243 219;
+    --accent-contrast: 255 255 255;
+
+    --danger: 220 38 38;
+    --danger-soft: 254 234 234;
+    --danger-contrast: 255 255 255;
+    --success: 5 150 105;
+    --info: 37 99 235;
+    --info-soft: 219 234 254;
+
+    --scrim: 15 23 42;
+
+    --shadow-raised: 0 1px 2px rgb(15 23 42 / 0.08);
+    --shadow-float: 0 8px 24px -6px rgb(15 23 42 / 0.14);
+    --shadow-modal: 0 24px 60px -12px rgb(15 23 42 / 0.22);
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    margin: 0;
+  }
+
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background-color: rgb(var(--bg));
+    color: rgb(var(--text));
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :root.theme-ready body {
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: #334155 transparent;
+  scrollbar-color: rgb(var(--border-strong)) transparent;
 }
 
 ::-webkit-scrollbar {
@@ -29,12 +105,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #334155;
+  background-color: rgb(var(--border-strong));
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: #475569;
+  background-color: rgb(var(--text-subtle));
 }
 
 .scrollbar-none {
@@ -55,4 +131,14 @@ body {
 .typing-dots::after {
   content: "...";
   animation: typing-dots 1.2s steps(1, end) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

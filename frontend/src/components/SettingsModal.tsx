@@ -16,20 +16,20 @@ export function SettingsModal({ onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-scrim/70 z-50 flex items-center justify-center p-4"
       onClick={onClose}
     >
       <div
-        className="bg-slate-800 border border-slate-700 rounded-xl p-6 w-full max-w-md max-h-[85vh] overflow-y-auto"
+        className="bg-surface-raised border border-line rounded-xl p-6 w-full max-w-md max-h-[85vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-slate-100">Settings</h2>
+          <h2 className="text-xl font-bold text-content">Settings</h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="text-slate-400 hover:text-slate-100 text-2xl leading-none"
+            className="text-content-muted hover:text-content text-2xl leading-none"
           >
             ×
           </button>

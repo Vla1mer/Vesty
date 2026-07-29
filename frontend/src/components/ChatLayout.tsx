@@ -10,7 +10,7 @@ export function ChatLayout() {
       <aside
         className={`${
           hasSelection ? "hidden md:flex" : "flex"
-        } h-screen w-full md:w-96 md:border-r border-slate-700 flex-col overflow-hidden`}
+        } h-screen w-full md:w-96 md:border-r border-line flex-col overflow-hidden`}
       >
         <ChatsPage />
       </aside>

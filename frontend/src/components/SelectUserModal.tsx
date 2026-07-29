@@ -39,19 +39,19 @@ export function SelectUserModal({ onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-scrim bg-opacity-60 flex items-center justify-center z-50 p-4"
       onClick={onClose}
     >
       <div
-        className="bg-slate-800 border border-slate-700 rounded-xl p-6 w-full max-w-md max-h-[80vh] flex flex-col"
+        className="bg-surface-raised border border-line rounded-xl p-6 w-full max-w-md max-h-[80vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-slate-100">Start a chat</h2>
+          <h2 className="text-xl font-bold text-content">Start a chat</h2>
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-100 text-2xl leading-none"
+            className="text-content-muted hover:text-content text-2xl leading-none"
             aria-label="Close"
           >
             ×
@@ -64,24 +64,24 @@ export function SelectUserModal({ onClose }: Props) {
           onChange={(e) => setSearch(e.target.value)}
           placeholder="🔍 Search by username..."
           autoFocus
-          className="w-full px-3 py-2 rounded bg-slate-900 border border-slate-600 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500 mb-3"
+          className="w-full px-3 py-2 rounded bg-surface border border-line-strong text-content placeholder-content-subtle focus:outline-none focus:border-accent mb-3"
         />
 
         {isError && (
-          <div className="text-sm text-red-400 bg-red-950 border border-red-900 rounded p-2 mb-3">
+          <div className="text-sm text-danger bg-danger-soft border border-danger/40 rounded p-2 mb-3">
             Failed to load users
           </div>
         )}
 
         <div className="flex-1 overflow-y-auto">
           {search.trim().length === 0 ? (
-            <p className="text-sm text-slate-500 text-center py-6">
+            <p className="text-sm text-content-subtle text-center py-6">
               Start typing to find someone
             </p>
           ) : isFetching ? (
-            <p className="text-slate-400 text-center py-8">Searching...</p>
+            <p className="text-content-muted text-center py-8">Searching...</p>
           ) : filtered.length === 0 ? (
-            <p className="text-sm text-slate-500 text-center py-6">
+            <p className="text-sm text-content-subtle text-center py-6">
               No users match your search
             </p>
           ) : (
@@ -91,19 +91,19 @@ export function SelectUserModal({ onClose }: Props) {
                   <button
                     type="button"
                     onClick={() => handleSelect(u)}
-                    className="w-full flex items-center justify-between px-3 py-2 rounded hover:bg-slate-700 transition text-left"
+                    className="w-full flex items-center justify-between px-3 py-2 rounded hover:bg-surface-overlay transition text-left"
                   >
                     <div>
-                      <p className="text-slate-100 text-sm font-medium">
+                      <p className="text-content text-sm font-medium">
                         {u.userName}
                       </p>
                       {(u.name || u.surname) && (
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-content-muted">
                           {[u.name, u.surname].filter(Boolean).join(" ")}
                         </p>
                       )}
                     </div>
-                    <span className="text-xs text-amber-400">💬</span>
+                    <span className="text-xs text-accent">💬</span>
                   </button>
                 </li>
               ))}

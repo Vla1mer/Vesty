@@ -24,10 +24,10 @@ export function ChatListItem({ chat }: Props) {
     <NavLink
       to={`/chats/${chat.id}`}
       className={({ isActive }) =>
-        `block border-l-4 border-b border-slate-800 p-4 transition cursor-pointer ${
+        `block border-l-4 border-b border-line p-4 transition cursor-pointer ${
           isActive
-            ? "border-l-amber-500 bg-slate-800"
-            : "border-l-transparent hover:bg-slate-800/50"
+            ? "border-l-amber-500 bg-surface-raised"
+            : "border-l-transparent hover:bg-surface-raised/60"
         }`
       }
     >
@@ -50,18 +50,18 @@ export function ChatListItem({ chat }: Props) {
 
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline justify-between gap-2">
-            <h3 className="text-lg font-semibold text-slate-100 truncate">{title}</h3>
+            <h3 className="text-lg font-semibold text-content truncate">{title}</h3>
             {chat.lastMessageAt && (
-              <span className="shrink-0 text-xs text-slate-500">
+              <span className="shrink-0 text-xs text-content-subtle">
                 {formatListTime(chat.lastMessageAt)}
               </span>
             )}
           </div>
           <div className="flex items-center justify-between gap-2 mt-0.5">
             {chat.lastMessageContent ? (
-              <p className="text-sm text-slate-400 truncate">
+              <p className="text-sm text-content-muted truncate">
                 {sender && (
-                  <span className="text-amber-400 font-medium">{sender}: </span>
+                  <span className="text-accent font-medium">{sender}: </span>
                 )}
                 {chat.lastMessageContent}
               </p>
@@ -69,7 +69,7 @@ export function ChatListItem({ chat }: Props) {
               <span />
             )}
             {!!chat.unreadCount && chat.unreadCount > 0 && (
-              <span className="shrink-0 min-w-5 h-5 px-1.5 flex items-center justify-center rounded-full bg-amber-500 text-slate-900 text-xs font-bold">
+              <span className="shrink-0 min-w-5 h-5 px-1.5 flex items-center justify-center rounded-full bg-accent text-accent-contrast text-xs font-bold">
                 {chat.unreadCount > 99 ? "99+" : chat.unreadCount}
               </span>
             )}

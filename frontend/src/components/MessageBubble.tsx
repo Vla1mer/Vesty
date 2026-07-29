@@ -195,15 +195,15 @@ export function MessageBubble({
       <div
         id={`message-${message.id}`}
         className={`flex items-center gap-2 rounded-lg transition-colors duration-500 ${
-          selected ? "bg-amber-500/10" : highlighted ? "bg-amber-400/20" : ""
+          selected ? "bg-accent/10" : highlighted ? "bg-accent/20" : ""
         }`}
       >
         {selectionMode && (
           <span
             className={`shrink-0 w-5 h-5 rounded-full border flex items-center justify-center text-[10px] ${
               selected
-                ? "bg-amber-500 border-amber-500 text-white"
-                : "border-slate-500 text-transparent"
+                ? "bg-accent border-accent text-accent-contrast"
+                : "border-line-strong text-transparent"
             }`}
           >
             ✓
@@ -236,22 +236,22 @@ export function MessageBubble({
               style={{ WebkitTouchCallout: "none" }}
               className={`rounded-2xl px-4 py-2 select-none md:select-text transition ${
                 menu || isEditing || pressing || selected
-                  ? "ring-2 ring-amber-400"
+                  ? "ring-2 ring-accent"
                   : ""
               } ${
                 isOwn
-                  ? "bg-amber-600 text-white rounded-br-sm md:rounded-br-2xl md:rounded-bl-sm"
-                  : "bg-slate-700 text-slate-100 rounded-bl-sm"
+                  ? "bg-accent text-accent-contrast rounded-br-sm md:rounded-br-2xl md:rounded-bl-sm"
+                  : "bg-surface-overlay text-content rounded-bl-sm"
               }`}
             >
               {!isOwn && showAuthor && (
-                <p className="text-xs text-amber-300 font-medium mb-1">
+                <p className="text-xs text-accent font-medium mb-1">
                   {displayName}
                 </p>
               )}
 
               {message.pinnedAt && (
-                <p className="text-[11px] text-amber-300 mb-1">📌 Pinned</p>
+                <p className="text-[11px] text-accent mb-1">📌 Pinned</p>
               )}
 
               {message.replyTo && (
@@ -260,16 +260,16 @@ export function MessageBubble({
                   onClick={() => onJumpToMessage?.(message.replyTo!.id)}
                   className={`w-full text-left mb-1.5 pl-2 border-l-2 rounded-sm py-0.5 transition ${
                     isOwn
-                      ? "border-amber-200 bg-amber-700/40 hover:bg-amber-700/60"
-                      : "border-amber-400 bg-slate-800/60 hover:bg-slate-800"
+                      ? "border-accent bg-accent/25 hover:bg-accent/35"
+                      : "border-accent bg-surface-raised/60 hover:bg-surface-raised"
                   }`}
                 >
-                  <span className="block text-xs font-medium text-amber-300 truncate">
+                  <span className="block text-xs font-medium text-accent truncate">
                     {replyAuthorName ?? `User #${message.replyTo.userId}`}
                   </span>
                   <span
                     className={`block text-xs truncate ${
-                      isOwn ? "text-amber-100" : "text-slate-300"
+                      isOwn ? "text-accent" : "text-content-muted"
                     }`}
                   >
                     {message.replyTo.content}
@@ -293,7 +293,7 @@ export function MessageBubble({
                 </p>
                 <span
                   className={`absolute bottom-0 right-0 text-[10px] leading-none whitespace-nowrap ${
-                    isOwn ? "text-amber-100" : "text-slate-400"
+                    isOwn ? "text-accent" : "text-content-muted"
                   }`}
                 >
                   {timeLabel}
@@ -318,8 +318,8 @@ export function MessageBubble({
                       title={`${r.userIds.length}`}
                       className={`px-1.5 py-0.5 rounded-full text-xs border transition ${
                         mine
-                          ? "bg-amber-500/20 border-amber-500 text-amber-200"
-                          : "bg-slate-800 border-slate-600 text-slate-300 hover:bg-slate-700"
+                          ? "bg-accent/20 border-accent text-accent"
+                          : "bg-surface-raised border-line-strong text-content-muted hover:bg-surface-overlay"
                       }`}
                     >
                       {r.emoji} {r.userIds.length}
@@ -335,7 +335,7 @@ export function MessageBubble({
       {menu && (
         <div
           ref={menuRef}
-          className="fixed z-50 w-max max-w-[13rem] rounded-lg border border-slate-700 bg-slate-800 py-1 shadow-xl"
+          className="fixed z-50 w-max max-w-[13rem] rounded-lg border border-line bg-surface-raised py-1 shadow-xl"
           style={{ top: menuPos.top, left: menuPos.left }}
           onClickCapture={(e) => {
             if (Date.now() - menuOpenedAtRef.current < 400) {
@@ -346,7 +346,7 @@ export function MessageBubble({
           onClick={(e) => e.stopPropagation()}
         >
           {onToggleReaction && (
-            <div className="flex gap-0.5 px-1.5 py-1.5 border-b border-slate-700">
+            <div className="flex gap-0.5 px-1.5 py-1.5 border-b border-line">
               {QUICK_REACTIONS.map((emoji) => {
                 const mine = Boolean(
                   currentUserId != null &&
@@ -363,7 +363,7 @@ export function MessageBubble({
                       onToggleReaction(message.id, emoji, mine);
                     }}
                     className={`w-7 h-7 rounded-full text-base leading-none transition ${
-                      mine ? "bg-amber-500/30" : "hover:bg-slate-700"
+                      mine ? "bg-accent/30" : "hover:bg-surface-overlay"
                     }`}
                   >
                     {emoji}
@@ -379,7 +379,7 @@ export function MessageBubble({
                 setMenu(false);
                 onReply(message);
               }}
-              className="w-full px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-700 transition"
+              className="w-full px-3 py-2 text-left text-sm text-content hover:bg-surface-overlay transition"
             >
               ↩️ Reply
             </button>
@@ -388,7 +388,7 @@ export function MessageBubble({
             <button
               type="button"
               onClick={handleCopy}
-              className="w-full px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-700 transition"
+              className="w-full px-3 py-2 text-left text-sm text-content hover:bg-surface-overlay transition"
             >
               📋 Copy
             </button>
@@ -400,7 +400,7 @@ export function MessageBubble({
                 setMenu(false);
                 onTogglePin(message.id, Boolean(message.pinnedAt));
               }}
-              className="w-full px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-700 transition"
+              className="w-full px-3 py-2 text-left text-sm text-content hover:bg-surface-overlay transition"
             >
               {message.pinnedAt ? "📌 Unpin" : "📌 Pin"}
             </button>
@@ -412,7 +412,7 @@ export function MessageBubble({
                 setMenu(false);
                 onEdit(message.id, message.content ?? "");
               }}
-              className="w-full px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-700 transition"
+              className="w-full px-3 py-2 text-left text-sm text-content hover:bg-surface-overlay transition"
             >
               ✏️ Edit
             </button>
@@ -424,7 +424,7 @@ export function MessageBubble({
                 setMenu(false);
                 onDelete(message.id);
               }}
-              className="w-full px-3 py-2 text-left text-sm text-red-300 hover:bg-slate-700 transition"
+              className="w-full px-3 py-2 text-left text-sm text-danger hover:bg-surface-overlay transition"
             >
               🗑️ Delete
             </button>

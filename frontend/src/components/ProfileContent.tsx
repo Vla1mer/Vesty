@@ -49,10 +49,10 @@ export function ProfileContent() {
 
   return (
     <>
-      {loading && <p className="text-slate-400">Loading...</p>}
+      {loading && <p className="text-content-muted">Loading...</p>}
 
       {(error || isError) && (
-        <div className="text-sm text-red-400 bg-red-950 border border-red-900 rounded p-3 mb-4">
+        <div className="text-sm text-danger bg-danger-soft border border-danger/40 rounded p-3 mb-4">
           {error ?? "Failed to load profile"}
         </div>
       )}
@@ -110,7 +110,7 @@ export function ProfileContent() {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="px-4 py-2 rounded bg-amber-600 hover:bg-amber-500 text-white font-medium disabled:opacity-50 transition"
+                      className="px-4 py-2 rounded bg-accent hover:bg-accent-hover text-accent-contrast font-medium disabled:opacity-50 transition"
                     >
                       {isSubmitting ? "Saving..." : "Save"}
                     </button>
@@ -118,7 +118,7 @@ export function ProfileContent() {
                       type="button"
                       onClick={() => setIsEditing(false)}
                       disabled={isSubmitting}
-                      className="px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-slate-100 disabled:opacity-50 transition"
+                      className="px-4 py-2 rounded bg-surface-overlay hover:bg-line-strong text-content disabled:opacity-50 transition"
                     >
                       Cancel
                     </button>
@@ -141,21 +141,21 @@ export function ProfileContent() {
                     setError(null);
                     setIsEditing(true);
                   }}
-                  className="w-full px-4 py-2 rounded bg-amber-600 hover:bg-amber-500 text-white font-medium transition"
+                  className="w-full px-4 py-2 rounded bg-accent hover:bg-accent-hover text-accent-contrast font-medium transition"
                 >
                   ✏️ Edit profile
                 </button>
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="w-full px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-slate-100 transition"
+                  className="w-full px-4 py-2 rounded bg-surface-overlay hover:bg-line-strong text-content transition"
                 >
                   Logout
                 </button>
                 <button
                   type="button"
                   onClick={() => setIsDeleteOpen(true)}
-                  className="w-full px-4 py-2 rounded bg-red-900 hover:bg-red-800 text-red-100 transition"
+                  className="w-full px-4 py-2 rounded bg-danger-soft hover:bg-danger/25 text-danger transition"
                 >
                   Delete account
                 </button>
@@ -182,9 +182,9 @@ export function ProfileContent() {
 
 function Row({ label, value }: { label: string; value?: string }) {
   return (
-    <div className="flex justify-between border-b border-slate-700 pb-2">
-      <span className="text-sm text-slate-400">{label}</span>
-      <span className="text-sm text-slate-100">{value || "—"}</span>
+    <div className="flex justify-between border-b border-line pb-2">
+      <span className="text-sm text-content-muted">{label}</span>
+      <span className="text-sm text-content">{value || "—"}</span>
     </div>
   );
 }

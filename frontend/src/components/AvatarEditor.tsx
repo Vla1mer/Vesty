@@ -15,7 +15,7 @@ export function AvatarEditor({ user }: AvatarEditorProps) {
   const [deleteAvatar, { isLoading: removing }] = useDeleteAvatarMutation();
 
   return (
-    <div className="pb-5 mb-5 border-b border-slate-700">
+    <div className="pb-5 mb-5 border-b border-line">
       <AvatarUpload
         preview={
           <Avatar

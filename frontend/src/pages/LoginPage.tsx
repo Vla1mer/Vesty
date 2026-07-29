@@ -33,13 +33,13 @@ export function LoginPage() {
         }}
       >
         {({ isSubmitting, status }) => (
-          <Form className="w-full max-w-sm bg-slate-800 border border-slate-700 rounded-xl p-6 space-y-4">
+          <Form className="w-full max-w-sm bg-surface-raised border border-line rounded-xl p-6 space-y-4">
             <div className="text-center">
               <h1 className="text-2xl font-bold">
-                <span className="text-amber-400">Vesty</span>{" "}
-                <span className="text-slate-100">Messenger</span>
+                <span className="text-accent">Vesty</span>{" "}
+                <span className="text-content">Messenger</span>
               </h1>
-              <p className="text-sm text-slate-400 mt-1">Sign in to your account</p>
+              <p className="text-sm text-content-muted mt-1">Sign in to your account</p>
             </div>
 
             <FormField
@@ -61,14 +61,14 @@ export function LoginPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-2 rounded bg-amber-600 hover:bg-amber-500 text-white disabled:bg-slate-700 disabled:cursor-not-allowed font-medium transition"
+              className="w-full py-2 rounded bg-accent hover:bg-accent-hover text-accent-contrast disabled:bg-surface-overlay disabled:cursor-not-allowed font-medium transition"
             >
               {isSubmitting ? "Signing in..." : "Sign in"}
             </button>
 
-            <p className="text-sm text-center text-slate-400">
+            <p className="text-sm text-center text-content-muted">
               Don't have an account?{" "}
-              <Link to="/register" className="text-amber-400 hover:underline">
+              <Link to="/register" className="text-accent hover:underline">
                 Register
               </Link>
             </p>

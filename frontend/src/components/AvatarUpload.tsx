@@ -60,7 +60,7 @@ export function AvatarUpload({
             type="button"
             disabled={busy}
             onClick={() => inputRef.current?.click()}
-            className="px-3 py-1.5 rounded bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium disabled:opacity-50 transition"
+            className="px-3 py-1.5 rounded bg-accent hover:bg-accent-hover text-accent-contrast text-sm font-medium disabled:opacity-50 transition"
           >
             {uploading ? "Uploading..." : "Upload photo"}
           </button>
@@ -70,15 +70,15 @@ export function AvatarUpload({
               type="button"
               disabled={busy}
               onClick={handleRemove}
-              className="px-3 py-1.5 rounded bg-slate-700 hover:bg-slate-600 text-slate-100 text-sm disabled:opacity-50 transition"
+              className="px-3 py-1.5 rounded bg-surface-overlay hover:bg-line-strong text-content text-sm disabled:opacity-50 transition"
             >
               {removing ? "Removing..." : "Remove"}
             </button>
           )}
         </div>
 
-        <p className="text-xs text-slate-400">JPEG, PNG or WebP</p>
-        {error && <p className="text-xs text-red-400">{error}</p>}
+        <p className="text-xs text-content-muted">JPEG, PNG or WebP</p>
+        {error && <p className="text-xs text-danger">{error}</p>}
       </div>
 
       <input
