@@ -252,5 +252,25 @@ namespace Vesty.Tests
 
             Assert.Equal(HttpStatusCode.BadRequest, stolen.StatusCode);
         }
+
+        [Fact]
+        public async Task Attachment_KeepsCyrillicFileName()
+        {
+            var client = await AuthenticatedClientAsync(UniqueName("cyr"));
+            var chat = await CreateChatAsync(client, "Cyrillic chat");
+            const string fileName = "Отчёт за квартал.pdf";
+
+            var upload = await client.PostAsync($"/api/Message/{chat.Id}/attachments",
+                FileForm(fileName, System.Text.Encoding.UTF8.GetBytes("%PDF-1.4"), "application/pdf"));
+            var attachment = await upload.Content.ReadFromJsonAsync<MessageAttachmentDto>();
+
+            Assert.Equal(fileName, attachment!.FileName);
+
+            var download = await client.GetAsync($"/api/Message/attachments/{attachment.Id}");
+            download.EnsureSuccessStatusCode();
+
+            var disposition = download.Content.Headers.ContentDisposition;
+            Assert.Equal(fileName, disposition!.FileNameStar);
+        }
 }
 }
