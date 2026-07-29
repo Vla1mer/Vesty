@@ -99,6 +99,7 @@ namespace Vesty.Tests
             Assert.Equal("image/webp", existing.ContentType);
             Assert.Equal(32, existing.Data.Length);
             _avatars.Verify(r => r.CreateAvatar(It.IsAny<UserAvatar>()), Times.Never);
+            _repository.Verify(r => r.SaveAsync(), Times.Once);
         }
 
         [Fact]
@@ -134,6 +135,7 @@ namespace Vesty.Tests
 
             _avatars.Verify(r => r.DeleteAvatar(avatar), Times.Once);
             Assert.Null(user.AvatarUpdatedAt);
+            _repository.Verify(r => r.SaveAsync(), Times.Once);
         }
 
         [Fact]
@@ -145,6 +147,39 @@ namespace Vesty.Tests
             var result = await _service.GetAsync(CurrentUserId);
 
             Assert.Null(result);
+        }
+
+        [Fact]
+        public async Task GetAsync_WhenUserHasAvatar_ReturnsIt()
+        {
+            var updatedAt = new DateTime(2026, 7, 28, 12, 0, 0, DateTimeKind.Utc);
+            _users.Setup(r => r.GetUserAsync(CurrentUserId, false))
+                .ReturnsAsync(new User { Id = CurrentUserId, AvatarUpdatedAt = updatedAt });
+            _avatars.Setup(r => r.GetAvatarAsync(CurrentUserId, false))
+                .ReturnsAsync(new UserAvatar
+                {
+                    UserId = CurrentUserId,
+                    ContentType = "image/webp",
+                    Data = new byte[] { 1, 2, 3 }
+                });
+
+            var result = await _service.GetAsync(CurrentUserId);
+
+            Assert.NotNull(result);
+            Assert.Equal("image/webp", result.ContentType);
+            Assert.Equal(updatedAt, result.UpdatedAt);
+            Assert.Equal(3, result.Data.Length);
+        }
+
+        [Fact]
+        public async Task GetAsync_WhenFlagSetButRowMissing_ReturnsNull()
+        {
+            _users.Setup(r => r.GetUserAsync(CurrentUserId, false))
+                .ReturnsAsync(new User { Id = CurrentUserId, AvatarUpdatedAt = DateTime.UtcNow });
+            _avatars.Setup(r => r.GetAvatarAsync(CurrentUserId, false))
+                .ReturnsAsync((UserAvatar?)null);
+
+            Assert.Null(await _service.GetAsync(CurrentUserId));
         }
 
         [Fact]

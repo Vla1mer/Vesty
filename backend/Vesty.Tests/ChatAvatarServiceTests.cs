@@ -28,9 +28,12 @@ namespace Vesty.Tests
             _service = new ChatAvatarService(_repository.Object, _currentUser.Object);
         }
 
-        private void ChatIs(bool isPrivate) =>
-            _chats.Setup(r => r.GetChatAsync(GroupChatId, It.IsAny<bool>()))
-                .ReturnsAsync(new Chat { Id = GroupChatId, IsPrivate = isPrivate });
+        private Chat ChatIs(bool isPrivate)
+        {
+            var chat = new Chat { Id = GroupChatId, IsPrivate = isPrivate };
+            _chats.Setup(r => r.GetChatAsync(GroupChatId, It.IsAny<bool>())).ReturnsAsync(chat);
+            return chat;
+        }
 
         private void CallerRole(int? roleId) =>
             _currentUser.Setup(u => u.GetMembershipAsync(GroupChatId))
@@ -45,14 +48,19 @@ namespace Vesty.Tests
         [InlineData(UserRole.Admin)]
         public async Task SetAsync_AsOwnerOrAdmin_Succeeds(int roleId)
         {
-            ChatIs(isPrivate: false);
+            var chat = ChatIs(isPrivate: false);
             CallerRole(roleId);
             _avatars.Setup(r => r.GetAvatarAsync(GroupChatId, It.IsAny<bool>()))
                 .ReturnsAsync((ChatAvatar?)null);
 
             await _service.SetAsync(GroupChatId, ImageOf(32), "image/png", 32);
 
-            _avatars.Verify(r => r.CreateAvatar(It.IsAny<ChatAvatar>()), Times.Once);
+            _avatars.Verify(r => r.CreateAvatar(It.Is<ChatAvatar>(a =>
+                a.ChatId == GroupChatId &&
+                a.ContentType == "image/png" &&
+                a.Data.Length == 32)), Times.Once);
+            Assert.NotNull(chat.AvatarUpdatedAt);
+            _repository.Verify(r => r.SaveAsync(), Times.Once);
         }
 
         [Fact]
@@ -119,6 +127,7 @@ namespace Vesty.Tests
 
             _avatars.Verify(r => r.DeleteAvatar(avatar), Times.Once);
             Assert.Null(chat.AvatarUpdatedAt);
+            _repository.Verify(r => r.SaveAsync(), Times.Once);
         }
     }
 }

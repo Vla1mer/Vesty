@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using Microsoft.Extensions.Configuration;
 using Services.Cryptography;
 
@@ -61,7 +62,31 @@ namespace Vesty.Tests
             var ciphertext = Cipher().Encrypt("secret");
             var other = CipherWith("YW5vdGhlci11bml0LXRlc3Qta2V5LTAwMDAwMDAwMDI=");
 
-            Assert.ThrowsAny<Exception>(() => other.Decrypt(ciphertext));
+            Assert.ThrowsAny<CryptographicException>(() => other.Decrypt(ciphertext));
+        }
+
+        [Fact]
+        public void Decrypt_WithInvalidBase64_Throws()
+        {
+            Assert.Throws<CryptographicException>(() => Cipher().Decrypt("not base64 at all!"));
+        }
+
+        [Fact]
+        public void Decrypt_WithTruncatedCiphertext_Throws()
+        {
+            var truncated = Convert.ToBase64String(new byte[8]);
+
+            Assert.Throws<CryptographicException>(() => Cipher().Decrypt(truncated));
+        }
+
+        [Fact]
+        public void Decrypt_WithTamperedCiphertext_Throws()
+        {
+            var bytes = Convert.FromBase64String(Cipher().Encrypt("secret"));
+            bytes[^1] ^= 0xFF;
+
+            Assert.ThrowsAny<CryptographicException>(() =>
+                Cipher().Decrypt(Convert.ToBase64String(bytes)));
         }
 
         [Fact]
