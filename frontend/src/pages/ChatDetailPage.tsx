@@ -624,7 +624,12 @@ export function ChatDetailPage() {
             />
             <button
               type="submit"
-              disabled={sending || saving || !input.trim()}
+              disabled={
+                sending ||
+                saving ||
+                attachments.isUploading ||
+                (!input.trim() && attachments.readyIds.length === 0)
+              }
               className="px-5 py-2 rounded bg-amber-600 hover:bg-amber-500 text-white disabled:bg-slate-700 disabled:cursor-not-allowed font-medium transition"
             >
               {sending || saving ? "..." : editingId !== null ? "Save" : "Send"}

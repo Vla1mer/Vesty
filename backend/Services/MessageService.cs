@@ -92,18 +92,22 @@ namespace Services
             });
         }
 
-        public async Task<MessageDto> CreateMessageForChatAsync(int chatId, string content,
+        public async Task<MessageDto> CreateMessageForChatAsync(int chatId, string? content,
             int? replyToMessageId = null, IEnumerable<int>? attachmentIds = null)
         {
             await GetChatOrThrowAsync(chatId);
             await EnsureCallerIsChatMember(chatId);
+
+            var text = content ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(text) && attachmentIds?.Any() != true)
+                throw new EmptyMessageException();
 
             var replyTo = await GetReplyTargetOrThrowAsync(chatId, replyToMessageId);
 
             var message = new Message
             {
                 UserId = _currentUser.UserId,
-                Content = _cipher.Encrypt(content),
+                Content = _cipher.Encrypt(text),
                 ReplyToMessageId = replyTo?.Id
             };
             _repository.Message.CreateMessageForChat(chatId, message);
@@ -116,7 +120,7 @@ namespace Services
 
             var messageDto = _mapper.Map<MessageDto>(message) with
             {
-                Content = content,
+                Content = text,
                 UserName = _currentUser.UserName,
                 ReplyTo = ToReplyDto(replyTo),
                 Attachments = attachments.Select(AttachmentService.ToDto).ToList()
