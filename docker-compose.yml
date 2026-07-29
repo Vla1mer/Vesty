@@ -17,5 +17,39 @@ services:
       timeout: 5s
       retries: 10
 
+  api:
+    build:
+      context: ./backend
+    container_name: vesty-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      UseHttpsRedirection: "false"
+      ConnectionStrings__DefaultConnection: >-
+        Host=db;Port=5432;Database=${POSTGRES_DB:-vesty};Username=${POSTGRES_USER:-vesty};Password=${POSTGRES_PASSWORD:-vesty};
+      JwtSettings__validIssuer: VestyAPI
+      JwtSettings__validAudience: ${API_URL:-http://localhost:8080}
+      JwtSettings__expires: "60"
+      JwtSettings__secretKey: ${JWT_SECRET:-local-development-secret-key-change-me-please}
+      MessageEncryption__Key: ${MESSAGE_KEY:-2S8pQ0vXhK7mDn4rZaWcYfJbLtGuEoNi3xHqVsCd1PY=}
+      Cors__AllowedOrigins__0: ${CLIENT_URL:-http://localhost:5173}
+    ports:
+      - "${API_PORT:-8080}:8080"
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ${API_URL:-http://localhost:8080}
+    container_name: vesty-web
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "${CLIENT_PORT:-5173}:80"
+
 volumes:
   db-data:

@@ -4,63 +4,63 @@ Real-time messenger. ASP.NET Core 9 + SignalR, React 19 + TypeScript, PostgreSQL
 
 Direct and group chats, live messaging, replies, reactions, pinned messages, avatars, JWT auth. Message content is encrypted at rest.
 
-## Requirements
-
-Docker Desktop · [.NET SDK 9+](https://dotnet.microsoft.com/download) · [Node.js 20+](https://nodejs.org)
-
 ## Run it
 
-**1. Start the database**
+The only requirement is [Docker](https://www.docker.com/products/docker-desktop).
 
 ```bash
-docker compose up -d db
+git clone https://github.com/Vla1mer/Vesty.git
+cd Vesty
+docker compose up
 ```
 
-**2. Create the config**
+Open `http://localhost:5173`.
+
+That starts three containers — PostgreSQL, the API and the client. Database migrations are applied automatically on the first run.
+
+To stop: `docker compose down`. Add `-v` to delete the database as well.
+
+## Configuration
+
+The defaults in `docker-compose.yml` are enough to run the project locally, so no setup is needed to try it out.
+
+For anything beyond local use, copy the template and set your own secrets:
 
 ```bash
-cp backend/Vesty/appsettings.Example.json backend/Vesty/appsettings.json
+cp .env.example .env
 ```
 
-Fill in two values in that file:
-
-- `JwtSettings.secretKey` — any random string, 32+ characters
-- `MessageEncryption.Key` — 32 random bytes in base64:
+- `JWT_SECRET` — any random string, 32+ characters
+- `MESSAGE_KEY` — 32 random bytes in base64:
 
 ```powershell
 [Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 }))   # Windows
 openssl rand -base64 32                                                            # Linux / macOS
 ```
 
-**3. Trust the dev certificate**
+The same file also controls ports (`API_PORT`, `CLIENT_PORT`, `DB_PORT`) and database credentials.
+
+## Development without Docker
+
+Requires [.NET SDK 9+](https://dotnet.microsoft.com/download) and [Node.js 20+](https://nodejs.org).
+
+Start only the database, then run both apps locally:
 
 ```bash
-dotnet dev-certs https --trust
-```
+docker compose up -d db
 
-Then restart the browser. Skipping this makes every API call fail silently.
+cp backend/Vesty/appsettings.Example.json backend/Vesty/appsettings.json
+# fill in JwtSettings.secretKey and MessageEncryption.Key
 
-**4. Start the server**
-
-```bash
+dotnet dev-certs https --trust        # then restart the browser
 cd backend && dotnet run --project Vesty/Vesty.csproj --launch-profile https
 ```
-
-Migrations run automatically on startup.
-
-**5. Start the client**
 
 ```bash
 cd frontend && npm install && npm run dev
 ```
 
-Open `http://localhost:5173`. API docs: `https://localhost:7033/swagger`
-
-## Notes
-
-The database container uses port **5433** so it won't clash with a local PostgreSQL. Data persists in the `db-data` volume; `docker compose down -v` wipes it.
-
-Config files hold secrets and are not tracked in git.
+Client on `http://localhost:5173`, API on `https://localhost:7033`, API docs on `https://localhost:7033/swagger`.
 
 ## Layout
 
