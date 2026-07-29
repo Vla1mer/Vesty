@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Testcontainers.Minio;
 using Testcontainers.PostgreSql;
 
 namespace Vesty.Tests
@@ -16,6 +17,10 @@ namespace Vesty.Tests
             .WithPassword("vesty")
             .Build();
 
+        private readonly MinioContainer _storage = new MinioBuilder()
+            .WithImage("minio/minio")
+            .Build();
+
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             builder.UseEnvironment("Development");
@@ -23,7 +28,7 @@ namespace Vesty.Tests
 
         public async Task InitializeAsync()
         {
-            await _database.StartAsync();
+            await Task.WhenAll(_database.StartAsync(), _storage.StartAsync());
 
             Environment.SetEnvironmentVariable(
                 "ConnectionStrings__DefaultConnection", _database.GetConnectionString());
@@ -34,11 +39,18 @@ namespace Vesty.Tests
             Environment.SetEnvironmentVariable("JwtSettings__expires", "60");
             Environment.SetEnvironmentVariable("JwtSettings__secretKey", SecretKey);
             Environment.SetEnvironmentVariable("MessageEncryption__Key", EncryptionKey);
+            Environment.SetEnvironmentVariable(
+                "Storage__Endpoint", new Uri(_storage.GetConnectionString()).Authority);
+            Environment.SetEnvironmentVariable("Storage__AccessKey", _storage.GetAccessKey());
+            Environment.SetEnvironmentVariable("Storage__SecretKey", _storage.GetSecretKey());
+            Environment.SetEnvironmentVariable("Storage__Bucket", "vesty-tests");
+            Environment.SetEnvironmentVariable("Storage__UseSsl", "false");
         }
 
         public new async Task DisposeAsync()
         {
             await _database.DisposeAsync();
+            await _storage.DisposeAsync();
             await base.DisposeAsync();
         }
     }

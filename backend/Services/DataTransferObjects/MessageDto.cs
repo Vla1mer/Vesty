@@ -12,5 +12,6 @@
         public MessageReplyDto? ReplyTo { get; init; }
         public DateTime? PinnedAt { get; init; }
         public IEnumerable<MessageReactionDto> Reactions { get; init; } = [];
+        public IEnumerable<MessageAttachmentDto> Attachments { get; init; } = [];
     }
 }

@@ -18,10 +18,11 @@ namespace Services
         private readonly ICurrentUserService _currentUser;
         private readonly IChatService _chatService;
         private readonly IChatNotifier _notifier;
+        private readonly IAttachmentService _attachments;
 
         public MessageService(IRepositoryManager repository, ILoggerManager logger, IMapper mapper,
             IMessageCipher cipher, ICurrentUserService currentUser, IChatService chatService,
-            IChatNotifier notifier)
+            IChatNotifier notifier, IAttachmentService attachments)
         {
             _repository = repository;
             _logger = logger;
@@ -30,6 +31,7 @@ namespace Services
             _currentUser = currentUser;
             _chatService = chatService;
             _notifier = notifier;
+            _attachments = attachments;
         }
 
         public async Task<(IEnumerable<MessageDto> messages, MetaData metaData)> GetAllAsync(MessageParameters messageParameters)
@@ -73,16 +75,25 @@ namespace Services
                 .GroupBy(r => r.MessageId)
                 .ToDictionary(g => g.Key, g => ReactionMapper.Group(g));
 
+            var attachments = await _repository.Attachment.GetByMessageIdsAsync(messages.Select(m => m.Id));
+            var attachmentsByMessage = attachments
+                .GroupBy(a => a.MessageId!.Value)
+                .ToDictionary(g => g.Key, g => g.Select(AttachmentService.ToDto).ToList());
+
             return messages.Select(m => _mapper.Map<MessageDto>(m) with
             {
                 ReplyTo = m.ReplyToMessageId is int replyId && byId.TryGetValue(replyId, out var target)
                     ? ToReplyDto(target)
                     : null,
-                Reactions = reactionsByMessage.TryGetValue(m.Id, out var rs) ? rs : []
+                Reactions = reactionsByMessage.TryGetValue(m.Id, out var rs) ? rs : [],
+                Attachments = attachmentsByMessage.TryGetValue(m.Id, out var att)
+                    ? att
+                    : Enumerable.Empty<MessageAttachmentDto>()
             });
         }
 
-        public async Task<MessageDto> CreateMessageForChatAsync(int chatId, string content, int? replyToMessageId = null)
+        public async Task<MessageDto> CreateMessageForChatAsync(int chatId, string content,
+            int? replyToMessageId = null, IEnumerable<int>? attachmentIds = null)
         {
             await GetChatOrThrowAsync(chatId);
             await EnsureCallerIsChatMember(chatId);
@@ -97,12 +108,18 @@ namespace Services
             };
             _repository.Message.CreateMessageForChat(chatId, message);
             await _repository.SaveAsync();
-            message.Content = _cipher.Decrypt(message.Content);
+
+            var attachments = await _attachments.ClaimForMessageAsync(
+                attachmentIds ?? [], message.Id);
+            if (attachments.Any())
+                await _repository.SaveAsync();
 
             var messageDto = _mapper.Map<MessageDto>(message) with
             {
+                Content = content,
                 UserName = _currentUser.UserName,
-                ReplyTo = ToReplyDto(replyTo)
+                ReplyTo = ToReplyDto(replyTo),
+                Attachments = attachments.Select(AttachmentService.ToDto).ToList()
             };
             await _notifier.MessageReceivedAsync(await GetMemberIdsAsync(chatId), messageDto);
             return messageDto;

@@ -1,0 +1,13 @@
+using Entities.Models;
+using Services.DataTransferObjects;
+
+namespace Services.Interfaces
+{
+    public interface IAttachmentService
+    {
+        Task<MessageAttachmentDto> UploadAsync(int chatId, Stream content, string? fileName,
+            string? contentType, long length);
+        Task<(byte[] content, string contentType, string fileName)> DownloadAsync(int attachmentId);
+        Task<IEnumerable<MessageAttachment>> ClaimForMessageAsync(IEnumerable<int> attachmentIds, int messageId);
+    }
+}

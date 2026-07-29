@@ -9,5 +9,7 @@ namespace Services.DataTransferObjects
         public string Content { get; init; }
 
         public int? ReplyToMessageId { get; init; }
+
+        public IEnumerable<int>? AttachmentIds { get; init; }
     }
 }

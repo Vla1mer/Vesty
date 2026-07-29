@@ -40,7 +40,7 @@ namespace Vesty.Controllers
                 return BadRequest("MessageForCreationDto object is null");
             if (!ModelState.IsValid)
                 return UnprocessableEntity(ModelState);
-            var created = await _service.Message.CreateMessageForChatAsync(chatId, message.Content, message.ReplyToMessageId);
+            var created = await _service.Message.CreateMessageForChatAsync(chatId, message.Content, message.ReplyToMessageId, message.AttachmentIds);
             return CreatedAtRoute("GetMessagesForChat", new { chatId }, created);
         }
 
@@ -135,6 +135,32 @@ namespace Vesty.Controllers
         {
             await _service.Message.SetPinnedAsync(id, pinned: false);
             return NoContent();
+        }
+
+        [HttpPost("{chatId:int}/attachments")]
+        [ProducesResponseType(typeof(MessageAttachmentDto), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> UploadAttachment(int chatId, IFormFile file)
+        {
+            if (file is null)
+                return BadRequest("Attachment file is required.");
+
+            await using var content = file.OpenReadStream();
+            var created = await _service.Attachment.UploadAsync(
+                chatId, content, file.FileName, file.ContentType, file.Length);
+
+            return StatusCode(StatusCodes.Status201Created, created);
+        }
+
+        [HttpGet("attachments/{id:int}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DownloadAttachment(int id)
+        {
+            var (content, contentType, fileName) = await _service.Attachment.DownloadAsync(id);
+            return File(content, contentType, fileName);
         }
 }
 }

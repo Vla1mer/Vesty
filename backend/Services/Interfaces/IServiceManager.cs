@@ -9,5 +9,6 @@
         IChatMemberService ChatMember { get; }
         IMessageService Message { get; }
         IReactionService Reaction { get; }
+        IAttachmentService Attachment { get; }
     }
 }
