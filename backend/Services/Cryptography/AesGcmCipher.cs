@@ -4,7 +4,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Services.Cryptography
 {
-    public sealed class AesGcmMessageCipher : IMessageCipher
+    public sealed class AesGcmCipher : IMessageCipher, IFileCipher
     {
         private const int KeySizeBytes = 32;
         private const int NonceSizeBytes = 12;
@@ -12,7 +12,7 @@ namespace Services.Cryptography
 
         private readonly byte[] _key;
 
-        public AesGcmMessageCipher(IConfiguration configuration)
+        public AesGcmCipher(IConfiguration configuration)
         {
             var keyBase64 = configuration["MessageEncryption:Key"];
             if (string.IsNullOrWhiteSpace(keyBase64))
@@ -39,22 +39,7 @@ namespace Services.Cryptography
         {
             ArgumentNullException.ThrowIfNull(plaintext);
 
-            var plaintextBytes = Encoding.UTF8.GetBytes(plaintext);
-            var nonce = RandomNumberGenerator.GetBytes(NonceSizeBytes);
-            var ciphertext = new byte[plaintextBytes.Length];
-            var tag = new byte[TagSizeBytes];
-
-            using (var aes = new AesGcm(_key, TagSizeBytes))
-            {
-                aes.Encrypt(nonce, plaintextBytes, ciphertext, tag);
-            }
-
-            var output = new byte[NonceSizeBytes + TagSizeBytes + ciphertext.Length];
-            Buffer.BlockCopy(nonce, 0, output, 0, NonceSizeBytes);
-            Buffer.BlockCopy(tag, 0, output, NonceSizeBytes, TagSizeBytes);
-            Buffer.BlockCopy(ciphertext, 0, output, NonceSizeBytes + TagSizeBytes, ciphertext.Length);
-
-            return Convert.ToBase64String(output);
+            return Convert.ToBase64String(Encrypt(Encoding.UTF8.GetBytes(plaintext)));
         }
 
         public string Decrypt(string ciphertext)
@@ -71,24 +56,52 @@ namespace Services.Cryptography
                 throw new CryptographicException("Ciphertext is not valid base64.", ex);
             }
 
+            return Encoding.UTF8.GetString(Decrypt(input));
+        }
+
+        public byte[] Encrypt(byte[] plaintext)
+        {
+            ArgumentNullException.ThrowIfNull(plaintext);
+
+            var nonce = RandomNumberGenerator.GetBytes(NonceSizeBytes);
+            var ciphertext = new byte[plaintext.Length];
+            var tag = new byte[TagSizeBytes];
+
+            using (var aes = new AesGcm(_key, TagSizeBytes))
+            {
+                aes.Encrypt(nonce, plaintext, ciphertext, tag);
+            }
+
+            var output = new byte[NonceSizeBytes + TagSizeBytes + ciphertext.Length];
+            Buffer.BlockCopy(nonce, 0, output, 0, NonceSizeBytes);
+            Buffer.BlockCopy(tag, 0, output, NonceSizeBytes, TagSizeBytes);
+            Buffer.BlockCopy(ciphertext, 0, output, NonceSizeBytes + TagSizeBytes, ciphertext.Length);
+
+            return output;
+        }
+
+        public byte[] Decrypt(byte[] input)
+        {
+            ArgumentNullException.ThrowIfNull(input);
+
             if (input.Length < NonceSizeBytes + TagSizeBytes)
                 throw new CryptographicException("Ciphertext is too short to be valid.");
 
             var nonce = new byte[NonceSizeBytes];
             var tag = new byte[TagSizeBytes];
-            var actualCiphertext = new byte[input.Length - NonceSizeBytes - TagSizeBytes];
+            var ciphertext = new byte[input.Length - NonceSizeBytes - TagSizeBytes];
 
             Buffer.BlockCopy(input, 0, nonce, 0, NonceSizeBytes);
             Buffer.BlockCopy(input, NonceSizeBytes, tag, 0, TagSizeBytes);
-            Buffer.BlockCopy(input, NonceSizeBytes + TagSizeBytes, actualCiphertext, 0, actualCiphertext.Length);
+            Buffer.BlockCopy(input, NonceSizeBytes + TagSizeBytes, ciphertext, 0, ciphertext.Length);
 
-            var plaintextBytes = new byte[actualCiphertext.Length];
+            var plaintext = new byte[ciphertext.Length];
             using (var aes = new AesGcm(_key, TagSizeBytes))
             {
-                aes.Decrypt(nonce, actualCiphertext, tag, plaintextBytes);
+                aes.Decrypt(nonce, ciphertext, tag, plaintext);
             }
 
-            return Encoding.UTF8.GetString(plaintextBytes);
+            return plaintext;
         }
     }
 }

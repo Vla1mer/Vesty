@@ -95,6 +95,13 @@ export interface MessageReactionDto {
   userIds: number[];
 }
 
+export interface MessageAttachmentDto {
+  id: number;
+  fileName: string;
+  contentType: string;
+  sizeInBytes: number;
+}
+
 export interface MessageDto {
   id: number;
   chatId: number;
@@ -106,11 +113,13 @@ export interface MessageDto {
   replyTo?: MessageReplyDto | null;
   reactions?: MessageReactionDto[];
   pinnedAt?: string | null;
+  attachments?: MessageAttachmentDto[];
 }
 
 export interface MessageForCreationDto {
   content: string;
   replyToMessageId?: number | null;
+  attachmentIds?: number[];
 }
 
 export interface MessageReactionsSignalrDto {

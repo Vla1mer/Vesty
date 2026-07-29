@@ -26,6 +26,8 @@ export const endpoints = {
     direct: "/api/Message/direct",
     reactions: (id: number) => `/api/Message/${id}/reactions`,
     pin: (id: number) => `/api/Message/${id}/pin`,
+    attachments: (chatId: number) => `/api/Message/${chatId}/attachments`,
+    attachment: (id: number) => `/api/Message/attachments/${id}`,
     reaction: (id: number, emoji: string) =>
       `/api/Message/${id}/reactions/${encodeURIComponent(emoji)}`,
     forChat: (chatId: number) => `/api/Message/${chatId}/messages`,

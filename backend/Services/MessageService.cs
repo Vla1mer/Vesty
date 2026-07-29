@@ -18,10 +18,11 @@ namespace Services
         private readonly ICurrentUserService _currentUser;
         private readonly IChatService _chatService;
         private readonly IChatNotifier _notifier;
+        private readonly IAttachmentService _attachments;
 
         public MessageService(IRepositoryManager repository, ILoggerManager logger, IMapper mapper,
             IMessageCipher cipher, ICurrentUserService currentUser, IChatService chatService,
-            IChatNotifier notifier)
+            IChatNotifier notifier, IAttachmentService attachments)
         {
             _repository = repository;
             _logger = logger;
@@ -30,6 +31,7 @@ namespace Services
             _currentUser = currentUser;
             _chatService = chatService;
             _notifier = notifier;
+            _attachments = attachments;
         }
 
         public async Task<(IEnumerable<MessageDto> messages, MetaData metaData)> GetAllAsync(MessageParameters messageParameters)
@@ -52,11 +54,13 @@ namespace Services
 
             var replyTo = await GetReplyTargetOrThrowAsync(message.ChatId, message.ReplyToMessageId);
             var reactions = await _repository.Reaction.GetByMessageIdsAsync(new[] { message.Id });
+            var attachments = await _repository.Attachment.GetByMessageIdsAsync(new[] { message.Id });
 
             return _mapper.Map<MessageDto>(message) with
             {
                 ReplyTo = ToReplyDto(replyTo),
-                Reactions = ReactionMapper.Group(reactions)
+                Reactions = ReactionMapper.Group(reactions),
+                Attachments = attachments.Select(AttachmentService.ToDto).ToList()
             };
         }
 
@@ -73,36 +77,59 @@ namespace Services
                 .GroupBy(r => r.MessageId)
                 .ToDictionary(g => g.Key, g => ReactionMapper.Group(g));
 
+            var attachments = await _repository.Attachment.GetByMessageIdsAsync(messages.Select(m => m.Id));
+            var attachmentsByMessage = attachments
+                .GroupBy(a => a.MessageId!.Value)
+                .ToDictionary(g => g.Key, g => g.Select(AttachmentService.ToDto).ToList());
+
             return messages.Select(m => _mapper.Map<MessageDto>(m) with
             {
                 ReplyTo = m.ReplyToMessageId is int replyId && byId.TryGetValue(replyId, out var target)
                     ? ToReplyDto(target)
                     : null,
-                Reactions = reactionsByMessage.TryGetValue(m.Id, out var rs) ? rs : []
+                Reactions = reactionsByMessage.TryGetValue(m.Id, out var rs) ? rs : [],
+                Attachments = attachmentsByMessage.TryGetValue(m.Id, out var att)
+                    ? att
+                    : Enumerable.Empty<MessageAttachmentDto>()
             });
         }
 
-        public async Task<MessageDto> CreateMessageForChatAsync(int chatId, string content, int? replyToMessageId = null)
+        public async Task<MessageDto> CreateMessageForChatAsync(int chatId, string? content,
+            int? replyToMessageId = null, IEnumerable<int>? attachmentIds = null)
         {
             await GetChatOrThrowAsync(chatId);
             await EnsureCallerIsChatMember(chatId);
 
+            var text = content ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(text) && attachmentIds?.Any() != true)
+                throw new EmptyMessageException();
+
             var replyTo = await GetReplyTargetOrThrowAsync(chatId, replyToMessageId);
+            var attachments = await _attachments.ReserveAsync(attachmentIds ?? []);
 
             var message = new Message
             {
                 UserId = _currentUser.UserId,
-                Content = _cipher.Encrypt(content),
+                Content = _cipher.Encrypt(text),
                 ReplyToMessageId = replyTo?.Id
             };
             _repository.Message.CreateMessageForChat(chatId, message);
             await _repository.SaveAsync();
-            message.Content = _cipher.Decrypt(message.Content);
+
+            if (attachments.Count > 0)
+            {
+                foreach (var attachment in attachments)
+                    attachment.MessageId = message.Id;
+
+                await _repository.SaveAsync();
+            }
 
             var messageDto = _mapper.Map<MessageDto>(message) with
             {
+                Content = text,
                 UserName = _currentUser.UserName,
-                ReplyTo = ToReplyDto(replyTo)
+                ReplyTo = ToReplyDto(replyTo),
+                Attachments = attachments.Select(AttachmentService.ToDto).ToList()
             };
             await _notifier.MessageReceivedAsync(await GetMemberIdsAsync(chatId), messageDto);
             return messageDto;
@@ -118,6 +145,9 @@ namespace Services
         {
             var message = await GetMessageOrThrowAsync(id, trackChanges: false);
             await EnsureCallerCanModerateMessage(message);
+
+            await _attachments.DeleteForMessageAsync(message.Id);
+
             _repository.Message.DeleteMessage(message);
             await _repository.SaveAsync();
 
@@ -140,12 +170,15 @@ namespace Services
 
             var replyTo = await GetReplyTargetOrThrowAsync(chatId, message.ReplyToMessageId);
             var reactions = await _repository.Reaction.GetByMessageIdsAsync(new[] { message.Id });
+            var attachments = await _repository.Attachment.GetByMessageIdsAsync(new[] { message.Id });
 
             var messageDto = _mapper.Map<MessageDto>(message) with
             {
+                Content = content,
                 UserName = _currentUser.UserName,
                 ReplyTo = ToReplyDto(replyTo),
-                Reactions = ReactionMapper.Group(reactions)
+                Reactions = ReactionMapper.Group(reactions),
+                Attachments = attachments.Select(AttachmentService.ToDto).ToList()
             };
             await _notifier.MessageUpdatedAsync(await GetMemberIdsAsync(chatId), messageDto);
         }

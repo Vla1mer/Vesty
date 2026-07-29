@@ -24,6 +24,8 @@ import { formatDateSeparator, isSameDay } from "../utils/date";
 import { onChatDeleted } from "../lib/signalr";
 import { setActiveChat } from "../lib/activeChat";
 import { useTypingIndicator } from "../hooks/useTypingIndicator";
+import { useAttachmentUploads } from "../hooks/useAttachmentUploads";
+import { AttachmentDrafts } from "../components/AttachmentDrafts";
 import type { AxiosBaseQueryError } from "../api/axiosBaseQuery";
 import { isDirectChat, UserRole, type ChatMemberWithRoleDto, type MessageDto } from "../types/api";
 
@@ -72,6 +74,9 @@ export function ChatDetailPage() {
   const [markChatRead] = useMarkChatReadMutation();
   const [toggleReaction] = useToggleReactionMutation();
   const [togglePin] = useTogglePinMutation();
+  const attachments = useAttachmentUploads(chatId);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDraggingFile, setIsDraggingFile] = useState(false);
   const { typingNames, notifyTyping } = useTypingIndicator(chatId, isValidChat);
 
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -180,7 +185,8 @@ export function ChatDetailPage() {
   async function handleSend(e: FormEvent) {
     e.preventDefault();
     const content = input.trim();
-    if (!content || sending || saving) return;
+    if (sending || saving || attachments.isUploading) return;
+    if (!content && attachments.readyIds.length === 0) return;
 
     if (editingId !== null) {
       if (content === editingMessage?.content) {
@@ -201,9 +207,11 @@ export function ChatDetailPage() {
         chatId,
         content,
         replyToMessageId: replyTo?.id,
+        attachmentIds: attachments.readyIds.length ? attachments.readyIds : undefined,
       }).unwrap();
       setInput("");
       setReplyTo(null);
+      attachments.clear();
     } catch {
       setActionError("Failed to send message");
     }
@@ -274,7 +282,33 @@ export function ChatDetailPage() {
   const title = chat ? getChatDisplayName(chat) : `Chat #${chatId}`;
 
   return (
-    <div className="relative h-full flex flex-col">
+    <div
+      className="relative h-full flex flex-col"
+      onDragOver={(e) => {
+        if (!e.dataTransfer.types.includes("Files")) return;
+        e.preventDefault();
+        setIsDraggingFile(true);
+      }}
+      onDragLeave={(e) => {
+        if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+        setIsDraggingFile(false);
+      }}
+      onDrop={(e) => {
+        if (!e.dataTransfer.types.includes("Files")) return;
+        e.preventDefault();
+        setIsDraggingFile(false);
+        attachments.add(Array.from(e.dataTransfer.files));
+      }}
+      onPaste={(e) => {
+        const files = Array.from(e.clipboardData.files);
+        if (files.length > 0) attachments.add(files);
+      }}
+    >
+      {isDraggingFile && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center border-2 border-dashed border-amber-500 bg-slate-900/80 pointer-events-none">
+          <p className="text-lg font-medium text-amber-400">Drop files to attach</p>
+        </div>
+      )}
       <div className="absolute top-0 inset-x-0 overflow-hidden min-h-[88px] z-10">
         <header
           className={`absolute inset-0 flex items-center gap-4 p-4 border-b border-slate-700 bg-slate-900/80 backdrop-blur transition-transform duration-200 ${
@@ -551,7 +585,27 @@ export function ChatDetailPage() {
               </button>
             </div>
           )}
+          <AttachmentDrafts uploads={attachments.uploads} onRemove={attachments.remove} />
           <form onSubmit={handleSend} className="flex gap-2 p-4">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              aria-label="Attach file"
+              title="Attach file"
+              className="shrink-0 px-2 text-2xl text-slate-400 hover:text-amber-400 transition"
+            >
+              📎
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              onChange={(e) => {
+                attachments.add(Array.from(e.target.files ?? []));
+                e.target.value = "";
+              }}
+              className="hidden"
+            />
             <input
               ref={inputRef}
               type="text"
@@ -570,7 +624,12 @@ export function ChatDetailPage() {
             />
             <button
               type="submit"
-              disabled={sending || saving || !input.trim()}
+              disabled={
+                sending ||
+                saving ||
+                attachments.isUploading ||
+                (!input.trim() && attachments.readyIds.length === 0)
+              }
               className="px-5 py-2 rounded bg-amber-600 hover:bg-amber-500 text-white disabled:bg-slate-700 disabled:cursor-not-allowed font-medium transition"
             >
               {sending || saving ? "..." : editingId !== null ? "Save" : "Send"}

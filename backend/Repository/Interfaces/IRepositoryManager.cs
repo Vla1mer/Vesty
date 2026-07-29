@@ -9,6 +9,7 @@
         IChatMemberRepository ChatMember { get; }
         IMessageRepository Message { get; }
         IReactionRepository Reaction { get; }
+        IAttachmentRepository Attachment { get; }
         Task SaveAsync();
     }
 }

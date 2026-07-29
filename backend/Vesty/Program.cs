@@ -60,6 +60,8 @@ builder.Services.AddOpenApi(options =>
 });
 builder.Services.ConfigureServiceManager();
 builder.Services.ConfigureMessageCipher();
+builder.Services.ConfigureFileStorage(builder.Configuration);
+builder.Services.AddHostedService<AbandonedAttachmentCleaner>();
 builder.Services.ConfigureCurrentUserService();
 builder.Services.ConfigureIdentity();
 builder.Services.ConfigureJWT(builder.Configuration);

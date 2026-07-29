@@ -19,6 +19,7 @@ namespace Repository
         public DbSet<UserAvatar> UserAvatars { get; set; }
         public DbSet<ChatAvatar> ChatAvatars { get; set; }
         public DbSet<MessageReaction> MessageReactions { get; set; }
+        public DbSet<MessageAttachment> MessageAttachments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -126,6 +127,23 @@ namespace Repository
                 e.HasOne(r => r.User)
                  .WithMany()
                  .HasForeignKey(r => r.UserId)
+                 .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<MessageAttachment>(e => {
+                e.HasKey(a => a.Id);
+                e.Property(a => a.StorageKey).HasMaxLength(200).IsRequired();
+                e.Property(a => a.FileName).HasMaxLength(260).IsRequired();
+                e.Property(a => a.ContentType).HasMaxLength(150).IsRequired();
+                e.Property(a => a.CreatedAt);
+                e.HasIndex(a => a.MessageId);
+                e.HasOne(a => a.Message)
+                 .WithMany(m => m.Attachments)
+                 .HasForeignKey(a => a.MessageId)
+                 .OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(a => a.User)
+                 .WithMany()
+                 .HasForeignKey(a => a.UserId)
                  .OnDelete(DeleteBehavior.Cascade);
             });
 

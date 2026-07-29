@@ -9,6 +9,7 @@ using Repository;
 using Repository.Interfaces;
 using Services;
 using Services.Cryptography;
+using Services.Storage;
 using Services.Interfaces;
 
 namespace Vesty.Extensions
@@ -49,8 +50,18 @@ namespace Vesty.Extensions
         public static void ConfigureServiceManager(this IServiceCollection services) =>
             services.AddScoped<IServiceManager, ServiceManager>();
 
-        public static void ConfigureMessageCipher(this IServiceCollection services) =>
-            services.AddSingleton<IMessageCipher, AesGcmMessageCipher>();
+        public static void ConfigureMessageCipher(this IServiceCollection services)
+        {
+            services.AddSingleton<AesGcmCipher>();
+            services.AddSingleton<IMessageCipher>(sp => sp.GetRequiredService<AesGcmCipher>());
+            services.AddSingleton<IFileCipher>(sp => sp.GetRequiredService<AesGcmCipher>());
+        }
+
+        public static void ConfigureFileStorage(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.Configure<StorageOptions>(configuration.GetSection(StorageOptions.SectionName));
+            services.AddSingleton<IFileStorage, MinioFileStorage>();
+        }
 
         public static void ConfigureCurrentUserService(this IServiceCollection services)
         {

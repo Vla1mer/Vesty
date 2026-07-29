@@ -8,7 +8,10 @@ namespace Vesty.Mappings
     {
         public MessageProfile()
         {
-            CreateMap<Message, MessageDto>();
+            CreateMap<Message, MessageDto>()
+                .ForMember(d => d.Reactions, opt => opt.Ignore())
+                .ForMember(d => d.Attachments, opt => opt.Ignore())
+                .ForMember(d => d.ReplyTo, opt => opt.Ignore());
             CreateMap<MessageForCreationDto, Message>();
             CreateMap<MessageForUpdateDto, Message>();
         }

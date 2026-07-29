@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { MouseEvent, TouchEvent as ReactTouchEvent } from "react";
 import { Avatar } from "./Avatar";
+import { MessageAttachments } from "./MessageAttachments";
 import type { MessageDto } from "../types/api";
 
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🔥"];
@@ -274,6 +275,10 @@ export function MessageBubble({
                     {message.replyTo.content}
                   </span>
                 </button>
+              )}
+
+              {!!message.attachments?.length && (
+                <MessageAttachments attachments={message.attachments} />
               )}
 
               <div className="relative">

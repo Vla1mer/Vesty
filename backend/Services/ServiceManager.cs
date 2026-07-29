@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Repository.Interfaces;
 using Services.Cryptography;
 using Services.Interfaces;
+using Services.Storage;
 
 namespace Services
 {
@@ -17,18 +18,20 @@ namespace Services
         private readonly Lazy<IChatMemberService> _chatMemberService;
         private readonly Lazy<IMessageService> _messageService;
         private readonly Lazy<IReactionService> _reactionService;
+        private readonly Lazy<IAttachmentService> _attachmentService;
 
         public ServiceManager(IRepositoryManager repositoryManager, ILoggerManager logger, IMapper mapper,
             UserManager<User> userManager, IConfiguration configuration, IMessageCipher messageCipher,
-            ICurrentUserService currentUser, IChatNotifier chatNotifier)
+            ICurrentUserService currentUser, IChatNotifier chatNotifier, IFileStorage fileStorage)
         {
             _userService = new Lazy<IUserService>(() => new UserService(repositoryManager, logger, mapper, userManager, configuration, currentUser));
             _avatarService = new Lazy<IAvatarService>(() => new AvatarService(repositoryManager, currentUser));
             _chatAvatarService = new Lazy<IChatAvatarService>(() => new ChatAvatarService(repositoryManager, currentUser));
             _chatService = new Lazy<IChatService>(() => new ChatService(repositoryManager, logger, mapper, currentUser, chatNotifier, messageCipher));
             _chatMemberService = new Lazy<IChatMemberService>(() => new ChatMemberService(repositoryManager, logger, mapper, currentUser, chatNotifier));
-            _messageService = new Lazy<IMessageService>(() => new MessageService(repositoryManager, logger, mapper, messageCipher, currentUser, _chatService.Value, chatNotifier));
+            _messageService = new Lazy<IMessageService>(() => new MessageService(repositoryManager, logger, mapper, messageCipher, currentUser, _chatService.Value, chatNotifier, _attachmentService.Value));
             _reactionService = new Lazy<IReactionService>(() => new ReactionService(repositoryManager, currentUser, chatNotifier));
+            _attachmentService = new Lazy<IAttachmentService>(() => new AttachmentService(repositoryManager, currentUser, fileStorage));
         }
 
         public IUserService User => _userService.Value;
@@ -38,5 +41,6 @@ namespace Services
         public IChatMemberService ChatMember => _chatMemberService.Value;
         public IMessageService Message => _messageService.Value;
         public IReactionService Reaction => _reactionService.Value;
+        public IAttachmentService Attachment => _attachmentService.Value;
     }
 }
