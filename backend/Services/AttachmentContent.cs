@@ -7,20 +7,34 @@ namespace Services
         public const int MaxSizeInBytes = 10 * 1024 * 1024;
         public const int MaxPerMessage = 10;
 
+        private static readonly char[] DirectorySeparators = ['/', '\\'];
+
         private static readonly HashSet<string> BlockedExtensions =
             new(StringComparer.OrdinalIgnoreCase)
             {
                 ".exe", ".bat", ".cmd", ".com", ".msi", ".scr", ".ps1", ".sh", ".vbs", ".jar"
             };
 
-        public static void EnsureValid(string? fileName, long length)
+        public static string NormalizeFileName(string? fileName)
+        {
+            if (string.IsNullOrWhiteSpace(fileName))
+                throw new InvalidAttachmentException("file name is required.");
+
+            var separator = fileName.LastIndexOfAny(DirectorySeparators);
+            var name = (separator >= 0 ? fileName[(separator + 1)..] : fileName).Trim();
+
+            if (name.Length == 0 || name == "." || name == "..")
+                throw new InvalidAttachmentException("file name is required.");
+
+            return name;
+        }
+
+        public static void EnsureValid(string fileName, long length)
         {
             if (length <= 0)
                 throw new InvalidAttachmentException("file is empty.");
             if (length > MaxSizeInBytes)
                 throw new InvalidAttachmentException($"maximum size is {MaxSizeInBytes / (1024 * 1024)} MB.");
-            if (string.IsNullOrWhiteSpace(fileName))
-                throw new InvalidAttachmentException("file name is required.");
             if (BlockedExtensions.Contains(Path.GetExtension(fileName)))
                 throw new InvalidAttachmentException("executable files are not allowed.");
         }

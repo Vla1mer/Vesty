@@ -25,7 +25,9 @@ namespace Services
             string? fileName, string? contentType, long length)
         {
             await EnsureCallerIsChatMemberAsync(chatId);
-            AttachmentContent.EnsureValid(fileName, length);
+
+            var name = AttachmentContent.NormalizeFileName(fileName);
+            AttachmentContent.EnsureValid(name, length);
 
             var data = await AttachmentContent.ReadAsync(content);
             var key = await _storage.PutAsync(data, contentType ?? "application/octet-stream");
@@ -34,7 +36,7 @@ namespace Services
             {
                 UserId = _currentUser.UserId,
                 StorageKey = key,
-                FileName = Path.GetFileName(fileName!),
+                FileName = name,
                 ContentType = contentType ?? "application/octet-stream",
                 SizeInBytes = data.Length
             };

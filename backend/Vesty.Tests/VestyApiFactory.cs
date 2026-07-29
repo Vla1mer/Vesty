@@ -10,14 +10,14 @@ namespace Vesty.Tests
         private const string SecretKey = "vesty-integration-tests-secret-key-0001";
         private const string EncryptionKey = "dmVzdHktdW5pdC10ZXN0LWtleS0wMDAwMDAwMDAwMDE=";
 
-        private readonly PostgreSqlContainer _database = new PostgreSqlBuilder()
+        private readonly PostgreSqlContainer _database = new PostgreSqlBuilder("postgres:17-alpine")
             .WithImage("postgres:17-alpine")
             .WithDatabase("vesty_tests")
             .WithUsername("vesty")
             .WithPassword("vesty")
             .Build();
 
-        private readonly MinioContainer _storage = new MinioBuilder().Build();
+        private readonly MinioContainer _storage = new MinioBuilder("minio/minio:RELEASE.2024-01-16T16-07-38Z").Build();
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {

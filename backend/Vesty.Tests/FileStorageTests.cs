@@ -14,7 +14,7 @@ namespace Vesty.Tests
         private const string EncryptionKey = "dmVzdHktdW5pdC10ZXN0LWtleS0wMDAwMDAwMDAwMDE=";
         private const string Bucket = "test-attachments";
 
-        private readonly MinioContainer _storage = new MinioBuilder().Build();
+        private readonly MinioContainer _storage = new MinioBuilder("minio/minio:RELEASE.2024-01-16T16-07-38Z").Build();
 
         private MinioFileStorage _fileStorage = null!;
         private IMinioClient _rawClient = null!;

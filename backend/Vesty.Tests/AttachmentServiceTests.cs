@@ -94,13 +94,35 @@ namespace Vesty.Tests
             Assert.Equal("report.pdf", result.FileName);
         }
 
-        [Fact]
-        public async Task UploadAsync_StripsDirectoryFromFileName()
+        [Theory]
+        [InlineData(@"C:\secrets\payroll.xlsx")]
+        [InlineData("/home/user/payroll.xlsx")]
+        [InlineData(@"..\..\payroll.xlsx")]
+        [InlineData("  payroll.xlsx  ")]
+        public async Task UploadAsync_StripsDirectoryFromFileName(string fileName)
         {
             var result = await _service.UploadAsync(
-                ChatId, FileOf(8), @"C:\secrets\payroll.xlsx", "application/vnd.ms-excel", 8);
+                ChatId, FileOf(8), fileName, "application/vnd.ms-excel", 8);
 
             Assert.Equal("payroll.xlsx", result.FileName);
+        }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData("   ")]
+        [InlineData(@"C:\secrets\")]
+        [InlineData("..")]
+        public async Task UploadAsync_WithoutUsableFileName_Throws(string fileName)
+        {
+            await Assert.ThrowsAsync<InvalidAttachmentException>(() =>
+                _service.UploadAsync(ChatId, FileOf(8), fileName, "text/plain", 8));
+        }
+
+        [Fact]
+        public async Task UploadAsync_WithExecutableBehindWindowsPath_Throws()
+        {
+            await Assert.ThrowsAsync<InvalidAttachmentException>(() =>
+                _service.UploadAsync(ChatId, FileOf(8), @"C:\tmp\virus.exe", "application/octet-stream", 8));
         }
 
         [Fact]
