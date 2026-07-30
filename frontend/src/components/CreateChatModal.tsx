@@ -1,9 +1,12 @@
 import { X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ValidationError } from "yup";
 import { useCreateChatMutation } from "../store/chatApi";
 import { useGetAllUsersQuery } from "../store/userApi";
 import { useAuth } from "../context/useAuth";
+import { Button } from "./ui/Button";
+import { Modal } from "./ui/Modal";
+import { TextInput } from "./ui/TextInput";
 import { FormError } from "./FormError";
 import { chatNameSchema } from "../validation/chatSchemas";
 import { getApiErrorMessage } from "../utils/apiError";
@@ -26,14 +29,6 @@ export function CreateChatModal({ onClose }: Props) {
   const { data: users = [], isFetching } = useGetAllUsersQuery(undefined, {
     skip: step !== 2 || search.trim().length === 0,
   });
-
-  useEffect(() => {
-    function handleEsc(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
-  }, [onClose]);
 
   const candidates = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -81,35 +76,18 @@ export function CreateChatModal({ onClose }: Props) {
   }
 
   return (
-    <div
-      className="fixed inset-0 bg-scrim/70 flex items-center justify-center z-50 p-4"
-      onClick={onClose}
+    <Modal
+      title={step === 1 ? "New group chat" : "Add members"}
+      onClose={onClose}
+      layout="column"
     >
-      <div
-        className="bg-surface border border-line rounded-card shadow-modal p-6 w-full max-w-sm max-h-[85vh] flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-content">
-            {step === 1 ? "New group chat" : "Add members"}
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-content-muted hover:text-content"
-            aria-label="Close"
-          >
-            <X size={22} />
-          </button>
-        </div>
-
-        {step === 1 ? (
+      {step === 1 ? (
           <div className="space-y-4">
             <div>
               <label className="block text-sm text-content-muted mb-1">
                 Chat name
               </label>
-              <input
+              <TextInput
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -118,11 +96,7 @@ export function CreateChatModal({ onClose }: Props) {
                 }}
                 autoFocus
                 maxLength={200}
-                className={`w-full px-3 py-2 rounded bg-surface border text-content focus:outline-none ${
-                  nameError
-                    ? "border-danger focus:border-danger"
-                    : "border-line-strong focus:border-accent-strong"
-                }`}
+                invalid={Boolean(nameError)}
               />
               {nameError && (
                 <p className="text-xs text-danger mt-1">{nameError}</p>
@@ -130,20 +104,10 @@ export function CreateChatModal({ onClose }: Props) {
             </div>
 
             <div className="flex gap-2 justify-end">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 rounded bg-surface-overlay hover:bg-line-strong text-content transition"
-              >
+              <Button variant="neutral" onClick={onClose}>
                 Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleNext}
-                className="px-4 py-2 rounded bg-accent hover:bg-accent-hover text-accent-contrast font-medium transition"
-              >
-                Next
-              </button>
+              </Button>
+              <Button onClick={handleNext}>Next</Button>
             </div>
           </div>
         ) : (
@@ -164,23 +128,23 @@ export function CreateChatModal({ onClose }: Props) {
                     <button
                       type="button"
                       onClick={() => removeUser(u.id)}
-                      className="text-content-muted hover:text-content"
+                      className="text-content-muted transition hover:text-content"
                       aria-label={`Remove ${u.userName}`}
                     >
-                      <X size={22} />
+                      <X size={14} />
                     </button>
                   </span>
                 ))}
               </div>
             )}
 
-            <input
+            <TextInput
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by username..."
               autoFocus
-              className="w-full px-3 py-2 rounded bg-surface border border-line-strong text-content text-sm focus:outline-none focus:border-accent-strong"
+              className="text-sm"
             />
 
             {search.trim().length > 0 && (
@@ -210,13 +174,9 @@ export function CreateChatModal({ onClose }: Props) {
                             </p>
                           )}
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => addUser(u)}
-                          className="text-xs px-2 py-1 rounded bg-accent hover:bg-accent-hover text-accent-contrast transition"
-                        >
+                        <Button size="xs" onClick={() => addUser(u)}>
                           + Add
-                        </button>
+                        </Button>
                       </li>
                     ))}
                   </ul>
@@ -227,26 +187,15 @@ export function CreateChatModal({ onClose }: Props) {
             <FormError message={error} />
 
             <div className="flex gap-2 justify-end">
-              <button
-                type="button"
-                onClick={() => setStep(1)}
-                disabled={creating}
-                className="px-4 py-2 rounded bg-surface-overlay hover:bg-line-strong text-content transition disabled:opacity-50"
-              >
+              <Button variant="neutral" onClick={() => setStep(1)} disabled={creating}>
                 Back
-              </button>
-              <button
-                type="button"
-                onClick={handleCreate}
-                disabled={creating}
-                className="px-4 py-2 rounded bg-accent hover:bg-accent-hover text-accent-contrast disabled:bg-surface-overlay disabled:cursor-not-allowed font-medium transition"
-              >
+              </Button>
+              <Button onClick={handleCreate} disabled={creating}>
                 {creating ? "Creating..." : "Create"}
-              </button>
+              </Button>
             </div>
           </div>
-        )}
-      </div>
-    </div>
+      )}
+    </Modal>
   );
 }

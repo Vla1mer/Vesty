@@ -5,6 +5,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useGetUserByIdQuery } from "../store/userApi";
 import { useCreateDirectChatAndSendMessageMutation } from "../store/messageApi";
 import type { AxiosBaseQueryError } from "../api/axiosBaseQuery";
+import { Button } from "../components/ui/Button";
+import { TextInput } from "../components/ui/TextInput";
+import { FormError } from "../components/FormError";
 
 export function NewDirectChatPage() {
   const { userId } = useParams<{ userId: string }>();
@@ -64,9 +67,7 @@ export function NewDirectChatPage() {
         {loading && <p className="text-content-muted text-center">Loading...</p>}
 
         {(loadError || sendError) && (
-          <div className="text-sm text-danger bg-danger-soft border border-danger/40 rounded p-3">
-            {loadError ?? sendError}
-          </div>
+          <FormError message={loadError ?? sendError} />
         )}
 
         {!loading && !loadError && !sendError && (
@@ -81,22 +82,18 @@ export function NewDirectChatPage() {
           onSubmit={handleSend}
           className="flex gap-2 p-4 border-t border-line bg-surface sticky bottom-0"
         >
-          <input
+          <TextInput
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type a message..."
             maxLength={2000}
             disabled={sending}
-            className="flex-1 px-3 py-2 rounded bg-surface-raised border border-line-strong text-content focus:outline-none focus:border-accent-strong disabled:opacity-50"
+            className="flex-1"
           />
-          <button
-            type="submit"
-            disabled={sending || !input.trim()}
-            className="px-5 py-2 rounded bg-accent hover:bg-accent-hover text-accent-contrast disabled:bg-surface-overlay disabled:cursor-not-allowed font-medium transition"
-          >
+          <Button type="submit" disabled={sending || !input.trim()} className="px-5">
             {sending ? "..." : "Send"}
-          </button>
+          </Button>
         </form>
       )}
     </div>

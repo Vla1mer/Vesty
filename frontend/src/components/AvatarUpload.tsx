@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { ACCEPTED_IMAGE_TYPES, cropToSquare } from "../utils/image";
+import { Button } from "./ui/Button";
 
 interface AvatarUploadProps {
   preview: ReactNode;
@@ -56,24 +57,14 @@ export function AvatarUpload({
 
       <div className="flex flex-col gap-2 min-w-0">
         <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => inputRef.current?.click()}
-            className="px-3 py-1.5 rounded bg-accent hover:bg-accent-hover text-accent-contrast text-sm font-medium disabled:opacity-50 transition"
-          >
+          <Button size="sm" disabled={busy} onClick={() => inputRef.current?.click()}>
             {uploading ? "Uploading..." : "Upload photo"}
-          </button>
+          </Button>
 
           {hasAvatar && (
-            <button
-              type="button"
-              disabled={busy}
-              onClick={handleRemove}
-              className="px-3 py-1.5 rounded bg-surface-overlay hover:bg-line-strong text-content text-sm disabled:opacity-50 transition"
-            >
+            <Button size="sm" variant="neutral" disabled={busy} onClick={handleRemove}>
               {removing ? "Removing..." : "Remove"}
-            </button>
+            </Button>
           )}
         </div>
 

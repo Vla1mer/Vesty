@@ -7,6 +7,7 @@ import { FormField } from "../components/FormField";
 import { FormError } from "../components/FormError";
 import { registerSchema } from "../validation/authSchemas";
 import { parseApiErrors } from "../utils/apiError";
+import { Button } from "../components/ui/Button";
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -89,13 +90,9 @@ export function RegisterPage() {
             <FormError message={status} />
 
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full py-2 rounded bg-accent hover:bg-accent-hover text-accent-contrast disabled:bg-surface-overlay disabled:cursor-not-allowed font-medium transition"
-            >
+            <Button type="submit" fullWidth disabled={isSubmitting}>
               {isSubmitting ? "Registering..." : "Register"}
-            </button>
+            </Button>
 
             <p className="text-sm text-center text-content-muted">
               Already have an account?{" "}

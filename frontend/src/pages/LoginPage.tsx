@@ -7,6 +7,7 @@ import { FormField } from "../components/FormField";
 import { FormError } from "../components/FormError";
 import { loginSchema } from "../validation/authSchemas";
 import type { AxiosError } from "axios";
+import { Button } from "../components/ui/Button";
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -62,13 +63,9 @@ export function LoginPage() {
             <FormError message={status} />
 
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full py-2 rounded bg-accent hover:bg-accent-hover text-accent-contrast disabled:bg-surface-overlay disabled:cursor-not-allowed font-medium transition"
-            >
+            <Button type="submit" fullWidth disabled={isSubmitting}>
               {isSubmitting ? "Signing in..." : "Sign in"}
-            </button>
+            </Button>
 
             <p className="text-sm text-center text-content-muted">
               Don't have an account?{" "}

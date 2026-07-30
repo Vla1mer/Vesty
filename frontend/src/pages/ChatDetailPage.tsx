@@ -29,6 +29,9 @@ import { ArrowLeft, Copy, Paperclip, Pencil, Pin, Reply, Trash2, X } from "lucid
 import { AttachmentDrafts } from "../components/AttachmentDrafts";
 import type { AxiosBaseQueryError } from "../api/axiosBaseQuery";
 import { isDirectChat, UserRole, type ChatMemberWithRoleDto, type MessageDto } from "../types/api";
+import { Button } from "../components/ui/Button";
+import { TextInput } from "../components/ui/TextInput";
+import { FormError } from "../components/FormError";
 
 function typingText(names: string[]): string {
   if (names.length === 1) return `${names[0]} is typing`;
@@ -439,9 +442,9 @@ export function ChatDetailPage() {
         )}
 
         {(loadError || actionError || messagesError) && (
-          <div className="text-sm text-danger bg-danger-soft border border-danger/40 rounded p-3">
-            {loadError ?? actionError ?? "Failed to load messages"}
-          </div>
+          <FormError
+            message={loadError ?? actionError ?? "Failed to load messages"}
+          />
         )}
 
         {!chatLoading &&
@@ -608,7 +611,7 @@ export function ChatDetailPage() {
               }}
               className="hidden"
             />
-            <input
+            <TextInput
               ref={inputRef}
               type="text"
               value={input}
@@ -622,9 +625,9 @@ export function ChatDetailPage() {
               placeholder="Type a message..."
               maxLength={2000}
               disabled={sending || saving}
-              className="flex-1 px-3 py-2 rounded bg-surface-sunken border border-line-strong text-content focus:outline-none focus:border-accent-strong disabled:opacity-50"
+              className="flex-1"
             />
-            <button
+            <Button
               type="submit"
               disabled={
                 sending ||
@@ -632,10 +635,10 @@ export function ChatDetailPage() {
                 attachments.isUploading ||
                 (!input.trim() && attachments.readyIds.length === 0)
               }
-              className="px-5 py-2 rounded bg-accent hover:bg-accent-hover text-accent-contrast disabled:bg-surface-overlay disabled:cursor-not-allowed font-medium transition"
+              className="px-5"
             >
               {sending || saving ? "..." : editingId !== null ? "Save" : "Send"}
-            </button>
+            </Button>
           </form>
         </div>
       )}

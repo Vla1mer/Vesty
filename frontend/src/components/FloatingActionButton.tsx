@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { Pencil, X } from "lucide-react";
+import { useState } from "react";
+import { Pencil } from "lucide-react";
+import { Modal } from "./ui/Modal";
 import type { LucideIcon } from "lucide-react";
 
 interface Action {
@@ -15,15 +16,6 @@ interface Props {
 
 export function FloatingActionButton({ actions }: Props) {
   const [isOpen, setIsOpen] = useState(false);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    function handleEsc(e: KeyboardEvent) {
-      if (e.key === "Escape") setIsOpen(false);
-    }
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
-  }, [isOpen]);
 
   function handleActionClick(action: Action) {
     setIsOpen(false);
@@ -43,27 +35,8 @@ export function FloatingActionButton({ actions }: Props) {
       </button>
 
       {isOpen && (
-        <div
-          className="fixed inset-0 bg-scrim/70 flex items-center justify-center z-50 p-4"
-          onClick={() => setIsOpen(false)}
-        >
-          <div
-            className="bg-surface border border-line rounded-card shadow-modal p-6 w-full max-w-sm space-y-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-content">Create new</h2>
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                className="text-content-muted hover:text-content"
-                aria-label="Close"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="space-y-2">
+        <Modal title="Create new" onClose={() => setIsOpen(false)}>
+          <div className="space-y-2">
               {actions.map((action, idx) => (
                 <button
                   key={idx}
@@ -81,10 +54,9 @@ export function FloatingActionButton({ actions }: Props) {
                     )}
                   </div>
                 </button>
-              ))}
-            </div>
+            ))}
           </div>
-        </div>
+        </Modal>
       )}
     </>
   );

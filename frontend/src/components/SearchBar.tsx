@@ -1,4 +1,5 @@
 import { Search, X } from "lucide-react";
+import { TextInput } from "./ui/TextInput";
 
 interface Props {
   value: string;
@@ -13,12 +14,12 @@ export function SearchBar({ value, onChange }: Props) {
         aria-hidden="true"
         className="absolute left-3 top-1/2 -translate-y-1/2 text-content-muted"
       />
-      <input
+      <TextInput
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Search chats and users..."
-        className="w-full pl-10 pr-10 py-2 rounded-lg bg-surface-sunken border border-line text-content placeholder-content-muted focus:outline-none focus:border-accent-strong transition"
+        className="rounded-lg pl-10 pr-10"
       />
       {value && (
         <button

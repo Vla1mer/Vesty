@@ -14,6 +14,7 @@ import { FloatingActionButton } from "../components/FloatingActionButton";
 import { ProfileModal } from "../components/ProfileModal";
 import { SettingsModal } from "../components/SettingsModal";
 import { BottomNav } from "../components/BottomNav";
+import { FormError } from "../components/FormError";
 
 export function ChatsPage() {
   const navigate = useNavigate();
@@ -111,9 +112,7 @@ export function ChatsPage() {
         {isLoading && <p className="text-content-muted px-4">Loading...</p>}
 
         {isError && (
-          <div className="text-sm text-danger bg-danger-soft border border-danger/40 rounded p-3 mx-4 mb-4">
-            Failed to load chats
-          </div>
+          <FormError className="mx-4 mb-4" message="Failed to load chats" />
         )}
 
         {!isLoading && !isError && (

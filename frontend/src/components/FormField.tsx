@@ -1,4 +1,5 @@
 import { Eye, EyeOff } from "lucide-react";
+import { TextInput } from "./ui/TextInput";
 import { useState } from "react";
 import { useField } from "formik";
 
@@ -31,19 +32,14 @@ export function FormField({
     <div>
       <label className="block text-sm text-content-muted mb-1">{label}</label>
       <div className="relative">
-        <input
+        <TextInput
           {...field}
           type={inputType}
           autoFocus={autoFocus}
           autoComplete={autoComplete}
           maxLength={maxLength}
-          className={`w-full px-3 py-2 ${
-            isPassword ? "pr-10" : ""
-          } rounded bg-surface-sunken border text-content focus:outline-none ${
-            showError
-              ? "border-danger focus:border-danger"
-              : "border-line-strong focus:border-accent-strong"
-          }`}
+          invalid={showError}
+          className={isPassword ? "pr-10" : ""}
         />
         {isPassword && (
           <button

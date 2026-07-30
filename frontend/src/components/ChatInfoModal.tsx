@@ -1,5 +1,5 @@
 import { ArrowDown, ArrowUp, Pencil, Trash2, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   useDeleteChatMutation,
   useRenameChatMutation,
@@ -12,6 +12,9 @@ import { useGetAllUsersQuery } from "../store/userApi";
 import { useAuth } from "../context/useAuth";
 import { Avatar } from "./Avatar";
 import { ChatAvatarEditor } from "./ChatAvatarEditor";
+import { Button } from "./ui/Button";
+import { TextInput } from "./ui/TextInput";
+import { Modal } from "./ui/Modal";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { isDirectChat, UserRole } from "../types/api";
 import { getChatDisplayName } from "../utils/chats";
@@ -19,6 +22,7 @@ import { chatNameSchema } from "../validation/chatSchemas";
 import { ValidationError } from "yup";
 import type { ChatDto, UserDto, ChatMemberWithRoleDto } from "../types/api";
 import type { AxiosBaseQueryError } from "../api/axiosBaseQuery";
+import { FormError } from "./FormError";
 
 interface Props {
   chat: ChatDto;
@@ -80,14 +84,6 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
       ),
     [isGroup, members, currentUserId]
   );
-
-  useEffect(() => {
-    function handleEsc(e: KeyboardEvent) {
-      if (e.key === "Escape" && busyUserId === null && !deleting) onClose();
-    }
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
-  }, [busyUserId, deleting, onClose]);
 
   const memberIds = useMemo(
     () => new Set(members.map((m) => m.userId)),
@@ -206,19 +202,18 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
 
   return (
     <>
-      <div
-        className="fixed inset-0 bg-scrim/70 flex items-center justify-center z-40 p-4"
-        onClick={busyUserId !== null || deleting ? undefined : onClose}
-      >
-        <div
-          className="bg-surface border border-line rounded-card shadow-modal p-6 w-full max-w-md max-h-[85vh] flex flex-col"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex-1 pr-2">
+      <Modal
+        onClose={busyUserId !== null || deleting ? () => {} : onClose}
+        closeDisabled={busyUserId !== null || deleting}
+        ariaLabel="Chat info"
+        size="md"
+        layout="column"
+        layer="base"
+        title={
+          <div className="flex-1 pr-2">
               {isRenaming ? (
                 <div className="flex flex-col gap-2">
-                  <input
+                  <TextInput
                     type="text"
                     value={nameDraft}
                     onChange={(e) => setNameDraft(e.target.value)}
@@ -228,25 +223,15 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                       if (e.key === "Enter") handleRename();
                       if (e.key === "Escape") setIsRenaming(false);
                     }}
-                    className="text-xl font-bold bg-surface border border-line-strong rounded px-2 py-1 text-content focus:outline-none focus:border-accent-strong"
+                    className="text-xl font-bold"
                   />
                   <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={handleRename}
-                      disabled={renaming || !nameDraft.trim()}
-                      className="text-xs px-3 py-1 rounded bg-accent hover:bg-accent-hover text-accent-contrast disabled:opacity-50"
-                    >
+                    <Button size="xs" onClick={handleRename} disabled={renaming || !nameDraft.trim()}>
                       {renaming ? "..." : "Save"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setIsRenaming(false)}
-                      disabled={renaming}
-                      className="text-xs px-3 py-1 rounded bg-surface-overlay hover:bg-line-strong text-content disabled:opacity-50"
-                    >
+                    </Button>
+                    <Button size="xs" variant="neutral" onClick={() => setIsRenaming(false)} disabled={renaming}>
                       Cancel
-                    </button>
+                    </Button>
                   </div>
                 </div>
               ) : (
@@ -284,22 +269,15 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                   />
                 </div>
               )}
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={busyUserId !== null || deleting}
-              className="text-content-muted hover:text-content disabled:opacity-50"
-              aria-label="Close"
-            >
-              <X size={22} />
-            </button>
           </div>
+        }
+      >
 
           {(error || membersError) && (
-            <div className="text-sm text-danger bg-danger-soft border border-danger/40 rounded p-2 mb-3">
-              {error ?? "Failed to load chat info"}
-            </div>
+            <FormError
+              className="mb-3"
+              message={error ?? "Failed to load chat info"}
+            />
           )}
 
           {loading ? (
@@ -366,43 +344,42 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                             m.roleId !== UserRole.Owner && (
                               <>
                                 {m.roleId === UserRole.User ? (
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      handleChangeRole(m, UserRole.Admin)
-                                    }
+                                  <Button
+                                    size="xs"
+                                    variant="info"
+                                    className="py-0.5"
+                                    onClick={() => handleChangeRole(m, UserRole.Admin)}
                                     disabled={busyUserId !== null}
-                                    className="text-xs px-2 py-0.5 rounded bg-info-soft hover:bg-info/25 text-info disabled:opacity-50 transition"
                                     title="Make admin"
                                   >
-                                    <ArrowUp size={11} aria-hidden="true" className="inline -mt-0.5" /> Admin
-                                  </button>
+                                    <ArrowUp size={11} aria-hidden="true" /> Admin
+                                  </Button>
                                 ) : (
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      handleChangeRole(m, UserRole.User)
-                                    }
+                                  <Button
+                                    size="xs"
+                                    variant="neutral"
+                                    className="py-0.5"
+                                    onClick={() => handleChangeRole(m, UserRole.User)}
                                     disabled={busyUserId !== null}
-                                    className="text-xs px-2 py-0.5 rounded bg-surface-overlay hover:bg-line-strong text-content disabled:opacity-50 transition"
                                     title="Remove admin"
                                   >
-                                    <ArrowDown size={11} aria-hidden="true" className="inline -mt-0.5" /> Member
-                                  </button>
+                                    <ArrowDown size={11} aria-hidden="true" /> Member
+                                  </Button>
                                 )}
                               </>
                             )}
 
                           {/* Удалить участника */}
                           {isGroup && m.userId !== currentUserId && (
-                            <button
-                              type="button"
+                            <Button
+                              size="xs"
+                              variant="danger"
                               onClick={() => handleRemove(m)}
                               disabled={busyUserId !== null}
-                              className="text-xs px-2 py-0.5 rounded bg-danger-soft hover:bg-danger/25 text-danger disabled:opacity-50 transition"
+                              aria-label="Remove member"
                             >
                               {busyUserId === m.userId ? "..." : <X size={12} />}
-                            </button>
+                            </Button>
                           )}
                         </div>
                       </li>
@@ -416,12 +393,12 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                   <h3 className="text-sm font-semibold text-content-muted mb-2">
                     Add a user
                   </h3>
-                  <input
+                  <TextInput
                     type="text"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search by username..."
-                    className="w-full px-3 py-2 rounded bg-surface border border-line-strong text-content text-sm focus:outline-none focus:border-accent-strong mb-2"
+                    className="mb-2 text-sm"
                   />
                   {search.trim().length === 0 ? (
                     <p className="text-sm text-content-subtle py-2 text-center">
@@ -458,14 +435,9 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                               )}
                             </div>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => handleAdd(u)}
-                            disabled={busyUserId !== null}
-                            className="text-xs px-2 py-1 rounded bg-accent hover:bg-accent-hover text-accent-contrast disabled:opacity-50 transition"
-                          >
+                          <Button size="xs" onClick={() => handleAdd(u)} disabled={busyUserId !== null}>
                             {busyUserId === u.id ? "..." : "+ Add"}
-                          </button>
+                          </Button>
                         </li>
                       ))}
                     </ul>
@@ -475,21 +447,20 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
 
               {canDelete && (
                 <section className="pt-2 border-t border-line">
-                  <button
-                    type="button"
+                  <Button
+                    variant="danger"
+                    fullWidth
                     onClick={() => setIsDeleteOpen(true)}
                     disabled={busyUserId !== null || deleting}
-                    className="w-full px-4 py-2 rounded bg-danger-soft hover:bg-danger/25 text-danger disabled:opacity-50 transition font-medium"
                   >
-                    <Trash2 size={15} aria-hidden="true" className="inline -mt-0.5 mr-1.5" />
+                    <Trash2 size={15} aria-hidden="true" />
                     Delete chat
-                  </button>
+                  </Button>
                 </section>
               )}
             </div>
           )}
-        </div>
-      </div>
+      </Modal>
 
       {isDeleteOpen && (
         <ConfirmDialog

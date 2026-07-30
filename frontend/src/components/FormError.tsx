@@ -1,11 +1,15 @@
 interface FormErrorProps {
   message?: string | null;
+  className?: string;
 }
 
-export function FormError({ message }: FormErrorProps) {
+export function FormError({ message, className = "" }: FormErrorProps) {
   if (!message) return null;
   return (
-    <div className="text-sm text-danger bg-danger-soft border border-danger/40 rounded p-2">
+    <div
+      role="alert"
+      className={`rounded border border-danger/40 bg-danger-soft p-3 text-sm text-danger ${className}`}
+    >
       {message}
     </div>
   );

@@ -1,9 +1,12 @@
-import { MessageSquare, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { MessageSquare } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGetAllUsersQuery } from "../store/userApi";
 import { useAuth } from "../context/useAuth";
 import type { UserDto } from "../types/api";
+import { FormError } from "./FormError";
+import { Modal } from "./ui/Modal";
+import { TextInput } from "./ui/TextInput";
 
 interface Props {
   onClose: () => void;
@@ -18,14 +21,6 @@ export function SelectUserModal({ onClose }: Props) {
     { skip: search.trim().length === 0 }
   );
 
-  useEffect(() => {
-    function handleEsc(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
-  }, [onClose]);
-
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     if (!term) return [];
@@ -39,42 +34,19 @@ export function SelectUserModal({ onClose }: Props) {
   }
 
   return (
-    <div
-      className="fixed inset-0 bg-scrim/70 flex items-center justify-center z-50 p-4"
-      onClick={onClose}
-    >
-      <div
-        className="bg-surface border border-line rounded-card shadow-modal p-6 w-full max-w-md max-h-[80vh] flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-content">Start a chat</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-content-muted hover:text-content"
-            aria-label="Close"
-          >
-            <X size={22} />
-          </button>
-        </div>
-
-        <input
+    <Modal title="Start a chat" onClose={onClose} size="md" layout="column">
+      <div className="shrink-0 space-y-3 pb-3">
+        <TextInput
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by username..."
           autoFocus
-          className="w-full px-3 py-2 rounded bg-surface border border-line-strong text-content placeholder-content-muted focus:outline-none focus:border-accent-strong mb-3"
         />
+        {isError && <FormError message="Failed to load users" />}
+      </div>
 
-        {isError && (
-          <div className="text-sm text-danger bg-danger-soft border border-danger/40 rounded p-2 mb-3">
-            Failed to load users
-          </div>
-        )}
-
-        <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto">
           {search.trim().length === 0 ? (
             <p className="text-sm text-content-subtle text-center py-6">
               Start typing to find someone
@@ -110,8 +82,7 @@ export function SelectUserModal({ onClose }: Props) {
               ))}
             </ul>
           )}
-        </div>
       </div>
-    </div>
+    </Modal>
   );
 }

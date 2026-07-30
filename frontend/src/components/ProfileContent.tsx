@@ -14,6 +14,7 @@ import { FormField } from "./FormField";
 import { FormError } from "./FormError";
 import { profileSchema } from "../validation/profileSchema";
 import { parseApiErrors } from "../utils/apiError";
+import { Button } from "./ui/Button";
 
 export function ProfileContent() {
   const navigate = useNavigate();
@@ -53,9 +54,7 @@ export function ProfileContent() {
       {loading && <p className="text-content-muted">Loading...</p>}
 
       {(error || isError) && (
-        <div className="text-sm text-danger bg-danger-soft border border-danger/40 rounded p-3 mb-4">
-          {error ?? "Failed to load profile"}
-        </div>
+        <FormError className="mb-4" message={error ?? "Failed to load profile"} />
       )}
 
       {!loading && user && (
@@ -108,21 +107,12 @@ export function ProfileContent() {
                   <FormError message={status} />
 
                   <div className="flex gap-2 pt-2">
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="px-4 py-2 rounded bg-accent hover:bg-accent-hover text-accent-contrast font-medium disabled:opacity-50 transition"
-                    >
+                    <Button type="submit" disabled={isSubmitting}>
                       {isSubmitting ? "Saving..." : "Save"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setIsEditing(false)}
-                      disabled={isSubmitting}
-                      className="px-4 py-2 rounded bg-surface-overlay hover:bg-line-strong text-content disabled:opacity-50 transition"
-                    >
+                    </Button>
+                    <Button variant="neutral" onClick={() => setIsEditing(false)} disabled={isSubmitting}>
                       Cancel
-                    </button>
+                    </Button>
                   </div>
                 </Form>
               )}
@@ -136,31 +126,22 @@ export function ProfileContent() {
               <Row label="Birthday" value={user.birthday} />
 
               <div className="pt-4 flex flex-col gap-2">
-                <button
-                  type="button"
+                <Button
                   onClick={() => {
                     setError(null);
                     setIsEditing(true);
                   }}
-                  className="w-full px-4 py-2 rounded bg-accent hover:bg-accent-hover text-accent-contrast font-medium transition"
+                  fullWidth
                 >
-                  <Pencil size={15} aria-hidden="true" className="inline -mt-0.5 mr-1.5" />
+                  <Pencil size={15} aria-hidden="true" />
                   Edit profile
-                </button>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="w-full px-4 py-2 rounded bg-surface-overlay hover:bg-line-strong text-content transition"
-                >
+                </Button>
+                <Button variant="neutral" fullWidth onClick={handleLogout}>
                   Logout
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsDeleteOpen(true)}
-                  className="w-full px-4 py-2 rounded bg-danger-soft hover:bg-danger/25 text-danger transition"
-                >
+                </Button>
+                <Button variant="danger" fullWidth onClick={() => setIsDeleteOpen(true)}>
                   Delete account
-                </button>
+                </Button>
               </div>
             </div>
           )}
