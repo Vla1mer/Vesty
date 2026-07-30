@@ -25,7 +25,7 @@ import { onChatDeleted } from "../lib/signalr";
 import { setActiveChat } from "../lib/activeChat";
 import { useTypingIndicator } from "../hooks/useTypingIndicator";
 import { useAttachmentUploads } from "../hooks/useAttachmentUploads";
-import { ArrowLeft, ChevronRight, Copy, MessageCircle, Paperclip, Pencil, Pin, Reply, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowLeft, ChevronRight, Copy, MessageCircle, Paperclip, Pencil, Pin, Reply, Trash2, X } from "lucide-react";
 import { AttachmentDrafts } from "../components/AttachmentDrafts";
 import type { AxiosBaseQueryError } from "../api/axiosBaseQuery";
 import { isDirectChat, UserRole, type ChatMemberWithRoleDto, type MessageDto } from "../types/api";
@@ -56,6 +56,10 @@ export function ChatDetailPage() {
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [unreadOnEntry, setUnreadOnEntry] = useState<number | null>(null);
+  const [showJumpToBottom, setShowJumpToBottom] = useState(false);
+  const [initialScrollDone, setInitialScrollDone] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const { data: chat, isLoading: chatLoading, error: chatError } =
     useGetChatByIdQuery(chatId, {
@@ -147,9 +151,42 @@ export function ChatDetailPage() {
     return "Failed to load chat";
   }, [isValidChat, chatError]);
 
-  useEffect(() => {
+  function handleScroll() {
+    const el = scrollRef.current;
+    if (!el) return;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    setShowJumpToBottom(distanceFromBottom > 240);
+  }
+
+  function jumpToBottom() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }
+
+  const firstUnreadId = useMemo(() => {
+    if (!unreadOnEntry || unreadOnEntry > messages.length) return null;
+    return messages[messages.length - unreadOnEntry]?.id ?? null;
+  }, [messages, unreadOnEntry]);
+
+  useEffect(() => {
+    if (messages.length === 0) return;
+
+    if (!initialScrollDone) {
+      // ждём счётчик непрочитанных: запрос за чатом приходит позже сообщений
+      if (unreadOnEntry === null) return;
+
+      const anchor =
+        firstUnreadId !== null
+          ? document.getElementById(`message-${firstUnreadId}`)
+          : null;
+
+      if (anchor) anchor.scrollIntoView({ block: "center" });
+      else bottomRef.current?.scrollIntoView();
+      setInitialScrollDone(true);
+      return;
+    }
+
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, firstUnreadId, unreadOnEntry, initialScrollDone]);
 
   useEffect(() => {
     if (!isValidChat) return;
@@ -159,11 +196,19 @@ export function ChatDetailPage() {
 
   useEffect(() => {
     setPinnedIndex(0);
+    setUnreadOnEntry(null);
+    setInitialScrollDone(false);
   }, [chatId]);
 
   useEffect(() => {
-    if (isValidChat) markChatRead(chatId);
-  }, [chatId, isValidChat, messages.length, markChatRead]);
+    if (unreadOnEntry !== null) return;
+    if (chat) setUnreadOnEntry(chat.unreadCount ?? 0);
+    else if (chatError) setUnreadOnEntry(0);
+  }, [chat, chatError, unreadOnEntry]);
+
+  useEffect(() => {
+    if (isValidChat && initialScrollDone) markChatRead(chatId);
+  }, [chatId, isValidChat, initialScrollDone, messages.length, markChatRead]);
 
   useEffect(() => {
     if (!isValidChat) return;
@@ -434,6 +479,8 @@ export function ChatDetailPage() {
       )}
 
       <div
+        ref={scrollRef}
+        onScroll={handleScroll}
         className={`flex-1 min-h-0 overflow-y-auto px-4 pb-4 flex flex-col ${
           activePinned && !selectionMode ? "pt-[140px]" : "pt-[88px]"
         }`}
@@ -481,6 +528,16 @@ export function ChatDetailPage() {
                   <span className="text-xs text-content-muted bg-surface-raised px-3 py-1 rounded-full">
                     {formatDateSeparator(msg.createdAt)}
                   </span>
+                </div>
+              )}
+
+              {msg.id === firstUnreadId && (
+                <div className="my-3 flex items-center gap-3">
+                  <span className="h-px flex-1 bg-accent-strong/40" />
+                  <span className="text-xs font-medium text-accent-strong">
+                    Unread messages
+                  </span>
+                  <span className="h-px flex-1 bg-accent-strong/40" />
                 </div>
               )}
               <MessageBubble
@@ -564,6 +621,24 @@ export function ChatDetailPage() {
             onConfirm={confirmBulkDelete}
             onCancel={() => setBulkDeleteOpen(false)}
           />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showJumpToBottom && (
+          <motion.button
+            type="button"
+            onClick={jumpToBottom}
+            aria-label="Jump to latest message"
+            title="Jump to latest message"
+            initial={{ opacity: 0, scale: 0.8, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 8 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28 }}
+            className="absolute bottom-24 right-4 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface-overlay text-content shadow-float transition-colors hover:bg-surface-raised"
+          >
+            <ArrowDown size={18} />
+          </motion.button>
         )}
       </AnimatePresence>
 
