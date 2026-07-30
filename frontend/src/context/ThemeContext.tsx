@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import {
-  THEME_STORAGE_KEY,
   ThemeContext,
   readStoredPreference,
   resolveTheme,
+  storePreference,
 } from "./themeContextInternal";
 import type { ThemePreference } from "./themeContextInternal";
 
@@ -30,7 +30,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [resolved]);
 
   const setPreference = useCallback((next: ThemePreference) => {
-    localStorage.setItem(THEME_STORAGE_KEY, next);
+    storePreference(next);
     setPreferenceState(next);
   }, []);
 

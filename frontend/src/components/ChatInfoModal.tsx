@@ -204,7 +204,7 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
   return (
     <>
       <Modal
-        onClose={busyUserId !== null || deleting ? () => {} : onClose}
+        onClose={onClose}
         closeDisabled={busyUserId !== null || deleting}
         ariaLabel="Chat info"
         size="md"

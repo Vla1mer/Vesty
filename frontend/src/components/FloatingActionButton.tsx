@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Pencil } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
 import { Modal } from "./ui/Modal";
 import type { LucideIcon } from "lucide-react";
 
@@ -34,8 +35,9 @@ export function FloatingActionButton({ actions }: Props) {
         <Pencil size={16} className="hidden md:block" />
       </button>
 
-      {isOpen && (
-        <Modal title="Create new" onClose={() => setIsOpen(false)}>
+      <AnimatePresence>
+        {isOpen && (
+          <Modal title="Create new" onClose={() => setIsOpen(false)}>
           <div className="space-y-2">
               {actions.map((action, idx) => (
                 <button
@@ -54,10 +56,11 @@ export function FloatingActionButton({ actions }: Props) {
                     )}
                   </div>
                 </button>
-            ))}
-          </div>
-        </Modal>
-      )}
+              ))}
+            </div>
+          </Modal>
+        )}
+      </AnimatePresence>
     </>
   );
 }

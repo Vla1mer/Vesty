@@ -40,11 +40,11 @@ export function Modal({
 
   useEffect(() => {
     function handleEsc(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape" && !closeDisabled) onClose();
     }
     window.addEventListener("keydown", handleEsc);
     return () => window.removeEventListener("keydown", handleEsc);
-  }, [onClose]);
+  }, [onClose, closeDisabled]);
 
   return (
     <motion.div
@@ -59,7 +59,11 @@ export function Modal({
         pressStartedOnBackdrop.current = e.target === e.currentTarget;
       }}
       onClick={(e) => {
-        if (e.target === e.currentTarget && pressStartedOnBackdrop.current) {
+        if (
+          !closeDisabled &&
+          e.target === e.currentTarget &&
+          pressStartedOnBackdrop.current
+        ) {
           onClose();
         }
       }}

@@ -461,7 +461,7 @@ export function ChatDetailPage() {
             />
           )}
 
-        <div className="mt-auto space-y-3">
+        <div className={messages.length > 0 ? "mt-auto space-y-3" : "space-y-3"}>
         <AnimatePresence initial={false}>
           {messages.map((msg, index) => {
           const prev = messages[index - 1];

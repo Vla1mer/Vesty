@@ -25,7 +25,7 @@ export function ConfirmDialog({
   return (
     <Modal
       title={title}
-      onClose={loading ? () => {} : onCancel}
+      onClose={onCancel}
       closeDisabled={loading}
     >
       <p className="text-sm text-content-muted">{message}</p>

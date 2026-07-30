@@ -20,8 +20,20 @@ export function isThemePreference(value: unknown): value is ThemePreference {
 }
 
 export function readStoredPreference(): ThemePreference {
-  const stored = localStorage.getItem(THEME_STORAGE_KEY);
-  return isThemePreference(stored) ? stored : "system";
+  try {
+    const stored = localStorage.getItem(THEME_STORAGE_KEY);
+    return isThemePreference(stored) ? stored : "system";
+  } catch {
+    return "system";
+  }
+}
+
+export function storePreference(preference: ThemePreference): void {
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, preference);
+  } catch {
+    // недоступное хранилище не должно ломать переключение темы
+  }
 }
 
 export function resolveTheme(preference: ThemePreference): ResolvedTheme {

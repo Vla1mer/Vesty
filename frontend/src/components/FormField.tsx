@@ -68,9 +68,16 @@ export function FormField({
           </motion.p>
         ) : (
           hint && (
-            <p key="hint" className="mt-1 text-xs text-content-subtle">
+            <motion.p
+              key="hint"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.12 }}
+              className="mt-1 text-xs text-content-subtle"
+            >
               {hint}
-            </p>
+            </motion.p>
           )
         )}
       </AnimatePresence>

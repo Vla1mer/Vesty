@@ -7,7 +7,10 @@
     <title>Vesty</title>
     <script>
       (function () {
-        var stored = localStorage.getItem("vesty.theme");
+        var stored = null;
+        try {
+          stored = localStorage.getItem("vesty.theme");
+        } catch (e) {}
         var preference = stored === "light" || stored === "dark" ? stored : "system";
         var theme =
           preference === "system"
