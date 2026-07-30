@@ -119,14 +119,16 @@ export function ProfileContent() {
               )}
             </Formik>
           ) : (
-            <div className="space-y-3">
-              <Row label="Username" value={user.userName} />
-              <Row label="First name" value={user.name} />
-              <Row label="Surname" value={user.surname} />
-              <Row label="Phone" value={user.phone} />
-              <Row label="Birthday" value={user.birthday} />
+            <div className="space-y-5">
+              <div className="divide-y divide-line overflow-hidden rounded-card border border-line">
+                <Row label="Username" value={user.userName} />
+                <Row label="First name" value={user.name} />
+                <Row label="Surname" value={user.surname} />
+                <Row label="Phone" value={user.phone} />
+                <Row label="Birthday" value={user.birthday} />
+              </div>
 
-              <div className="pt-4 flex flex-col gap-2">
+              <div className="flex flex-col gap-2">
                 <Button
                   onClick={() => {
                     setError(null);
@@ -140,7 +142,15 @@ export function ProfileContent() {
                 <Button variant="neutral" fullWidth onClick={handleLogout}>
                   Logout
                 </Button>
-                <Button variant="danger" fullWidth onClick={() => setIsDeleteOpen(true)}>
+              </div>
+
+              <div className="border-t border-line pt-4 text-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-danger hover:text-danger"
+                  onClick={() => setIsDeleteOpen(true)}
+                >
                   Delete account
                 </Button>
               </div>
@@ -168,9 +178,13 @@ export function ProfileContent() {
 
 function Row({ label, value }: { label: string; value?: string }) {
   return (
-    <div className="flex justify-between border-b border-line pb-2">
-      <span className="text-sm text-content-muted">{label}</span>
-      <span className="text-sm text-content">{value || "—"}</span>
+    <div className="flex items-baseline justify-between gap-4 bg-surface-muted/40 px-4 py-2.5">
+      <span className="shrink-0 text-sm text-content-muted">{label}</span>
+      <span
+        className={`truncate text-sm ${value ? "font-medium text-content" : "text-content-subtle"}`}
+      >
+        {value || "—"}
+      </span>
     </div>
   );
 }

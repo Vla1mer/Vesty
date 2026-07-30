@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import { X } from "lucide-react";
 import { motion } from "framer-motion";
@@ -36,6 +36,8 @@ export function Modal({
   layer = "top",
   children,
 }: Props) {
+  const pressStartedOnBackdrop = useRef(false);
+
   useEffect(() => {
     function handleEsc(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
@@ -53,7 +55,14 @@ export function Modal({
       className={`fixed inset-0 flex items-center justify-center bg-scrim/70 p-4 ${
         layer === "top" ? "z-50" : "z-40"
       }`}
-      onClick={onClose}
+      onPointerDown={(e) => {
+        pressStartedOnBackdrop.current = e.target === e.currentTarget;
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget && pressStartedOnBackdrop.current) {
+          onClose();
+        }
+      }}
     >
       <motion.div
         role="dialog"
@@ -63,7 +72,6 @@ export function Modal({
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 8, scale: 0.98 }}
         transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-        onClick={(e) => e.stopPropagation()}
         className={`w-full ${WIDTHS[size]} rounded-card border border-line bg-surface p-6 shadow-modal ${LAYOUTS[layout]}`}
       >
         {title && (

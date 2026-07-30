@@ -1,10 +1,12 @@
 import { useRef, useState } from "react";
 import type { ReactNode } from "react";
+import { Pencil } from "lucide-react";
 import { ACCEPTED_IMAGE_TYPES, cropToSquare } from "../utils/image";
 import { Button } from "./ui/Button";
 
 interface AvatarUploadProps {
   preview: ReactNode;
+  heading?: ReactNode;
   hasAvatar: boolean;
   uploading: boolean;
   removing: boolean;
@@ -14,6 +16,7 @@ interface AvatarUploadProps {
 
 export function AvatarUpload({
   preview,
+  heading,
   hasAvatar,
   uploading,
   removing,
@@ -53,22 +56,36 @@ export function AvatarUpload({
 
   return (
     <div className="flex items-center gap-4">
-      {preview}
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        disabled={busy}
+        aria-label={hasAvatar ? "Change photo" : "Upload photo"}
+        title={hasAvatar ? "Change photo" : "Upload photo"}
+        className="group relative shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong disabled:cursor-not-allowed"
+      >
+        {preview}
+        <span
+          className={`pointer-events-none absolute inset-0 flex items-center justify-center rounded-full bg-scrim/55 text-white transition-opacity duration-150 ${
+            uploading
+              ? "opacity-100"
+              : "opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100"
+          }`}
+        >
+          <Pencil size={18} aria-hidden="true" />
+        </span>
+      </button>
 
-      <div className="flex flex-col gap-2 min-w-0">
-        <div className="flex flex-wrap gap-2">
-          <Button size="sm" disabled={busy} onClick={() => inputRef.current?.click()}>
-            {uploading ? "Uploading..." : "Upload photo"}
+      <div className="flex min-w-0 flex-col items-start gap-1.5">
+        {heading}
+
+        {hasAvatar && (
+          <Button size="xs" variant="ghost" disabled={busy} onClick={handleRemove}>
+            {removing ? "Removing..." : "Remove photo"}
           </Button>
+        )}
 
-          {hasAvatar && (
-            <Button size="sm" variant="neutral" disabled={busy} onClick={handleRemove}>
-              {removing ? "Removing..." : "Remove"}
-            </Button>
-          )}
-        </div>
-
-        <p className="text-xs text-content-muted">JPEG, PNG or WebP</p>
+        <p className="text-xs text-content-subtle">JPEG, PNG or WebP</p>
         {error && <p className="text-xs text-danger">{error}</p>}
       </div>
 

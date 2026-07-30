@@ -27,6 +27,14 @@ export function AvatarEditor({ user }: AvatarEditorProps) {
             size="xl"
           />
         }
+        heading={
+          <div className="min-w-0">
+            <p className="truncate text-base font-semibold text-content">
+              {[user.name, user.surname].filter(Boolean).join(" ") || user.userName}
+            </p>
+            <p className="truncate text-xs text-content-muted">@{user.userName}</p>
+          </div>
+        }
         hasAvatar={Boolean(user.avatarUpdatedAt)}
         uploading={uploading}
         removing={removing}
