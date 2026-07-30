@@ -22,6 +22,7 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
   fullWidth?: boolean;
+  glow?: boolean;
   children?: ReactNode;
 }
 
@@ -29,6 +30,7 @@ export function Button({
   variant = "primary",
   size = "md",
   fullWidth = false,
+  glow = false,
   type = "button",
   className = "",
   children,
@@ -40,7 +42,8 @@ export function Button({
       className={`inline-flex items-center justify-center rounded font-medium transition
         disabled:opacity-50 disabled:cursor-not-allowed
         focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong
-        ${VARIANTS[variant]} ${SIZES[size]} ${fullWidth ? "w-full" : ""} ${className}`}
+        ${VARIANTS[variant]} ${SIZES[size]} ${fullWidth ? "w-full" : ""}
+        ${glow ? "enabled:hover:shadow-glow" : ""} ${className}`}
       {...rest}
     >
       {children}

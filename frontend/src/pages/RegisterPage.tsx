@@ -94,7 +94,7 @@ export function RegisterPage() {
             <FormError message={status} />
 
 
-            <Button type="submit" fullWidth disabled={isSubmitting}>
+            <Button type="submit" fullWidth glow disabled={isSubmitting}>
               {isSubmitting ? "Registering..." : "Register"}
             </Button>
 

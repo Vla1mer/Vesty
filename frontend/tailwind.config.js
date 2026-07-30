@@ -57,6 +57,7 @@ export default {
         scrim: token("scrim"),
       },
       boxShadow: {
+        glow: "0 0 20px -2px rgb(var(--accent) / 0.55), 0 0 0 3px rgb(var(--accent) / 0.16)",
         raised: "var(--shadow-raised)",
         float: "var(--shadow-float)",
         modal: "var(--shadow-modal)",
@@ -67,6 +68,15 @@ export default {
       },
       transitionTimingFunction: {
         swift: "cubic-bezier(0.22, 1, 0.36, 1)",
+      },
+      keyframes: {
+        "glow-danger": {
+          "0%, 100%": { boxShadow: "0 0 0 2px rgb(var(--danger) / 0.22)" },
+          "50%": { boxShadow: "0 0 0 6px rgb(var(--danger) / 0.34)" },
+        },
+      },
+      animation: {
+        "glow-danger": "glow-danger 1.6s ease-in-out infinite",
       },
     },
   },

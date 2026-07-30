@@ -14,7 +14,11 @@ export const TextInput = forwardRef<HTMLInputElement, Props>(function TextInput(
       ref={ref}
       className={`w-full rounded bg-surface-sunken px-3 py-2 text-content placeholder-content-muted
         border transition focus:outline-none disabled:opacity-50
-        ${invalid ? "border-danger focus:border-danger" : "border-line-strong focus:border-accent-strong"}
+        ${
+          invalid
+            ? "border-danger focus:border-danger animate-glow-danger"
+            : "border-line-strong focus:border-accent-strong"
+        }
         ${className}`}
       {...rest}
     />

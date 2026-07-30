@@ -1,4 +1,5 @@
 import { Eye, EyeOff } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { TextInput } from "./ui/TextInput";
 import { useState } from "react";
 import { useField } from "formik";
@@ -53,11 +54,26 @@ export function FormField({
           </button>
         )}
       </div>
-      {showError ? (
-        <p className="text-xs text-danger mt-1">{meta.error}</p>
-      ) : (
-        hint && <p className="text-xs text-content-subtle mt-1">{hint}</p>
-      )}
+      <AnimatePresence mode="wait" initial={false}>
+        {showError ? (
+          <motion.p
+            key="error"
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
+            className="mt-1 text-xs text-danger"
+          >
+            {meta.error}
+          </motion.p>
+        ) : (
+          hint && (
+            <p key="hint" className="mt-1 text-xs text-content-subtle">
+              {hint}
+            </p>
+          )
+        )}
+      </AnimatePresence>
     </div>
   );
 }
