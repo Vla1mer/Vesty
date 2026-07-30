@@ -56,6 +56,8 @@ export function ChatDetailPage() {
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [unreadOnEntry, setUnreadOnEntry] = useState<number | null>(null);
+  const didInitialScroll = useRef(false);
 
   const { data: chat, isLoading: chatLoading, error: chatError } =
     useGetChatByIdQuery(chatId, {
@@ -147,9 +149,31 @@ export function ChatDetailPage() {
     return "Failed to load chat";
   }, [isValidChat, chatError]);
 
+  const firstUnreadId = useMemo(() => {
+    if (!unreadOnEntry || unreadOnEntry >= messages.length) return null;
+    return messages[messages.length - unreadOnEntry]?.id ?? null;
+  }, [messages, unreadOnEntry]);
+
   useEffect(() => {
+    if (messages.length === 0) return;
+
+    if (!didInitialScroll.current) {
+      // ждём счётчик непрочитанных: запрос за чатом приходит позже сообщений
+      if (unreadOnEntry === null) return;
+
+      didInitialScroll.current = true;
+      const anchor =
+        firstUnreadId !== null
+          ? document.getElementById(`message-${firstUnreadId}`)
+          : null;
+
+      if (anchor) anchor.scrollIntoView({ block: "center" });
+      else bottomRef.current?.scrollIntoView();
+      return;
+    }
+
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, firstUnreadId, unreadOnEntry]);
 
   useEffect(() => {
     if (!isValidChat) return;
@@ -159,11 +183,19 @@ export function ChatDetailPage() {
 
   useEffect(() => {
     setPinnedIndex(0);
+    setUnreadOnEntry(null);
+    didInitialScroll.current = false;
   }, [chatId]);
 
   useEffect(() => {
-    if (isValidChat) markChatRead(chatId);
-  }, [chatId, isValidChat, messages.length, markChatRead]);
+    if (unreadOnEntry !== null) return;
+    if (chat) setUnreadOnEntry(chat.unreadCount ?? 0);
+    else if (chatError) setUnreadOnEntry(0);
+  }, [chat, chatError, unreadOnEntry]);
+
+  useEffect(() => {
+    if (isValidChat && unreadOnEntry !== null) markChatRead(chatId);
+  }, [chatId, isValidChat, unreadOnEntry, messages.length, markChatRead]);
 
   useEffect(() => {
     if (!isValidChat) return;
@@ -481,6 +513,16 @@ export function ChatDetailPage() {
                   <span className="text-xs text-content-muted bg-surface-raised px-3 py-1 rounded-full">
                     {formatDateSeparator(msg.createdAt)}
                   </span>
+                </div>
+              )}
+
+              {msg.id === firstUnreadId && (
+                <div className="my-3 flex items-center gap-3">
+                  <span className="h-px flex-1 bg-accent-strong/40" />
+                  <span className="text-xs font-medium text-accent-strong">
+                    Unread messages
+                  </span>
+                  <span className="h-px flex-1 bg-accent-strong/40" />
                 </div>
               )}
               <MessageBubble

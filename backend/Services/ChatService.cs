@@ -45,14 +45,20 @@ namespace Services
             var chat = await GetChatOrThrowAsync(id, trackChanges: false);
             await EnsureCallerIsChatMember(id);
 
-            if (!chat.IsPrivate)
-                return _mapper.Map<ChatDto>(chat);
+            ChatDto dto;
+            if (chat.IsPrivate)
+            {
+                var partners = await _repository.ChatMember.GetDirectChatPartnersAsync(
+                    new[] { chat.Id }, _currentUser.UserId);
+                partners.TryGetValue(chat.Id, out var partner);
+                dto = MapToDirectChatDto(chat, partner);
+            }
+            else
+            {
+                dto = _mapper.Map<ChatDto>(chat);
+            }
 
-            var partners = await _repository.ChatMember.GetDirectChatPartnersAsync(
-                new[] { chat.Id }, _currentUser.UserId);
-            partners.TryGetValue(chat.Id, out var partner);
-
-            return MapToDirectChatDto(chat, partner);
+            return (await AttachUnreadCountsAsync([dto]))[0];
         }
 
         public async Task<ChatDto> CreateAsync(ChatForCreationDto chatDto)
