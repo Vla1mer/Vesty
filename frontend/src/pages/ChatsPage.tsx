@@ -175,14 +175,14 @@ export function ChatsPage() {
             <button
               type="button"
               onClick={openProfile}
-              className="w-full flex items-center gap-3 px-3 py-3 rounded text-content hover:bg-surface-raised transition text-left"
+              className="w-full flex items-center gap-3 px-3 py-3 rounded text-content hover:bg-surface-muted transition text-left"
             >
               <User size={18} aria-hidden="true" /> Profile
             </button>
             <button
               type="button"
               onClick={openSettings}
-              className="w-full flex items-center gap-3 px-3 py-3 rounded text-content hover:bg-surface-raised transition text-left"
+              className="w-full flex items-center gap-3 px-3 py-3 rounded text-content hover:bg-surface-muted transition text-left"
             >
               <Settings size={18} aria-hidden="true" /> Settings
             </button>
@@ -191,7 +191,7 @@ export function ChatsPage() {
             <button
               type="button"
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-3 py-3 rounded text-danger hover:bg-surface-raised transition"
+              className="w-full flex items-center gap-3 px-3 py-3 rounded text-danger hover:bg-surface-muted transition"
             >
               <LogOut size={18} aria-hidden="true" /> Logout
             </button>

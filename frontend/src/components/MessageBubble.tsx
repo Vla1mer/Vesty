@@ -444,7 +444,7 @@ export function MessageBubble({
                 setMenu(false);
                 onDelete(message.id);
               }}
-              className="w-full px-3 py-2 text-left text-sm text-danger hover:bg-surface-overlay transition"
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-sm text-danger hover:bg-surface-overlay transition"
             >
               <Trash2 size={15} aria-hidden="true" /> Delete
             </button>

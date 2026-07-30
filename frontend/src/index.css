@@ -5,87 +5,85 @@
 @layer base {
   :root,
   :root[data-theme="dark"] {
-    --bg: 21 23 28;
-    --surface: 27 30 36;
-    --surface-raised: 35 39 48;
-    --surface-muted: 31 35 43;
-    --surface-overlay: 35 39 48;
-    --surface-sunken: 14 16 20;
+    --bg: 14 16 20;
+    --surface: 24 27 33;
+    --surface-muted: 33 37 45;
+    --surface-raised: 42 47 56;
+    --surface-overlay: 50 56 66;
+    --surface-sunken: 10 11 14;
 
-    --bubble-in: 35 39 48;
-    --bubble-out: 244 165 36;
-    --on-bubble: 255 255 255;
-    --on-bubble-muted: 255 243 224;
-    --on-bubble-accent: 255 255 255;
+    --bubble-in: 42 47 56;
+    --bubble-out: 23 69 63;
+    --on-bubble: 234 251 248;
+    --on-bubble-muted: 168 206 200;
+    --on-bubble-accent: 111 220 206;
 
-    --border: 48 54 65;
-    --border-strong: 69 77 91;
+    --border: 57 64 76;
+    --border-strong: 112 122 139;
 
-    --text: 243 244 246;
-    --text-muted: 192 199 210;
-    --text-subtle: 141 150 165;
+    --text: 237 240 245;
+    --text-muted: 176 184 197;
+    --text-subtle: 142 151 166;
 
-    --brand: 244 165 36;
-    --accent: 244 165 36;
-    --accent-hover: 214 140 17;
-    --accent-strong: 248 196 90;
-    --accent-soft: 58 42 17;
+    --brand: 74 214 199;
+    --accent: 13 122 114;
+    --accent-hover: 14 130 122;
+    --accent-strong: 95 224 210;
+    --accent-soft: 15 51 47;
     --accent-contrast: 255 255 255;
 
-    --danger: 248 113 113;
-    --danger-soft: 58 29 29;
-    --danger-contrast: 21 23 28;
-    --success: 52 211 153;
-    --info: 125 179 251;
-    --info-soft: 28 39 64;
+    --danger: 248 133 133;
+    --danger-soft: 61 29 29;
+    --danger-contrast: 43 12 12;
+    --success: 74 222 128;
+    --info: 133 183 253;
+    --info-soft: 25 39 65;
 
-    --scrim: 10 11 14;
-
-    --shadow-raised: 0 1px 2px rgb(0 0 0 / 0.45);
-    --shadow-float: 0 8px 24px -6px rgb(0 0 0 / 0.6);
-    --shadow-modal: 0 24px 60px -12px rgb(0 0 0 / 0.75);
+    --scrim: 5 7 10;
+    --shadow-raised: 0 1px 2px rgb(0 0 0 / 0.40);
+    --shadow-float: 0 10px 28px -8px rgb(0 0 0 / 0.55);
+    --shadow-modal: 0 26px 66px -14px rgb(0 0 0 / 0.70);
   }
 
   :root[data-theme="light"] {
-    --bg: 220 224 230;
-    --surface: 248 250 252;
+    --bg: 232 236 242;
+    --surface: 250 251 253;
+    --surface-muted: 240 243 248;
     --surface-raised: 255 255 255;
-    --surface-muted: 237 240 244;
     --surface-overlay: 255 255 255;
-    --surface-sunken: 224 229 237;
+    --surface-sunken: 228 233 240;
 
     --bubble-in: 255 255 255;
-    --bubble-out: 244 165 36;
-    --on-bubble: 17 24 39;
-    --on-bubble-muted: 75 58 22;
-    --on-bubble-accent: 107 66 4;
+    --bubble-out: 207 240 235;
+    --on-bubble: 10 46 42;
+    --on-bubble-muted: 55 105 99;
+    --on-bubble-accent: 11 106 99;
 
-    --border: 220 227 237;
-    --border-strong: 194 203 217;
+    --border: 199 207 219;
+    --border-strong: 124 135 153;
 
-    --text: 31 41 55;
-    --text-muted: 107 114 128;
-    --text-subtle: 156 163 175;
+    --text: 22 27 36;
+    --text-muted: 85 95 111;
+    --text-subtle: 95 104 121;
 
-    --brand: 244 165 36;
-    --accent: 244 165 36;
-    --accent-hover: 214 140 17;
-    --accent-strong: 154 92 0;
-    --accent-soft: 254 243 199;
-    --accent-contrast: 17 24 39;
+    --brand: 10 100 93;
+    --accent: 13 122 114;
+    --accent-hover: 10 101 95;
+    --accent-strong: 11 106 99;
+    --accent-soft: 214 243 239;
+    --accent-contrast: 255 255 255;
 
-    --danger: 220 38 38;
-    --danger-soft: 254 226 226;
+    --danger: 194 32 32;
+    --danger-soft: 253 230 230;
     --danger-contrast: 255 255 255;
-    --success: 5 150 105;
-    --info: 37 99 235;
-    --info-soft: 219 234 254;
+    --success: 21 128 61;
+    --info: 28 78 216;
+    --info-soft: 219 231 254;
 
-    --scrim: 31 41 55;
-
-    --shadow-raised: 0 1px 1px rgb(31 41 55 / 0.06), 0 2px 4px -1px rgb(31 41 55 / 0.10);
-    --shadow-float: 0 10px 28px -8px rgb(31 41 55 / 0.24), 0 2px 6px -2px rgb(31 41 55 / 0.10);
-    --shadow-modal: 0 28px 70px -14px rgb(31 41 55 / 0.36);
+    --scrim: 21 25 32;
+    --shadow-raised: 0 1px 1px rgb(26 31 41 / 0.05), 0 2px 6px -1px rgb(26 31 41 / 0.10);
+    --shadow-float: 0 10px 30px -8px rgb(26 31 41 / 0.20), 0 2px 6px -2px rgb(26 31 41 / 0.10);
+    --shadow-modal: 0 28px 72px -14px rgb(26 31 41 / 0.32);
   }
 
   html,

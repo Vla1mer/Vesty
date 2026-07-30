@@ -59,7 +59,7 @@ function FileAttachment({ attachment }: { attachment: MessageAttachmentDto }) {
     <button
       type="button"
       onClick={() => download(attachment)}
-      className="flex items-center gap-2 rounded bg-surface-raised/80 hover:bg-surface-raised border border-line-strong px-3 py-2 text-left transition"
+      className="flex items-center gap-2 rounded bg-surface-raised/80 hover:bg-surface-muted border border-line-strong px-3 py-2 text-left transition"
     >
       <FileText size={20} aria-hidden="true" className="shrink-0 text-content-muted" />
       <span className="min-w-0">

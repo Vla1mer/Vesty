@@ -327,7 +327,7 @@ export function ChatDetailPage() {
             type="button"
             onClick={() => chat && setIsInfoOpen(true)}
             disabled={!chat}
-            className="group flex-1 flex items-center gap-2 text-left rounded px-2 -mx-2 hover:bg-surface-raised transition disabled:cursor-default disabled:hover:bg-transparent"
+            className="group flex-1 flex items-center gap-2 text-left rounded px-2 -mx-2 hover:bg-surface-muted transition disabled:cursor-default disabled:hover:bg-transparent"
           >
             {chat &&
               (isDirectChat(chat) && chat.partnerUserId ? (

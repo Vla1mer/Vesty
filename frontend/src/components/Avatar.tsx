@@ -3,14 +3,14 @@ import { API_URL } from "../api/client";
 import { endpoints } from "../api/endpoints";
 
 const PALETTE = [
-  "bg-amber-500",
-  "bg-sky-500",
-  "bg-emerald-500",
-  "bg-violet-500",
-  "bg-rose-500",
-  "bg-teal-500",
-  "bg-orange-500",
-  "bg-indigo-500",
+  "bg-amber-400",
+  "bg-sky-400",
+  "bg-emerald-400",
+  "bg-violet-400",
+  "bg-rose-400",
+  "bg-fuchsia-400",
+  "bg-orange-400",
+  "bg-indigo-400",
 ];
 
 const SIZES = {

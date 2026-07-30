@@ -25,7 +25,7 @@ export function ChatListItem({ chat }: Props) {
       to={`/chats/${chat.id}`}
       className={({ isActive }) =>
         `block mx-2 rounded-card px-3 py-1.5 transition cursor-pointer ${
-          isActive ? "bg-accent" : "hover:bg-surface-raised"
+          isActive ? "bg-accent" : "hover:bg-surface-muted"
         }`
       }
     >
