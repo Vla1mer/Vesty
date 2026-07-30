@@ -1,9 +1,13 @@
 import { MessagesSquare } from "lucide-react";
+import { EmptyState } from "./ui/EmptyState";
+
 export function ChatEmptyState() {
   return (
-    <div className="h-full flex flex-col items-center justify-center text-content-subtle p-6 text-center">
-      <MessagesSquare size={56} aria-hidden="true" className="mb-4 text-content-subtle" />
-      <p className="text-lg">Select a chat to start messaging</p>
-    </div>
+    <EmptyState
+      className="h-full"
+      Icon={MessagesSquare}
+      title="Select a chat"
+      description="Pick a conversation from the list, or start a new one."
+    />
   );
 }

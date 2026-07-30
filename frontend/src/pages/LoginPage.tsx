@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
+import { MessagesSquare } from "lucide-react";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { Formik, Form } from "formik";
 import { login } from "../api/auth";
@@ -40,6 +41,9 @@ export function LoginPage() {
         {({ isSubmitting, status }) => (
           <Form className="w-full max-w-sm bg-surface border border-line rounded-card shadow-float p-6 space-y-4">
             <div className="text-center">
+              <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-card bg-accent text-accent-contrast shadow-raised">
+                <MessagesSquare size={24} aria-hidden="true" />
+              </span>
               <h1 className="text-2xl font-bold">
                 <span className="text-brand">Vesty</span>{" "}
                 <span className="text-content">Messenger</span>

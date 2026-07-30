@@ -7,7 +7,7 @@ import { Avatar } from "../components/Avatar";
 import { ChatListItem } from "../components/ChatListItem";
 import { CreateChatModal } from "../components/CreateChatModal";
 import { SelectUserModal } from "../components/SelectUserModal";
-import { LogOut, Menu, MessageSquarePlus, Settings, User, Users } from "lucide-react";
+import { LogOut, Menu, MessageSquarePlus, MessagesSquare, Settings, User, Users } from "lucide-react";
 import { SearchBar } from "../components/SearchBar";
 import { SearchResults } from "../components/SearchResults";
 import { FloatingActionButton } from "../components/FloatingActionButton";
@@ -16,6 +16,8 @@ import { SettingsModal } from "../components/SettingsModal";
 import { BottomNav } from "../components/BottomNav";
 import { FormError } from "../components/FormError";
 import { AnimatePresence, motion } from "framer-motion";
+import { EmptyState } from "../components/ui/EmptyState";
+import { ChatListSkeleton } from "../components/ui/Skeleton";
 
 export function ChatsPage() {
   const navigate = useNavigate();
@@ -110,7 +112,7 @@ export function ChatsPage() {
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto pb-20 md:pb-4 scrollbar-none">
-        {isLoading && <p className="text-content-muted px-4">Loading...</p>}
+        {isLoading && <ChatListSkeleton />}
 
         {isError && (
           <FormError className="mx-4 mb-4" message="Failed to load chats" />
@@ -123,12 +125,11 @@ export function ChatsPage() {
                 <SearchResults query={searchQuery} chats={chats} />
               </div>
             ) : chats.length === 0 ? (
-              <div className="text-center py-12 text-content-muted px-4">
-                <p className="text-lg">No chats yet</p>
-                <p className="text-sm mt-2">
-                  Use the compose button to start a conversation.
-                </p>
-              </div>
+              <EmptyState
+                Icon={MessagesSquare}
+                title="No chats yet"
+                description="Use the compose button to start a conversation."
+              />
             ) : (
               <div>
                 <AnimatePresence initial={false}>

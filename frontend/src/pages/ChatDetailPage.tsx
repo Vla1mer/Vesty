@@ -25,7 +25,7 @@ import { onChatDeleted } from "../lib/signalr";
 import { setActiveChat } from "../lib/activeChat";
 import { useTypingIndicator } from "../hooks/useTypingIndicator";
 import { useAttachmentUploads } from "../hooks/useAttachmentUploads";
-import { ArrowLeft, Copy, Paperclip, Pencil, Pin, Reply, Trash2, X } from "lucide-react";
+import { ArrowLeft, ChevronRight, Copy, MessageCircle, Paperclip, Pencil, Pin, Reply, Trash2, X } from "lucide-react";
 import { AttachmentDrafts } from "../components/AttachmentDrafts";
 import type { AxiosBaseQueryError } from "../api/axiosBaseQuery";
 import { isDirectChat, UserRole, type ChatMemberWithRoleDto, type MessageDto } from "../types/api";
@@ -33,6 +33,8 @@ import { Button } from "../components/ui/Button";
 import { TextInput } from "../components/ui/TextInput";
 import { FormError } from "../components/FormError";
 import { AnimatePresence, motion } from "framer-motion";
+import { EmptyState } from "../components/ui/EmptyState";
+import { MessageListSkeleton } from "../components/ui/Skeleton";
 
 function typingText(names: string[]): string {
   if (names.length === 1) return `${names[0]} is typing`;
@@ -364,12 +366,11 @@ export function ChatDetailPage() {
                 ) : null)}
             </div>
             {chat && (
-              <span
-                className="text-content-subtle group-hover:text-accent-strong transition text-3xl leading-none"
+              <ChevronRight
+                size={20}
                 aria-hidden="true"
-              >
-                ›
-              </span>
+                className="shrink-0 text-content-subtle transition group-hover:translate-x-0.5 group-hover:text-accent-strong"
+              />
             )}
           </button>
         </header>
@@ -437,13 +438,11 @@ export function ChatDetailPage() {
           activePinned && !selectionMode ? "pt-[140px]" : "pt-[88px]"
         }`}
       >
-        <div className="mt-auto space-y-3">
-        {(chatLoading || messagesLoading) && (
-          <p className="text-content-muted text-center">Loading...</p>
-        )}
+        {(chatLoading || messagesLoading) && <MessageListSkeleton />}
 
         {(loadError || actionError || messagesError) && (
           <FormError
+            className="mt-auto"
             message={loadError ?? actionError ?? "Failed to load messages"}
           />
         )}
@@ -454,11 +453,15 @@ export function ChatDetailPage() {
           !actionError &&
           !messagesError &&
           messages.length === 0 && (
-            <div className="text-center py-12 text-content-muted">
-              <p>No messages yet. Be the first to write something!</p>
-            </div>
+            <EmptyState
+              className="m-auto"
+              Icon={MessageCircle}
+              title="No messages yet"
+              description="Say hello — your first message will appear here."
+            />
           )}
 
+        <div className="mt-auto space-y-3">
         <AnimatePresence initial={false}>
           {messages.map((msg, index) => {
           const prev = messages[index - 1];
