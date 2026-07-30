@@ -1,3 +1,4 @@
+import { ArrowDown, ArrowUp, Pencil, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
   useDeleteChatMutation,
@@ -264,7 +265,7 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                       aria-label="Rename chat"
                       title="Rename chat"
                     >
-                      ✏️
+                      <Pencil size={14} />
                     </button>
                   )}
                 </div>
@@ -288,10 +289,10 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
               type="button"
               onClick={onClose}
               disabled={busyUserId !== null || deleting}
-              className="text-content-muted hover:text-content text-2xl leading-none disabled:opacity-50"
+              className="text-content-muted hover:text-content disabled:opacity-50"
               aria-label="Close"
             >
-              ×
+              <X size={22} />
             </button>
           </div>
 
@@ -374,7 +375,7 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                                     className="text-xs px-2 py-0.5 rounded bg-info-soft hover:bg-info/25 text-info disabled:opacity-50 transition"
                                     title="Make admin"
                                   >
-                                    ↑ Admin
+                                    <ArrowUp size={11} aria-hidden="true" className="inline -mt-0.5" /> Admin
                                   </button>
                                 ) : (
                                   <button
@@ -386,7 +387,7 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                                     className="text-xs px-2 py-0.5 rounded bg-surface-overlay hover:bg-line-strong text-content disabled:opacity-50 transition"
                                     title="Remove admin"
                                   >
-                                    ↓ Member
+                                    <ArrowDown size={11} aria-hidden="true" className="inline -mt-0.5" /> Member
                                   </button>
                                 )}
                               </>
@@ -400,7 +401,7 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                               disabled={busyUserId !== null}
                               className="text-xs px-2 py-0.5 rounded bg-danger-soft hover:bg-danger/25 text-danger disabled:opacity-50 transition"
                             >
-                              {busyUserId === m.userId ? "..." : "✕"}
+                              {busyUserId === m.userId ? "..." : <X size={12} />}
                             </button>
                           )}
                         </div>
@@ -480,7 +481,8 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                     disabled={busyUserId !== null || deleting}
                     className="w-full px-4 py-2 rounded bg-danger-soft hover:bg-danger/25 text-danger disabled:opacity-50 transition font-medium"
                   >
-                    🗑️ Delete chat
+                    <Trash2 size={15} aria-hidden="true" className="inline -mt-0.5 mr-1.5" />
+                    Delete chat
                   </button>
                 </section>
               )}

@@ -1,3 +1,4 @@
+import { X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { ValidationError } from "yup";
 import { useCreateChatMutation } from "../store/chatApi";
@@ -95,10 +96,10 @@ export function CreateChatModal({ onClose }: Props) {
           <button
             type="button"
             onClick={onClose}
-            className="text-content-muted hover:text-content text-2xl leading-none"
+            className="text-content-muted hover:text-content"
             aria-label="Close"
           >
-            ×
+            <X size={22} />
           </button>
         </div>
 
@@ -166,7 +167,7 @@ export function CreateChatModal({ onClose }: Props) {
                       className="text-content-muted hover:text-content"
                       aria-label={`Remove ${u.userName}`}
                     >
-                      ×
+                      <X size={22} />
                     </button>
                   </span>
                 ))}

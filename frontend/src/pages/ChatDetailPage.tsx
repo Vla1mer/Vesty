@@ -25,6 +25,7 @@ import { onChatDeleted } from "../lib/signalr";
 import { setActiveChat } from "../lib/activeChat";
 import { useTypingIndicator } from "../hooks/useTypingIndicator";
 import { useAttachmentUploads } from "../hooks/useAttachmentUploads";
+import { ArrowLeft, Copy, Paperclip, Pencil, Pin, Reply, Trash2, X } from "lucide-react";
 import { AttachmentDrafts } from "../components/AttachmentDrafts";
 import type { AxiosBaseQueryError } from "../api/axiosBaseQuery";
 import { isDirectChat, UserRole, type ChatMemberWithRoleDto, type MessageDto } from "../types/api";
@@ -317,10 +318,10 @@ export function ChatDetailPage() {
         >
           <button
             onClick={() => navigate("/chats")}
-            className="md:hidden text-content-muted hover:text-content text-2xl"
+            className="md:hidden text-content-muted hover:text-content"
             aria-label="Back"
           >
-            ←
+            <ArrowLeft size={22} />
           </button>
           <button
             type="button"
@@ -376,21 +377,21 @@ export function ChatDetailPage() {
         >
           <button
             onClick={clearSelection}
-            className="text-content-muted hover:text-content text-2xl leading-none"
+            className="text-content-muted hover:text-content"
             aria-label="Cancel selection"
           >
-            ✕
+            <X size={22} />
           </button>
           <span className="flex-1 font-semibold text-content">
             {selectedIds.size} selected
           </span>
-          <div className="flex items-center gap-4 text-xl">
+          <div className="flex items-center gap-4 text-content-muted">
             <button onClick={copySelected} aria-label="Copy" title="Copy">
-              📋
+              <Copy size={20} />
             </button>
             {selectedIds.size === 1 && ownSelectedIds.length === 1 && (
               <button onClick={editSelected} aria-label="Edit" title="Edit">
-                ✏️
+                <Pencil size={20} />
               </button>
             )}
             {ownSelectedIds.length > 0 && (
@@ -398,8 +399,9 @@ export function ChatDetailPage() {
                 onClick={() => setBulkDeleteOpen(true)}
                 aria-label="Delete"
                 title="Delete"
+                className="text-danger"
               >
-                🗑️
+                <Trash2 size={20} />
               </button>
             )}
           </div>
@@ -412,7 +414,7 @@ export function ChatDetailPage() {
           onClick={showNextPinned}
           className="absolute top-[88px] inset-x-0 z-10 flex items-center gap-3 px-4 py-2 border-b border-line bg-surface-muted/95 backdrop-blur text-left hover:bg-surface transition"
         >
-          <span className="text-accent-strong leading-none">📌</span>
+          <Pin size={15} aria-hidden="true" className="shrink-0 text-accent-strong" />
           <div className="min-w-0 flex-1 border-l-2 border-accent-strong pl-3">
             <p className="text-xs font-medium text-accent-strong">
               {pinnedMessages.length > 1
@@ -547,7 +549,7 @@ export function ChatDetailPage() {
         <div className="relative border-t border-line bg-surface sticky bottom-0">
           {editingMessage && (
             <div className="flex items-center gap-3 px-4 pt-3 -mb-1">
-              <span className="text-accent-strong text-lg leading-none">✏️</span>
+              <Pencil size={18} aria-hidden="true" className="shrink-0 text-accent-strong" />
               <div className="flex-1 min-w-0 border-l-2 border-accent-strong pl-3">
                 <p className="text-xs font-medium text-accent-strong">Editing</p>
                 <p className="text-sm text-content-muted truncate">
@@ -558,15 +560,15 @@ export function ChatDetailPage() {
                 type="button"
                 onClick={cancelEdit}
                 aria-label="Cancel editing"
-                className="text-content-muted hover:text-content text-2xl leading-none"
+                className="text-content-muted hover:text-content"
               >
-                ×
+                <X size={20} />
               </button>
             </div>
           )}
           {replyTo && !editingMessage && (
             <div className="flex items-center gap-3 px-4 pt-3 -mb-1">
-              <span className="text-accent-strong text-lg leading-none">↩️</span>
+              <Reply size={18} aria-hidden="true" className="shrink-0 text-accent-strong" />
               <div className="flex-1 min-w-0 border-l-2 border-accent-strong pl-3">
                 <p className="text-xs font-medium text-accent-strong">
                   Reply to {memberById.get(replyTo.userId)?.userName ?? `User #${replyTo.userId}`}
@@ -579,9 +581,9 @@ export function ChatDetailPage() {
                 type="button"
                 onClick={() => setReplyTo(null)}
                 aria-label="Cancel reply"
-                className="text-content-muted hover:text-content text-2xl leading-none"
+                className="text-content-muted hover:text-content"
               >
-                ×
+                <X size={20} />
               </button>
             </div>
           )}
@@ -592,9 +594,9 @@ export function ChatDetailPage() {
               onClick={() => fileInputRef.current?.click()}
               aria-label="Attach file"
               title="Attach file"
-              className="shrink-0 px-2 text-2xl text-content-muted hover:text-accent-strong transition"
+              className="shrink-0 px-2 text-content-muted hover:text-accent-strong transition"
             >
-              📎
+              <Paperclip size={20} />
             </button>
             <input
               ref={fileInputRef}

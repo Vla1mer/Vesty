@@ -1,3 +1,4 @@
+import { ArrowLeft } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -49,10 +50,10 @@ export function NewDirectChatPage() {
       <header className="flex items-center gap-4 p-4 border-b border-line bg-surface sticky top-0 z-10">
         <button
           onClick={() => navigate("/chats")}
-          className="md:hidden text-content-muted hover:text-content text-2xl"
+          className="md:hidden text-content-muted hover:text-content"
           aria-label="Back"
         >
-          ←
+          <ArrowLeft size={22} />
         </button>
         <div className="flex-1">
           <h1 className="text-xl font-bold text-content">{title}</h1>

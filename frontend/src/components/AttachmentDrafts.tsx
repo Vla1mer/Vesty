@@ -1,3 +1,4 @@
+import { FileText, X } from "lucide-react";
 import { formatSize } from "../api/attachments";
 import type { PendingUpload } from "../hooks/useAttachmentUploads";
 
@@ -24,9 +25,9 @@ export function AttachmentDrafts({ uploads, onRemove }: AttachmentDraftsProps) {
             type="button"
             onClick={() => onRemove(upload.localId)}
             aria-label="Remove attachment"
-            className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-surface-overlay hover:bg-line-strong text-content text-xs leading-none"
+            className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-surface-overlay hover:bg-line-strong text-content flex items-center justify-center"
           >
-            ×
+            <X size={12} />
           </button>
 
           {upload.previewUrl ? (
@@ -36,8 +37,8 @@ export function AttachmentDrafts({ uploads, onRemove }: AttachmentDraftsProps) {
               className="w-full h-16 object-cover rounded mb-1"
             />
           ) : (
-            <div className="w-full h-16 rounded mb-1 bg-surface flex items-center justify-center text-2xl">
-              📄
+            <div className="w-full h-16 rounded mb-1 bg-surface flex items-center justify-center text-content-muted">
+              <FileText size={24} aria-hidden="true" />
             </div>
           )}
 

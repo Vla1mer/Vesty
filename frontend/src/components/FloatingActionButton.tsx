@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { Pencil, X } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 interface Action {
-  icon: string;
+  Icon: LucideIcon;
   label: string;
   description?: string;
   onClick: () => void;
@@ -34,9 +36,10 @@ export function FloatingActionButton({ actions }: Props) {
         type="button"
         onClick={() => setIsOpen(true)}
         aria-label="New chat"
-        className="absolute right-4 bottom-20 z-30 w-14 h-14 shadow-float text-2xl rounded-full bg-accent hover:bg-accent-hover text-accent-contrast flex items-center justify-center transition md:static md:shrink-0 md:w-9 md:h-9 md:shadow-none md:text-lg"
+        className="absolute right-4 bottom-20 z-30 w-14 h-14 shadow-float rounded-full bg-accent hover:bg-accent-hover text-accent-contrast flex items-center justify-center transition md:static md:shrink-0 md:w-9 md:h-9 md:shadow-none"
       >
-        💬
+        <Pencil size={20} className="md:hidden" />
+        <Pencil size={16} className="hidden md:block" />
       </button>
 
       {isOpen && (
@@ -53,10 +56,10 @@ export function FloatingActionButton({ actions }: Props) {
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="text-content-muted hover:text-content text-2xl leading-none"
+                className="text-content-muted hover:text-content"
                 aria-label="Close"
               >
-                ×
+                <X size={20} />
               </button>
             </div>
 
@@ -68,7 +71,7 @@ export function FloatingActionButton({ actions }: Props) {
                   onClick={() => handleActionClick(action)}
                   className="w-full flex items-center gap-4 p-4 rounded-lg bg-surface hover:bg-surface-overlay border border-line hover:border-accent-strong transition text-left"
                 >
-                  <span className="text-3xl">{action.icon}</span>
+                  <action.Icon size={24} aria-hidden="true" className="shrink-0 text-accent-strong" />
                   <div className="flex-1">
                     <p className="text-content font-medium">{action.label}</p>
                     {action.description && (

@@ -1,3 +1,4 @@
+import { Pencil } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Formik, Form } from "formik";
@@ -143,7 +144,8 @@ export function ProfileContent() {
                   }}
                   className="w-full px-4 py-2 rounded bg-accent hover:bg-accent-hover text-accent-contrast font-medium transition"
                 >
-                  ✏️ Edit profile
+                  <Pencil size={15} aria-hidden="true" className="inline -mt-0.5 mr-1.5" />
+                  Edit profile
                 </button>
                 <button
                   type="button"

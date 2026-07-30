@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { MouseEvent, TouchEvent as ReactTouchEvent } from "react";
+import { Check, Copy, Pencil, Pin, PinOff, Reply, Trash2 } from "lucide-react";
 import { Avatar } from "./Avatar";
 import { MessageAttachments } from "./MessageAttachments";
 import type { MessageDto } from "../types/api";
@@ -206,7 +207,7 @@ export function MessageBubble({
                 : "border-line-strong text-transparent"
             }`}
           >
-            ✓
+            <Check size={12} strokeWidth={3} />
           </span>
         )}
         <div
@@ -256,7 +257,8 @@ export function MessageBubble({
                     isOwn ? "text-on-bubble-accent" : "text-accent-strong"
                   }`}
                 >
-                  📌 Pinned
+                  <Pin size={11} aria-hidden="true" className="inline -mt-0.5 mr-1" />
+                  Pinned
                 </p>
               )}
 
@@ -389,18 +391,18 @@ export function MessageBubble({
                 setMenu(false);
                 onReply(message);
               }}
-              className="w-full px-3 py-2 text-left text-sm text-content hover:bg-surface-overlay transition"
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-sm text-content hover:bg-surface-overlay transition"
             >
-              ↩️ Reply
+              <Reply size={15} aria-hidden="true" /> Reply
             </button>
           )}
           {message.content && (
             <button
               type="button"
               onClick={handleCopy}
-              className="w-full px-3 py-2 text-left text-sm text-content hover:bg-surface-overlay transition"
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-sm text-content hover:bg-surface-overlay transition"
             >
-              📋 Copy
+              <Copy size={15} aria-hidden="true" /> Copy
             </button>
           )}
           {onTogglePin && (
@@ -410,9 +412,17 @@ export function MessageBubble({
                 setMenu(false);
                 onTogglePin(message.id, Boolean(message.pinnedAt));
               }}
-              className="w-full px-3 py-2 text-left text-sm text-content hover:bg-surface-overlay transition"
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-sm text-content hover:bg-surface-overlay transition"
             >
-              {message.pinnedAt ? "📌 Unpin" : "📌 Pin"}
+              {message.pinnedAt ? (
+                <>
+                  <PinOff size={15} aria-hidden="true" /> Unpin
+                </>
+              ) : (
+                <>
+                  <Pin size={15} aria-hidden="true" /> Pin
+                </>
+              )}
             </button>
           )}
           {onEdit && (
@@ -422,9 +432,9 @@ export function MessageBubble({
                 setMenu(false);
                 onEdit(message.id, message.content ?? "");
               }}
-              className="w-full px-3 py-2 text-left text-sm text-content hover:bg-surface-overlay transition"
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-sm text-content hover:bg-surface-overlay transition"
             >
-              ✏️ Edit
+              <Pencil size={15} aria-hidden="true" /> Edit
             </button>
           )}
           {onDelete && (
@@ -436,7 +446,7 @@ export function MessageBubble({
               }}
               className="w-full px-3 py-2 text-left text-sm text-danger hover:bg-surface-overlay transition"
             >
-              🗑️ Delete
+              <Trash2 size={15} aria-hidden="true" /> Delete
             </button>
           )}
         </div>

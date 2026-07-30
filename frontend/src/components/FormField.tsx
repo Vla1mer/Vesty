@@ -1,3 +1,4 @@
+import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { useField } from "formik";
 
@@ -52,7 +53,7 @@ export function FormField({
             aria-label={showPassword ? "Hide password" : "Show password"}
             className="absolute inset-y-0 right-0 px-3 flex items-center text-content-muted hover:text-content transition"
           >
-            {showPassword ? "🙈" : "👁️"}
+            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         )}
       </div>

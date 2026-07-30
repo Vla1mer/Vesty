@@ -1,3 +1,4 @@
+import { MessageSquare, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGetAllUsersQuery } from "../store/userApi";
@@ -51,10 +52,10 @@ export function SelectUserModal({ onClose }: Props) {
           <button
             type="button"
             onClick={onClose}
-            className="text-content-muted hover:text-content text-2xl leading-none"
+            className="text-content-muted hover:text-content"
             aria-label="Close"
           >
-            ×
+            <X size={22} />
           </button>
         </div>
 
@@ -62,7 +63,7 @@ export function SelectUserModal({ onClose }: Props) {
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="🔍 Search by username..."
+          placeholder="Search by username..."
           autoFocus
           className="w-full px-3 py-2 rounded bg-surface border border-line-strong text-content placeholder-content-muted focus:outline-none focus:border-accent-strong mb-3"
         />
@@ -103,7 +104,7 @@ export function SelectUserModal({ onClose }: Props) {
                         </p>
                       )}
                     </div>
-                    <span className="text-xs text-accent-strong">💬</span>
+                    <MessageSquare size={14} aria-hidden="true" className="shrink-0 text-accent-strong" />
                   </button>
                 </li>
               ))}

@@ -1,3 +1,4 @@
+import { Download, FileText } from "lucide-react";
 import { useState } from "react";
 import {
   fetchAttachmentBlob,
@@ -60,7 +61,7 @@ function FileAttachment({ attachment }: { attachment: MessageAttachmentDto }) {
       onClick={() => download(attachment)}
       className="flex items-center gap-2 rounded bg-surface-raised/80 hover:bg-surface-raised border border-line-strong px-3 py-2 text-left transition"
     >
-      <span className="text-xl leading-none">📄</span>
+      <FileText size={20} aria-hidden="true" className="shrink-0 text-content-muted" />
       <span className="min-w-0">
         <span className="block text-xs text-content truncate max-w-40">
           {attachment.fileName}
@@ -69,7 +70,7 @@ function FileAttachment({ attachment }: { attachment: MessageAttachmentDto }) {
           {formatSize(attachment.sizeInBytes)}
         </span>
       </span>
-      <span className="text-content-muted text-sm">⬇</span>
+      <Download size={16} aria-hidden="true" className="shrink-0 text-content-muted" />
     </button>
   );
 }

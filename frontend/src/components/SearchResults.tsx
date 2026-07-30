@@ -1,3 +1,4 @@
+import { MessageSquare } from "lucide-react";
 import { useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useGetAllUsersQuery } from "../store/userApi";
@@ -98,7 +99,9 @@ export function SearchResults({ query, chats }: Props) {
                     </p>
                   )}
                 </div>
-                <span className="text-xs text-accent-strong">💬 Message</span>
+                <span className="flex items-center gap-1 text-xs text-accent-strong">
+                  <MessageSquare size={13} aria-hidden="true" /> Message
+                </span>
               </button>
             ))}
           </div>

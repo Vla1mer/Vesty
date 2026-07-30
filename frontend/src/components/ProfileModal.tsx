@@ -1,3 +1,4 @@
+import { X } from "lucide-react";
 import { useEffect } from "react";
 import { ProfileContent } from "./ProfileContent";
 
@@ -29,9 +30,9 @@ export function ProfileModal({ onClose }: Props) {
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="text-content-muted hover:text-content text-2xl leading-none"
+            className="text-content-muted hover:text-content"
           >
-            ×
+            <X size={22} />
           </button>
         </div>
         <ProfileContent />

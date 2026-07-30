@@ -1,3 +1,5 @@
+import { Search, X } from "lucide-react";
+
 interface Props {
   value: string;
   onChange: (value: string) => void;
@@ -6,9 +8,11 @@ interface Props {
 export function SearchBar({ value, onChange }: Props) {
   return (
     <div className="relative mb-4">
-      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-content-subtle">
-        🔍
-      </span>
+      <Search
+        size={16}
+        aria-hidden="true"
+        className="absolute left-3 top-1/2 -translate-y-1/2 text-content-muted"
+      />
       <input
         type="text"
         value={value}
@@ -21,9 +25,9 @@ export function SearchBar({ value, onChange }: Props) {
           type="button"
           onClick={() => onChange("")}
           aria-label="Clear search"
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-content-subtle hover:text-content text-lg leading-none"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-content-muted hover:text-content"
         >
-          ×
+          <X size={16} />
         </button>
       )}
     </div>

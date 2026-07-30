@@ -7,6 +7,7 @@ import { Avatar } from "../components/Avatar";
 import { ChatListItem } from "../components/ChatListItem";
 import { CreateChatModal } from "../components/CreateChatModal";
 import { SelectUserModal } from "../components/SelectUserModal";
+import { LogOut, Menu, MessageSquarePlus, Settings, User, Users } from "lucide-react";
 import { SearchBar } from "../components/SearchBar";
 import { SearchResults } from "../components/SearchResults";
 import { FloatingActionButton } from "../components/FloatingActionButton";
@@ -70,9 +71,9 @@ export function ChatsPage() {
             type="button"
             onClick={() => setIsMenuOpen(true)}
             aria-label="Menu"
-            className="hidden md:block text-2xl leading-none text-content-muted hover:text-accent-strong transition"
+            className="hidden md:block text-content-muted hover:text-accent-strong transition"
           >
-            ☰
+            <Menu size={22} />
           </button>
           <div className="min-w-0">
             <h1 className="text-xl font-bold text-content truncate">
@@ -87,13 +88,13 @@ export function ChatsPage() {
         <FloatingActionButton
           actions={[
             {
-              icon: "💬",
+              Icon: MessageSquarePlus,
               label: "New direct message",
               description: "Start a private conversation with someone",
               onClick: () => setIsSelectUserOpen(true),
             },
             {
-              icon: "👥",
+              Icon: Users,
               label: "New group chat",
               description: "Create a chat for multiple people",
               onClick: () => setIsCreateModalOpen(true),
@@ -125,7 +126,7 @@ export function ChatsPage() {
               <div className="text-center py-12 text-content-muted px-4">
                 <p className="text-lg">No chats yet</p>
                 <p className="text-sm mt-2">
-                  Tap the 💬 button to start a conversation.
+                  Use the compose button to start a conversation.
                 </p>
               </div>
             ) : (
@@ -176,14 +177,14 @@ export function ChatsPage() {
               onClick={openProfile}
               className="w-full flex items-center gap-3 px-3 py-3 rounded text-content hover:bg-surface-raised transition text-left"
             >
-              <span className="text-xl">👤</span> Profile
+              <User size={18} aria-hidden="true" /> Profile
             </button>
             <button
               type="button"
               onClick={openSettings}
               className="w-full flex items-center gap-3 px-3 py-3 rounded text-content hover:bg-surface-raised transition text-left"
             >
-              <span className="text-xl">⚙️</span> Settings
+              <Settings size={18} aria-hidden="true" /> Settings
             </button>
           </nav>
           <div className="p-2 border-t border-line">
@@ -192,7 +193,7 @@ export function ChatsPage() {
               onClick={handleLogout}
               className="w-full flex items-center gap-3 px-3 py-3 rounded text-danger hover:bg-surface-raised transition"
             >
-              <span className="text-xl">🚪</span> Logout
+              <LogOut size={18} aria-hidden="true" /> Logout
             </button>
           </div>
         </div>
