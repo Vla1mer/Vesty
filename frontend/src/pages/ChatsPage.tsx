@@ -15,6 +15,7 @@ import { ProfileModal } from "../components/ProfileModal";
 import { SettingsModal } from "../components/SettingsModal";
 import { BottomNav } from "../components/BottomNav";
 import { FormError } from "../components/FormError";
+import { AnimatePresence, motion } from "framer-motion";
 
 export function ChatsPage() {
   const navigate = useNavigate();
@@ -130,9 +131,20 @@ export function ChatsPage() {
               </div>
             ) : (
               <div>
-                {chats.map((chat) => (
-                  <ChatListItem key={chat.id} chat={chat} />
-                ))}
+                <AnimatePresence initial={false}>
+                  {chats.map((chat) => (
+                    <motion.div
+                      key={chat.id}
+                      layout
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                    >
+                      <ChatListItem chat={chat} />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               </div>
             )}
           </>
@@ -198,21 +210,29 @@ export function ChatsPage() {
         </div>
       </div>
 
-      {isCreateModalOpen && (
-        <CreateChatModal onClose={() => setIsCreateModalOpen(false)} />
-      )}
+      <AnimatePresence>
+        {isCreateModalOpen && (
+          <CreateChatModal onClose={() => setIsCreateModalOpen(false)} />
+        )}
+      </AnimatePresence>
 
-      {isSelectUserOpen && (
-        <SelectUserModal onClose={() => setIsSelectUserOpen(false)} />
-      )}
+      <AnimatePresence>
+        {isSelectUserOpen && (
+          <SelectUserModal onClose={() => setIsSelectUserOpen(false)} />
+        )}
+      </AnimatePresence>
 
-      {isProfileOpen && (
-        <ProfileModal onClose={() => setIsProfileOpen(false)} />
-      )}
+      <AnimatePresence>
+        {isProfileOpen && (
+          <ProfileModal onClose={() => setIsProfileOpen(false)} />
+        )}
+      </AnimatePresence>
 
-      {isSettingsOpen && (
-        <SettingsModal onClose={() => setIsSettingsOpen(false)} />
-      )}
+      <AnimatePresence>
+        {isSettingsOpen && (
+          <SettingsModal onClose={() => setIsSettingsOpen(false)} />
+        )}
+      </AnimatePresence>
 
       <div className="md:hidden">
         <BottomNav />

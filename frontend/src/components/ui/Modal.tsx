@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { X } from "lucide-react";
+import { motion } from "framer-motion";
 
 const WIDTHS = {
   sm: "max-w-sm",
@@ -44,16 +45,24 @@ export function Modal({
   }, [onClose]);
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.16, ease: "easeOut" }}
       className={`fixed inset-0 flex items-center justify-center bg-scrim/70 p-4 ${
         layer === "top" ? "z-50" : "z-40"
       }`}
       onClick={onClose}
     >
-      <div
+      <motion.div
         role="dialog"
         aria-modal="true"
         aria-label={ariaLabel ?? (typeof title === "string" ? title : undefined)}
+        initial={{ opacity: 0, y: 12, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 8, scale: 0.98 }}
+        transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
         onClick={(e) => e.stopPropagation()}
         className={`w-full ${WIDTHS[size]} rounded-card border border-line bg-surface p-6 shadow-modal ${LAYOUTS[layout]}`}
       >
@@ -76,7 +85,7 @@ export function Modal({
           </div>
         )}
         {children}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

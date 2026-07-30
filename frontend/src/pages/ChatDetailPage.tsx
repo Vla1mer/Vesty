@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -32,6 +32,7 @@ import { isDirectChat, UserRole, type ChatMemberWithRoleDto, type MessageDto } f
 import { Button } from "../components/ui/Button";
 import { TextInput } from "../components/ui/TextInput";
 import { FormError } from "../components/FormError";
+import { AnimatePresence, motion } from "framer-motion";
 
 function typingText(names: string[]): string {
   if (names.length === 1) return `${names[0]} is typing`;
@@ -458,12 +459,20 @@ export function ChatDetailPage() {
             </div>
           )}
 
-        {messages.map((msg, index) => {
+        <AnimatePresence initial={false}>
+          {messages.map((msg, index) => {
           const prev = messages[index - 1];
           const showDate =
             !prev || !isSameDay(prev.createdAt, msg.createdAt);
           return (
-            <Fragment key={msg.id}>
+            <motion.div
+              key={msg.id}
+              layout="position"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+            >
               {showDate && (
                 <div className="flex justify-center my-2">
                   <span className="text-xs text-content-muted bg-surface-raised px-3 py-1 rounded-full">
@@ -507,46 +516,53 @@ export function ChatDetailPage() {
                     : undefined
                 }
               />
-            </Fragment>
+            </motion.div>
           );
-        })}
+          })}
+        </AnimatePresence>
         <div ref={bottomRef} />
         </div>
       </div>
 
-      {isInfoOpen && chat && (
-        <ChatInfoModal
-          chat={chat}
-          onClose={() => setIsInfoOpen(false)}
-          onDeleted={() => navigate("/chats", { replace: true })}
-        />
-      )}
+      <AnimatePresence>
+        {isInfoOpen && chat && (
+          <ChatInfoModal
+            chat={chat}
+            onClose={() => setIsInfoOpen(false)}
+            onDeleted={() => navigate("/chats", { replace: true })}
+          />
+        )}
+      </AnimatePresence>
 
-      {deleteTargetId !== null && (
-        <ConfirmDialog
-          title="Delete message?"
-          message="This message will be permanently deleted."
-          confirmText="Delete"
-          variant="danger"
-          loading={deletingMessage}
-          onConfirm={confirmDeleteMessage}
-          onCancel={() => setDeleteTargetId(null)}
-        />
-      )}
+      <AnimatePresence>
+        {deleteTargetId !== null && (
+          <ConfirmDialog
+            title="Delete message?"
+            message="This message will be permanently deleted."
+            confirmText="Delete"
+            variant="danger"
+            loading={deletingMessage}
+            onConfirm={confirmDeleteMessage}
+            onCancel={() => setDeleteTargetId(null)}
+          />
+        )}
+      </AnimatePresence>
 
-      {bulkDeleteOpen && (
-        <ConfirmDialog
-          title={`Delete ${ownSelectedIds.length} ${
-            ownSelectedIds.length === 1 ? "message" : "messages"
-          }?`}
-          message="The selected messages will be permanently deleted."
-          confirmText="Delete"
-          variant="danger"
-          loading={deletingMessage}
-          onConfirm={confirmBulkDelete}
-          onCancel={() => setBulkDeleteOpen(false)}
-        />
-      )}
+      <AnimatePresence>
+        {bulkDeleteOpen && (
+          <ConfirmDialog
+            title={`Delete ${ownSelectedIds.length} ${
+              ownSelectedIds.length === 1 ? "message" : "messages"
+            }?`}
+            message="The selected messages will be permanently deleted."
+            confirmText="Delete"
+            variant="danger"
+            loading={deletingMessage}
+            onConfirm={confirmBulkDelete}
+            onCancel={() => setBulkDeleteOpen(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {!loadError && !actionError && (
         <div className="relative border-t border-line bg-surface sticky bottom-0">

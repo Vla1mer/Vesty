@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { MouseEvent, TouchEvent as ReactTouchEvent } from "react";
 import { Check, Copy, Pencil, Pin, PinOff, Reply, Trash2 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Avatar } from "./Avatar";
 import { MessageAttachments } from "./MessageAttachments";
 import type { MessageDto } from "../types/api";
@@ -319,13 +320,19 @@ export function MessageBubble({
                   isOwn ? "justify-end md:justify-start" : "justify-start"
                 }`}
               >
+                <AnimatePresence initial={false}>
                 {message.reactions.map((r) => {
                   const mine =
                     currentUserId != null && r.userIds.includes(currentUserId);
                   return (
-                    <button
+                    <motion.button
                       key={r.emoji}
                       type="button"
+                      layout
+                      initial={{ opacity: 0, scale: 0.5 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.5 }}
+                      transition={{ type: "spring", stiffness: 520, damping: 26 }}
                       onClick={() => onToggleReaction?.(message.id, r.emoji, mine)}
                       title={`${r.userIds.length}`}
                       className={`px-1.5 py-0.5 rounded-full text-xs border transition ${
@@ -335,9 +342,10 @@ export function MessageBubble({
                       }`}
                     >
                       {r.emoji} {r.userIds.length}
-                    </button>
+                    </motion.button>
                   );
                 })}
+                </AnimatePresence>
               </div>
             )}
           </div>
@@ -345,9 +353,12 @@ export function MessageBubble({
       </div>
 
       {menu && (
-        <div
+        <motion.div
           ref={menuRef}
-          className="fixed z-50 w-max max-w-[13rem] rounded-lg border border-line bg-surface-raised py-1 shadow-float"
+          initial={{ opacity: 0, scale: 0.94 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.13, ease: [0.22, 1, 0.36, 1] }}
+          className="fixed z-50 w-max max-w-[13rem] origin-top-left rounded-lg border border-line bg-surface-raised py-1 shadow-float"
           style={{ top: menuPos.top, left: menuPos.left }}
           onClickCapture={(e) => {
             if (Date.now() - menuOpenedAtRef.current < 400) {
@@ -449,7 +460,7 @@ export function MessageBubble({
               <Trash2 size={15} aria-hidden="true" /> Delete
             </button>
           )}
-        </div>
+        </motion.div>
       )}
     </>
   );

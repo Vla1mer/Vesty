@@ -23,6 +23,7 @@ import { ValidationError } from "yup";
 import type { ChatDto, UserDto, ChatMemberWithRoleDto } from "../types/api";
 import type { AxiosBaseQueryError } from "../api/axiosBaseQuery";
 import { FormError } from "./FormError";
+import { AnimatePresence } from "framer-motion";
 
 interface Props {
   chat: ChatDto;
@@ -462,25 +463,27 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
           )}
       </Modal>
 
-      {isDeleteOpen && (
-        <ConfirmDialog
-          title="Delete chat?"
-          message={
-            isDirectChat(chat)
-              ? `Are you sure you want to delete this conversation with ${
-                  chat.partnerUserName ?? "this user"
-                }? All messages will be permanently lost.`
-              : `Are you sure you want to delete "${
-                  chat.name ?? `chat #${chat.id}`
-                }"? All messages and members will be permanently lost.`
-          }
-          confirmText="Delete"
-          variant="danger"
-          loading={deleting}
-          onConfirm={handleDelete}
-          onCancel={() => setIsDeleteOpen(false)}
-        />
-      )}
+      <AnimatePresence>
+        {isDeleteOpen && (
+          <ConfirmDialog
+            title="Delete chat?"
+            message={
+              isDirectChat(chat)
+                ? `Are you sure you want to delete this conversation with ${
+                    chat.partnerUserName ?? "this user"
+                  }? All messages will be permanently lost.`
+                : `Are you sure you want to delete "${
+                    chat.name ?? `chat #${chat.id}`
+                  }"? All messages and members will be permanently lost.`
+            }
+            confirmText="Delete"
+            variant="danger"
+            loading={deleting}
+            onConfirm={handleDelete}
+            onCancel={() => setIsDeleteOpen(false)}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 }

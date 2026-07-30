@@ -15,6 +15,7 @@ import { FormError } from "./FormError";
 import { profileSchema } from "../validation/profileSchema";
 import { parseApiErrors } from "../utils/apiError";
 import { Button } from "./ui/Button";
+import { AnimatePresence } from "framer-motion";
 
 export function ProfileContent() {
   const navigate = useNavigate();
@@ -148,17 +149,19 @@ export function ProfileContent() {
         </>
       )}
 
-      {isDeleteOpen && (
-        <ConfirmDialog
-          title="Delete account?"
-          message="Your account will be permanently deleted. This action cannot be undone."
-          confirmText="Delete"
-          variant="danger"
-          loading={deleting}
-          onConfirm={handleDeleteAccount}
-          onCancel={() => setIsDeleteOpen(false)}
-        />
-      )}
+      <AnimatePresence>
+        {isDeleteOpen && (
+          <ConfirmDialog
+            title="Delete account?"
+            message="Your account will be permanently deleted. This action cannot be undone."
+            confirmText="Delete"
+            variant="danger"
+            loading={deleting}
+            onConfirm={handleDeleteAccount}
+            onCancel={() => setIsDeleteOpen(false)}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 }
