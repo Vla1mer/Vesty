@@ -85,7 +85,6 @@ export function AvatarUpload({
           </Button>
         )}
 
-        <p className="text-xs text-content-subtle">JPEG, PNG or WebP</p>
         {error && <p className="text-xs text-danger">{error}</p>}
       </div>
 
