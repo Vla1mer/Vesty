@@ -64,7 +64,7 @@ export function SelectUserModal({ onClose }: Props) {
           onChange={(e) => setSearch(e.target.value)}
           placeholder="🔍 Search by username..."
           autoFocus
-          className="w-full px-3 py-2 rounded bg-surface border border-line-strong text-content placeholder-content-subtle focus:outline-none focus:border-accent-strong mb-3"
+          className="w-full px-3 py-2 rounded bg-surface border border-line-strong text-content placeholder-content-muted focus:outline-none focus:border-accent-strong mb-3"
         />
 
         {isError && (

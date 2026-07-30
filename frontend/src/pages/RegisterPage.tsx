@@ -57,7 +57,7 @@ export function RegisterPage() {
           <Form className="w-full max-w-sm bg-surface border border-line rounded-card shadow-float p-6 space-y-4">
             <div className="text-center">
               <h1 className="text-2xl font-bold">
-                <span className="text-accent-strong">Vesty</span>{" "}
+                <span className="text-brand">Vesty</span>{" "}
                 <span className="text-content">Messenger</span>
               </h1>
               <p className="text-sm text-content-muted mt-1">Create your account</p>

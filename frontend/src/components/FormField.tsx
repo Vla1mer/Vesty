@@ -38,7 +38,7 @@ export function FormField({
           maxLength={maxLength}
           className={`w-full px-3 py-2 ${
             isPassword ? "pr-10" : ""
-          } rounded bg-surface border text-content focus:outline-none ${
+          } rounded bg-surface-sunken border text-content focus:outline-none ${
             showError
               ? "border-danger focus:border-danger"
               : "border-line-strong focus:border-accent-strong"

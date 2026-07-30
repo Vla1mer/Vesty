@@ -11,9 +11,11 @@ export default {
     extend: {
       colors: {
         bg: token("bg"),
+        brand: token("brand"),
         surface: {
           DEFAULT: token("surface"),
           raised: token("surface-raised"),
+          muted: token("surface-muted"),
           overlay: token("surface-overlay"),
           sunken: token("surface-sunken"),
         },

@@ -76,7 +76,7 @@ export function ChatsPage() {
           </button>
           <div className="min-w-0">
             <h1 className="text-xl font-bold text-content truncate">
-              <span className="text-accent-strong">Vesty</span>
+              <span className="text-brand">Vesty</span>
             </h1>
             {userName && (
               <p className="text-xs text-content-muted truncate">{userName}</p>

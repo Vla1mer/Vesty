@@ -14,7 +14,7 @@ export function SearchBar({ value, onChange }: Props) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Search chats and users..."
-        className="w-full pl-10 pr-10 py-2 rounded-lg bg-surface-raised border border-line text-content placeholder-content-subtle focus:outline-none focus:border-accent-strong transition"
+        className="w-full pl-10 pr-10 py-2 rounded-lg bg-surface-sunken border border-line text-content placeholder-content-muted focus:outline-none focus:border-accent-strong transition"
       />
       {value && (
         <button

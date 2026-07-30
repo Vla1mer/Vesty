@@ -410,7 +410,7 @@ export function ChatDetailPage() {
         <button
           type="button"
           onClick={showNextPinned}
-          className="absolute top-[88px] inset-x-0 z-10 flex items-center gap-3 px-4 py-2 border-b border-line bg-surface/95 backdrop-blur text-left hover:bg-surface-raised transition"
+          className="absolute top-[88px] inset-x-0 z-10 flex items-center gap-3 px-4 py-2 border-b border-line bg-surface-muted/95 backdrop-blur text-left hover:bg-surface transition"
         >
           <span className="text-accent-strong leading-none">📌</span>
           <div className="min-w-0 flex-1 border-l-2 border-accent-strong pl-3">
@@ -620,7 +620,7 @@ export function ChatDetailPage() {
               placeholder="Type a message..."
               maxLength={2000}
               disabled={sending || saving}
-              className="flex-1 px-3 py-2 rounded bg-surface-raised border border-line-strong text-content focus:outline-none focus:border-accent-strong disabled:opacity-50"
+              className="flex-1 px-3 py-2 rounded bg-surface-sunken border border-line-strong text-content focus:outline-none focus:border-accent-strong disabled:opacity-50"
             />
             <button
               type="submit"
