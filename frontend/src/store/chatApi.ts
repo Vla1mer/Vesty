@@ -255,16 +255,23 @@ export const chatApi = apiSlice.injectEndpoints({
     markChatRead: builder.mutation<void, number>({
       query: (chatId) => ({ url: endpoints.chat.read(chatId), method: HTTP_METHOD.POST }),
       async onQueryStarted(chatId, { dispatch, queryFulfilled }) {
-        const patch = dispatch(
-          chatApi.util.updateQueryData("getChats", undefined, (draft) => {
-            const chat = draft.find((c) => c.id === chatId);
-            if (chat) chat.unreadCount = 0;
-          })
-        );
+        const patches = [
+          dispatch(
+            chatApi.util.updateQueryData("getChats", undefined, (draft) => {
+              const chat = draft.find((c) => c.id === chatId);
+              if (chat) chat.unreadCount = 0;
+            })
+          ),
+          dispatch(
+            chatApi.util.updateQueryData("getChatById", chatId, (draft) => {
+              draft.unreadCount = 0;
+            })
+          ),
+        ];
         try {
           await queryFulfilled;
         } catch {
-          patch.undo();
+          patches.forEach((patch) => patch.undo());
         }
       },
     }),

@@ -58,7 +58,7 @@ export function ChatDetailPage() {
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [unreadOnEntry, setUnreadOnEntry] = useState<number | null>(null);
   const [showJumpToBottom, setShowJumpToBottom] = useState(false);
-  const didInitialScroll = useRef(false);
+  const [initialScrollDone, setInitialScrollDone] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const { data: chat, isLoading: chatLoading, error: chatError } =
@@ -163,18 +163,17 @@ export function ChatDetailPage() {
   }
 
   const firstUnreadId = useMemo(() => {
-    if (!unreadOnEntry || unreadOnEntry >= messages.length) return null;
+    if (!unreadOnEntry || unreadOnEntry > messages.length) return null;
     return messages[messages.length - unreadOnEntry]?.id ?? null;
   }, [messages, unreadOnEntry]);
 
   useEffect(() => {
     if (messages.length === 0) return;
 
-    if (!didInitialScroll.current) {
+    if (!initialScrollDone) {
       // ждём счётчик непрочитанных: запрос за чатом приходит позже сообщений
       if (unreadOnEntry === null) return;
 
-      didInitialScroll.current = true;
       const anchor =
         firstUnreadId !== null
           ? document.getElementById(`message-${firstUnreadId}`)
@@ -182,11 +181,12 @@ export function ChatDetailPage() {
 
       if (anchor) anchor.scrollIntoView({ block: "center" });
       else bottomRef.current?.scrollIntoView();
+      setInitialScrollDone(true);
       return;
     }
 
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, firstUnreadId, unreadOnEntry]);
+  }, [messages, firstUnreadId, unreadOnEntry, initialScrollDone]);
 
   useEffect(() => {
     if (!isValidChat) return;
@@ -197,7 +197,7 @@ export function ChatDetailPage() {
   useEffect(() => {
     setPinnedIndex(0);
     setUnreadOnEntry(null);
-    didInitialScroll.current = false;
+    setInitialScrollDone(false);
   }, [chatId]);
 
   useEffect(() => {
@@ -207,8 +207,8 @@ export function ChatDetailPage() {
   }, [chat, chatError, unreadOnEntry]);
 
   useEffect(() => {
-    if (isValidChat && unreadOnEntry !== null) markChatRead(chatId);
-  }, [chatId, isValidChat, unreadOnEntry, messages.length, markChatRead]);
+    if (isValidChat && initialScrollDone) markChatRead(chatId);
+  }, [chatId, isValidChat, initialScrollDone, messages.length, markChatRead]);
 
   useEffect(() => {
     if (!isValidChat) return;
