@@ -1,3 +1,4 @@
+import { MessageSquare } from "lucide-react";
 import { useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useGetAllUsersQuery } from "../store/userApi";
@@ -48,7 +49,7 @@ export function SearchResults({ query, chats }: Props) {
 
   if (matchedChats.length === 0 && matchedUsers.length === 0 && !loadingUsers) {
     return (
-      <div className="text-center py-12 text-slate-400">
+      <div className="text-center py-12 text-content-muted">
         <p>No matches for "{query}"</p>
       </div>
     );
@@ -58,7 +59,7 @@ export function SearchResults({ query, chats }: Props) {
     <div className="space-y-6">
       {matchedChats.length > 0 && (
         <section>
-          <h2 className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-2 px-1">
+          <h2 className="text-xs uppercase tracking-wide text-content-subtle font-semibold mb-2 px-1">
             Chats
           </h2>
           <div className="space-y-2">
@@ -66,9 +67,9 @@ export function SearchResults({ query, chats }: Props) {
               <Link
                 key={chat.id}
                 to={`/chats/${chat.id}`}
-                className="block rounded-lg border border-slate-700 bg-slate-800 p-3 hover:bg-slate-700 hover:border-amber-500 transition"
+                className="block rounded-lg border border-line bg-surface-raised p-3 hover:bg-surface-overlay hover:border-accent-strong transition"
               >
-                <h3 className="text-slate-100 font-medium">
+                <h3 className="text-content font-medium">
                   {getChatDisplayName(chat)}
                 </h3>
               </Link>
@@ -79,7 +80,7 @@ export function SearchResults({ query, chats }: Props) {
 
       {matchedUsers.length > 0 && (
         <section>
-          <h2 className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-2 px-1">
+          <h2 className="text-xs uppercase tracking-wide text-content-subtle font-semibold mb-2 px-1">
             Users
           </h2>
           <div className="space-y-2">
@@ -88,17 +89,19 @@ export function SearchResults({ query, chats }: Props) {
                 key={u.id}
                 type="button"
                 onClick={() => navigate(`/chats/new/${u.id}`)}
-                className="w-full flex items-center justify-between p-3 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 hover:border-amber-500 transition text-left"
+                className="w-full flex items-center justify-between p-3 rounded-lg border border-line bg-surface-raised hover:bg-surface-overlay hover:border-accent-strong transition text-left"
               >
                 <div>
-                  <p className="text-slate-100 font-medium">{u.userName}</p>
+                  <p className="text-content font-medium">{u.userName}</p>
                   {(u.name || u.surname) && (
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-content-muted">
                       {[u.name, u.surname].filter(Boolean).join(" ")}
                     </p>
                   )}
                 </div>
-                <span className="text-xs text-amber-400">💬 Message</span>
+                <span className="flex items-center gap-1 text-xs text-accent-strong">
+                  <MessageSquare size={13} aria-hidden="true" /> Message
+                </span>
               </button>
             ))}
           </div>
@@ -106,7 +109,7 @@ export function SearchResults({ query, chats }: Props) {
       )}
 
       {loadingUsers && matchedChats.length === 0 && (
-        <p className="text-slate-400 text-center py-4">Searching...</p>
+        <p className="text-content-muted text-center py-4">Searching...</p>
       )}
     </div>
   );

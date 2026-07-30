@@ -1,5 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { MouseEvent, TouchEvent as ReactTouchEvent } from "react";
+import { Check, Copy, Pencil, Pin, PinOff, Reply, Trash2 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Avatar } from "./Avatar";
 import { MessageAttachments } from "./MessageAttachments";
 import type { MessageDto } from "../types/api";
@@ -195,18 +197,18 @@ export function MessageBubble({
       <div
         id={`message-${message.id}`}
         className={`flex items-center gap-2 rounded-lg transition-colors duration-500 ${
-          selected ? "bg-amber-500/10" : highlighted ? "bg-amber-400/20" : ""
+          selected ? "bg-accent/10" : highlighted ? "bg-accent/20" : ""
         }`}
       >
         {selectionMode && (
           <span
             className={`shrink-0 w-5 h-5 rounded-full border flex items-center justify-center text-[10px] ${
               selected
-                ? "bg-amber-500 border-amber-500 text-white"
-                : "border-slate-500 text-transparent"
+                ? "bg-accent border-accent-strong text-accent-contrast"
+                : "border-line-strong text-transparent"
             }`}
           >
-            ✓
+            <Check size={12} strokeWidth={3} />
           </span>
         )}
         <div
@@ -234,24 +236,31 @@ export function MessageBubble({
               onTouchMove={handleTouchMove}
               onTouchCancel={cancelTouch}
               style={{ WebkitTouchCallout: "none" }}
-              className={`rounded-2xl px-4 py-2 select-none md:select-text transition ${
+              className={`rounded-bubble px-4 py-2 select-none md:select-text shadow-raised transition ${
                 menu || isEditing || pressing || selected
-                  ? "ring-2 ring-amber-400"
+                  ? "ring-2 ring-accent-strong"
                   : ""
               } ${
                 isOwn
-                  ? "bg-amber-600 text-white rounded-br-sm md:rounded-br-2xl md:rounded-bl-sm"
-                  : "bg-slate-700 text-slate-100 rounded-bl-sm"
+                  ? "bg-bubble-out text-on-bubble rounded-br-sm md:rounded-br-bubble md:rounded-bl-sm"
+                  : "bg-bubble-in text-content rounded-bl-sm"
               }`}
             >
               {!isOwn && showAuthor && (
-                <p className="text-xs text-amber-300 font-medium mb-1">
+                <p className="text-xs text-accent-strong font-medium mb-1">
                   {displayName}
                 </p>
               )}
 
               {message.pinnedAt && (
-                <p className="text-[11px] text-amber-300 mb-1">📌 Pinned</p>
+                <p
+                  className={`text-[11px] mb-1 ${
+                    isOwn ? "text-on-bubble-accent" : "text-accent-strong"
+                  }`}
+                >
+                  <Pin size={11} aria-hidden="true" className="inline -mt-0.5 mr-1" />
+                  Pinned
+                </p>
               )}
 
               {message.replyTo && (
@@ -260,16 +269,20 @@ export function MessageBubble({
                   onClick={() => onJumpToMessage?.(message.replyTo!.id)}
                   className={`w-full text-left mb-1.5 pl-2 border-l-2 rounded-sm py-0.5 transition ${
                     isOwn
-                      ? "border-amber-200 bg-amber-700/40 hover:bg-amber-700/60"
-                      : "border-amber-400 bg-slate-800/60 hover:bg-slate-800"
+                      ? "border-on-bubble-accent bg-on-bubble/[0.08] hover:bg-on-bubble/[0.13]"
+                      : "border-accent-strong bg-content/[0.05] hover:bg-content/[0.09]"
                   }`}
                 >
-                  <span className="block text-xs font-medium text-amber-300 truncate">
+                  <span
+                    className={`block text-xs font-medium truncate ${
+                      isOwn ? "text-on-bubble-accent" : "text-accent-strong"
+                    }`}
+                  >
                     {replyAuthorName ?? `User #${message.replyTo.userId}`}
                   </span>
                   <span
                     className={`block text-xs truncate ${
-                      isOwn ? "text-amber-100" : "text-slate-300"
+                      isOwn ? "text-on-bubble-muted" : "text-content-muted"
                     }`}
                   >
                     {message.replyTo.content}
@@ -285,15 +298,15 @@ export function MessageBubble({
                 <p className="break-words whitespace-pre-wrap">
                   {message.content}
                   <span
-                    className="invisible select-none ml-2 text-[10px]"
+                    className="invisible select-none ml-2.5 text-xs"
                     aria-hidden="true"
                   >
                     {timeLabel}
                   </span>
                 </p>
                 <span
-                  className={`absolute bottom-0 right-0 text-[10px] leading-none whitespace-nowrap ${
-                    isOwn ? "text-amber-100" : "text-slate-400"
+                  className={`absolute bottom-0 right-0 text-xs leading-none whitespace-nowrap ${
+                    isOwn ? "text-on-bubble-muted" : "text-content-muted"
                   }`}
                 >
                   {timeLabel}
@@ -307,25 +320,32 @@ export function MessageBubble({
                   isOwn ? "justify-end md:justify-start" : "justify-start"
                 }`}
               >
+                <AnimatePresence initial={false}>
                 {message.reactions.map((r) => {
                   const mine =
                     currentUserId != null && r.userIds.includes(currentUserId);
                   return (
-                    <button
+                    <motion.button
                       key={r.emoji}
                       type="button"
+                      layout
+                      initial={{ opacity: 0, scale: 0.5 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.5 }}
+                      transition={{ type: "spring", stiffness: 520, damping: 26 }}
                       onClick={() => onToggleReaction?.(message.id, r.emoji, mine)}
                       title={`${r.userIds.length}`}
                       className={`px-1.5 py-0.5 rounded-full text-xs border transition ${
                         mine
-                          ? "bg-amber-500/20 border-amber-500 text-amber-200"
-                          : "bg-slate-800 border-slate-600 text-slate-300 hover:bg-slate-700"
+                          ? "bg-accent/20 border-accent-strong text-accent-strong"
+                          : "bg-surface-raised border-line-strong text-content-muted hover:bg-surface-overlay"
                       }`}
                     >
                       {r.emoji} {r.userIds.length}
-                    </button>
+                    </motion.button>
                   );
                 })}
+                </AnimatePresence>
               </div>
             )}
           </div>
@@ -333,9 +353,12 @@ export function MessageBubble({
       </div>
 
       {menu && (
-        <div
+        <motion.div
           ref={menuRef}
-          className="fixed z-50 w-max max-w-[13rem] rounded-lg border border-slate-700 bg-slate-800 py-1 shadow-xl"
+          initial={{ opacity: 0, scale: 0.94 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.13, ease: [0.22, 1, 0.36, 1] }}
+          className="fixed z-50 w-max max-w-[13rem] origin-top-left rounded-lg border border-line bg-surface-raised py-1 shadow-float"
           style={{ top: menuPos.top, left: menuPos.left }}
           onClickCapture={(e) => {
             if (Date.now() - menuOpenedAtRef.current < 400) {
@@ -346,7 +369,7 @@ export function MessageBubble({
           onClick={(e) => e.stopPropagation()}
         >
           {onToggleReaction && (
-            <div className="flex gap-0.5 px-1.5 py-1.5 border-b border-slate-700">
+            <div className="flex gap-0.5 px-1.5 py-1.5 border-b border-line">
               {QUICK_REACTIONS.map((emoji) => {
                 const mine = Boolean(
                   currentUserId != null &&
@@ -363,7 +386,7 @@ export function MessageBubble({
                       onToggleReaction(message.id, emoji, mine);
                     }}
                     className={`w-7 h-7 rounded-full text-base leading-none transition ${
-                      mine ? "bg-amber-500/30" : "hover:bg-slate-700"
+                      mine ? "bg-accent/30" : "hover:bg-surface-overlay"
                     }`}
                   >
                     {emoji}
@@ -379,18 +402,18 @@ export function MessageBubble({
                 setMenu(false);
                 onReply(message);
               }}
-              className="w-full px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-700 transition"
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-sm text-content hover:bg-surface-overlay transition"
             >
-              ↩️ Reply
+              <Reply size={15} aria-hidden="true" /> Reply
             </button>
           )}
           {message.content && (
             <button
               type="button"
               onClick={handleCopy}
-              className="w-full px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-700 transition"
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-sm text-content hover:bg-surface-overlay transition"
             >
-              📋 Copy
+              <Copy size={15} aria-hidden="true" /> Copy
             </button>
           )}
           {onTogglePin && (
@@ -400,9 +423,17 @@ export function MessageBubble({
                 setMenu(false);
                 onTogglePin(message.id, Boolean(message.pinnedAt));
               }}
-              className="w-full px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-700 transition"
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-sm text-content hover:bg-surface-overlay transition"
             >
-              {message.pinnedAt ? "📌 Unpin" : "📌 Pin"}
+              {message.pinnedAt ? (
+                <>
+                  <PinOff size={15} aria-hidden="true" /> Unpin
+                </>
+              ) : (
+                <>
+                  <Pin size={15} aria-hidden="true" /> Pin
+                </>
+              )}
             </button>
           )}
           {onEdit && (
@@ -412,9 +443,9 @@ export function MessageBubble({
                 setMenu(false);
                 onEdit(message.id, message.content ?? "");
               }}
-              className="w-full px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-700 transition"
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-sm text-content hover:bg-surface-overlay transition"
             >
-              ✏️ Edit
+              <Pencil size={15} aria-hidden="true" /> Edit
             </button>
           )}
           {onDelete && (
@@ -424,12 +455,12 @@ export function MessageBubble({
                 setMenu(false);
                 onDelete(message.id);
               }}
-              className="w-full px-3 py-2 text-left text-sm text-red-300 hover:bg-slate-700 transition"
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-sm text-danger hover:bg-surface-overlay transition"
             >
-              🗑️ Delete
+              <Trash2 size={15} aria-hidden="true" /> Delete
             </button>
           )}
-        </div>
+        </motion.div>
       )}
     </>
   );

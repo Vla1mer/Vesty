@@ -1,3 +1,4 @@
+import { FileText, X } from "lucide-react";
 import { formatSize } from "../api/attachments";
 import type { PendingUpload } from "../hooks/useAttachmentUploads";
 
@@ -16,17 +17,17 @@ export function AttachmentDrafts({ uploads, onRemove }: AttachmentDraftsProps) {
           key={upload.localId}
           className={`relative shrink-0 w-28 rounded border p-2 ${
             upload.error
-              ? "border-red-800 bg-red-950"
-              : "border-slate-700 bg-slate-800"
+              ? "border-danger/40 bg-danger-soft"
+              : "border-line bg-surface-raised"
           }`}
         >
           <button
             type="button"
             onClick={() => onRemove(upload.localId)}
             aria-label="Remove attachment"
-            className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-slate-700 hover:bg-slate-600 text-slate-100 text-xs leading-none"
+            className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-surface-overlay hover:bg-line-strong text-content flex items-center justify-center"
           >
-            ×
+            <X size={12} />
           </button>
 
           {upload.previewUrl ? (
@@ -36,25 +37,25 @@ export function AttachmentDrafts({ uploads, onRemove }: AttachmentDraftsProps) {
               className="w-full h-16 object-cover rounded mb-1"
             />
           ) : (
-            <div className="w-full h-16 rounded mb-1 bg-slate-900 flex items-center justify-center text-2xl">
-              📄
+            <div className="w-full h-16 rounded mb-1 bg-surface flex items-center justify-center text-content-muted">
+              <FileText size={24} aria-hidden="true" />
             </div>
           )}
 
-          <p className="text-[11px] text-slate-200 truncate" title={upload.fileName}>
+          <p className="text-[11px] text-content truncate" title={upload.fileName}>
             {upload.fileName}
           </p>
 
           {upload.error ? (
-            <p className="text-[10px] text-red-400">{upload.error}</p>
+            <p className="text-[10px] text-danger">{upload.error}</p>
           ) : upload.attachment ? (
-            <p className="text-[10px] text-slate-400">
+            <p className="text-[10px] text-content-muted">
               {formatSize(upload.sizeInBytes)}
             </p>
           ) : (
-            <div className="h-1 mt-1 rounded bg-slate-700 overflow-hidden">
+            <div className="h-1 mt-1 rounded bg-surface-overlay overflow-hidden">
               <div
-                className="h-full bg-amber-500 transition-all"
+                className="h-full bg-accent transition-all"
                 style={{ width: `${upload.progress}%` }}
               />
             </div>

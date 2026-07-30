@@ -1,7 +1,11 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { Pencil } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
+import { Modal } from "./ui/Modal";
+import type { LucideIcon } from "lucide-react";
 
 interface Action {
-  icon: string;
+  Icon: LucideIcon;
   label: string;
   description?: string;
   onClick: () => void;
@@ -14,15 +18,6 @@ interface Props {
 export function FloatingActionButton({ actions }: Props) {
   const [isOpen, setIsOpen] = useState(false);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    function handleEsc(e: KeyboardEvent) {
-      if (e.key === "Escape") setIsOpen(false);
-    }
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
-  }, [isOpen]);
-
   function handleActionClick(action: Action) {
     setIsOpen(false);
     action.onClick();
@@ -34,45 +29,28 @@ export function FloatingActionButton({ actions }: Props) {
         type="button"
         onClick={() => setIsOpen(true)}
         aria-label="New chat"
-        className="absolute right-4 bottom-20 z-30 w-14 h-14 shadow-xl text-2xl rounded-full bg-amber-600 hover:bg-amber-500 text-white flex items-center justify-center transition md:static md:shrink-0 md:w-9 md:h-9 md:shadow-none md:text-lg"
+        className="absolute right-4 bottom-20 z-30 w-14 h-14 shadow-float rounded-full bg-accent hover:bg-accent-hover text-accent-contrast flex items-center justify-center transition md:static md:shrink-0 md:w-9 md:h-9 md:shadow-none"
       >
-        💬
+        <Pencil size={20} className="md:hidden" />
+        <Pencil size={16} className="hidden md:block" />
       </button>
 
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
-          onClick={() => setIsOpen(false)}
-        >
-          <div
-            className="bg-slate-800 border border-slate-700 rounded-xl p-6 w-full max-w-sm space-y-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-slate-100">Create new</h2>
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                className="text-slate-400 hover:text-slate-100 text-2xl leading-none"
-                aria-label="Close"
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="space-y-2">
+      <AnimatePresence>
+        {isOpen && (
+          <Modal title="Create new" onClose={() => setIsOpen(false)}>
+          <div className="space-y-2">
               {actions.map((action, idx) => (
                 <button
                   key={idx}
                   type="button"
                   onClick={() => handleActionClick(action)}
-                  className="w-full flex items-center gap-4 p-4 rounded-lg bg-slate-900 hover:bg-slate-700 border border-slate-700 hover:border-amber-500 transition text-left"
+                  className="w-full flex items-center gap-4 p-4 rounded-lg bg-surface hover:bg-surface-overlay border border-line hover:border-accent-strong transition text-left"
                 >
-                  <span className="text-3xl">{action.icon}</span>
+                  <action.Icon size={24} aria-hidden="true" className="shrink-0 text-accent-strong" />
                   <div className="flex-1">
-                    <p className="text-slate-100 font-medium">{action.label}</p>
+                    <p className="text-content font-medium">{action.label}</p>
                     {action.description && (
-                      <p className="text-xs text-slate-400 mt-0.5">
+                      <p className="text-xs text-content-muted mt-0.5">
                         {action.description}
                       </p>
                     )}
@@ -80,9 +58,9 @@ export function FloatingActionButton({ actions }: Props) {
                 </button>
               ))}
             </div>
-          </div>
-        </div>
-      )}
+          </Modal>
+        )}
+      </AnimatePresence>
     </>
   );
 }

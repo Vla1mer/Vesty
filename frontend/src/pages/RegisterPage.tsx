@@ -1,4 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
+import { MessagesSquare } from "lucide-react";
+import { ThemeToggle } from "../components/ThemeToggle";
 import { Formik, Form } from "formik";
 import { register, login } from "../api/auth";
 import { useAuth } from "../context/useAuth";
@@ -6,13 +8,17 @@ import { FormField } from "../components/FormField";
 import { FormError } from "../components/FormError";
 import { registerSchema } from "../validation/authSchemas";
 import { parseApiErrors } from "../utils/apiError";
+import { Button } from "../components/ui/Button";
 
 export function RegisterPage() {
   const navigate = useNavigate();
   const { setAuthenticated } = useAuth();
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="relative min-h-screen flex items-center justify-center p-4">
+      <div className="absolute top-4 right-4 z-10">
+        <ThemeToggle />
+      </div>
       <Formik
         initialValues={{ userName: "", password: "", confirmPassword: "", name: "", surname: "" }}
         validationSchema={registerSchema}
@@ -50,13 +56,16 @@ export function RegisterPage() {
         }}
       >
         {({ isSubmitting, status }) => (
-          <Form className="w-full max-w-sm bg-slate-800 border border-slate-700 rounded-xl p-6 space-y-4">
+          <Form className="w-full max-w-sm bg-surface border border-line rounded-card shadow-float p-6 space-y-4">
             <div className="text-center">
+              <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-card bg-accent text-accent-contrast shadow-raised">
+                <MessagesSquare size={24} aria-hidden="true" />
+              </span>
               <h1 className="text-2xl font-bold">
-                <span className="text-amber-400">Vesty</span>{" "}
-                <span className="text-slate-100">Messenger</span>
+                <span className="text-brand">Vesty</span>{" "}
+                <span className="text-content">Messenger</span>
               </h1>
-              <p className="text-sm text-slate-400 mt-1">Create your account</p>
+              <p className="text-sm text-content-muted mt-1">Create your account</p>
             </div>
 
             <FormField
@@ -85,17 +94,13 @@ export function RegisterPage() {
             <FormError message={status} />
 
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full py-2 rounded bg-amber-600 hover:bg-amber-500 text-white disabled:bg-slate-700 disabled:cursor-not-allowed font-medium transition"
-            >
+            <Button type="submit" fullWidth glow disabled={isSubmitting}>
               {isSubmitting ? "Registering..." : "Register"}
-            </button>
+            </Button>
 
-            <p className="text-sm text-center text-slate-400">
+            <p className="text-sm text-center text-content-muted">
               Already have an account?{" "}
-              <Link to="/login" className="text-amber-400 hover:underline">
+              <Link to="/login" className="text-accent-strong hover:underline">
                 Sign in
               </Link>
             </p>

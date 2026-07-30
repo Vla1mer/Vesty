@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { ArrowDown, ArrowUp, Pencil, Trash2, X } from "lucide-react";
+import { useMemo, useState } from "react";
 import {
   useDeleteChatMutation,
   useRenameChatMutation,
@@ -11,6 +12,9 @@ import { useGetAllUsersQuery } from "../store/userApi";
 import { useAuth } from "../context/useAuth";
 import { Avatar } from "./Avatar";
 import { ChatAvatarEditor } from "./ChatAvatarEditor";
+import { Button } from "./ui/Button";
+import { TextInput } from "./ui/TextInput";
+import { Modal } from "./ui/Modal";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { isDirectChat, UserRole } from "../types/api";
 import { getChatDisplayName } from "../utils/chats";
@@ -18,6 +22,8 @@ import { chatNameSchema } from "../validation/chatSchemas";
 import { ValidationError } from "yup";
 import type { ChatDto, UserDto, ChatMemberWithRoleDto } from "../types/api";
 import type { AxiosBaseQueryError } from "../api/axiosBaseQuery";
+import { FormError } from "./FormError";
+import { AnimatePresence } from "framer-motion";
 
 interface Props {
   chat: ChatDto;
@@ -79,14 +85,6 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
       ),
     [isGroup, members, currentUserId]
   );
-
-  useEffect(() => {
-    function handleEsc(e: KeyboardEvent) {
-      if (e.key === "Escape" && busyUserId === null && !deleting) onClose();
-    }
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
-  }, [busyUserId, deleting, onClose]);
 
   const memberIds = useMemo(
     () => new Set(members.map((m) => m.userId)),
@@ -205,19 +203,18 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
 
   return (
     <>
-      <div
-        className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-40 p-4"
-        onClick={busyUserId !== null || deleting ? undefined : onClose}
-      >
-        <div
-          className="bg-slate-800 border border-slate-700 rounded-xl p-6 w-full max-w-md max-h-[85vh] flex flex-col"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex-1 pr-2">
+      <Modal
+        onClose={onClose}
+        closeDisabled={busyUserId !== null || deleting}
+        ariaLabel="Chat info"
+        size="md"
+        layout="column"
+        layer="base"
+        title={
+          <div className="flex-1 pr-2">
               {isRenaming ? (
                 <div className="flex flex-col gap-2">
-                  <input
+                  <TextInput
                     type="text"
                     value={nameDraft}
                     onChange={(e) => setNameDraft(e.target.value)}
@@ -227,30 +224,20 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                       if (e.key === "Enter") handleRename();
                       if (e.key === "Escape") setIsRenaming(false);
                     }}
-                    className="text-xl font-bold bg-slate-900 border border-slate-600 rounded px-2 py-1 text-slate-100 focus:outline-none focus:border-amber-500"
+                    className="text-xl font-bold"
                   />
                   <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={handleRename}
-                      disabled={renaming || !nameDraft.trim()}
-                      className="text-xs px-3 py-1 rounded bg-amber-600 hover:bg-amber-500 text-white disabled:opacity-50"
-                    >
+                    <Button size="xs" onClick={handleRename} disabled={renaming || !nameDraft.trim()}>
                       {renaming ? "..." : "Save"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setIsRenaming(false)}
-                      disabled={renaming}
-                      className="text-xs px-3 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-100 disabled:opacity-50"
-                    >
+                    </Button>
+                    <Button size="xs" variant="neutral" onClick={() => setIsRenaming(false)} disabled={renaming}>
                       Cancel
-                    </button>
+                    </Button>
                   </div>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <h2 className="text-2xl font-bold text-slate-100 break-words">
+                  <h2 className="text-2xl font-bold text-content break-words">
                     {title}
                   </h2>
                   {canRename && (
@@ -260,17 +247,17 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                         setNameDraft(chat.name ?? "");
                         setIsRenaming(true);
                       }}
-                      className="text-slate-400 hover:text-amber-400 transition text-sm"
+                      className="text-content-muted hover:text-accent-strong transition text-sm"
                       aria-label="Rename chat"
                       title="Rename chat"
                     >
-                      ✏️
+                      <Pencil size={14} />
                     </button>
                   )}
                 </div>
               )}
               {!isRenaming && (
-                <p className="text-sm text-slate-400 mt-1">
+                <p className="text-sm text-content-muted mt-1">
                   {loading ? "Loading..." : `Members (${members.length})`}
                 </p>
               )}
@@ -283,40 +270,33 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                   />
                 </div>
               )}
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={busyUserId !== null || deleting}
-              className="text-slate-400 hover:text-slate-100 text-2xl leading-none disabled:opacity-50"
-              aria-label="Close"
-            >
-              ×
-            </button>
           </div>
+        }
+      >
 
           {(error || membersError) && (
-            <div className="text-sm text-red-400 bg-red-950 border border-red-900 rounded p-2 mb-3">
-              {error ?? "Failed to load chat info"}
-            </div>
+            <FormError
+              className="mb-3"
+              message={error ?? "Failed to load chat info"}
+            />
           )}
 
           {loading ? (
-            <p className="text-slate-400 text-center py-8">Loading...</p>
+            <p className="text-content-muted text-center py-8">Loading...</p>
           ) : (
             <div className="flex-1 overflow-y-auto space-y-4">
               <section>
-                <h3 className="text-sm font-semibold text-slate-300 mb-2">
+                <h3 className="text-sm font-semibold text-content-muted mb-2">
                   In this chat
                 </h3>
                 {members.length === 0 ? (
-                  <p className="text-sm text-slate-500">No members yet</p>
+                  <p className="text-sm text-content-subtle">No members yet</p>
                 ) : (
                   <ul className="space-y-1">
                     {members.map((m) => (
                       <li
                         key={m.userId}
-                        className="flex items-center justify-between rounded bg-slate-900 px-3 py-2 gap-2"
+                        className="flex items-center justify-between rounded bg-surface px-3 py-2 gap-2"
                       >
                         <div className="min-w-0 flex items-center gap-2.5">
                           <Avatar
@@ -328,16 +308,16 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                             size="sm"
                           />
                           <div className="min-w-0">
-                          <p className="text-slate-100 text-sm truncate">
+                          <p className="text-content text-sm truncate">
                             {m.userName}
                             {m.userId === currentUserId && (
-                              <span className="text-xs text-amber-400 ml-2">
+                              <span className="text-xs text-accent-strong ml-2">
                                 (you)
                               </span>
                             )}
                           </p>
                           {(m.name || m.surname) && (
-                            <p className="text-xs text-slate-400 truncate">
+                            <p className="text-xs text-content-muted truncate">
                               {[m.name, m.surname].filter(Boolean).join(" ")}
                             </p>
                           )}
@@ -349,10 +329,10 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                           <span
                             className={`text-xs px-2 py-0.5 rounded ${
                               m.roleId === UserRole.Owner
-                                ? "bg-amber-900 text-amber-200"
+                                ? "bg-accent-soft text-accent-strong"
                                 : m.roleId === UserRole.Admin
-                                ? "bg-blue-900 text-blue-200"
-                                : "bg-slate-700 text-slate-300"
+                                ? "bg-info-soft text-info"
+                                : "bg-surface-overlay text-content-muted"
                             }`}
                           >
                             {roleLabel[m.roleId]}
@@ -365,43 +345,42 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                             m.roleId !== UserRole.Owner && (
                               <>
                                 {m.roleId === UserRole.User ? (
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      handleChangeRole(m, UserRole.Admin)
-                                    }
+                                  <Button
+                                    size="xs"
+                                    variant="info"
+                                    className="py-0.5"
+                                    onClick={() => handleChangeRole(m, UserRole.Admin)}
                                     disabled={busyUserId !== null}
-                                    className="text-xs px-2 py-0.5 rounded bg-blue-900 hover:bg-blue-800 text-blue-100 disabled:opacity-50 transition"
                                     title="Make admin"
                                   >
-                                    ↑ Admin
-                                  </button>
+                                    <ArrowUp size={11} aria-hidden="true" /> Admin
+                                  </Button>
                                 ) : (
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      handleChangeRole(m, UserRole.User)
-                                    }
+                                  <Button
+                                    size="xs"
+                                    variant="neutral"
+                                    className="py-0.5"
+                                    onClick={() => handleChangeRole(m, UserRole.User)}
                                     disabled={busyUserId !== null}
-                                    className="text-xs px-2 py-0.5 rounded bg-slate-700 hover:bg-slate-600 text-slate-200 disabled:opacity-50 transition"
                                     title="Remove admin"
                                   >
-                                    ↓ Member
-                                  </button>
+                                    <ArrowDown size={11} aria-hidden="true" /> Member
+                                  </Button>
                                 )}
                               </>
                             )}
 
                           {/* Удалить участника */}
                           {isGroup && m.userId !== currentUserId && (
-                            <button
-                              type="button"
+                            <Button
+                              size="xs"
+                              variant="danger"
                               onClick={() => handleRemove(m)}
                               disabled={busyUserId !== null}
-                              className="text-xs px-2 py-0.5 rounded bg-red-900 hover:bg-red-800 text-red-100 disabled:opacity-50 transition"
+                              aria-label="Remove member"
                             >
-                              {busyUserId === m.userId ? "..." : "✕"}
-                            </button>
+                              {busyUserId === m.userId ? "..." : <X size={12} />}
+                            </Button>
                           )}
                         </div>
                       </li>
@@ -412,22 +391,22 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
 
               {isGroup && (
                 <section>
-                  <h3 className="text-sm font-semibold text-slate-300 mb-2">
+                  <h3 className="text-sm font-semibold text-content-muted mb-2">
                     Add a user
                   </h3>
-                  <input
+                  <TextInput
                     type="text"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search by username..."
-                    className="w-full px-3 py-2 rounded bg-slate-900 border border-slate-600 text-slate-100 text-sm focus:outline-none focus:border-amber-500 mb-2"
+                    className="mb-2 text-sm"
                   />
                   {search.trim().length === 0 ? (
-                    <p className="text-sm text-slate-500 py-2 text-center">
+                    <p className="text-sm text-content-subtle py-2 text-center">
                       Start typing to find users
                     </p>
                   ) : filteredCandidates.length === 0 ? (
-                    <p className="text-sm text-slate-500 py-2 text-center">
+                    <p className="text-sm text-content-subtle py-2 text-center">
                       {usersFetching ? "Searching..." : "No users match your search"}
                     </p>
                   ) : (
@@ -435,7 +414,7 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                       {filteredCandidates.map((u) => (
                         <li
                           key={u.id}
-                          className="flex items-center justify-between rounded bg-slate-900 px-3 py-2"
+                          className="flex items-center justify-between rounded bg-surface px-3 py-2"
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
                             <Avatar
@@ -447,24 +426,19 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                               size="sm"
                             />
                             <div className="min-w-0">
-                              <p className="text-slate-100 text-sm truncate">
+                              <p className="text-content text-sm truncate">
                                 {u.userName}
                               </p>
                               {(u.name || u.surname) && (
-                                <p className="text-xs text-slate-400 truncate">
+                                <p className="text-xs text-content-muted truncate">
                                   {[u.name, u.surname].filter(Boolean).join(" ")}
                                 </p>
                               )}
                             </div>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => handleAdd(u)}
-                            disabled={busyUserId !== null}
-                            className="text-xs px-2 py-1 rounded bg-amber-600 hover:bg-amber-500 text-white disabled:opacity-50 transition"
-                          >
+                          <Button size="xs" onClick={() => handleAdd(u)} disabled={busyUserId !== null}>
                             {busyUserId === u.id ? "..." : "+ Add"}
-                          </button>
+                          </Button>
                         </li>
                       ))}
                     </ul>
@@ -473,41 +447,43 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
               )}
 
               {canDelete && (
-                <section className="pt-2 border-t border-slate-700">
-                  <button
-                    type="button"
+                <section className="pt-2 border-t border-line">
+                  <Button
+                    variant="danger"
+                    fullWidth
                     onClick={() => setIsDeleteOpen(true)}
                     disabled={busyUserId !== null || deleting}
-                    className="w-full px-4 py-2 rounded bg-red-900 hover:bg-red-800 text-red-100 disabled:opacity-50 transition font-medium"
                   >
-                    🗑️ Delete chat
-                  </button>
+                    <Trash2 size={15} aria-hidden="true" />
+                    Delete chat
+                  </Button>
                 </section>
               )}
             </div>
           )}
-        </div>
-      </div>
+      </Modal>
 
-      {isDeleteOpen && (
-        <ConfirmDialog
-          title="Delete chat?"
-          message={
-            isDirectChat(chat)
-              ? `Are you sure you want to delete this conversation with ${
-                  chat.partnerUserName ?? "this user"
-                }? All messages will be permanently lost.`
-              : `Are you sure you want to delete "${
-                  chat.name ?? `chat #${chat.id}`
-                }"? All messages and members will be permanently lost.`
-          }
-          confirmText="Delete"
-          variant="danger"
-          loading={deleting}
-          onConfirm={handleDelete}
-          onCancel={() => setIsDeleteOpen(false)}
-        />
-      )}
+      <AnimatePresence>
+        {isDeleteOpen && (
+          <ConfirmDialog
+            title="Delete chat?"
+            message={
+              isDirectChat(chat)
+                ? `Are you sure you want to delete this conversation with ${
+                    chat.partnerUserName ?? "this user"
+                  }? All messages will be permanently lost.`
+                : `Are you sure you want to delete "${
+                    chat.name ?? `chat #${chat.id}`
+                  }"? All messages and members will be permanently lost.`
+            }
+            confirmText="Delete"
+            variant="danger"
+            loading={deleting}
+            onConfirm={handleDelete}
+            onCancel={() => setIsDeleteOpen(false)}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 }

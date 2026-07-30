@@ -24,58 +24,84 @@ export function ChatListItem({ chat }: Props) {
     <NavLink
       to={`/chats/${chat.id}`}
       className={({ isActive }) =>
-        `block border-l-4 border-b border-slate-800 p-4 transition cursor-pointer ${
-          isActive
-            ? "border-l-amber-500 bg-slate-800"
-            : "border-l-transparent hover:bg-slate-800/50"
+        `block mx-2 rounded-card px-3 py-1.5 transition cursor-pointer ${
+          isActive ? "bg-accent" : "hover:bg-surface-muted"
         }`
       }
     >
-      <div className="flex items-center gap-3">
-        {isDirectChat(chat) && chat.partnerUserId ? (
-          <Avatar
-            userId={chat.partnerUserId}
-            userName={chat.partnerUserName ?? undefined}
-            avatarUpdatedAt={chat.partnerAvatarUpdatedAt}
-            size="lg"
-          />
-        ) : (
-          <ChatAvatar
-            chatId={chat.id}
-            name={title}
-            avatarUpdatedAt={chat.avatarUpdatedAt}
-            size="lg"
-          />
-        )}
+      {({ isActive }) => (
+        <div className="flex items-center gap-3">
+          {isDirectChat(chat) && chat.partnerUserId ? (
+            <Avatar
+              userId={chat.partnerUserId}
+              userName={chat.partnerUserName ?? undefined}
+              avatarUpdatedAt={chat.partnerAvatarUpdatedAt}
+              size="lg"
+            />
+          ) : (
+            <ChatAvatar
+              chatId={chat.id}
+              name={title}
+              avatarUpdatedAt={chat.avatarUpdatedAt}
+              size="lg"
+            />
+          )}
 
-        <div className="min-w-0 flex-1">
-          <div className="flex items-baseline justify-between gap-2">
-            <h3 className="text-lg font-semibold text-slate-100 truncate">{title}</h3>
-            {chat.lastMessageAt && (
-              <span className="shrink-0 text-xs text-slate-500">
-                {formatListTime(chat.lastMessageAt)}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center justify-between gap-2 mt-0.5">
-            {chat.lastMessageContent ? (
-              <p className="text-sm text-slate-400 truncate">
-                {sender && (
-                  <span className="text-amber-400 font-medium">{sender}: </span>
-                )}
-                {chat.lastMessageContent}
-              </p>
-            ) : (
-              <span />
-            )}
-            {!!chat.unreadCount && chat.unreadCount > 0 && (
-              <span className="shrink-0 min-w-5 h-5 px-1.5 flex items-center justify-center rounded-full bg-amber-500 text-slate-900 text-xs font-bold">
-                {chat.unreadCount > 99 ? "99+" : chat.unreadCount}
-              </span>
-            )}
+          <div className="min-w-0 flex-1">
+            <div className="flex items-baseline justify-between gap-2">
+              <h3
+                className={`text-[15px] font-semibold truncate ${
+                  isActive ? "text-accent-contrast" : "text-content"
+                }`}
+              >
+                {title}
+              </h3>
+              {chat.lastMessageAt && (
+                <span
+                  className={`shrink-0 text-xs ${
+                    isActive ? "text-accent-contrast/70" : "text-content-subtle"
+                  }`}
+                >
+                  {formatListTime(chat.lastMessageAt)}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center justify-between gap-2 mt-0.5">
+              {chat.lastMessageContent ? (
+                <p
+                  className={`text-sm truncate ${
+                    isActive ? "text-accent-contrast/75" : "text-content-muted"
+                  }`}
+                >
+                  {sender && (
+                    <span
+                      className={`font-medium ${
+                        isActive ? "text-accent-contrast" : "text-accent-strong"
+                      }`}
+                    >
+                      {sender}:{" "}
+                    </span>
+                  )}
+                  {chat.lastMessageContent}
+                </p>
+              ) : (
+                <span />
+              )}
+              {!!chat.unreadCount && chat.unreadCount > 0 && (
+                <span
+                  className={`shrink-0 min-w-5 h-5 px-1.5 flex items-center justify-center rounded-full text-xs font-bold ${
+                    isActive
+                      ? "bg-accent-contrast text-accent"
+                      : "bg-accent text-accent-contrast"
+                  }`}
+                >
+                  {chat.unreadCount > 99 ? "99+" : chat.unreadCount}
+                </span>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </NavLink>
   );
 }

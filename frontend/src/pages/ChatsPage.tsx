@@ -7,12 +7,17 @@ import { Avatar } from "../components/Avatar";
 import { ChatListItem } from "../components/ChatListItem";
 import { CreateChatModal } from "../components/CreateChatModal";
 import { SelectUserModal } from "../components/SelectUserModal";
+import { LogOut, Menu, MessageSquarePlus, MessagesSquare, Settings, User, Users } from "lucide-react";
 import { SearchBar } from "../components/SearchBar";
 import { SearchResults } from "../components/SearchResults";
 import { FloatingActionButton } from "../components/FloatingActionButton";
 import { ProfileModal } from "../components/ProfileModal";
 import { SettingsModal } from "../components/SettingsModal";
 import { BottomNav } from "../components/BottomNav";
+import { FormError } from "../components/FormError";
+import { AnimatePresence, motion } from "framer-motion";
+import { EmptyState } from "../components/ui/EmptyState";
+import { ChatListSkeleton } from "../components/ui/Skeleton";
 
 export function ChatsPage() {
   const navigate = useNavigate();
@@ -63,23 +68,23 @@ export function ChatsPage() {
   const isSearching = searchQuery.trim().length > 0;
 
   return (
-    <div className="relative flex-1 min-h-0 flex flex-col bg-slate-900">
-      <header className="flex items-center justify-between gap-2 p-4 border-b border-slate-700">
+    <div className="relative flex-1 min-h-0 flex flex-col bg-surface">
+      <header className="flex items-center justify-between gap-2 p-4 border-b border-line">
         <div className="flex items-center gap-3 min-w-0">
           <button
             type="button"
             onClick={() => setIsMenuOpen(true)}
             aria-label="Menu"
-            className="hidden md:block text-2xl leading-none text-slate-300 hover:text-amber-400 transition"
+            className="hidden md:block text-content-muted hover:text-accent-strong transition"
           >
-            ☰
+            <Menu size={22} />
           </button>
           <div className="min-w-0">
-            <h1 className="text-xl font-bold text-slate-100 truncate">
-              <span className="text-amber-400">Vesty</span>
+            <h1 className="text-xl font-bold text-content truncate">
+              <span className="text-brand">Vesty</span>
             </h1>
             {userName && (
-              <p className="text-xs text-slate-400 truncate">{userName}</p>
+              <p className="text-xs text-content-muted truncate">{userName}</p>
             )}
           </div>
         </div>
@@ -87,13 +92,13 @@ export function ChatsPage() {
         <FloatingActionButton
           actions={[
             {
-              icon: "💬",
+              Icon: MessageSquarePlus,
               label: "New direct message",
               description: "Start a private conversation with someone",
               onClick: () => setIsSelectUserOpen(true),
             },
             {
-              icon: "👥",
+              Icon: Users,
               label: "New group chat",
               description: "Create a chat for multiple people",
               onClick: () => setIsCreateModalOpen(true),
@@ -107,12 +112,10 @@ export function ChatsPage() {
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto pb-20 md:pb-4 scrollbar-none">
-        {isLoading && <p className="text-slate-400 px-4">Loading...</p>}
+        {isLoading && <ChatListSkeleton />}
 
         {isError && (
-          <div className="text-sm text-red-400 bg-red-950 border border-red-900 rounded p-3 mx-4 mb-4">
-            Failed to load chats
-          </div>
+          <FormError className="mx-4 mb-4" message="Failed to load chats" />
         )}
 
         {!isLoading && !isError && (
@@ -122,17 +125,27 @@ export function ChatsPage() {
                 <SearchResults query={searchQuery} chats={chats} />
               </div>
             ) : chats.length === 0 ? (
-              <div className="text-center py-12 text-slate-400 px-4">
-                <p className="text-lg">No chats yet</p>
-                <p className="text-sm mt-2">
-                  Tap the 💬 button to start a conversation.
-                </p>
-              </div>
+              <EmptyState
+                Icon={MessagesSquare}
+                title="No chats yet"
+                description="Use the compose button to start a conversation."
+              />
             ) : (
               <div>
-                {chats.map((chat) => (
-                  <ChatListItem key={chat.id} chat={chat} />
-                ))}
+                <AnimatePresence initial={false}>
+                  {chats.map((chat) => (
+                    <motion.div
+                      key={chat.id}
+                      layout
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                    >
+                      <ChatListItem chat={chat} />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               </div>
             )}
           </>
@@ -145,17 +158,17 @@ export function ChatsPage() {
         }`}
       >
         <div
-          className={`absolute inset-0 bg-black/50 transition-opacity ${
+          className={`absolute inset-0 bg-scrim/70 transition-opacity ${
             isMenuOpen ? "opacity-100" : "opacity-0"
           }`}
           onClick={() => setIsMenuOpen(false)}
         />
         <div
-          className={`absolute top-0 left-0 bottom-0 w-72 max-w-[80%] bg-slate-900 border-r border-slate-700 flex flex-col transition-transform duration-200 ${
+          className={`absolute top-0 left-0 bottom-0 w-72 max-w-[80%] bg-surface border-r border-line flex flex-col transition-transform duration-200 ${
             isMenuOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
-          <div className="p-4 border-b border-slate-700 flex items-center gap-3">
+          <div className="p-4 border-b border-line flex items-center gap-3">
             {userId !== null && (
               <Avatar
                 userId={userId}
@@ -166,7 +179,7 @@ export function ChatsPage() {
                 size="lg"
               />
             )}
-            <p className="text-lg font-bold text-slate-100 truncate">
+            <p className="text-lg font-bold text-content truncate">
               {userName ?? "Account"}
             </p>
           </div>
@@ -174,45 +187,53 @@ export function ChatsPage() {
             <button
               type="button"
               onClick={openProfile}
-              className="w-full flex items-center gap-3 px-3 py-3 rounded text-slate-200 hover:bg-slate-800 transition text-left"
+              className="w-full flex items-center gap-3 px-3 py-3 rounded text-content hover:bg-surface-muted transition text-left"
             >
-              <span className="text-xl">👤</span> Profile
+              <User size={18} aria-hidden="true" /> Profile
             </button>
             <button
               type="button"
               onClick={openSettings}
-              className="w-full flex items-center gap-3 px-3 py-3 rounded text-slate-200 hover:bg-slate-800 transition text-left"
+              className="w-full flex items-center gap-3 px-3 py-3 rounded text-content hover:bg-surface-muted transition text-left"
             >
-              <span className="text-xl">⚙️</span> Settings
+              <Settings size={18} aria-hidden="true" /> Settings
             </button>
           </nav>
-          <div className="p-2 border-t border-slate-700">
+          <div className="p-2 border-t border-line">
             <button
               type="button"
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-3 py-3 rounded text-red-300 hover:bg-slate-800 transition"
+              className="w-full flex items-center gap-3 px-3 py-3 rounded text-danger hover:bg-surface-muted transition"
             >
-              <span className="text-xl">🚪</span> Logout
+              <LogOut size={18} aria-hidden="true" /> Logout
             </button>
           </div>
         </div>
       </div>
 
-      {isCreateModalOpen && (
-        <CreateChatModal onClose={() => setIsCreateModalOpen(false)} />
-      )}
+      <AnimatePresence>
+        {isCreateModalOpen && (
+          <CreateChatModal onClose={() => setIsCreateModalOpen(false)} />
+        )}
+      </AnimatePresence>
 
-      {isSelectUserOpen && (
-        <SelectUserModal onClose={() => setIsSelectUserOpen(false)} />
-      )}
+      <AnimatePresence>
+        {isSelectUserOpen && (
+          <SelectUserModal onClose={() => setIsSelectUserOpen(false)} />
+        )}
+      </AnimatePresence>
 
-      {isProfileOpen && (
-        <ProfileModal onClose={() => setIsProfileOpen(false)} />
-      )}
+      <AnimatePresence>
+        {isProfileOpen && (
+          <ProfileModal onClose={() => setIsProfileOpen(false)} />
+        )}
+      </AnimatePresence>
 
-      {isSettingsOpen && (
-        <SettingsModal onClose={() => setIsSettingsOpen(false)} />
-      )}
+      <AnimatePresence>
+        {isSettingsOpen && (
+          <SettingsModal onClose={() => setIsSettingsOpen(false)} />
+        )}
+      </AnimatePresence>
 
       <div className="md:hidden">
         <BottomNav />

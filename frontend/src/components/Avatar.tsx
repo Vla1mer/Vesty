@@ -3,20 +3,20 @@ import { API_URL } from "../api/client";
 import { endpoints } from "../api/endpoints";
 
 const PALETTE = [
-  "bg-amber-500",
-  "bg-sky-500",
-  "bg-emerald-500",
-  "bg-violet-500",
-  "bg-rose-500",
-  "bg-teal-500",
-  "bg-orange-500",
-  "bg-indigo-500",
+  "bg-amber-400",
+  "bg-sky-400",
+  "bg-emerald-400",
+  "bg-violet-400",
+  "bg-rose-400",
+  "bg-fuchsia-400",
+  "bg-orange-400",
+  "bg-indigo-400",
 ];
 
 const SIZES = {
   sm: "w-7 h-7 text-[11px]",
   md: "w-10 h-10 text-sm",
-  lg: "w-14 h-14 text-lg",
+  lg: "w-12 h-12 text-base",
   xl: "w-24 h-24 text-3xl",
 } as const;
 
@@ -48,7 +48,7 @@ function AvatarView({
   className,
 }: AvatarViewProps) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
-  const base = `${SIZES[size]} shrink-0 rounded-full overflow-hidden select-none ${className}`;
+  const base = `${SIZES[size]} shrink-0 rounded-full overflow-hidden select-none ring-1 ring-line-strong/60 ${className}`;
 
   if (src && src !== failedSrc) {
     return (
@@ -56,7 +56,7 @@ function AvatarView({
         src={src}
         alt={alt}
         onError={() => setFailedSrc(src)}
-        className={`${base} object-cover bg-slate-700`}
+        className={`${base} object-cover bg-surface-raised`}
       />
     );
   }
@@ -132,7 +132,7 @@ export function ChatAvatar({
           : undefined
       }
       fallbackText={(name.charAt(0) || "#").toUpperCase()}
-      fallbackColor="bg-slate-700 !text-slate-200"
+      fallbackColor="bg-surface-raised !text-content-muted"
       alt={name}
       size={size}
       className={className}

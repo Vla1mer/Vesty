@@ -15,7 +15,7 @@ export function AvatarEditor({ user }: AvatarEditorProps) {
   const [deleteAvatar, { isLoading: removing }] = useDeleteAvatarMutation();
 
   return (
-    <div className="pb-5 mb-5 border-b border-slate-700">
+    <div className="pb-5 mb-5 border-b border-line">
       <AvatarUpload
         preview={
           <Avatar
@@ -26,6 +26,14 @@ export function AvatarEditor({ user }: AvatarEditorProps) {
             avatarUpdatedAt={user.avatarUpdatedAt}
             size="xl"
           />
+        }
+        heading={
+          <div className="min-w-0">
+            <p className="truncate text-base font-semibold text-content">
+              {[user.name, user.surname].filter(Boolean).join(" ") || user.userName}
+            </p>
+            <p className="truncate text-xs text-content-muted">@{user.userName}</p>
+          </div>
         }
         hasAvatar={Boolean(user.avatarUpdatedAt)}
         uploading={uploading}

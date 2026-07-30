@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -25,9 +25,16 @@ import { onChatDeleted } from "../lib/signalr";
 import { setActiveChat } from "../lib/activeChat";
 import { useTypingIndicator } from "../hooks/useTypingIndicator";
 import { useAttachmentUploads } from "../hooks/useAttachmentUploads";
+import { ArrowLeft, ChevronRight, Copy, MessageCircle, Paperclip, Pencil, Pin, Reply, Trash2, X } from "lucide-react";
 import { AttachmentDrafts } from "../components/AttachmentDrafts";
 import type { AxiosBaseQueryError } from "../api/axiosBaseQuery";
 import { isDirectChat, UserRole, type ChatMemberWithRoleDto, type MessageDto } from "../types/api";
+import { Button } from "../components/ui/Button";
+import { TextInput } from "../components/ui/TextInput";
+import { FormError } from "../components/FormError";
+import { AnimatePresence, motion } from "framer-motion";
+import { EmptyState } from "../components/ui/EmptyState";
+import { MessageListSkeleton } from "../components/ui/Skeleton";
 
 function typingText(names: string[]): string {
   if (names.length === 1) return `${names[0]} is typing`;
@@ -305,28 +312,28 @@ export function ChatDetailPage() {
       }}
     >
       {isDraggingFile && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center border-2 border-dashed border-amber-500 bg-slate-900/80 pointer-events-none">
-          <p className="text-lg font-medium text-amber-400">Drop files to attach</p>
+        <div className="absolute inset-0 z-30 flex items-center justify-center border-2 border-dashed border-accent-strong bg-surface/80 pointer-events-none">
+          <p className="text-lg font-medium text-accent-strong">Drop files to attach</p>
         </div>
       )}
       <div className="absolute top-0 inset-x-0 overflow-hidden min-h-[88px] z-10">
         <header
-          className={`absolute inset-0 flex items-center gap-4 p-4 border-b border-slate-700 bg-slate-900/80 backdrop-blur transition-transform duration-200 ${
+          className={`absolute inset-0 flex items-center gap-4 p-4 border-b border-line bg-surface/80 backdrop-blur transition-transform duration-200 ${
             selectionMode ? "-translate-y-full" : "translate-y-0"
           }`}
         >
           <button
             onClick={() => navigate("/chats")}
-            className="md:hidden text-slate-400 hover:text-slate-100 text-2xl"
+            className="md:hidden text-content-muted hover:text-content"
             aria-label="Back"
           >
-            ←
+            <ArrowLeft size={22} />
           </button>
           <button
             type="button"
             onClick={() => chat && setIsInfoOpen(true)}
             disabled={!chat}
-            className="group flex-1 flex items-center gap-2 text-left rounded px-2 -mx-2 hover:bg-slate-800 transition disabled:cursor-default disabled:hover:bg-transparent"
+            className="group flex-1 flex items-center gap-2 text-left rounded px-2 -mx-2 hover:bg-surface-muted transition disabled:cursor-default disabled:hover:bg-transparent"
           >
             {chat &&
               (isDirectChat(chat) && chat.partnerUserId ? (
@@ -343,15 +350,15 @@ export function ChatDetailPage() {
                 />
               ))}
             <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-bold text-slate-100 truncate">{title}</h1>
+              <h1 className="text-xl font-bold text-content truncate">{title}</h1>
               {chat &&
                 (typingNames.length > 0 ? (
-                  <p className="text-xs text-amber-400 italic">
+                  <p className="text-xs text-accent-strong italic">
                     {typingText(typingNames)}
                     <span className="typing-dots" />
                   </p>
                 ) : !chat.isPrivate ? (
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-content-muted">
                     {members.length > 0
                       ? `${members.length} ${members.length === 1 ? "member" : "members"}`
                       : "Loading..."}
@@ -359,38 +366,37 @@ export function ChatDetailPage() {
                 ) : null)}
             </div>
             {chat && (
-              <span
-                className="text-slate-500 group-hover:text-amber-400 transition text-3xl leading-none"
+              <ChevronRight
+                size={20}
                 aria-hidden="true"
-              >
-                ›
-              </span>
+                className="shrink-0 text-content-subtle transition group-hover:translate-x-0.5 group-hover:text-accent-strong"
+              />
             )}
           </button>
         </header>
 
         <header
-          className={`absolute inset-0 flex items-center gap-4 p-4 border-b border-slate-700 bg-slate-900/80 backdrop-blur transition-transform duration-200 ${
+          className={`absolute inset-0 flex items-center gap-4 p-4 border-b border-line bg-surface/80 backdrop-blur transition-transform duration-200 ${
             selectionMode ? "translate-y-0" : "-translate-y-full"
           }`}
         >
           <button
             onClick={clearSelection}
-            className="text-slate-400 hover:text-slate-100 text-2xl leading-none"
+            className="text-content-muted hover:text-content"
             aria-label="Cancel selection"
           >
-            ✕
+            <X size={22} />
           </button>
-          <span className="flex-1 font-semibold text-slate-100">
+          <span className="flex-1 font-semibold text-content">
             {selectedIds.size} selected
           </span>
-          <div className="flex items-center gap-4 text-xl">
+          <div className="flex items-center gap-4 text-content-muted">
             <button onClick={copySelected} aria-label="Copy" title="Copy">
-              📋
+              <Copy size={20} />
             </button>
             {selectedIds.size === 1 && ownSelectedIds.length === 1 && (
               <button onClick={editSelected} aria-label="Edit" title="Edit">
-                ✏️
+                <Pencil size={20} />
               </button>
             )}
             {ownSelectedIds.length > 0 && (
@@ -398,8 +404,9 @@ export function ChatDetailPage() {
                 onClick={() => setBulkDeleteOpen(true)}
                 aria-label="Delete"
                 title="Delete"
+                className="text-danger"
               >
-                🗑️
+                <Trash2 size={20} />
               </button>
             )}
           </div>
@@ -410,16 +417,16 @@ export function ChatDetailPage() {
         <button
           type="button"
           onClick={showNextPinned}
-          className="absolute top-[88px] inset-x-0 z-10 flex items-center gap-3 px-4 py-2 border-b border-slate-700 bg-slate-900/95 backdrop-blur text-left hover:bg-slate-800 transition"
+          className="absolute top-[88px] inset-x-0 z-10 flex items-center gap-3 px-4 py-2 border-b border-line bg-surface-muted/95 backdrop-blur text-left hover:bg-surface transition"
         >
-          <span className="text-amber-400 leading-none">📌</span>
-          <div className="min-w-0 flex-1 border-l-2 border-amber-500 pl-3">
-            <p className="text-xs font-medium text-amber-400">
+          <Pin size={15} aria-hidden="true" className="shrink-0 text-accent-strong" />
+          <div className="min-w-0 flex-1 border-l-2 border-accent-strong pl-3">
+            <p className="text-xs font-medium text-accent-strong">
               {pinnedMessages.length > 1
                 ? `Pinned message ${(pinnedIndex % pinnedMessages.length) + 1} of ${pinnedMessages.length}`
                 : "Pinned message"}
             </p>
-            <p className="text-sm text-slate-300 truncate">
+            <p className="text-sm text-content-muted truncate">
               {activePinned.content}
             </p>
           </div>
@@ -431,15 +438,13 @@ export function ChatDetailPage() {
           activePinned && !selectionMode ? "pt-[140px]" : "pt-[88px]"
         }`}
       >
-        <div className="mt-auto space-y-3">
-        {(chatLoading || messagesLoading) && (
-          <p className="text-slate-400 text-center">Loading...</p>
-        )}
+        {(chatLoading || messagesLoading) && <MessageListSkeleton />}
 
         {(loadError || actionError || messagesError) && (
-          <div className="text-sm text-red-400 bg-red-950 border border-red-900 rounded p-3">
-            {loadError ?? actionError ?? "Failed to load messages"}
-          </div>
+          <FormError
+            className="mt-auto"
+            message={loadError ?? actionError ?? "Failed to load messages"}
+          />
         )}
 
         {!chatLoading &&
@@ -448,20 +453,32 @@ export function ChatDetailPage() {
           !actionError &&
           !messagesError &&
           messages.length === 0 && (
-            <div className="text-center py-12 text-slate-400">
-              <p>No messages yet. Be the first to write something!</p>
-            </div>
+            <EmptyState
+              className="m-auto"
+              Icon={MessageCircle}
+              title="No messages yet"
+              description="Say hello — your first message will appear here."
+            />
           )}
 
-        {messages.map((msg, index) => {
+        <div className={messages.length > 0 ? "mt-auto space-y-3" : "space-y-3"}>
+        <AnimatePresence initial={false}>
+          {messages.map((msg, index) => {
           const prev = messages[index - 1];
           const showDate =
             !prev || !isSameDay(prev.createdAt, msg.createdAt);
           return (
-            <Fragment key={msg.id}>
+            <motion.div
+              key={msg.id}
+              layout="position"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+            >
               {showDate && (
                 <div className="flex justify-center my-2">
-                  <span className="text-xs text-slate-400 bg-slate-800 px-3 py-1 rounded-full">
+                  <span className="text-xs text-content-muted bg-surface-raised px-3 py-1 rounded-full">
                     {formatDateSeparator(msg.createdAt)}
                   </span>
                 </div>
@@ -502,55 +519,62 @@ export function ChatDetailPage() {
                     : undefined
                 }
               />
-            </Fragment>
+            </motion.div>
           );
-        })}
+          })}
+        </AnimatePresence>
         <div ref={bottomRef} />
         </div>
       </div>
 
-      {isInfoOpen && chat && (
-        <ChatInfoModal
-          chat={chat}
-          onClose={() => setIsInfoOpen(false)}
-          onDeleted={() => navigate("/chats", { replace: true })}
-        />
-      )}
+      <AnimatePresence>
+        {isInfoOpen && chat && (
+          <ChatInfoModal
+            chat={chat}
+            onClose={() => setIsInfoOpen(false)}
+            onDeleted={() => navigate("/chats", { replace: true })}
+          />
+        )}
+      </AnimatePresence>
 
-      {deleteTargetId !== null && (
-        <ConfirmDialog
-          title="Delete message?"
-          message="This message will be permanently deleted."
-          confirmText="Delete"
-          variant="danger"
-          loading={deletingMessage}
-          onConfirm={confirmDeleteMessage}
-          onCancel={() => setDeleteTargetId(null)}
-        />
-      )}
+      <AnimatePresence>
+        {deleteTargetId !== null && (
+          <ConfirmDialog
+            title="Delete message?"
+            message="This message will be permanently deleted."
+            confirmText="Delete"
+            variant="danger"
+            loading={deletingMessage}
+            onConfirm={confirmDeleteMessage}
+            onCancel={() => setDeleteTargetId(null)}
+          />
+        )}
+      </AnimatePresence>
 
-      {bulkDeleteOpen && (
-        <ConfirmDialog
-          title={`Delete ${ownSelectedIds.length} ${
-            ownSelectedIds.length === 1 ? "message" : "messages"
-          }?`}
-          message="The selected messages will be permanently deleted."
-          confirmText="Delete"
-          variant="danger"
-          loading={deletingMessage}
-          onConfirm={confirmBulkDelete}
-          onCancel={() => setBulkDeleteOpen(false)}
-        />
-      )}
+      <AnimatePresence>
+        {bulkDeleteOpen && (
+          <ConfirmDialog
+            title={`Delete ${ownSelectedIds.length} ${
+              ownSelectedIds.length === 1 ? "message" : "messages"
+            }?`}
+            message="The selected messages will be permanently deleted."
+            confirmText="Delete"
+            variant="danger"
+            loading={deletingMessage}
+            onConfirm={confirmBulkDelete}
+            onCancel={() => setBulkDeleteOpen(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {!loadError && !actionError && (
-        <div className="relative border-t border-slate-700 bg-slate-900 sticky bottom-0">
+        <div className="relative border-t border-line bg-surface sticky bottom-0">
           {editingMessage && (
             <div className="flex items-center gap-3 px-4 pt-3 -mb-1">
-              <span className="text-amber-400 text-lg leading-none">✏️</span>
-              <div className="flex-1 min-w-0 border-l-2 border-amber-500 pl-3">
-                <p className="text-xs font-medium text-amber-400">Editing</p>
-                <p className="text-sm text-slate-300 truncate">
+              <Pencil size={18} aria-hidden="true" className="shrink-0 text-accent-strong" />
+              <div className="flex-1 min-w-0 border-l-2 border-accent-strong pl-3">
+                <p className="text-xs font-medium text-accent-strong">Editing</p>
+                <p className="text-sm text-content-muted truncate">
                   {editingMessage.content}
                 </p>
               </div>
@@ -558,20 +582,20 @@ export function ChatDetailPage() {
                 type="button"
                 onClick={cancelEdit}
                 aria-label="Cancel editing"
-                className="text-slate-400 hover:text-slate-100 text-2xl leading-none"
+                className="text-content-muted hover:text-content"
               >
-                ×
+                <X size={20} />
               </button>
             </div>
           )}
           {replyTo && !editingMessage && (
             <div className="flex items-center gap-3 px-4 pt-3 -mb-1">
-              <span className="text-amber-400 text-lg leading-none">↩️</span>
-              <div className="flex-1 min-w-0 border-l-2 border-amber-500 pl-3">
-                <p className="text-xs font-medium text-amber-400">
+              <Reply size={18} aria-hidden="true" className="shrink-0 text-accent-strong" />
+              <div className="flex-1 min-w-0 border-l-2 border-accent-strong pl-3">
+                <p className="text-xs font-medium text-accent-strong">
                   Reply to {memberById.get(replyTo.userId)?.userName ?? `User #${replyTo.userId}`}
                 </p>
-                <p className="text-sm text-slate-300 truncate">
+                <p className="text-sm text-content-muted truncate">
                   {replyTo.content}
                 </p>
               </div>
@@ -579,9 +603,9 @@ export function ChatDetailPage() {
                 type="button"
                 onClick={() => setReplyTo(null)}
                 aria-label="Cancel reply"
-                className="text-slate-400 hover:text-slate-100 text-2xl leading-none"
+                className="text-content-muted hover:text-content"
               >
-                ×
+                <X size={20} />
               </button>
             </div>
           )}
@@ -592,9 +616,9 @@ export function ChatDetailPage() {
               onClick={() => fileInputRef.current?.click()}
               aria-label="Attach file"
               title="Attach file"
-              className="shrink-0 px-2 text-2xl text-slate-400 hover:text-amber-400 transition"
+              className="shrink-0 px-2 text-content-muted hover:text-accent-strong transition"
             >
-              📎
+              <Paperclip size={20} />
             </button>
             <input
               ref={fileInputRef}
@@ -606,7 +630,7 @@ export function ChatDetailPage() {
               }}
               className="hidden"
             />
-            <input
+            <TextInput
               ref={inputRef}
               type="text"
               value={input}
@@ -620,9 +644,9 @@ export function ChatDetailPage() {
               placeholder="Type a message..."
               maxLength={2000}
               disabled={sending || saving}
-              className="flex-1 px-3 py-2 rounded bg-slate-800 border border-slate-600 text-slate-100 focus:outline-none focus:border-amber-500 disabled:opacity-50"
+              className="flex-1"
             />
-            <button
+            <Button
               type="submit"
               disabled={
                 sending ||
@@ -630,10 +654,10 @@ export function ChatDetailPage() {
                 attachments.isUploading ||
                 (!input.trim() && attachments.readyIds.length === 0)
               }
-              className="px-5 py-2 rounded bg-amber-600 hover:bg-amber-500 text-white disabled:bg-slate-700 disabled:cursor-not-allowed font-medium transition"
+              className="px-5"
             >
               {sending || saving ? "..." : editingId !== null ? "Save" : "Send"}
-            </button>
+            </Button>
           </form>
         </div>
       )}

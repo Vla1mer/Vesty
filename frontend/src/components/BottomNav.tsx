@@ -1,29 +1,30 @@
 import { NavLink } from "react-router-dom";
+import { MessageSquare, Settings, User } from "lucide-react";
 
 const tabs = [
-  { to: "/profile", icon: "👤", label: "Profile" },
-  { to: "/chats", icon: "💬", label: "Chats" },
-  { to: "/settings", icon: "⚙️", label: "Settings" },
+  { to: "/profile", Icon: User, label: "Profile" },
+  { to: "/chats", Icon: MessageSquare, label: "Chats" },
+  { to: "/settings", Icon: Settings, label: "Settings" },
 ];
 
 export function BottomNav() {
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-20 bg-slate-900 border-t border-slate-700">
+    <nav className="fixed inset-x-0 bottom-0 z-20 bg-surface border-t border-line">
       <div className="max-w-4xl mx-auto flex">
-        {tabs.map((tab) => (
+        {tabs.map(({ to, Icon, label }) => (
           <NavLink
-            key={tab.to}
-            to={tab.to}
+            key={to}
+            to={to}
             className={({ isActive }) =>
               `flex-1 flex flex-col items-center justify-center py-2 transition ${
                 isActive
-                  ? "text-amber-400"
-                  : "text-slate-400 hover:text-slate-100"
+                  ? "text-accent-strong"
+                  : "text-content-muted hover:text-content"
               }`
             }
           >
-            <span className="text-2xl leading-none">{tab.icon}</span>
-            <span className="text-xs mt-1">{tab.label}</span>
+            <Icon size={22} aria-hidden="true" />
+            <span className="text-xs mt-1">{label}</span>
           </NavLink>
         ))}
       </div>

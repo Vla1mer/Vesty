@@ -1,3 +1,4 @@
+import { Pencil } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Formik, Form } from "formik";
@@ -13,6 +14,8 @@ import { FormField } from "./FormField";
 import { FormError } from "./FormError";
 import { profileSchema } from "../validation/profileSchema";
 import { parseApiErrors } from "../utils/apiError";
+import { Button } from "./ui/Button";
+import { AnimatePresence } from "framer-motion";
 
 export function ProfileContent() {
   const navigate = useNavigate();
@@ -49,12 +52,10 @@ export function ProfileContent() {
 
   return (
     <>
-      {loading && <p className="text-slate-400">Loading...</p>}
+      {loading && <p className="text-content-muted">Loading...</p>}
 
       {(error || isError) && (
-        <div className="text-sm text-red-400 bg-red-950 border border-red-900 rounded p-3 mb-4">
-          {error ?? "Failed to load profile"}
-        </div>
+        <FormError className="mb-4" message={error ?? "Failed to load profile"} />
       )}
 
       {!loading && user && (
@@ -107,84 +108,83 @@ export function ProfileContent() {
                   <FormError message={status} />
 
                   <div className="flex gap-2 pt-2">
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="px-4 py-2 rounded bg-amber-600 hover:bg-amber-500 text-white font-medium disabled:opacity-50 transition"
-                    >
+                    <Button type="submit" disabled={isSubmitting}>
                       {isSubmitting ? "Saving..." : "Save"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setIsEditing(false)}
-                      disabled={isSubmitting}
-                      className="px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-slate-100 disabled:opacity-50 transition"
-                    >
+                    </Button>
+                    <Button variant="neutral" onClick={() => setIsEditing(false)} disabled={isSubmitting}>
                       Cancel
-                    </button>
+                    </Button>
                   </div>
                 </Form>
               )}
             </Formik>
           ) : (
-            <div className="space-y-3">
-              <Row label="Username" value={user.userName} />
-              <Row label="First name" value={user.name} />
-              <Row label="Surname" value={user.surname} />
-              <Row label="Phone" value={user.phone} />
-              <Row label="Birthday" value={user.birthday} />
+            <div className="space-y-5">
+              <div className="divide-y divide-line overflow-hidden rounded-card border border-line">
+                <Row label="Username" value={user.userName} />
+                <Row label="First name" value={user.name} />
+                <Row label="Surname" value={user.surname} />
+                <Row label="Phone" value={user.phone} />
+                <Row label="Birthday" value={user.birthday} />
+              </div>
 
-              <div className="pt-4 flex flex-col gap-2">
-                <button
-                  type="button"
+              <div className="flex flex-col gap-2">
+                <Button
                   onClick={() => {
                     setError(null);
                     setIsEditing(true);
                   }}
-                  className="w-full px-4 py-2 rounded bg-amber-600 hover:bg-amber-500 text-white font-medium transition"
+                  fullWidth
                 >
-                  ✏️ Edit profile
-                </button>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="w-full px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-slate-100 transition"
-                >
+                  <Pencil size={15} aria-hidden="true" />
+                  Edit profile
+                </Button>
+                <Button variant="neutral" fullWidth onClick={handleLogout}>
                   Logout
-                </button>
-                <button
-                  type="button"
+                </Button>
+              </div>
+
+              <div className="border-t border-line pt-4 text-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-danger hover:text-danger"
                   onClick={() => setIsDeleteOpen(true)}
-                  className="w-full px-4 py-2 rounded bg-red-900 hover:bg-red-800 text-red-100 transition"
                 >
                   Delete account
-                </button>
+                </Button>
               </div>
             </div>
           )}
         </>
       )}
 
-      {isDeleteOpen && (
-        <ConfirmDialog
-          title="Delete account?"
-          message="Your account will be permanently deleted. This action cannot be undone."
-          confirmText="Delete"
-          variant="danger"
-          loading={deleting}
-          onConfirm={handleDeleteAccount}
-          onCancel={() => setIsDeleteOpen(false)}
-        />
-      )}
+      <AnimatePresence>
+        {isDeleteOpen && (
+          <ConfirmDialog
+            title="Delete account?"
+            message="Your account will be permanently deleted. This action cannot be undone."
+            confirmText="Delete"
+            variant="danger"
+            loading={deleting}
+            onConfirm={handleDeleteAccount}
+            onCancel={() => setIsDeleteOpen(false)}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 }
 
 function Row({ label, value }: { label: string; value?: string }) {
   return (
-    <div className="flex justify-between border-b border-slate-700 pb-2">
-      <span className="text-sm text-slate-400">{label}</span>
-      <span className="text-sm text-slate-100">{value || "—"}</span>
+    <div className="flex items-baseline justify-between gap-4 bg-surface-muted/40 px-4 py-2.5">
+      <span className="shrink-0 text-sm text-content-muted">{label}</span>
+      <span
+        className={`truncate text-sm ${value ? "font-medium text-content" : "text-content-subtle"}`}
+      >
+        {value || "—"}
+      </span>
     </div>
   );
 }

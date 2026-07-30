@@ -1,12 +1,17 @@
+import { ThemeToggle } from "./ThemeToggle";
+
 export function SettingsContent() {
   return (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
-      <span className="text-6xl mb-4">⚙️</span>
-      <h2 className="text-xl font-semibold text-slate-100 mb-2">Coming soon</h2>
-      <p className="text-sm text-slate-400 max-w-sm">
-        This page is under construction. Soon you'll be able to customize your
-        experience here.
-      </p>
+    <div className="space-y-8 py-2">
+      <section className="flex items-center justify-between gap-4">
+        <span className="min-w-0">
+          <span className="block text-sm font-medium text-content">Dark theme</span>
+          <span className="block text-xs text-content-subtle">
+            Switch between light and dark appearance
+          </span>
+        </span>
+        <ThemeToggle />
+      </section>
     </div>
   );
 }

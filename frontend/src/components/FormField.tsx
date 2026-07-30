@@ -1,3 +1,6 @@
+import { Eye, EyeOff } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { TextInput } from "./ui/TextInput";
 import { useState } from "react";
 import { useField } from "formik";
 
@@ -28,21 +31,16 @@ export function FormField({
 
   return (
     <div>
-      <label className="block text-sm text-slate-300 mb-1">{label}</label>
+      <label className="block text-sm text-content-muted mb-1">{label}</label>
       <div className="relative">
-        <input
+        <TextInput
           {...field}
           type={inputType}
           autoFocus={autoFocus}
           autoComplete={autoComplete}
           maxLength={maxLength}
-          className={`w-full px-3 py-2 ${
-            isPassword ? "pr-10" : ""
-          } rounded bg-slate-900 border text-slate-100 focus:outline-none ${
-            showError
-              ? "border-red-500 focus:border-red-500"
-              : "border-slate-600 focus:border-amber-500"
-          }`}
+          invalid={showError}
+          className={isPassword ? "pr-10" : ""}
         />
         {isPassword && (
           <button
@@ -50,17 +48,39 @@ export function FormField({
             onClick={() => setShowPassword((visible) => !visible)}
             tabIndex={-1}
             aria-label={showPassword ? "Hide password" : "Show password"}
-            className="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-slate-200 transition"
+            className="absolute inset-y-0 right-0 px-3 flex items-center text-content-muted hover:text-content transition"
           >
-            {showPassword ? "🙈" : "👁️"}
+            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         )}
       </div>
-      {showError ? (
-        <p className="text-xs text-red-400 mt-1">{meta.error}</p>
-      ) : (
-        hint && <p className="text-xs text-slate-500 mt-1">{hint}</p>
-      )}
+      <AnimatePresence mode="wait" initial={false}>
+        {showError ? (
+          <motion.p
+            key="error"
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
+            className="mt-1 text-xs text-danger"
+          >
+            {meta.error}
+          </motion.p>
+        ) : (
+          hint && (
+            <motion.p
+              key="hint"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.12 }}
+              className="mt-1 text-xs text-content-subtle"
+            >
+              {hint}
+            </motion.p>
+          )
+        )}
+      </AnimatePresence>
     </div>
   );
 }
