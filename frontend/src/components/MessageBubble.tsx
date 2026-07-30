@@ -335,7 +335,7 @@ export function MessageBubble({
                       transition={{ type: "spring", stiffness: 520, damping: 26 }}
                       onClick={() => onToggleReaction?.(message.id, r.emoji, mine)}
                       title={`${r.userIds.length}`}
-                      className={`px-1.5 py-0.5 rounded-full text-xs border transition ${
+                      className={`px-1.5 py-0.5 rounded-full text-xs border transition-colors ${
                         mine
                           ? "bg-accent/20 border-accent-strong text-accent-strong"
                           : "bg-surface-raised border-line-strong text-content-muted hover:bg-surface-overlay"
