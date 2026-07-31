@@ -37,7 +37,7 @@ export function SelectUserModal({ onClose }: Props) {
 
   const { data: friends = [] } = useGetFriendsQuery();
   const { data: requests = [] } = useGetFriendRequestsQuery();
-  const [sendRequest, { isLoading: sending }] = useSendFriendRequestMutation();
+  const [sendRequest, sendState] = useSendFriendRequestMutation();
 
   const friendIds = new Set(friends.map((f) => f.userId));
   const requestedIds = new Set(requests.map((r) => r.userId));
@@ -112,7 +112,7 @@ export function SelectUserModal({ onClose }: Props) {
                     <Button
                       size="xs"
                       variant="neutral"
-                      disabled={sending}
+                      disabled={sendState.isLoading && sendState.originalArgs === u.id}
                       onClick={() => sendRequest(u.id)}
                       aria-label={`Add ${u.userName} to friends`}
                       title="Add to friends"

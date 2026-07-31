@@ -145,8 +145,10 @@ namespace Services
 
         private async Task EnsureTargetAllowsInviteAsync(int targetUserId)
         {
-            var target = await _repository.User.GetUserAsync(targetUserId, trackChanges: false);
-            if (target is null || target.WhoCanInvite == PrivacyLevel.Everyone) return;
+            var target = await _repository.User.GetUserAsync(targetUserId, trackChanges: false)
+                ?? throw new UserNotFoundException(targetUserId);
+
+            if (target.WhoCanInvite == PrivacyLevel.Everyone) return;
 
             if (target.WhoCanInvite == PrivacyLevel.FriendsOnly &&
                 await _repository.Friendship.AreFriendsAsync(_currentUser.UserId, targetUserId))
