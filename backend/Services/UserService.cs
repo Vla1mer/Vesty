@@ -41,15 +41,13 @@ namespace Services
             if (!userParameters.ValidBirthdayRange)
                 throw new MaxBirthdayRangeBadRequestException();
 
+            // заблокированные в обе стороны отсекаются до постраничности,
+            // иначе счётчики страниц врут
+            userParameters.ExcludedUserIds =
+                (await _repository.UserBlock.GetRelatedUserIdsAsync(_currentUser.UserId)).ToList();
+
             var usersWithMetaData = await _repository.User.GetAllUsersAsync(userParameters, trackChanges: false);
-
-            // заблокированные в обе стороны не показываются в поиске
-            var hidden = (await _repository.UserBlock.GetRelatedUserIdsAsync(_currentUser.UserId)).ToHashSet();
-            var visible = hidden.Count == 0
-                ? usersWithMetaData.AsEnumerable()
-                : usersWithMetaData.Where(u => !hidden.Contains(u.Id));
-
-            var usersDto = _mapper.Map<IEnumerable<UserDto>>(visible);
+            var usersDto = _mapper.Map<IEnumerable<UserDto>>(usersWithMetaData);
             return (users: usersDto, metaData: usersWithMetaData.MetaData);
         }
 

@@ -58,8 +58,9 @@ namespace Vesty.Tests
         {
             ExistingBlock(null);
 
-            var result = await _service.BlockAsync(TargetUserId);
+            var (result, created) = await _service.BlockAsync(TargetUserId);
 
+            Assert.True(created);
             _blocks.Verify(r => r.CreateBlock(It.Is<UserBlock>(b =>
                 b.BlockerId == CurrentUserId && b.BlockedId == TargetUserId)), Times.Once);
             Assert.Equal(TargetUserId, result.UserId);
@@ -96,12 +97,30 @@ namespace Vesty.Tests
         }
 
         [Fact]
+        public async Task BlockAsync_WhenAlreadyBlocked_KeepsTheOriginalDate()
+        {
+            var blockedAt = new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc);
+            ExistingBlock(new UserBlock
+            {
+                BlockerId = CurrentUserId,
+                BlockedId = TargetUserId,
+                CreatedAt = blockedAt
+            });
+
+            var (result, created) = await _service.BlockAsync(TargetUserId);
+
+            Assert.False(created);
+            Assert.Equal(blockedAt, result.CreatedAt);
+        }
+
+        [Fact]
         public async Task BlockAsync_WhenAlreadyBlocked_DoesNotDuplicate()
         {
             ExistingBlock(new UserBlock { BlockerId = CurrentUserId, BlockedId = TargetUserId });
 
-            var result = await _service.BlockAsync(TargetUserId);
+            var (result, created) = await _service.BlockAsync(TargetUserId);
 
+            Assert.False(created);
             _blocks.Verify(r => r.CreateBlock(It.IsAny<UserBlock>()), Times.Never);
             _repository.Verify(r => r.SaveAsync(), Times.Never);
             Assert.Equal(TargetUserId, result.UserId);
@@ -124,7 +143,7 @@ namespace Vesty.Tests
         {
             ExistingBlock(null);
 
-            await Assert.ThrowsAsync<UserNotFoundException>(() =>
+            await Assert.ThrowsAsync<BlockNotFoundException>(() =>
                 _service.UnblockAsync(TargetUserId));
         }
 

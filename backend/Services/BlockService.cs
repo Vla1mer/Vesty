@@ -32,7 +32,7 @@ namespace Services
             });
         }
 
-        public async Task<BlockedUserDto> BlockAsync(int targetUserId)
+        public async Task<(BlockedUserDto blocked, bool created)> BlockAsync(int targetUserId)
         {
             var currentUserId = _currentUser.UserId;
             if (targetUserId == currentUserId)
@@ -42,13 +42,16 @@ namespace Services
                 ?? throw new UserNotFoundException(targetUserId);
 
             var existing = await _repository.UserBlock.GetAsync(currentUserId, targetUserId, trackChanges: false);
+            var block = existing;
+
             if (existing is null)
             {
-                _repository.UserBlock.CreateBlock(new UserBlock
+                block = new UserBlock
                 {
                     BlockerId = currentUserId,
                     BlockedId = targetUserId
-                });
+                };
+                _repository.UserBlock.CreateBlock(block);
 
                 // блокировка разрывает дружбу и снимает висящие заявки
                 var friendship = await _repository.Friendship.GetBetweenAsync(
@@ -59,22 +62,24 @@ namespace Services
                 await _repository.SaveAsync();
             }
 
-            return new BlockedUserDto
+            var dto = new BlockedUserDto
             {
                 UserId = target.Id,
                 UserName = target.UserName!,
                 Name = target.Name,
                 Surname = target.Surname,
                 AvatarUpdatedAt = target.AvatarUpdatedAt,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = block!.CreatedAt
             };
+
+            return (dto, created: existing is null);
         }
 
         public async Task UnblockAsync(int targetUserId)
         {
             var block = await _repository.UserBlock.GetAsync(
                 _currentUser.UserId, targetUserId, trackChanges: true)
-                ?? throw new UserNotFoundException(targetUserId);
+                ?? throw new BlockNotFoundException(targetUserId);
 
             _repository.UserBlock.DeleteBlock(block);
             await _repository.SaveAsync();

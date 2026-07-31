@@ -1,4 +1,4 @@
-﻿using Entities.Models;
+using Entities.Models;
 using Microsoft.EntityFrameworkCore;
 using Repository.Interfaces;
 using Shared.RequestFeatures;
@@ -12,7 +12,12 @@ namespace Repository
 
         public async Task<PagedList<User>> GetAllUsersAsync(UserParameters userParameters, bool trackChanges)
         {
-            var users = await FindAll(trackChanges)
+            var query = FindAll(trackChanges);
+
+            if (userParameters.ExcludedUserIds.Count > 0)
+                query = query.Where(u => !userParameters.ExcludedUserIds.Contains(u.Id));
+
+            var users = await query
                 .FilterByBirthday(userParameters.MinBirthday, userParameters.MaxBirthday)
                 .FilterByPhone(userParameters.HasPhone)
                 .Search(userParameters.SearchTerm)

@@ -23,11 +23,18 @@ namespace Vesty.Controllers
             Ok(await _service.Block.GetBlockedAsync());
 
         [HttpPost("{userId:int}")]
+        [ProducesResponseType(typeof(BlockedUserDto), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(BlockedUserDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Block(int userId) =>
-            Ok(await _service.Block.BlockAsync(userId));
+        public async Task<IActionResult> Block(int userId)
+        {
+            var (blocked, created) = await _service.Block.BlockAsync(userId);
+
+            return created
+                ? CreatedAtAction(nameof(GetBlocked), blocked)
+                : Ok(blocked);
+        }
 
         [HttpDelete("{userId:int}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]

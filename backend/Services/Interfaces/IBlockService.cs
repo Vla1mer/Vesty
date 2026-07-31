@@ -5,7 +5,7 @@ namespace Services.Interfaces
     public interface IBlockService
     {
         Task<IEnumerable<BlockedUserDto>> GetBlockedAsync();
-        Task<BlockedUserDto> BlockAsync(int targetUserId);
+        Task<(BlockedUserDto blocked, bool created)> BlockAsync(int targetUserId);
         Task UnblockAsync(int targetUserId);
     }
 }
