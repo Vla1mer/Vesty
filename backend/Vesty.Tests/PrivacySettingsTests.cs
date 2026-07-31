@@ -162,6 +162,48 @@ namespace Vesty.Tests
                 _memberService.AddUserToChatAsync(ChatId, new ChatMemberForCreationDto { UserId = TargetUserId }));
         }
 
+        // --- блокировка ---
+
+        private void Blocked() =>
+            _blocks.Setup(r => r.IsBlockedEitherWayAsync(CurrentUserId, TargetUserId))
+                .ReturnsAsync(true);
+
+        [Fact]
+        public async Task DirectChat_WhenBlocked_Throws()
+        {
+            TargetWithPrivacy(PrivacyLevel.Everyone, PrivacyLevel.Everyone);
+            Blocked();
+
+            await Assert.ThrowsAsync<BlockedUserException>(() =>
+                _chatService.CreateDirectChatAsync(TargetUserId));
+        }
+
+        [Fact]
+        public async Task DirectChat_WhenBlocked_ChecksBeforeLookingForExistingChat()
+        {
+            TargetWithPrivacy(PrivacyLevel.Everyone, PrivacyLevel.Everyone);
+            Blocked();
+
+            await Assert.ThrowsAsync<BlockedUserException>(() =>
+                _chatService.CreateDirectChatAsync(TargetUserId));
+
+            _chats.Verify(r => r.GetPrivateChatBetweenAsync(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task Invite_WhenBlocked_Throws()
+        {
+            CallerIsChatOwner();
+            TargetWithPrivacy(PrivacyLevel.Everyone, PrivacyLevel.Everyone);
+            Blocked();
+            _chats.Setup(r => r.GetChatAsync(ChatId, false))
+                .ReturnsAsync(new Chat { Id = ChatId, IsPrivate = false });
+            _members.Setup(r => r.IsUserInChatAsync(ChatId, TargetUserId)).ReturnsAsync(false);
+
+            await Assert.ThrowsAsync<BlockedUserException>(() =>
+                _memberService.AddUserToChatAsync(ChatId, new ChatMemberForCreationDto { UserId = TargetUserId }));
+        }
+
         // --- настройки ---
 
         [Theory]
