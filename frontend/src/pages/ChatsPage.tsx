@@ -13,6 +13,7 @@ import { SearchResults } from "../components/SearchResults";
 import { FloatingActionButton } from "../components/FloatingActionButton";
 import { ProfileModal } from "../components/ProfileModal";
 import { SettingsModal } from "../components/SettingsModal";
+import { FriendsModal } from "../components/FriendsModal";
 import { BottomNav } from "../components/BottomNav";
 import { FormError } from "../components/FormError";
 import { AnimatePresence, motion } from "framer-motion";
@@ -31,6 +32,7 @@ export function ChatsPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isFriendsOpen, setIsFriendsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   function openProfile() {
@@ -39,6 +41,15 @@ export function ChatsPage() {
       setIsProfileOpen(true);
     } else {
       navigate("/profile");
+    }
+  }
+
+  function openFriends() {
+    setIsMenuOpen(false);
+    if (window.matchMedia("(min-width: 768px)").matches) {
+      setIsFriendsOpen(true);
+    } else {
+      navigate("/friends");
     }
   }
 
@@ -193,6 +204,13 @@ export function ChatsPage() {
             </button>
             <button
               type="button"
+              onClick={openFriends}
+              className="w-full flex items-center gap-3 px-3 py-3 rounded text-content hover:bg-surface-muted transition text-left"
+            >
+              <Users size={18} aria-hidden="true" /> Friends
+            </button>
+            <button
+              type="button"
               onClick={openSettings}
               className="w-full flex items-center gap-3 px-3 py-3 rounded text-content hover:bg-surface-muted transition text-left"
             >
@@ -226,6 +244,12 @@ export function ChatsPage() {
       <AnimatePresence>
         {isProfileOpen && (
           <ProfileModal onClose={() => setIsProfileOpen(false)} />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isFriendsOpen && (
+          <FriendsModal onClose={() => setIsFriendsOpen(false)} />
         )}
       </AnimatePresence>
 

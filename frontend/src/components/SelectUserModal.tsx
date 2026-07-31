@@ -1,11 +1,17 @@
-import { MessageSquare } from "lucide-react";
+import { Check, Clock, MessageSquare, UserPlus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGetAllUsersQuery } from "../store/userApi";
 import { useAuth } from "../context/useAuth";
 import type { UserDto } from "../types/api";
 import { FormError } from "./FormError";
+import { Button } from "./ui/Button";
 import { Modal } from "./ui/Modal";
+import {
+  useGetFriendRequestsQuery,
+  useGetFriendsQuery,
+  useSendFriendRequestMutation,
+} from "../store/friendApi";
 import { TextInput } from "./ui/TextInput";
 
 interface Props {
@@ -28,6 +34,13 @@ export function SelectUserModal({ onClose }: Props) {
       .filter((u) => u.id !== currentUserId)
       .filter((u) => u.userName.toLowerCase().includes(term));
   }, [users, search, currentUserId]);
+
+  const { data: friends = [] } = useGetFriendsQuery();
+  const { data: requests = [] } = useGetFriendRequestsQuery();
+  const [sendRequest, { isLoading: sending }] = useSendFriendRequestMutation();
+
+  const friendIds = new Set(friends.map((f) => f.userId));
+  const requestedIds = new Set(requests.map((r) => r.userId));
 
   function handleSelect(user: UserDto) {
     navigate(`/chats/new/${user.id}`);
@@ -60,23 +73,62 @@ export function SelectUserModal({ onClose }: Props) {
           ) : (
             <ul className="space-y-1">
               {filtered.map((u) => (
-                <li key={u.id}>
+                <li
+                  key={u.id}
+                  className="flex items-center gap-2 rounded px-3 py-2 transition-colors hover:bg-surface-muted"
+                >
                   <button
                     type="button"
                     onClick={() => handleSelect(u)}
-                    className="w-full flex items-center justify-between px-3 py-2 rounded hover:bg-surface-overlay transition text-left"
+                    className="flex min-w-0 flex-1 items-center gap-2 text-left"
                   >
-                    <div>
-                      <p className="text-content text-sm font-medium">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-content">
                         {u.userName}
                       </p>
                       {(u.name || u.surname) && (
-                        <p className="text-xs text-content-muted">
+                        <p className="truncate text-xs text-content-muted">
                           {[u.name, u.surname].filter(Boolean).join(" ")}
                         </p>
                       )}
                     </div>
-                    <MessageSquare size={14} aria-hidden="true" className="shrink-0 text-accent-strong" />
+                  </button>
+
+                  {friendIds.has(u.id) ? (
+                    <span
+                      title="Already friends"
+                      className="flex items-center gap-1 text-xs text-content-muted"
+                    >
+                      <Check size={13} aria-hidden="true" /> Friend
+                    </span>
+                  ) : requestedIds.has(u.id) ? (
+                    <span
+                      title="Request pending"
+                      className="flex items-center gap-1 text-xs text-content-muted"
+                    >
+                      <Clock size={13} aria-hidden="true" /> Pending
+                    </span>
+                  ) : (
+                    <Button
+                      size="xs"
+                      variant="neutral"
+                      disabled={sending}
+                      onClick={() => sendRequest(u.id)}
+                      aria-label={`Add ${u.userName} to friends`}
+                      title="Add to friends"
+                    >
+                      <UserPlus size={13} />
+                    </Button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => handleSelect(u)}
+                    aria-label={`Message ${u.userName}`}
+                    title="Message"
+                    className="shrink-0 rounded p-1.5 text-accent-strong transition-colors hover:bg-surface-overlay"
+                  >
+                    <MessageSquare size={14} aria-hidden="true" />
                   </button>
                 </li>
               ))}
