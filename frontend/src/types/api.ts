@@ -191,3 +191,12 @@ export interface PrivacySettingsDto {
   whoCanMessage: number;
   whoCanInvite: number;
 }
+
+export interface BlockedUserDto {
+  userId: number;
+  userName: string;
+  name?: string | null;
+  surname?: string | null;
+  avatarUpdatedAt?: string | null;
+  createdAt: string;
+}

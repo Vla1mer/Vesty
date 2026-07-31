@@ -1,8 +1,9 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Clock, MessageSquare, Search, UserPlus, UserX, X } from "lucide-react";
+import { Ban, Check, Clock, MessageSquare, Search, UserPlus, UserX, X } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSearchUsersQuery } from "../store/userApi";
+import { useBlockUserMutation } from "../store/blockApi";
 import { TextInput } from "./ui/TextInput";
 import { useAuth } from "../context/useAuth";
 import {
@@ -67,13 +68,14 @@ export function FriendsContent() {
   const [acceptRequest, acceptState] = useAcceptFriendRequestMutation();
   const [removeFriend, removeState] = useRemoveFriendMutation();
   const [sendRequest, sendState] = useSendFriendRequestMutation();
+  const [blockUser, blockState] = useBlockUserMutation();
   const { data: found = [], isFetching: searching } = useSearchUsersQuery(term, {
     skip: term.length === 0,
   });
 
   // блокируем только ту строку, по которой идёт запрос, а не весь список
   function isBusy(userId: number): boolean {
-    return [acceptState, removeState, sendState].some(
+    return [acceptState, removeState, sendState, blockState].some(
       (state) => state.isLoading && state.originalArgs === userId
     );
   }
@@ -261,13 +263,23 @@ export function FriendsContent() {
                       </Button>
                       <Button
                         size="xs"
-                        variant="danger"
+                        variant="neutral"
                         disabled={isBusy(friend.userId)}
                         onClick={() => removeFriend(friend.userId)}
                         aria-label="Remove friend"
                         title="Remove friend"
                       >
                         <UserX size={14} />
+                      </Button>
+                      <Button
+                        size="xs"
+                        variant="danger"
+                        disabled={isBusy(friend.userId)}
+                        onClick={() => blockUser(friend.userId)}
+                        aria-label="Block user"
+                        title="Block user"
+                      >
+                        <Ban size={14} />
                       </Button>
                     </>
                   }
