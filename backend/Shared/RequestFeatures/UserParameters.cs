@@ -1,4 +1,4 @@
-﻿namespace Shared.RequestFeatures
+namespace Shared.RequestFeatures
 {
     public class UserParameters : RequestParameters
     {
@@ -9,5 +9,6 @@
         public bool ValidBirthdayRange => MaxBirthday > MinBirthday;
         public bool? HasPhone { get; set; }
         public string? SearchTerm { get; set; }
+        public IReadOnlyCollection<int> ExcludedUserIds { get; set; } = [];
     }
 }

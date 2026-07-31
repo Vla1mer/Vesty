@@ -11,5 +11,6 @@ namespace Services.Interfaces
         IReactionService Reaction { get; }
         IAttachmentService Attachment { get; }
         IFriendService Friend { get; }
+        IBlockService Block { get; }
     }
 }

@@ -16,6 +16,10 @@ export const FRIEND_API_TAGS = {
   FRIEND_REQUEST: "FriendRequest",
 } as const;
 
+export const BLOCK_API_TAGS = {
+  BLOCK: "Block",
+} as const;
+
 export const TAG_ID = {
   LIST: "LIST",
 } as const;

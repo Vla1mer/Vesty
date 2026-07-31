@@ -99,6 +99,9 @@ namespace Services
             if (otherUser is null)
                 throw new UserNotFoundException(otherUserId);
 
+            if (await _repository.UserBlock.IsBlockedEitherWayAsync(currentUserId, otherUserId))
+                throw new BlockedUserException();
+
             var existing = await _repository.Chat.GetPrivateChatBetweenAsync(currentUserId, otherUserId);
             if (existing is not null)
                 return MapToDirectChatDto(existing, ToPartner(otherUser));

@@ -10,6 +10,10 @@ export const endpoints = {
     avatar: (id: number) => `/api/User/${id}/avatar`,
     privacy: "/api/User/privacy",
   },
+  block: {
+    base: "/api/Block",
+    byUser: (userId: number) => `/api/Block/${userId}`,
+  },
   friend: {
     base: "/api/Friend",
     requests: "/api/Friend/requests",

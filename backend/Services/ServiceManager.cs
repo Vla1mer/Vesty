@@ -20,6 +20,7 @@ namespace Services
         private readonly Lazy<IReactionService> _reactionService;
         private readonly Lazy<IAttachmentService> _attachmentService;
         private readonly Lazy<IFriendService> _friendService;
+        private readonly Lazy<IBlockService> _blockService;
 
         public ServiceManager(IRepositoryManager repositoryManager, ILoggerManager logger, IMapper mapper,
             UserManager<User> userManager, IConfiguration configuration, IMessageCipher messageCipher,
@@ -34,6 +35,7 @@ namespace Services
             _reactionService = new Lazy<IReactionService>(() => new ReactionService(repositoryManager, currentUser, chatNotifier));
             _attachmentService = new Lazy<IAttachmentService>(() => new AttachmentService(repositoryManager, currentUser, fileStorage));
             _friendService = new Lazy<IFriendService>(() => new FriendService(repositoryManager, currentUser, chatNotifier));
+            _blockService = new Lazy<IBlockService>(() => new BlockService(repositoryManager, currentUser));
         }
 
         public IUserService User => _userService.Value;
@@ -45,5 +47,6 @@ namespace Services
         public IReactionService Reaction => _reactionService.Value;
         public IAttachmentService Attachment => _attachmentService.Value;
         public IFriendService Friend => _friendService.Value;
+        public IBlockService Block => _blockService.Value;
     }
 }

@@ -35,6 +35,7 @@ import { FormError } from "../components/FormError";
 import { AnimatePresence, motion } from "framer-motion";
 import { EmptyState } from "../components/ui/EmptyState";
 import { MessageListSkeleton } from "../components/ui/Skeleton";
+import { StrangerBanner } from "../components/StrangerBanner";
 
 function typingText(names: string[]): string {
   if (names.length === 1) return `${names[0]} is typing`;
@@ -485,6 +486,13 @@ export function ChatDetailPage() {
           activePinned && !selectionMode ? "pt-[140px]" : "pt-[88px]"
         }`}
       >
+        {chat && isDirectChat(chat) && chat.partnerUserId && (
+          <StrangerBanner
+            partnerUserId={chat.partnerUserId}
+            partnerName={chat.partnerUserName ?? "This user"}
+          />
+        )}
+
         {(chatLoading || messagesLoading) && <MessageListSkeleton />}
 
         {(loadError || actionError || messagesError) && (

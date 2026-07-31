@@ -21,6 +21,7 @@ namespace Repository
         public DbSet<MessageReaction> MessageReactions { get; set; }
         public DbSet<MessageAttachment> MessageAttachments { get; set; }
         public DbSet<Friendship> Friendships { get; set; }
+        public DbSet<UserBlock> UserBlocks { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -128,6 +129,22 @@ namespace Repository
                 e.HasOne(r => r.User)
                  .WithMany()
                  .HasForeignKey(r => r.UserId)
+                 .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<UserBlock>(e => {
+                e.HasKey(b => b.Id);
+                e.Property(b => b.Id).ValueGeneratedOnAdd();
+                e.Property(b => b.CreatedAt);
+                e.HasIndex(b => new { b.BlockerId, b.BlockedId }).IsUnique();
+                e.HasIndex(b => b.BlockedId);
+                e.HasOne(b => b.Blocker)
+                 .WithMany()
+                 .HasForeignKey(b => b.BlockerId)
+                 .OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(b => b.Blocked)
+                 .WithMany()
+                 .HasForeignKey(b => b.BlockedId)
                  .OnDelete(DeleteBehavior.Cascade);
             });
 

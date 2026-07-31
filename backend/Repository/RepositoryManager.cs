@@ -19,6 +19,7 @@ namespace Repository
         private readonly Lazy<IReactionRepository> _reactionRepository;
         private readonly Lazy<IAttachmentRepository> _attachmentRepository;
         private readonly Lazy<IFriendshipRepository> _friendshipRepository;
+        private readonly Lazy<IUserBlockRepository> _userBlockRepository;
 
         public RepositoryManager(AppDbContext context)
         {
@@ -32,6 +33,7 @@ namespace Repository
             _reactionRepository = new Lazy<IReactionRepository>(() => new ReactionRepository(context));
             _attachmentRepository = new Lazy<IAttachmentRepository>(() => new AttachmentRepository(context));
             _friendshipRepository = new Lazy<IFriendshipRepository>(() => new FriendshipRepository(context));
+            _userBlockRepository = new Lazy<IUserBlockRepository>(() => new UserBlockRepository(context));
         }
 
         public IUserRepository User => _userRepository.Value;
@@ -43,6 +45,7 @@ namespace Repository
         public IReactionRepository Reaction => _reactionRepository.Value;
         public IAttachmentRepository Attachment => _attachmentRepository.Value;
         public IFriendshipRepository Friendship => _friendshipRepository.Value;
+        public IUserBlockRepository UserBlock => _userBlockRepository.Value;
 
         // вставка не состоялась, но EF держит сущность как Added и повторит её
         // при следующем SaveChanges — снимаем с отслеживания

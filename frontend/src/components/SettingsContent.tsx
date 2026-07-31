@@ -1,3 +1,4 @@
+import { BlockedUsers } from "./BlockedUsers";
 import { PrivacySettings } from "./PrivacySettings";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -15,6 +16,8 @@ export function SettingsContent() {
       </section>
 
       <PrivacySettings />
+
+      <BlockedUsers />
     </div>
   );
 }

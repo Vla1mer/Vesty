@@ -41,6 +41,11 @@ namespace Services
             if (!userParameters.ValidBirthdayRange)
                 throw new MaxBirthdayRangeBadRequestException();
 
+            // заблокированные в обе стороны отсекаются до постраничности,
+            // иначе счётчики страниц врут
+            userParameters.ExcludedUserIds =
+                (await _repository.UserBlock.GetRelatedUserIdsAsync(_currentUser.UserId)).ToList();
+
             var usersWithMetaData = await _repository.User.GetAllUsersAsync(userParameters, trackChanges: false);
             var usersDto = _mapper.Map<IEnumerable<UserDto>>(usersWithMetaData);
             return (users: usersDto, metaData: usersWithMetaData.MetaData);
