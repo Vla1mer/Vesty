@@ -249,6 +249,8 @@ export function ChatDetailPage() {
     if (sending || saving || attachments.isUploading) return;
     if (!content && attachments.readyIds.length === 0) return;
 
+    setActionError(null);
+
     if (editingId !== null) {
       if (content === editingMessage?.content) {
         cancelEdit();
@@ -257,13 +259,11 @@ export function ChatDetailPage() {
       try {
         await updateMessage({ chatId, id: editingId, content }).unwrap();
         cancelEdit();
-      } catch {
-        setActionError("Failed to edit message");
+      } catch (error) {
+        setActionError(getApiErrorMessage(error, "Failed to edit message"));
       }
       return;
     }
-
-    setActionError(null);
 
     try {
       await createMessage({

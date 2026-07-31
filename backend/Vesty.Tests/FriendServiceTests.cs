@@ -152,10 +152,14 @@ namespace Vesty.Tests
         public async Task AcceptAsync_WhenBlocked_Throws()
         {
             Blocked();
-            ExistingFriendship(Pending(OtherUserId, CurrentUserId));
 
             await Assert.ThrowsAsync<BlockedUserException>(() =>
                 _service.AcceptAsync(OtherUserId));
+
+            // запрет срабатывает до обращения к связи, а не после
+            _friendships.Verify(
+                r => r.GetBetweenAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<bool>()),
+                Times.Never);
         }
 
         [Fact]
