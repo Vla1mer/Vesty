@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, Eraser, Pencil, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Crown, Eraser, LogOut, Pencil, Trash2, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
   useClearChatForMeMutation,
@@ -8,6 +8,7 @@ import {
   useAddChatMemberMutation,
   useRemoveChatMemberMutation,
   useUpdateMemberRoleMutation,
+  useTransferChatOwnershipMutation,
 } from "../store/chatApi";
 import { useGetAllUsersQuery } from "../store/userApi";
 import { useAuth } from "../context/useAuth";
@@ -48,6 +49,11 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
   const [addChatMember] = useAddChatMemberMutation();
   const [removeChatMember] = useRemoveChatMemberMutation();
   const [updateMemberRole] = useUpdateMemberRoleMutation();
+  const [transferChatOwnership] = useTransferChatOwnershipMutation();
+  const [transferTarget, setTransferTarget] =
+    useState<ChatMemberWithRoleDto | null>(null);
+  const [isLeaveOpen, setIsLeaveOpen] = useState(false);
+  const [leaving, setLeaving] = useState(false);
   const [search, setSearch] = useState("");
   const [busyUserId, setBusyUserId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -58,8 +64,6 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
   const [renaming, setRenaming] = useState(false);
 
   const isGroup = !chat.isPrivate;
-  const canDelete = chat.isPrivate || chat.creatorId === currentUserId;
-  const canRename = isGroup && chat.creatorId === currentUserId;
 
   const {
     data: members = [],
@@ -78,6 +82,9 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
       ),
     [members, currentUserId]
   );
+
+  const canDelete = chat.isPrivate || isCallerOwner;
+  const canRename = isGroup && isCallerOwner;
 
   const canManageAvatar = useMemo(
     () =>
@@ -150,6 +157,39 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
       );
     } finally {
       setBusyUserId(null);
+    }
+  }
+
+  async function handleTransferOwnership() {
+    if (!transferTarget) return;
+    setBusyUserId(transferTarget.userId);
+    setError(null);
+    try {
+      await transferChatOwnership({
+        chatId: chat.id,
+        userId: transferTarget.userId,
+      }).unwrap();
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Failed to transfer ownership"));
+    } finally {
+      setTransferTarget(null);
+      setBusyUserId(null);
+    }
+  }
+
+  async function handleLeave() {
+    if (currentUserId === null) return;
+    setLeaving(true);
+    setError(null);
+    try {
+      await removeChatMember({ chatId: chat.id, userId: currentUserId }).unwrap();
+      setIsLeaveOpen(false);
+      onDeleted();
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Failed to leave the chat"));
+      setIsLeaveOpen(false);
+    } finally {
+      setLeaving(false);
     }
   }
 
@@ -382,6 +422,23 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                               </>
                             )}
 
+                          {isGroup &&
+                            isCallerOwner &&
+                            m.userId !== currentUserId &&
+                            m.roleId !== UserRole.Owner && (
+                              <Button
+                                size="xs"
+                                variant="neutral"
+                                className="py-0.5"
+                                onClick={() => setTransferTarget(m)}
+                                disabled={busyUserId !== null}
+                                aria-label="Make owner"
+                                title="Make owner"
+                              >
+                                <Crown size={11} aria-hidden="true" />
+                              </Button>
+                            )}
+
                           {/* Удалить участника */}
                           {isGroup && m.userId !== currentUserId && (
                             <Button
@@ -472,6 +529,29 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                 </section>
               )}
 
+              {isGroup && (
+                <section className="space-y-2 border-t border-line pt-2">
+                  {isCallerOwner ? (
+                    members.length > 1 && (
+                      <p className="text-xs text-content-subtle">
+                        To leave this chat, hand ownership to another member
+                        first.
+                      </p>
+                    )
+                  ) : (
+                    <Button
+                      variant="neutral"
+                      fullWidth
+                      onClick={() => setIsLeaveOpen(true)}
+                      disabled={busyUserId !== null || deleting || leaving}
+                    >
+                      <LogOut size={15} aria-hidden="true" />
+                      Leave chat
+                    </Button>
+                  )}
+                </section>
+              )}
+
               {canDelete && (
                 <section className="pt-2">
                   <Button
@@ -499,6 +579,36 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
             loading={clearing}
             onConfirm={handleClearForMe}
             onCancel={() => setIsClearOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {transferTarget && (
+          <ConfirmDialog
+            title="Make owner?"
+            message={`${transferTarget.userName} will own this chat and you become an admin. Only they will be able to hand it back.`}
+            confirmText="Make owner"
+            variant="primary"
+            loading={busyUserId === transferTarget.userId}
+            onConfirm={handleTransferOwnership}
+            onCancel={() => setTransferTarget(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isLeaveOpen && (
+          <ConfirmDialog
+            title="Leave chat?"
+            message={`You will stop receiving messages from "${getChatDisplayName(
+              chat
+            )}". Someone will have to add you back to return.`}
+            confirmText="Leave"
+            variant="danger"
+            loading={leaving}
+            onConfirm={handleLeave}
+            onCancel={() => setIsLeaveOpen(false)}
           />
         )}
       </AnimatePresence>

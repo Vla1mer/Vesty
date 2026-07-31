@@ -133,6 +133,17 @@ namespace Vesty.Controllers
             return NoContent();
         }
 
+        [HttpPost("{chatId:int}/users/{userId:int}/owner")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> TransferOwnership(int chatId, int userId)
+        {
+            await _service.ChatMember.TransferOwnershipAsync(chatId, userId);
+            return NoContent();
+        }
+
         [HttpPut("{id:int}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]

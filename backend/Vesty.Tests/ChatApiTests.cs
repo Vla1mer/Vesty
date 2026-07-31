@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Entities.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Services.DataTransferObjects;
 
@@ -290,6 +291,67 @@ namespace Vesty.Tests
             var sent = await client.PostAsJsonAsync($"/api/Message/{chatId}/messages",
                 new { content = text });
             sent.EnsureSuccessStatusCode();
+        }
+
+        private static async Task<int> UserIdAsync(HttpClient client, string userName)
+        {
+            var search = await client.GetFromJsonAsync<List<UserDto>>(
+                $"/api/User?searchTerm={userName}&pageSize=20");
+            return search!.Single(u => u.UserName == userName).Id;
+        }
+
+        [Fact]
+        public async Task TransferOwnership_LetsTheFormerOwnerLeave()
+        {
+            var ownerName = UniqueName("towna");
+            var heirName = UniqueName("townb");
+            var owner = await AuthenticatedClientAsync(ownerName);
+            var heir = await AuthenticatedClientAsync(heirName);
+
+            var ownerId = await UserIdAsync(owner, ownerName);
+            var heirId = await UserIdAsync(owner, heirName);
+
+            var chat = await CreateChatAsync(owner, "Group " + ownerName);
+            var added = await owner.PostAsJsonAsync($"/api/Chat/{chat.Id}/users",
+                new { userId = heirId });
+            added.EnsureSuccessStatusCode();
+
+            var earlyLeave = await owner.DeleteAsync($"/api/Chat/{chat.Id}/users/{ownerId}");
+            Assert.Equal(HttpStatusCode.BadRequest, earlyLeave.StatusCode);
+
+            var transfer = await owner.PostAsync($"/api/Chat/{chat.Id}/users/{heirId}/owner", null);
+            Assert.Equal(HttpStatusCode.NoContent, transfer.StatusCode);
+
+            var members = await heir.GetFromJsonAsync<List<ChatMemberWithRoleDto>>(
+                $"/api/Chat/{chat.Id}/users");
+            Assert.Equal(UserRole.Owner, members!.Single(m => m.UserId == heirId).RoleId);
+            Assert.Equal(UserRole.Admin, members!.Single(m => m.UserId == ownerId).RoleId);
+
+            var leave = await owner.DeleteAsync($"/api/Chat/{chat.Id}/users/{ownerId}");
+            Assert.Equal(HttpStatusCode.NoContent, leave.StatusCode);
+
+            var ownerChats = await owner.GetFromJsonAsync<List<ChatDto>>("/api/Chat");
+            Assert.DoesNotContain(ownerChats!, c => c.Id == chat.Id);
+
+            var heirChats = await heir.GetFromJsonAsync<List<ChatDto>>("/api/Chat");
+            Assert.Contains(heirChats!, c => c.Id == chat.Id);
+        }
+
+        [Fact]
+        public async Task TransferOwnership_ByANonOwner_IsForbidden()
+        {
+            var ownerName = UniqueName("nowna");
+            var memberName = UniqueName("nownb");
+            var owner = await AuthenticatedClientAsync(ownerName);
+            var member = await AuthenticatedClientAsync(memberName);
+
+            var memberId = await UserIdAsync(owner, memberName);
+
+            var chat = await CreateChatAsync(owner, "Group " + ownerName);
+            await owner.PostAsJsonAsync($"/api/Chat/{chat.Id}/users", new { userId = memberId });
+
+            var transfer = await member.PostAsync($"/api/Chat/{chat.Id}/users/{memberId}/owner", null);
+            Assert.Equal(HttpStatusCode.Forbidden, transfer.StatusCode);
         }
 
         [Fact]
