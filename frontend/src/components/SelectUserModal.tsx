@@ -1,7 +1,7 @@
 import { Check, Clock, MessageSquare, UserPlus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useGetAllUsersQuery } from "../store/userApi";
+import { useSearchUsersQuery } from "../store/userApi";
 import { useAuth } from "../context/useAuth";
 import type { UserDto } from "../types/api";
 import { FormError } from "./FormError";
@@ -22,18 +22,15 @@ export function SelectUserModal({ onClose }: Props) {
   const navigate = useNavigate();
   const { userId: currentUserId } = useAuth();
   const [search, setSearch] = useState("");
-  const { data: users = [], isFetching, isError } = useGetAllUsersQuery(
-    undefined,
-    { skip: search.trim().length === 0 }
-  );
+  const term = search.trim();
+  const { data: users = [], isFetching, isError } = useSearchUsersQuery(term, {
+    skip: term.length === 0,
+  });
 
-  const filtered = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    if (!term) return [];
-    return users
-      .filter((u) => u.id !== currentUserId)
-      .filter((u) => u.userName.toLowerCase().includes(term));
-  }, [users, search, currentUserId]);
+  const filtered = useMemo(
+    () => users.filter((u) => u.id !== currentUserId),
+    [users, currentUserId]
+  );
 
   const { data: friends = [] } = useGetFriendsQuery();
   const { data: requests = [] } = useGetFriendRequestsQuery();
@@ -60,7 +57,7 @@ export function SelectUserModal({ onClose }: Props) {
       </div>
 
       <div className="flex-1 overflow-y-auto">
-          {search.trim().length === 0 ? (
+          {term.length === 0 ? (
             <p className="text-sm text-content-subtle text-center py-6">
               Start typing to find someone
             </p>
