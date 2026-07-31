@@ -1,4 +1,4 @@
-﻿namespace Repository.Interfaces
+namespace Repository.Interfaces
 {
     public interface IRepositoryManager
     {
@@ -10,6 +10,7 @@
         IMessageRepository Message { get; }
         IReactionRepository Reaction { get; }
         IAttachmentRepository Attachment { get; }
+        IFriendshipRepository Friendship { get; }
         Task SaveAsync();
     }
 }

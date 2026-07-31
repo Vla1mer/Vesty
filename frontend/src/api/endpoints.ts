@@ -9,6 +9,12 @@ export const endpoints = {
     byId: (id: number) => `/api/User/${id}`,
     avatar: (id: number) => `/api/User/${id}/avatar`,
   },
+  friend: {
+    base: "/api/Friend",
+    requests: "/api/Friend/requests",
+    byUser: (userId: number) => `/api/Friend/${userId}`,
+    accept: (userId: number) => `/api/Friend/${userId}/accept`,
+  },
   chat: {
     base: "/api/Chat",
     byId: (chatId: number) => `/api/Chat/${chatId}`,

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Repository.Interfaces;
 using Shared.Exceptions;
@@ -18,6 +18,7 @@ namespace Repository
         private readonly Lazy<IMessageRepository> _messageRepository;
         private readonly Lazy<IReactionRepository> _reactionRepository;
         private readonly Lazy<IAttachmentRepository> _attachmentRepository;
+        private readonly Lazy<IFriendshipRepository> _friendshipRepository;
 
         public RepositoryManager(AppDbContext context)
         {
@@ -30,6 +31,7 @@ namespace Repository
             _messageRepository = new Lazy<IMessageRepository>(() => new MessageRepository(context));
             _reactionRepository = new Lazy<IReactionRepository>(() => new ReactionRepository(context));
             _attachmentRepository = new Lazy<IAttachmentRepository>(() => new AttachmentRepository(context));
+            _friendshipRepository = new Lazy<IFriendshipRepository>(() => new FriendshipRepository(context));
         }
 
         public IUserRepository User => _userRepository.Value;
@@ -40,6 +42,7 @@ namespace Repository
         public IMessageRepository Message => _messageRepository.Value;
         public IReactionRepository Reaction => _reactionRepository.Value;
         public IAttachmentRepository Attachment => _attachmentRepository.Value;
+        public IFriendshipRepository Friendship => _friendshipRepository.Value;
 
         public async Task SaveAsync()
         {

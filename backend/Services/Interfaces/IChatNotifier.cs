@@ -1,4 +1,4 @@
-﻿using Services.DataTransferObjects;
+using Services.DataTransferObjects;
 
 namespace Services.Interfaces
 {
@@ -12,5 +12,8 @@ namespace Services.Interfaces
         Task ChatRenamedAsync(IEnumerable<int> recipientUserIds, ChatRenamedSignalrDto renamed);
         Task MessageReactionsUpdatedAsync(IEnumerable<int> recipientUserIds, MessageReactionsSignalrDto reactions);
         Task MessagePinnedAsync(IEnumerable<int> recipientUserIds, MessagePinnedSignalrDto pinned);
+        Task FriendRequestReceivedAsync(IEnumerable<int> recipientUserIds, FriendDto request);
+        Task FriendshipAcceptedAsync(IEnumerable<int> recipientUserIds, FriendDto friend);
+        Task FriendshipRemovedAsync(IEnumerable<int> recipientUserIds, int byUserId);
     }
 }

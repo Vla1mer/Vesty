@@ -1,4 +1,4 @@
-﻿namespace Services.Interfaces
+namespace Services.Interfaces
 {
     public interface IServiceManager
     {
@@ -10,5 +10,6 @@
         IMessageService Message { get; }
         IReactionService Reaction { get; }
         IAttachmentService Attachment { get; }
+        IFriendService Friend { get; }
     }
 }

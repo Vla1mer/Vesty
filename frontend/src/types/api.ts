@@ -164,3 +164,19 @@ export interface ApiError {
   message?: string;
   errors?: Record<string, string[]>;
 }
+
+export const FRIENDSHIP_STATUS = {
+  PENDING: 1,
+  ACCEPTED: 2,
+} as const;
+
+export interface FriendDto {
+  userId: number;
+  userName: string;
+  name?: string | null;
+  surname?: string | null;
+  avatarUpdatedAt?: string | null;
+  status: number;
+  isIncoming: boolean;
+  createdAt: string;
+}

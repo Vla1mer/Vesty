@@ -17,6 +17,14 @@ export const userApi = apiSlice.injectEndpoints({
           : [{ type: USER_API_TAGS.USER, id: TAG_ID.LIST }],
     }),
 
+    searchUsers: builder.query<UserDto[], string>({
+      query: (searchTerm) => ({
+        url: endpoints.user.base,
+        params: { searchTerm, pageSize: 20 },
+      }),
+      providesTags: [{ type: USER_API_TAGS.USER, id: TAG_ID.LIST }],
+    }),
+
     getUserById: builder.query<UserDto, number>({
       query: (id) => ({ url: endpoints.user.byId(id) }),
       providesTags: (_result, _error, id) => [{ type: USER_API_TAGS.USER, id }],
@@ -68,6 +76,7 @@ export const userApi = apiSlice.injectEndpoints({
 
 export const {
   useGetAllUsersQuery,
+  useSearchUsersQuery,
   useGetUserByIdQuery,
   useUpdateUserMutation,
   useDeleteUserMutation,

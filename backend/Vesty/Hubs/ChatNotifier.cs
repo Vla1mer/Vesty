@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR;
 using Services.DataTransferObjects;
 using Services.Interfaces;
 
@@ -14,6 +14,9 @@ namespace Vesty.Hubs
         public const string ChatRenamed = "ChatRenamed";
         public const string MessageReactionsUpdated = "MessageReactionsUpdated";
         public const string MessagePinned = "MessagePinned";
+        public const string FriendRequestReceived = "FriendRequestReceived";
+        public const string FriendshipAccepted = "FriendshipAccepted";
+        public const string FriendshipRemoved = "FriendshipRemoved";
 
         private readonly IHubContext<ChatHub> _hubContext;
 
@@ -21,6 +24,15 @@ namespace Vesty.Hubs
         {
             _hubContext = hubContext;
         }
+
+        public Task FriendRequestReceivedAsync(IEnumerable<int> recipientUserIds, FriendDto request) =>
+            SendToUsersAsync(recipientUserIds, FriendRequestReceived, request);
+
+        public Task FriendshipAcceptedAsync(IEnumerable<int> recipientUserIds, FriendDto friend) =>
+            SendToUsersAsync(recipientUserIds, FriendshipAccepted, friend);
+
+        public Task FriendshipRemovedAsync(IEnumerable<int> recipientUserIds, int byUserId) =>
+            SendToUsersAsync(recipientUserIds, FriendshipRemoved, byUserId);
 
         public Task MessageReceivedAsync(IEnumerable<int> recipientUserIds, MessageDto message) =>
             SendToUsersAsync(recipientUserIds, MessageReceived, message);
