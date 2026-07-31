@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Entities.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
@@ -19,6 +19,7 @@ namespace Services
         private readonly Lazy<IMessageService> _messageService;
         private readonly Lazy<IReactionService> _reactionService;
         private readonly Lazy<IAttachmentService> _attachmentService;
+        private readonly Lazy<IFriendService> _friendService;
 
         public ServiceManager(IRepositoryManager repositoryManager, ILoggerManager logger, IMapper mapper,
             UserManager<User> userManager, IConfiguration configuration, IMessageCipher messageCipher,
@@ -32,6 +33,7 @@ namespace Services
             _messageService = new Lazy<IMessageService>(() => new MessageService(repositoryManager, logger, mapper, messageCipher, currentUser, _chatService.Value, chatNotifier, _attachmentService.Value));
             _reactionService = new Lazy<IReactionService>(() => new ReactionService(repositoryManager, currentUser, chatNotifier));
             _attachmentService = new Lazy<IAttachmentService>(() => new AttachmentService(repositoryManager, currentUser, fileStorage));
+            _friendService = new Lazy<IFriendService>(() => new FriendService(repositoryManager, currentUser, chatNotifier));
         }
 
         public IUserService User => _userService.Value;
@@ -42,5 +44,6 @@ namespace Services
         public IMessageService Message => _messageService.Value;
         public IReactionService Reaction => _reactionService.Value;
         public IAttachmentService Attachment => _attachmentService.Value;
+        public IFriendService Friend => _friendService.Value;
     }
 }
