@@ -23,11 +23,6 @@ namespace Repository.Extensions
             return messages.Where(m => m.ChatId == chatId);
         }
 
-        public static IQueryable<Message> FilterByChatIds(
-            this IQueryable<Message> messages,
-            IEnumerable<int> chatIds) =>
-            messages.Where(m => chatIds.Contains(m.ChatId));
-
         public static IQueryable<Message> FilterByUserId(
             this IQueryable<Message> messages,
             int? userId)

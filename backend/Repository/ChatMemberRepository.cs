@@ -22,6 +22,13 @@ namespace Repository
                 .Select(cm => cm.ChatId)
                 .ToListAsync();
 
+        public async Task<Dictionary<int, DateTime>> GetClearedAtByChatIdsAsync(
+            int userId, IEnumerable<int> chatIds) =>
+            await FindByCondition(
+                cm => cm.UserId == userId && chatIds.Contains(cm.ChatId) && cm.ClearedAt != null,
+                trackChanges: false)
+                .ToDictionaryAsync(cm => cm.ChatId, cm => cm.ClearedAt!.Value);
+
         public async Task<IEnumerable<ChatMember>> GetMembersByChatIdAsync(int chatId, bool trackChanges) =>
             await FindByCondition(cm => cm.ChatId == chatId, trackChanges)
                 .Include(cm => cm.User)

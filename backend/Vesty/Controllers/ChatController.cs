@@ -149,6 +149,26 @@ namespace Vesty.Controllers
             return NoContent();
         }
 
+        [HttpGet("direct/{otherUserId:int}")]
+        [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> FindDirectChat(int otherUserId)
+        {
+            var chatId = await _service.Chat.FindDirectChatIdAsync(otherUserId);
+            return chatId is null ? NotFound() : Ok(chatId);
+        }
+
+        [HttpDelete("{id:int}/for-me")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> ClearForMe(int id)
+        {
+            await _service.Chat.ClearForCurrentUserAsync(id);
+            return NoContent();
+        }
+
         [HttpPost("{id:int}/read")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]

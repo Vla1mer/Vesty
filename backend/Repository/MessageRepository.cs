@@ -1,4 +1,4 @@
-﻿using Entities.Models;
+using Entities.Models;
 using Microsoft.EntityFrameworkCore;
 using Repository.Interfaces;
 using Shared.RequestFeatures;
@@ -10,10 +10,12 @@ namespace Repository
     {
         public MessageRepository(AppDbContext context) : base(context) { }
 
-        public async Task<PagedList<Message>> GetAllMessagesAsync(MessageParameters messageParameters, IEnumerable<int> allowedChatIds, bool trackChanges)
+        public async Task<PagedList<Message>> GetAllMessagesAsync(MessageParameters messageParameters, int viewerUserId, bool trackChanges)
         {
             var messages = await FindAll(trackChanges)
-                .FilterByChatIds(allowedChatIds)
+                .Where(m => RepositoryContext.Set<ChatMember>().Any(cm =>
+                    cm.ChatId == m.ChatId && cm.UserId == viewerUserId &&
+                    (cm.ClearedAt == null || m.CreatedAt > cm.ClearedAt)))
                 .FilterByCreatedAt(messageParameters.MinCreatedAt, messageParameters.MaxCreatedAt)
                 .FilterByChatId(messageParameters.ChatId)
                 .FilterByUserId(messageParameters.UserId)
@@ -24,8 +26,12 @@ namespace Repository
             return PagedList<Message>.ToPagedList(messages, messageParameters.PageNumber, messageParameters.PageSize);
         }
 
-        public async Task<IEnumerable<Message>> GetLastMessagesByChatIdsAsync(IEnumerable<int> chatIds) =>
+        public async Task<IEnumerable<Message>> GetLastMessagesByChatIdsAsync(
+            IEnumerable<int> chatIds, int viewerUserId) =>
             await FindByCondition(m => chatIds.Contains(m.ChatId), trackChanges: false)
+                .Where(m => RepositoryContext.Set<ChatMember>().Any(cm =>
+                    cm.ChatId == m.ChatId && cm.UserId == viewerUserId &&
+                    (cm.ClearedAt == null || m.CreatedAt > cm.ClearedAt)))
                 .Where(m => !RepositoryContext.Set<Message>().Any(x =>
                     x.ChatId == m.ChatId &&
                     (x.CreatedAt > m.CreatedAt ||
@@ -38,7 +44,8 @@ namespace Repository
             var counts = await FindByCondition(m => chatIds.Contains(m.ChatId) && m.UserId != userId, trackChanges: false)
                 .Where(m => RepositoryContext.Set<ChatMember>().Any(cm =>
                     cm.ChatId == m.ChatId && cm.UserId == userId &&
-                    (cm.LastReadAt == null || m.CreatedAt > cm.LastReadAt)))
+                    (cm.LastReadAt == null || m.CreatedAt > cm.LastReadAt) &&
+                    (cm.ClearedAt == null || m.CreatedAt > cm.ClearedAt)))
                 .GroupBy(m => m.ChatId)
                 .Select(g => new { ChatId = g.Key, Count = g.Count() })
                 .ToListAsync();
@@ -52,7 +59,12 @@ namespace Repository
                 .FirstOrDefaultAsync();
 
         public async Task<IEnumerable<Message>> GetMessagesByChatAsync(int chatId, bool trackChanges) =>
+            await GetMessagesByChatAsync(chatId, clearedAt: null, trackChanges);
+
+        public async Task<IEnumerable<Message>> GetMessagesByChatAsync(
+            int chatId, DateTime? clearedAt, bool trackChanges) =>
             await FindByCondition(m => m.ChatId == chatId, trackChanges)
+                .Where(m => clearedAt == null || m.CreatedAt > clearedAt)
                 .OrderBy(m => m.CreatedAt)
                 .ThenBy(m => m.Id)
                 .ToListAsync();

@@ -39,8 +39,8 @@ namespace Services
             if (!messageParameters.ValidCreatedAtRange)
                 throw new MaxCreatedAtRangeBadRequestException();
 
-            var allowedChatIds = await _repository.ChatMember.GetChatIdsForUserAsync(_currentUser.UserId);
-            var messagesWithMetaData = await _repository.Message.GetAllMessagesAsync(messageParameters, allowedChatIds, trackChanges: false);
+            var messagesWithMetaData = await _repository.Message.GetAllMessagesAsync(
+                messageParameters, _currentUser.UserId, trackChanges: false);
             DecryptInPlace(messagesWithMetaData);
             var messagesDto = _mapper.Map<IEnumerable<MessageDto>>(messagesWithMetaData);
             return (messages: messagesDto, metaData: messagesWithMetaData.MetaData);
@@ -49,7 +49,9 @@ namespace Services
         public async Task<MessageDto> GetByIdAsync(int id)
         {
             var message = await GetMessageOrThrowAsync(id, trackChanges: false);
-            await EnsureCallerIsChatMember(message.ChatId);
+            var membership = await EnsureCallerIsChatMember(message.ChatId);
+            if (IsCleared(message, membership))
+                throw new MessageNotFoundException(id);
             message.Content = _cipher.Decrypt(message.Content);
 
             var replyTo = await GetReplyTargetOrThrowAsync(message.ChatId, message.ReplyToMessageId);
@@ -67,8 +69,9 @@ namespace Services
         public async Task<IEnumerable<MessageDto>> GetMessagesByChatAsync(int chatId, bool trackChanges)
         {
             await GetChatOrThrowAsync(chatId);
-            await EnsureCallerIsChatMember(chatId);
-            var messages = (await _repository.Message.GetMessagesByChatAsync(chatId, trackChanges)).ToList();
+            var membership = await EnsureCallerIsChatMember(chatId);
+            var messages = (await _repository.Message.GetMessagesByChatAsync(
+                chatId, membership.ClearedAt, trackChanges)).ToList();
             DecryptInPlace(messages);
 
             var byId = messages.ToDictionary(m => m.Id);
@@ -283,11 +286,15 @@ namespace Services
             return message;
         }
 
-        private async Task EnsureCallerIsChatMember(int chatId)
+        private static bool IsCleared(Message message, ChatMember membership) =>
+            membership.ClearedAt is not null && message.CreatedAt <= membership.ClearedAt;
+
+        private async Task<ChatMember> EnsureCallerIsChatMember(int chatId)
         {
             var member = await _currentUser.GetMembershipAsync(chatId);
             if (member is null)
                 throw new ChatAccessDeniedException(chatId, _currentUser.UserId);
+            return member;
         }
 
         private async Task EnsureCallerCanModerateMessage(Message message)

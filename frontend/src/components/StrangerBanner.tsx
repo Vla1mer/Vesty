@@ -2,10 +2,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Ban, Clock, ShieldOff, UserPlus } from "lucide-react";
 import type { ReactNode } from "react";
 import {
-  useBlockUserMutation,
   useGetBlockedUsersQuery,
   useUnblockUserMutation,
 } from "../store/blockApi";
+import { useBlockWithChatPrompt } from "../hooks/useBlockWithChatPrompt";
+import { ConfirmDialog } from "./ConfirmDialog";
+import { FormError } from "./FormError";
 import {
   useGetFriendRequestsQuery,
   useGetFriendsQuery,
@@ -38,18 +40,37 @@ export function StrangerBanner({ partnerUserId, partnerName }: Props) {
   const { data: requests = [] } = useGetFriendRequestsQuery();
   const { data: blocked = [] } = useGetBlockedUsersQuery();
   const [sendRequest, sendState] = useSendFriendRequestMutation();
-  const [blockUser, blockState] = useBlockUserMutation();
+  const blocking = useBlockWithChatPrompt();
   const [unblockUser, unblockState] = useUnblockUserMutation();
 
   const isFriend = friends.some((f) => f.userId === partnerUserId);
   const isBlocked = blocked.some((b) => b.userId === partnerUserId);
   const requested = requests.some((r) => r.userId === partnerUserId);
   const busy =
-    sendState.isLoading || blockState.isLoading || unblockState.isLoading;
+    sendState.isLoading || blocking.isBlocking || unblockState.isLoading;
 
   const name = <span className="font-medium text-content">{partnerName}</span>;
 
   return (
+    <>
+    <AnimatePresence>
+      {blocking.askedForChatId !== null && (
+        <ConfirmDialog
+          title="Delete this chat?"
+          message="You blocked this user. The conversation can be removed from your list — they keep their copy."
+          confirmText="Delete for me"
+          cancelText="Keep"
+          variant="danger"
+          loading={blocking.isClearing}
+          error={blocking.clearError}
+          onConfirm={blocking.confirmClear}
+          onCancel={blocking.dismissClear}
+        />
+      )}
+    </AnimatePresence>
+
+    <FormError message={blocking.error} className="mb-3" />
+
     <AnimatePresence mode="wait">
       {isBlocked ? (
         <Banner
@@ -90,7 +111,7 @@ export function StrangerBanner({ partnerUserId, partnerName }: Props) {
                 size="xs"
                 variant="danger"
                 disabled={busy}
-                onClick={() => blockUser(partnerUserId)}
+                onClick={() => blocking.block(partnerUserId)}
               >
                 <Ban size={13} /> Block
               </Button>
@@ -99,5 +120,6 @@ export function StrangerBanner({ partnerUserId, partnerName }: Props) {
         />
       ) : null}
     </AnimatePresence>
+    </>
   );
 }

@@ -1,6 +1,6 @@
 import { apiSlice } from "./apiSlice";
 import { endpoints } from "../api/endpoints";
-import { CHAT_API_TAGS, TAG_ID } from "../api/constants";
+import { CHAT_API_TAGS, MESSAGE_API_TAGS, TAG_ID } from "../api/constants";
 import { HTTP_METHOD } from "../utils/http";
 import { getCurrentUserId } from "../api/client";
 import { getActiveChat } from "../lib/activeChat";
@@ -112,6 +112,22 @@ export const chatApi = apiSlice.injectEndpoints({
     deleteChat: builder.mutation<void, number>({
       query: (chatId) => ({ url: endpoints.chat.byId(chatId), method: HTTP_METHOD.DELETE }),
       invalidatesTags: [{ type: CHAT_API_TAGS.CHAT, id: TAG_ID.LIST }],
+    }),
+
+    clearChatForMe: builder.mutation<void, number>({
+      query: (chatId) => ({
+        url: endpoints.chat.clearForMe(chatId),
+        method: HTTP_METHOD.DELETE,
+      }),
+      invalidatesTags: (_result, _error, chatId) => [
+        { type: CHAT_API_TAGS.CHAT, id: TAG_ID.LIST },
+        { type: CHAT_API_TAGS.CHAT, id: chatId },
+        { type: MESSAGE_API_TAGS.MESSAGE, id: chatId },
+      ],
+    }),
+
+    findDirectChat: builder.query<number, number>({
+      query: (otherUserId) => ({ url: endpoints.chat.direct(otherUserId) }),
     }),
 
     renameChat: builder.mutation<void, { chatId: number; name: string }>({
@@ -282,6 +298,8 @@ export const {
   useGetChatsQuery,
   useCreateChatMutation,
   useDeleteChatMutation,
+  useClearChatForMeMutation,
+  useLazyFindDirectChatQuery,
   useRenameChatMutation,
   useGetChatByIdQuery,
   useGetChatMembersQuery,

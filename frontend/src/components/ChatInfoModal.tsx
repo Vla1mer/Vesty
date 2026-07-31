@@ -1,6 +1,7 @@
-import { ArrowDown, ArrowUp, Pencil, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Eraser, Pencil, Trash2, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
+  useClearChatForMeMutation,
   useDeleteChatMutation,
   useRenameChatMutation,
   useGetChatMembersQuery,
@@ -41,6 +42,8 @@ const roleLabel: Record<number, string> = {
 export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
   const { userId: currentUserId } = useAuth();
   const [deleteChat] = useDeleteChatMutation();
+  const [clearChatForMe, { isLoading: clearing }] = useClearChatForMeMutation();
+  const [isClearOpen, setIsClearOpen] = useState(false);
   const [renameChat] = useRenameChatMutation();
   const [addChatMember] = useAddChatMemberMutation();
   const [removeChatMember] = useRemoveChatMemberMutation();
@@ -147,6 +150,19 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
       );
     } finally {
       setBusyUserId(null);
+    }
+  }
+
+  async function handleClearForMe() {
+    setError(null);
+    try {
+      await clearChatForMe(chat.id).unwrap();
+      setIsClearOpen(false);
+      onClose();
+      onDeleted?.();
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Failed to delete the chat"));
+      setIsClearOpen(false);
     }
   }
 
@@ -442,8 +458,22 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                 </section>
               )}
 
+              {chat.isPrivate && (
+                <section className="space-y-2 border-t border-line pt-2">
+                  <Button
+                    variant="neutral"
+                    fullWidth
+                    onClick={() => setIsClearOpen(true)}
+                    disabled={busyUserId !== null || deleting || clearing}
+                  >
+                    <Eraser size={15} aria-hidden="true" />
+                    Delete for me
+                  </Button>
+                </section>
+              )}
+
               {canDelete && (
-                <section className="pt-2 border-t border-line">
+                <section className="pt-2">
                   <Button
                     variant="danger"
                     fullWidth
@@ -458,6 +488,20 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
             </div>
           )}
       </Modal>
+
+      <AnimatePresence>
+        {isClearOpen && (
+          <ConfirmDialog
+            title="Delete for me?"
+            message="The conversation will disappear from your list. The other person keeps their copy, and the chat comes back if they write again."
+            confirmText="Delete"
+            variant="danger"
+            loading={clearing}
+            onConfirm={handleClearForMe}
+            onCancel={() => setIsClearOpen(false)}
+          />
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {isDeleteOpen && (
