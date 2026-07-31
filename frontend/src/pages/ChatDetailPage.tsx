@@ -36,6 +36,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { EmptyState } from "../components/ui/EmptyState";
 import { MessageListSkeleton } from "../components/ui/Skeleton";
 import { StrangerBanner } from "../components/StrangerBanner";
+import { getApiErrorMessage } from "../utils/apiError";
+import { useGetBlockedUsersQuery } from "../store/blockApi";
 
 function typingText(names: string[]): string {
   if (names.length === 1) return `${names[0]} is typing`;
@@ -53,6 +55,7 @@ export function ChatDetailPage() {
   const [input, setInput] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const { data: blockedUsers = [] } = useGetBlockedUsersQuery();
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -163,6 +166,11 @@ export function ChatDetailPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }
 
+  const blockedPartner =
+    chat && isDirectChat(chat) && chat.partnerUserId
+      ? blockedUsers.some((b) => b.userId === chat.partnerUserId)
+      : false;
+
   const firstUnreadId = useMemo(() => {
     if (!unreadOnEntry || unreadOnEntry > messages.length) return null;
     return messages[messages.length - unreadOnEntry]?.id ?? null;
@@ -241,6 +249,8 @@ export function ChatDetailPage() {
     if (sending || saving || attachments.isUploading) return;
     if (!content && attachments.readyIds.length === 0) return;
 
+    setActionError(null);
+
     if (editingId !== null) {
       if (content === editingMessage?.content) {
         cancelEdit();
@@ -249,8 +259,8 @@ export function ChatDetailPage() {
       try {
         await updateMessage({ chatId, id: editingId, content }).unwrap();
         cancelEdit();
-      } catch {
-        setActionError("Failed to edit message");
+      } catch (error) {
+        setActionError(getApiErrorMessage(error, "Failed to edit message"));
       }
       return;
     }
@@ -265,8 +275,8 @@ export function ChatDetailPage() {
       setInput("");
       setReplyTo(null);
       attachments.clear();
-    } catch {
-      setActionError("Failed to send message");
+    } catch (error) {
+      setActionError(getApiErrorMessage(error, "Failed to send message"));
     }
   }
 
@@ -495,17 +505,16 @@ export function ChatDetailPage() {
 
         {(chatLoading || messagesLoading) && <MessageListSkeleton />}
 
-        {(loadError || actionError || messagesError) && (
+        {(loadError || messagesError) && (
           <FormError
             className="mt-auto"
-            message={loadError ?? actionError ?? "Failed to load messages"}
+            message={loadError ?? "Failed to load messages"}
           />
         )}
 
         {!chatLoading &&
           !messagesLoading &&
           !loadError &&
-          !actionError &&
           !messagesError &&
           messages.length === 0 && (
             <EmptyState
@@ -650,8 +659,22 @@ export function ChatDetailPage() {
         )}
       </AnimatePresence>
 
-      {!loadError && !actionError && (
+      {!loadError && (
         <div className="relative border-t border-line bg-surface sticky bottom-0">
+          <AnimatePresence>
+            {actionError && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+                className="overflow-hidden px-4 pt-3"
+              >
+                <FormError message={actionError} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {editingMessage && (
             <div className="flex items-center gap-3 px-4 pt-3 -mb-1">
               <Pencil size={18} aria-hidden="true" className="shrink-0 text-accent-strong" />
@@ -724,9 +747,13 @@ export function ChatDetailPage() {
               onKeyDown={(e) => {
                 if (e.key === "Escape" && editingId !== null) cancelEdit();
               }}
-              placeholder="Type a message..."
+              placeholder={
+                blockedPartner
+                  ? "Unblock this user to send messages"
+                  : "Type a message..."
+              }
               maxLength={2000}
-              disabled={sending || saving}
+              disabled={sending || saving || blockedPartner}
               className="flex-1"
             />
             <Button
@@ -734,6 +761,7 @@ export function ChatDetailPage() {
               disabled={
                 sending ||
                 saving ||
+                blockedPartner ||
                 attachments.isUploading ||
                 (!input.trim() && attachments.readyIds.length === 0)
               }

@@ -43,6 +43,7 @@ namespace Services
                 throw new FriendshipWithSelfException();
 
             await EnsureUserExistsAsync(targetUserId);
+            await EnsureNotBlockedAsync(targetUserId);
 
             var existing = await _repository.Friendship.GetBetweenAsync(
                 currentUserId, targetUserId, trackChanges: true);
@@ -83,6 +84,8 @@ namespace Services
 
         public async Task<FriendDto> AcceptAsync(int requesterUserId)
         {
+            await EnsureNotBlockedAsync(requesterUserId);
+
             var friendship = await _repository.Friendship.GetBetweenAsync(
                 _currentUser.UserId, requesterUserId, trackChanges: true);
 
@@ -111,6 +114,12 @@ namespace Services
 
         public Task<bool> AreFriendsAsync(int otherUserId) =>
             _repository.Friendship.AreFriendsAsync(_currentUser.UserId, otherUserId);
+
+        private async Task EnsureNotBlockedAsync(int otherUserId)
+        {
+            if (await _repository.UserBlock.IsBlockedEitherWayAsync(_currentUser.UserId, otherUserId))
+                throw new BlockedUserException();
+        }
 
         private async Task<FriendDto> AcceptRaceWinnerAsync(int targetUserId)
         {
