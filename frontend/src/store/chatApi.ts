@@ -126,6 +126,10 @@ export const chatApi = apiSlice.injectEndpoints({
       ],
     }),
 
+    findDirectChat: builder.query<number, number>({
+      query: (otherUserId) => ({ url: endpoints.chat.direct(otherUserId) }),
+    }),
+
     renameChat: builder.mutation<void, { chatId: number; name: string }>({
       query: ({ chatId, name }) => ({
         url: endpoints.chat.byId(chatId),
@@ -295,6 +299,7 @@ export const {
   useCreateChatMutation,
   useDeleteChatMutation,
   useClearChatForMeMutation,
+  useLazyFindDirectChatQuery,
   useRenameChatMutation,
   useGetChatByIdQuery,
   useGetChatMembersQuery,

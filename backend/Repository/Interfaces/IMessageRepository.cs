@@ -5,7 +5,7 @@ namespace Repository.Interfaces
 {
     public interface IMessageRepository
     {
-        Task<PagedList<Message>> GetAllMessagesAsync(MessageParameters messageParameters, IEnumerable<int> allowedChatIds, bool trackChanges);
+        Task<PagedList<Message>> GetAllMessagesAsync(MessageParameters messageParameters, int viewerUserId, bool trackChanges);
         Task<IEnumerable<Message>> GetMessagesByChatAsync(int chatId, bool trackChanges);
         Task<IEnumerable<Message>> GetMessagesByChatAsync(int chatId, DateTime? clearedAt, bool trackChanges);
         Task<IEnumerable<Message>> GetLastMessagesByChatIdsAsync(IEnumerable<int> chatIds, int viewerUserId);

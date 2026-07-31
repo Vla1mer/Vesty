@@ -92,6 +92,45 @@ namespace Vesty.Tests
         }
 
         [Fact]
+        public async Task ClearForCurrentUserAsync_ForGroupChat_Throws()
+        {
+            _chats.Setup(r => r.GetChatAsync(ChatId, It.IsAny<bool>()))
+                .ReturnsAsync(new Chat { Id = ChatId, IsPrivate = false });
+
+            await Assert.ThrowsAsync<OperationNotAllowedInGroupChatException>(() =>
+                _service.ClearForCurrentUserAsync(ChatId));
+
+            _repository.Verify(r => r.SaveAsync(), Times.Never);
+        }
+
+        [Fact]
+        public async Task GetByIdAsync_ForMessageBeforeTheMarker_Throws()
+        {
+            var clearedAt = new DateTime(2026, 5, 1, 0, 0, 0, DateTimeKind.Utc);
+            _messages.Setup(r => r.GetMessageAsync(5, false))
+                .ReturnsAsync(new Message { Id = 5, ChatId = ChatId, CreatedAt = clearedAt.AddMinutes(-1) });
+            _currentUser.Setup(u => u.GetMembershipAsync(ChatId))
+                .ReturnsAsync(new ChatMember { ChatId = ChatId, UserId = CurrentUserId, ClearedAt = clearedAt });
+
+            await Assert.ThrowsAsync<MessageNotFoundException>(() => _messageService.GetByIdAsync(5));
+        }
+
+        [Fact]
+        public async Task GetByIdAsync_ForMessageAfterTheMarker_Returns()
+        {
+            var clearedAt = new DateTime(2026, 5, 1, 0, 0, 0, DateTimeKind.Utc);
+            var message = new Message { Id = 6, ChatId = ChatId, CreatedAt = clearedAt.AddMinutes(1) };
+            _messages.Setup(r => r.GetMessageAsync(6, false)).ReturnsAsync(message);
+            _currentUser.Setup(u => u.GetMembershipAsync(ChatId))
+                .ReturnsAsync(new ChatMember { ChatId = ChatId, UserId = CurrentUserId, ClearedAt = clearedAt });
+            _mapper.Setup(m => m.Map<MessageDto>(message)).Returns(new MessageDto { Id = 6 });
+
+            var result = await _messageService.GetByIdAsync(6);
+
+            Assert.Equal(6, result.Id);
+        }
+
+        [Fact]
         public async Task GetMessagesByChatAsync_PassesTheMarkerToTheQuery()
         {
             var clearedAt = new DateTime(2026, 5, 1, 0, 0, 0, DateTimeKind.Utc);

@@ -1,4 +1,5 @@
 import { Button } from "./ui/Button";
+import { FormError } from "./FormError";
 import { Modal } from "./ui/Modal";
 
 interface Props {
@@ -8,6 +9,7 @@ interface Props {
   cancelText?: string;
   variant?: "danger" | "primary";
   loading?: boolean;
+  error?: string | null;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -19,6 +21,7 @@ export function ConfirmDialog({
   cancelText = "Cancel",
   variant = "danger",
   loading = false,
+  error = null,
   onConfirm,
   onCancel,
 }: Props) {
@@ -29,6 +32,7 @@ export function ConfirmDialog({
       closeDisabled={loading}
     >
       <p className="text-sm text-content-muted">{message}</p>
+      <FormError message={error} className="mt-4" />
 
       <div className="flex justify-end gap-2 pt-6">
         <Button variant="neutral" onClick={onCancel} disabled={loading}>

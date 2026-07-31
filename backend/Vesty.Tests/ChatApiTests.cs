@@ -345,5 +345,52 @@ namespace Vesty.Tests
                 $"/api/Chat/{chatId}/messages");
             Assert.Equal("fresh", Assert.Single(aliceMessages!).Content);
         }
+
+        [Fact]
+        public async Task ClearForMe_HidesOldMessagesFromSearchAndDirectFetch()
+        {
+            var aliceName = UniqueName("hida");
+            var bobName = UniqueName("hidb");
+            var alice = await AuthenticatedClientAsync(aliceName);
+            var bob = await AuthenticatedClientAsync(bobName);
+
+            var chatId = await DirectChatWithAsync(alice, bobName);
+            await SendAsync(alice, chatId, "before clear");
+
+            var before = await alice.GetFromJsonAsync<List<MessageDto>>(
+                $"/api/Chat/{chatId}/messages");
+            var oldId = Assert.Single(before!).Id;
+
+            await alice.DeleteAsync($"/api/Chat/{chatId}/for-me");
+            await SendAsync(bob, chatId, "after clear");
+
+            var byId = await alice.GetAsync($"/api/Message/{oldId}");
+            Assert.Equal(HttpStatusCode.NotFound, byId.StatusCode);
+
+            var search = await alice.GetFromJsonAsync<List<MessageDto>>(
+                $"/api/Message?chatId={chatId}");
+            Assert.Equal("after clear", Assert.Single(search!).Content);
+
+            var bobById = await bob.GetAsync($"/api/Message/{oldId}");
+            Assert.Equal(HttpStatusCode.OK, bobById.StatusCode);
+        }
+
+        [Fact]
+        public async Task ClearForMe_OnGroupChat_IsRejected()
+        {
+            var ownerName = UniqueName("grpo");
+            var owner = await AuthenticatedClientAsync(ownerName);
+
+            var created = await owner.PostAsJsonAsync("/api/Chat",
+                new { name = "Group " + ownerName, members = Array.Empty<object>() });
+            created.EnsureSuccessStatusCode();
+            var chat = await created.Content.ReadFromJsonAsync<ChatDto>();
+
+            var cleared = await owner.DeleteAsync($"/api/Chat/{chat!.Id}/for-me");
+            Assert.Equal(HttpStatusCode.BadRequest, cleared.StatusCode);
+
+            var chats = await owner.GetFromJsonAsync<List<ChatDto>>("/api/Chat");
+            Assert.Contains(chats!, c => c.Id == chat.Id);
+        }
 }
 }

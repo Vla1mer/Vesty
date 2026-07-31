@@ -7,6 +7,7 @@ import {
 } from "../store/blockApi";
 import { useBlockWithChatPrompt } from "../hooks/useBlockWithChatPrompt";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { FormError } from "./FormError";
 import {
   useGetFriendRequestsQuery,
   useGetFriendsQuery,
@@ -61,11 +62,14 @@ export function StrangerBanner({ partnerUserId, partnerName }: Props) {
           cancelText="Keep"
           variant="danger"
           loading={blocking.isClearing}
+          error={blocking.clearError}
           onConfirm={blocking.confirmClear}
           onCancel={blocking.dismissClear}
         />
       )}
     </AnimatePresence>
+
+    <FormError message={blocking.error} className="mb-3" />
 
     <AnimatePresence mode="wait">
       {isBlocked ? (

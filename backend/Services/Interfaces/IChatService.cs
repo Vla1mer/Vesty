@@ -10,6 +10,7 @@ namespace Services.Interfaces
         Task<ChatDto> GetByIdAsync(int id);
         Task<ChatDto> CreateAsync(ChatForCreationDto chatDto);
         Task<DirectChatDto> CreateDirectChatAsync(int otherUserId);
+        Task<int?> FindDirectChatIdAsync(int otherUserId);
         Task DeleteAsync(int id);
         Task ClearForCurrentUserAsync(int id);
         Task RenameAsync(int id, ChatForRenameDto chatDto);

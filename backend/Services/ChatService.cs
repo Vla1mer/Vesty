@@ -178,9 +178,18 @@ namespace Services
             await _notifier.ChatDeletedAsync(memberIds, new ChatDeletedSignalrDto { ChatId = id });
         }
 
+        public async Task<int?> FindDirectChatIdAsync(int otherUserId)
+        {
+            var chat = await _repository.Chat.GetPrivateChatBetweenAsync(
+                _currentUser.UserId, otherUserId);
+            return chat?.Id;
+        }
+
         public async Task ClearForCurrentUserAsync(int id)
         {
-            await GetChatOrThrowAsync(id, trackChanges: false);
+            var chat = await GetChatOrThrowAsync(id, trackChanges: false);
+            if (!chat.IsPrivate)
+                throw new OperationNotAllowedInGroupChatException("clear the chat for yourself");
 
             var member = await _repository.ChatMember.GetMemberAsync(
                 id, _currentUser.UserId, trackChanges: true)

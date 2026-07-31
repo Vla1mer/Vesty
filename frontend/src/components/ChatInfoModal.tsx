@@ -458,17 +458,19 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                 </section>
               )}
 
-              <section className="space-y-2 border-t border-line pt-2">
-                <Button
-                  variant="neutral"
-                  fullWidth
-                  onClick={() => setIsClearOpen(true)}
-                  disabled={busyUserId !== null || deleting || clearing}
-                >
-                  <Eraser size={15} aria-hidden="true" />
-                  Delete for me
-                </Button>
-              </section>
+              {chat.isPrivate && (
+                <section className="space-y-2 border-t border-line pt-2">
+                  <Button
+                    variant="neutral"
+                    fullWidth
+                    onClick={() => setIsClearOpen(true)}
+                    disabled={busyUserId !== null || deleting || clearing}
+                  >
+                    <Eraser size={15} aria-hidden="true" />
+                    Delete for me
+                  </Button>
+                </section>
+              )}
 
               {canDelete && (
                 <section className="pt-2">

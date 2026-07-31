@@ -76,8 +76,11 @@ export function FriendsContent() {
 
   // блокируем только ту строку, по которой идёт запрос, а не весь список
   function isBusy(userId: number): boolean {
-    return [acceptState, removeState, sendState].some(
-      (state) => state.isLoading && state.originalArgs === userId
+    return (
+      blocking.blockingUserId === userId ||
+      [acceptState, removeState, sendState].some(
+        (state) => state.isLoading && state.originalArgs === userId
+      )
     );
   }
   const incoming = requests.filter((r) => r.isIncoming);
@@ -101,11 +104,14 @@ export function FriendsContent() {
             cancelText="Keep"
             variant="danger"
             loading={blocking.isClearing}
+            error={blocking.clearError}
             onConfirm={blocking.confirmClear}
             onCancel={blocking.dismissClear}
           />
         )}
       </AnimatePresence>
+
+      <FormError message={blocking.error} />
 
       <section>
         <div className="relative">
