@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Shared.Exceptions;
 using Entities.Models;
 using Shared.RequestFeatures;
@@ -97,8 +97,9 @@ namespace Services
         public async Task<MessageDto> CreateMessageForChatAsync(int chatId, string? content,
             int? replyToMessageId = null, IEnumerable<int>? attachmentIds = null)
         {
-            await GetChatOrThrowAsync(chatId);
+            var chat = await GetChatOrThrowAsync(chatId);
             await EnsureCallerIsChatMember(chatId);
+            await EnsureDirectChatNotBlockedAsync(chat);
 
             var text = content ?? string.Empty;
             if (string.IsNullOrWhiteSpace(text) && attachmentIds?.Any() != true)
@@ -251,6 +252,19 @@ namespace Services
         {
             var members = await _repository.ChatMember.GetMembersByChatIdAsync(chatId, trackChanges: false);
             return members.Select(m => m.UserId);
+        }
+
+        private async Task EnsureDirectChatNotBlockedAsync(Chat chat)
+        {
+            if (!chat.IsPrivate) return;
+
+            var members = await _repository.ChatMember.GetMembersByChatIdAsync(chat.Id, trackChanges: false);
+            var partnerId = members.Select(m => m.UserId)
+                .FirstOrDefault(id => id != _currentUser.UserId);
+            if (partnerId == 0) return;
+
+            if (await _repository.UserBlock.IsBlockedEitherWayAsync(_currentUser.UserId, partnerId))
+                throw new BlockedUserException();
         }
 
         private async Task<Chat> GetChatOrThrowAsync(int chatId)

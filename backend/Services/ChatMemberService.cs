@@ -51,6 +51,9 @@ namespace Services
             await EnsureCallerCanInvite(chatId);
             await EnsureUserExistsAsync(memberDto.UserId);
             await EnsureUserNotInChatAsync(chatId, memberDto.UserId);
+            if (await _repository.UserBlock.IsBlockedEitherWayAsync(_currentUser.UserId, memberDto.UserId))
+                throw new BlockedUserException();
+
             await EnsureTargetAllowsInviteAsync(memberDto.UserId);
 
             var member = new ChatMember { ChatId = chatId, UserId = memberDto.UserId };

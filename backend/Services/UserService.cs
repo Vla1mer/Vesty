@@ -42,7 +42,14 @@ namespace Services
                 throw new MaxBirthdayRangeBadRequestException();
 
             var usersWithMetaData = await _repository.User.GetAllUsersAsync(userParameters, trackChanges: false);
-            var usersDto = _mapper.Map<IEnumerable<UserDto>>(usersWithMetaData);
+
+            // заблокированные в обе стороны не показываются в поиске
+            var hidden = (await _repository.UserBlock.GetRelatedUserIdsAsync(_currentUser.UserId)).ToHashSet();
+            var visible = hidden.Count == 0
+                ? usersWithMetaData.AsEnumerable()
+                : usersWithMetaData.Where(u => !hidden.Contains(u.Id));
+
+            var usersDto = _mapper.Map<IEnumerable<UserDto>>(visible);
             return (users: usersDto, metaData: usersWithMetaData.MetaData);
         }
 

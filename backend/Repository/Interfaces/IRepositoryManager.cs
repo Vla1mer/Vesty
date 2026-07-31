@@ -11,6 +11,7 @@ namespace Repository.Interfaces
         IReactionRepository Reaction { get; }
         IAttachmentRepository Attachment { get; }
         IFriendshipRepository Friendship { get; }
+        IUserBlockRepository UserBlock { get; }
         Task SaveAsync();
     }
 }
