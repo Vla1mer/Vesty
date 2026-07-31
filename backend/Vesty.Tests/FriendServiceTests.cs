@@ -16,6 +16,7 @@ namespace Vesty.Tests
         private readonly Mock<IRepositoryManager> _repository = new();
         private readonly Mock<IFriendshipRepository> _friendships = new();
         private readonly Mock<IUserRepository> _users = new();
+        private readonly Mock<IUserBlockRepository> _blocks = new();
         private readonly Mock<ICurrentUserService> _currentUser = new();
         private readonly Mock<IChatNotifier> _notifier = new();
 
@@ -25,6 +26,9 @@ namespace Vesty.Tests
         {
             _repository.SetupGet(r => r.Friendship).Returns(_friendships.Object);
             _repository.SetupGet(r => r.User).Returns(_users.Object);
+            _repository.SetupGet(r => r.UserBlock).Returns(_blocks.Object);
+            _blocks.Setup(r => r.IsBlockedEitherWayAsync(It.IsAny<int>(), It.IsAny<int>()))
+                .ReturnsAsync(false);
             _currentUser.SetupGet(u => u.UserId).Returns(CurrentUserId);
 
             _users.Setup(r => r.GetUserAsync(It.IsAny<int>(), false))
@@ -118,6 +122,40 @@ namespace Vesty.Tests
             Assert.NotNull(incoming.RespondedAt);
             Assert.Equal(Friendship.Accepted, result.Status);
             _friendships.Verify(r => r.CreateFriendship(It.IsAny<Friendship>()), Times.Never);
+        }
+
+        private void Blocked() =>
+            _blocks.Setup(r => r.IsBlockedEitherWayAsync(CurrentUserId, OtherUserId))
+                .ReturnsAsync(true);
+
+        [Fact]
+        public async Task SendRequestAsync_WhenBlocked_Throws()
+        {
+            Blocked();
+
+            await Assert.ThrowsAsync<BlockedUserException>(() =>
+                _service.SendRequestAsync(OtherUserId));
+        }
+
+        [Fact]
+        public async Task SendRequestAsync_WhenBlocked_DoesNotCreateAnything()
+        {
+            Blocked();
+
+            await Assert.ThrowsAsync<BlockedUserException>(() =>
+                _service.SendRequestAsync(OtherUserId));
+
+            _friendships.Verify(r => r.CreateFriendship(It.IsAny<Friendship>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task AcceptAsync_WhenBlocked_Throws()
+        {
+            Blocked();
+            ExistingFriendship(Pending(OtherUserId, CurrentUserId));
+
+            await Assert.ThrowsAsync<BlockedUserException>(() =>
+                _service.AcceptAsync(OtherUserId));
         }
 
         [Fact]
