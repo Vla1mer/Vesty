@@ -1,4 +1,4 @@
-﻿using Entities.Models;
+using Entities.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +20,7 @@ namespace Repository
         public DbSet<ChatAvatar> ChatAvatars { get; set; }
         public DbSet<MessageReaction> MessageReactions { get; set; }
         public DbSet<MessageAttachment> MessageAttachments { get; set; }
+        public DbSet<Friendship> Friendships { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -127,6 +128,22 @@ namespace Repository
                 e.HasOne(r => r.User)
                  .WithMany()
                  .HasForeignKey(r => r.UserId)
+                 .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<Friendship>(e => {
+                e.HasKey(f => f.Id);
+                e.Property(f => f.Id).ValueGeneratedOnAdd();
+                e.Property(f => f.CreatedAt);
+                e.HasIndex(f => new { f.RequesterId, f.AddresseeId }).IsUnique();
+                e.HasIndex(f => f.AddresseeId);
+                e.HasOne(f => f.Requester)
+                 .WithMany()
+                 .HasForeignKey(f => f.RequesterId)
+                 .OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(f => f.Addressee)
+                 .WithMany()
+                 .HasForeignKey(f => f.AddresseeId)
                  .OnDelete(DeleteBehavior.Cascade);
             });
 
