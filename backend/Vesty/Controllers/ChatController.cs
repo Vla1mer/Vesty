@@ -149,6 +149,16 @@ namespace Vesty.Controllers
             return NoContent();
         }
 
+        [HttpDelete("{id:int}/for-me")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> ClearForMe(int id)
+        {
+            await _service.Chat.ClearForCurrentUserAsync(id);
+            return NoContent();
+        }
+
         [HttpPost("{id:int}/read")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]

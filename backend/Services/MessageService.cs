@@ -67,8 +67,9 @@ namespace Services
         public async Task<IEnumerable<MessageDto>> GetMessagesByChatAsync(int chatId, bool trackChanges)
         {
             await GetChatOrThrowAsync(chatId);
-            await EnsureCallerIsChatMember(chatId);
-            var messages = (await _repository.Message.GetMessagesByChatAsync(chatId, trackChanges)).ToList();
+            var membership = await EnsureCallerIsChatMember(chatId);
+            var messages = (await _repository.Message.GetMessagesByChatAsync(
+                chatId, membership.ClearedAt, trackChanges)).ToList();
             DecryptInPlace(messages);
 
             var byId = messages.ToDictionary(m => m.Id);
@@ -283,11 +284,12 @@ namespace Services
             return message;
         }
 
-        private async Task EnsureCallerIsChatMember(int chatId)
+        private async Task<ChatMember> EnsureCallerIsChatMember(int chatId)
         {
             var member = await _currentUser.GetMembershipAsync(chatId);
             if (member is null)
                 throw new ChatAccessDeniedException(chatId, _currentUser.UserId);
+            return member;
         }
 
         private async Task EnsureCallerCanModerateMessage(Message message)

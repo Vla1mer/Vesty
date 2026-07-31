@@ -37,6 +37,7 @@ namespace Services
             var result = await ConvertDirectChatsAsync(chatsDto);
             result = await AttachLastMessagesAsync(result);
             result = await AttachUnreadCountsAsync(result);
+            result = await HideClearedDirectChatsAsync(result);
             return (chats: result, metaData: chatsWithMetaData.MetaData);
         }
 
@@ -177,6 +178,18 @@ namespace Services
             await _notifier.ChatDeletedAsync(memberIds, new ChatDeletedSignalrDto { ChatId = id });
         }
 
+        public async Task ClearForCurrentUserAsync(int id)
+        {
+            await GetChatOrThrowAsync(id, trackChanges: false);
+
+            var member = await _repository.ChatMember.GetMemberAsync(
+                id, _currentUser.UserId, trackChanges: true)
+                ?? throw new ChatAccessDeniedException(id, _currentUser.UserId);
+
+            member.ClearedAt = DateTime.UtcNow;
+            await _repository.SaveAsync();
+        }
+
         public async Task RenameAsync(int id, ChatForRenameDto chatDto)
         {
             var chat = await GetChatOrThrowAsync(id, trackChanges: true);
@@ -228,12 +241,29 @@ namespace Services
             return result;
         }
 
+        // личный чат, очищенный у себя, прячется до первого нового сообщения
+        private async Task<List<ChatDto>> HideClearedDirectChatsAsync(List<ChatDto> chats)
+        {
+            if (chats.Count == 0) return chats;
+
+            var cleared = await _repository.ChatMember.GetClearedAtByChatIdsAsync(
+                _currentUser.UserId, chats.Select(c => c.Id));
+
+            if (cleared.Count == 0) return chats;
+
+            return chats.Where(c =>
+                !c.IsPrivate ||
+                !cleared.TryGetValue(c.Id, out var clearedAt) ||
+                (c.LastMessageAt is not null && c.LastMessageAt > clearedAt)
+            ).ToList();
+        }
+
         private async Task<List<ChatDto>> AttachLastMessagesAsync(List<ChatDto> chats)
         {
             if (chats.Count == 0) return chats;
 
             var lastMessages = await _repository.Message.GetLastMessagesByChatIdsAsync(
-                chats.Select(c => c.Id));
+                chats.Select(c => c.Id), _currentUser.UserId);
             var lastByChat = lastMessages.ToDictionary(m => m.ChatId);
 
             return chats.Select(c =>
