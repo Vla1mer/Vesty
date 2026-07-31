@@ -103,6 +103,8 @@ namespace Services
             if (existing is not null)
                 return MapToDirectChatDto(existing, ToPartner(otherUser));
 
+            await EnsurePrivacyAllowsAsync(otherUser.WhoCanMessage, otherUserId, "direct messages");
+
             var chat = new Chat
             {
                 Name = null,
@@ -242,6 +244,17 @@ namespace Services
                     }
                     : c
             ).ToList();
+        }
+
+        private async Task EnsurePrivacyAllowsAsync(int level, int targetUserId, string action)
+        {
+            if (level == PrivacyLevel.Everyone) return;
+
+            if (level == PrivacyLevel.FriendsOnly &&
+                await _repository.Friendship.AreFriendsAsync(_currentUser.UserId, targetUserId))
+                return;
+
+            throw new PrivacyRestrictedException(action);
         }
 
         private async Task<List<ChatDto>> AttachUnreadCountsAsync(List<ChatDto> chats)

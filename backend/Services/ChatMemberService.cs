@@ -51,6 +51,7 @@ namespace Services
             await EnsureCallerCanInvite(chatId);
             await EnsureUserExistsAsync(memberDto.UserId);
             await EnsureUserNotInChatAsync(chatId, memberDto.UserId);
+            await EnsureTargetAllowsInviteAsync(memberDto.UserId);
 
             var member = new ChatMember { ChatId = chatId, UserId = memberDto.UserId };
             _repository.ChatMember.CreateMember(member);
@@ -140,6 +141,18 @@ namespace Services
             var member = await _currentUser.GetMembershipAsync(chatId);
             if (member is null)
                 throw new ChatAccessDeniedException(chatId, _currentUser.UserId);
+        }
+
+        private async Task EnsureTargetAllowsInviteAsync(int targetUserId)
+        {
+            var target = await _repository.User.GetUserAsync(targetUserId, trackChanges: false);
+            if (target is null || target.WhoCanInvite == PrivacyLevel.Everyone) return;
+
+            if (target.WhoCanInvite == PrivacyLevel.FriendsOnly &&
+                await _repository.Friendship.AreFriendsAsync(_currentUser.UserId, targetUserId))
+                return;
+
+            throw new PrivacyRestrictedException("group invites");
         }
 
         private async Task EnsureCallerCanInvite(int chatId)
