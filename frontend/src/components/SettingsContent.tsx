@@ -1,3 +1,4 @@
+import { PrivacySettings } from "./PrivacySettings";
 import { ThemeToggle } from "./ThemeToggle";
 
 export function SettingsContent() {
@@ -12,6 +13,8 @@ export function SettingsContent() {
         </span>
         <ThemeToggle />
       </section>
+
+      <PrivacySettings />
     </div>
   );
 }

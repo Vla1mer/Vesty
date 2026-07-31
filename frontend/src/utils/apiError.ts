@@ -40,11 +40,21 @@ function extractErrorDict(data: unknown): Record<string, string[]> | null {
   return Object.keys(result).length > 0 ? result : null;
 }
 
+/** Ответы обработчика исключений имеют вид { StatusCode, Message }. */
+function extractMessage(data: unknown): string | null {
+  if (!data || typeof data !== "object") return null;
+  const message = (data as Record<string, unknown>).Message ??
+    (data as Record<string, unknown>).message;
+  return typeof message === "string" && message.length > 0 ? message : null;
+}
+
 export function parseApiErrors(err: unknown, fallback: string): ParsedApiErrors {
   const data =
     (err as AxiosError).response?.data ?? (err as { data?: unknown }).data;
   const errors = extractErrorDict(data);
-  if (!errors) return { fieldErrors: {}, generalError: fallback };
+  if (!errors) {
+    return { fieldErrors: {}, generalError: extractMessage(data) ?? fallback };
+  }
 
   const fieldErrors: Record<string, string> = {};
   const unmapped: string[] = [];
