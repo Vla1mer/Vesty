@@ -21,6 +21,7 @@ namespace Vesty.Tests
         private readonly Mock<IChatRepository> _chats = new();
         private readonly Mock<IChatMemberRepository> _members = new();
         private readonly Mock<IFriendshipRepository> _friendships = new();
+        private readonly Mock<IUserBlockRepository> _blocks = new();
         private readonly Mock<ICurrentUserService> _currentUser = new();
         private readonly Mock<IChatNotifier> _notifier = new();
         private readonly Mock<ILoggerManager> _logger = new();
@@ -37,6 +38,9 @@ namespace Vesty.Tests
             _repository.SetupGet(r => r.Chat).Returns(_chats.Object);
             _repository.SetupGet(r => r.ChatMember).Returns(_members.Object);
             _repository.SetupGet(r => r.Friendship).Returns(_friendships.Object);
+            _repository.SetupGet(r => r.UserBlock).Returns(_blocks.Object);
+            _blocks.Setup(r => r.IsBlockedEitherWayAsync(It.IsAny<int>(), It.IsAny<int>()))
+                .ReturnsAsync(false);
             _currentUser.SetupGet(u => u.UserId).Returns(CurrentUserId);
 
             _chats.Setup(r => r.GetPrivateChatBetweenAsync(It.IsAny<int>(), It.IsAny<int>()))
