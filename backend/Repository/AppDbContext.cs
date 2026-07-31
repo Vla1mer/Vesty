@@ -135,7 +135,6 @@ namespace Repository
                 e.HasKey(f => f.Id);
                 e.Property(f => f.Id).ValueGeneratedOnAdd();
                 e.Property(f => f.CreatedAt);
-                e.HasIndex(f => new { f.RequesterId, f.AddresseeId }).IsUnique();
                 e.HasIndex(f => f.AddresseeId);
                 e.HasOne(f => f.Requester)
                  .WithMany()

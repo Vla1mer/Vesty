@@ -24,14 +24,6 @@ namespace Repository
                 .OrderByDescending(f => f.CreatedAt)
                 .ToListAsync();
 
-        public async Task<IEnumerable<int>> GetFriendIdsAsync(int userId) =>
-            await FindByCondition(
-                f => f.Status == Friendship.Accepted &&
-                     (f.RequesterId == userId || f.AddresseeId == userId),
-                trackChanges: false)
-                .Select(f => f.RequesterId == userId ? f.AddresseeId : f.RequesterId)
-                .ToListAsync();
-
         public async Task<bool> AreFriendsAsync(int userId, int otherUserId) =>
             await FindByCondition(
                 f => f.Status == Friendship.Accepted &&

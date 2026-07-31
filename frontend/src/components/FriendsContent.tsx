@@ -64,14 +64,19 @@ export function FriendsContent() {
   const term = search.trim();
   const { data: friends = [], isLoading, isError } = useGetFriendsQuery();
   const { data: requests = [] } = useGetFriendRequestsQuery();
-  const [acceptRequest, { isLoading: accepting }] = useAcceptFriendRequestMutation();
-  const [removeFriend, { isLoading: removing }] = useRemoveFriendMutation();
-  const [sendRequest, { isLoading: sending }] = useSendFriendRequestMutation();
+  const [acceptRequest, acceptState] = useAcceptFriendRequestMutation();
+  const [removeFriend, removeState] = useRemoveFriendMutation();
+  const [sendRequest, sendState] = useSendFriendRequestMutation();
   const { data: found = [], isFetching: searching } = useSearchUsersQuery(term, {
     skip: term.length === 0,
   });
 
-  const busy = accepting || removing || sending;
+  // блокируем только ту строку, по которой идёт запрос, а не весь список
+  function isBusy(userId: number): boolean {
+    return [acceptState, removeState, sendState].some(
+      (state) => state.isLoading && state.originalArgs === userId
+    );
+  }
   const incoming = requests.filter((r) => r.isIncoming);
   const outgoing = requests.filter((r) => !r.isIncoming);
 
@@ -141,7 +146,7 @@ export function FriendsContent() {
                   ) : (
                     <Button
                       size="xs"
-                      disabled={busy}
+                      disabled={isBusy(user.id)}
                       onClick={() => sendRequest(user.id)}
                     >
                       <UserPlus size={13} /> Add
@@ -172,7 +177,7 @@ export function FriendsContent() {
                     <>
                       <Button
                         size="xs"
-                        disabled={busy}
+                        disabled={isBusy(request.userId)}
                         onClick={() => acceptRequest(request.userId)}
                         aria-label="Accept request"
                       >
@@ -181,7 +186,7 @@ export function FriendsContent() {
                       <Button
                         size="xs"
                         variant="neutral"
-                        disabled={busy}
+                        disabled={isBusy(request.userId)}
                         onClick={() => removeFriend(request.userId)}
                         aria-label="Decline request"
                       >
@@ -209,7 +214,7 @@ export function FriendsContent() {
                     <Button
                       size="xs"
                       variant="neutral"
-                      disabled={busy}
+                      disabled={isBusy(request.userId)}
                       onClick={() => removeFriend(request.userId)}
                     >
                       Cancel
@@ -257,7 +262,7 @@ export function FriendsContent() {
                       <Button
                         size="xs"
                         variant="danger"
-                        disabled={busy}
+                        disabled={isBusy(friend.userId)}
                         onClick={() => removeFriend(friend.userId)}
                         aria-label="Remove friend"
                         title="Remove friend"

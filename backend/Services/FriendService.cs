@@ -64,7 +64,16 @@ namespace Services
             };
 
             _repository.Friendship.CreateFriendship(friendship);
-            await _repository.SaveAsync();
+
+            try
+            {
+                await _repository.SaveAsync();
+            }
+            catch (DuplicateResourceException)
+            {
+                // встречная заявка успела вставиться первой — принимаем её
+                return await AcceptRaceWinnerAsync(targetUserId);
+            }
 
             await _notifier.FriendRequestReceivedAsync(new[] { targetUserId },
                 await BuildDtoAsync(friendship, currentUserId));
@@ -102,6 +111,20 @@ namespace Services
 
         public Task<bool> AreFriendsAsync(int otherUserId) =>
             _repository.Friendship.AreFriendsAsync(_currentUser.UserId, otherUserId);
+
+        private async Task<FriendDto> AcceptRaceWinnerAsync(int targetUserId)
+        {
+            var winner = await _repository.Friendship.GetBetweenAsync(
+                _currentUser.UserId, targetUserId, trackChanges: true);
+
+            if (winner is null)
+                throw new FriendshipAlreadyExistsException();
+
+            if (winner.Status == Friendship.Pending && winner.AddresseeId == _currentUser.UserId)
+                return await AcceptExistingAsync(winner);
+
+            throw new FriendshipAlreadyExistsException();
+        }
 
         private async Task<FriendDto> AcceptExistingAsync(Friendship friendship)
         {
