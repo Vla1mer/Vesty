@@ -2,7 +2,7 @@ import { apiSlice } from "./apiSlice";
 import { endpoints } from "../api/endpoints";
 import { USER_API_TAGS, CHAT_API_TAGS, TAG_ID } from "../api/constants";
 import { HTTP_METHOD } from "../utils/http";
-import type { UserDto, UserForUpdateDto } from "../types/api";
+import type { PrivacySettingsDto, UserDto, UserForUpdateDto } from "../types/api";
 
 export const userApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
@@ -23,6 +23,20 @@ export const userApi = apiSlice.injectEndpoints({
         params: { searchTerm, pageSize: 20 },
       }),
       providesTags: [{ type: USER_API_TAGS.USER, id: TAG_ID.LIST }],
+    }),
+
+    getPrivacySettings: builder.query<PrivacySettingsDto, void>({
+      query: () => ({ url: endpoints.user.privacy }),
+      providesTags: [{ type: USER_API_TAGS.USER, id: "PRIVACY" }],
+    }),
+
+    updatePrivacySettings: builder.mutation<PrivacySettingsDto, PrivacySettingsDto>({
+      query: (settings) => ({
+        url: endpoints.user.privacy,
+        method: HTTP_METHOD.PUT,
+        data: settings,
+      }),
+      invalidatesTags: [{ type: USER_API_TAGS.USER, id: "PRIVACY" }],
     }),
 
     getUserById: builder.query<UserDto, number>({
@@ -77,6 +91,8 @@ export const userApi = apiSlice.injectEndpoints({
 export const {
   useGetAllUsersQuery,
   useSearchUsersQuery,
+  useGetPrivacySettingsQuery,
+  useUpdatePrivacySettingsMutation,
   useGetUserByIdQuery,
   useUpdateUserMutation,
   useDeleteUserMutation,

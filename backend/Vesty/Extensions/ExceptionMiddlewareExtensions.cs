@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using Shared.ErrorModel;
 using Shared.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
@@ -26,6 +26,7 @@ namespace Vesty.Extensions
                             BadRequestException => StatusCodes.Status400BadRequest,
                             ForbiddenException => StatusCodes.Status403Forbidden,
                             ConflictException => StatusCodes.Status409Conflict,
+                            ConcurrentUpdateException => StatusCodes.Status503ServiceUnavailable,
                             _ => StatusCodes.Status500InternalServerError
                         };
 

@@ -8,6 +8,7 @@ import type { AxiosBaseQueryError } from "../api/axiosBaseQuery";
 import { Button } from "../components/ui/Button";
 import { TextInput } from "../components/ui/TextInput";
 import { FormError } from "../components/FormError";
+import { getApiErrorMessage } from "../utils/apiError";
 
 export function NewDirectChatPage() {
   const { userId } = useParams<{ userId: string }>();
@@ -41,8 +42,8 @@ export function NewDirectChatPage() {
         content,
       }).unwrap();
       navigate(`/chats/${message.chatId}`, { replace: true });
-    } catch {
-      setSendError("Failed to send message");
+    } catch (error) {
+      setSendError(getApiErrorMessage(error, "Failed to send message"));
     }
   }
 

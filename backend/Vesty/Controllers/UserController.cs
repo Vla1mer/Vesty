@@ -75,6 +75,24 @@ namespace Vesty.Controllers
             return Ok(pagedResult.users);
         }
 
+        [HttpGet("privacy")]
+        [Authorize]
+        [ProducesResponseType(typeof(PrivacySettingsDto), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetPrivacy() =>
+            Ok(await _service.User.GetPrivacyAsync());
+
+        [HttpPut("privacy")]
+        [Authorize]
+        [ProducesResponseType(typeof(PrivacySettingsDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> UpdatePrivacy([FromBody] PrivacySettingsDto settings)
+        {
+            if (settings is null)
+                return BadRequest("PrivacySettingsDto object is null");
+
+            return Ok(await _service.User.UpdatePrivacyAsync(settings));
+        }
+
         [HttpGet("{id:int}")]
         [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

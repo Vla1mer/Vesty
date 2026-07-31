@@ -118,7 +118,7 @@ namespace Services
                 _currentUser.UserId, targetUserId, trackChanges: true);
 
             if (winner is null)
-                throw new FriendshipAlreadyExistsException();
+                throw new ConcurrentUpdateException();
 
             if (winner.Status == Friendship.Pending && winner.AddresseeId == _currentUser.UserId)
                 return await AcceptExistingAsync(winner);

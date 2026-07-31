@@ -41,7 +41,7 @@ namespace Vesty.Controllers
             // встречная заявка подтверждает дружбу — ничего не создано
             return result.Status == Friendship.Accepted
                 ? Ok(result)
-                : CreatedAtAction(nameof(GetFriends), result);
+                : CreatedAtAction(nameof(GetPendingRequests), result);
         }
 
         [HttpPost("{userId:int}/accept")]

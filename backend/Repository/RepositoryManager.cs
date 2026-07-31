@@ -44,6 +44,14 @@ namespace Repository
         public IAttachmentRepository Attachment => _attachmentRepository.Value;
         public IFriendshipRepository Friendship => _friendshipRepository.Value;
 
+        // вставка не состоялась, но EF держит сущность как Added и повторит её
+        // при следующем SaveChanges — снимаем с отслеживания
+        private static void DetachPendingInserts(DbUpdateException ex)
+        {
+            foreach (var entry in ex.Entries.Where(e => e.State == EntityState.Added))
+                entry.State = EntityState.Detached;
+        }
+
         public async Task SaveAsync()
         {
             try
@@ -52,6 +60,7 @@ namespace Repository
             }
             catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: UniqueViolation })
             {
+                DetachPendingInserts(ex);
                 throw new DuplicateResourceException();
             }
         }

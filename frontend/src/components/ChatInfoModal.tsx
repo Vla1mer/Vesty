@@ -24,6 +24,7 @@ import type { ChatDto, UserDto, ChatMemberWithRoleDto } from "../types/api";
 import type { AxiosBaseQueryError } from "../api/axiosBaseQuery";
 import { FormError } from "./FormError";
 import { AnimatePresence } from "framer-motion";
+import { getApiErrorMessage } from "../utils/apiError";
 
 interface Props {
   chat: ChatDto;
@@ -105,12 +106,7 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
     try {
       await addChatMember({ chatId: chat.id, userId: user.id }).unwrap();
     } catch (err) {
-      const status = (err as AxiosBaseQueryError).status;
-      setError(
-        status === 403
-          ? "Only owners or admins can add members"
-          : "Failed to add member"
-      );
+      setError(getApiErrorMessage(err, "Failed to add member"));
     } finally {
       setBusyUserId(null);
     }

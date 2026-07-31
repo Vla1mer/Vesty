@@ -1,4 +1,4 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using AutoMapper;
@@ -94,6 +94,34 @@ namespace Services
                 throw new UserNotFoundException(id);
             _repository.User.DeleteUser(user);
             await _repository.SaveAsync();
+        }
+
+        public async Task<PrivacySettingsDto> GetPrivacyAsync()
+        {
+            var user = await _repository.User.GetUserAsync(_currentUser.UserId, trackChanges: false)
+                ?? throw new UserNotFoundException(_currentUser.UserId);
+
+            return new PrivacySettingsDto
+            {
+                WhoCanMessage = user.WhoCanMessage,
+                WhoCanInvite = user.WhoCanInvite
+            };
+        }
+
+        public async Task<PrivacySettingsDto> UpdatePrivacyAsync(PrivacySettingsDto settings)
+        {
+            if (!PrivacyLevel.IsDefined(settings.WhoCanMessage) ||
+                !PrivacyLevel.IsDefined(settings.WhoCanInvite))
+                throw new InvalidPrivacyLevelException();
+
+            var user = await _repository.User.GetUserAsync(_currentUser.UserId, trackChanges: true)
+                ?? throw new UserNotFoundException(_currentUser.UserId);
+
+            user.WhoCanMessage = settings.WhoCanMessage;
+            user.WhoCanInvite = settings.WhoCanInvite;
+            await _repository.SaveAsync();
+
+            return settings;
         }
 
         public async Task UpdateAsync(int id, UserForUpdateDto userDto)

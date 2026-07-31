@@ -1,4 +1,4 @@
-﻿using Entities.Models;
+using Entities.Models;
 using Microsoft.AspNetCore.Identity;
 using Shared.RequestFeatures;
 using Services.DataTransferObjects;
@@ -13,6 +13,8 @@ namespace Services.Interfaces
         Task<(IEnumerable<UserDto> users, string ids)> RegisterUserCollectionAsync(IEnumerable<UserForRegistrationDto> userCollection);
         Task DeleteAsync(int id);
         Task UpdateAsync(int id, UserForUpdateDto userDto);
+        Task<PrivacySettingsDto> GetPrivacyAsync();
+        Task<PrivacySettingsDto> UpdatePrivacyAsync(PrivacySettingsDto settings);
         Task<(UserForUpdateDto userToPatch, User userEntity)> GetUserForPatchAsync(int id, bool trackChanges);
         Task SaveChangesForPatchAsync(UserForUpdateDto userToPatch, User userEntity);
         Task<IdentityResult> RegisterUser(UserForRegistrationDto userForRegistration);

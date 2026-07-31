@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 
 namespace Entities.Models
 {
@@ -12,6 +12,8 @@ namespace Entities.Models
         public string? RefreshToken { get; set; }
         public DateTime RefreshTokenExpiryTime { get; set; }
         public DateTime? AvatarUpdatedAt { get; set; }
+        public int WhoCanMessage { get; set; } = PrivacyLevel.Everyone;
+        public int WhoCanInvite { get; set; } = PrivacyLevel.Everyone;
 
         public UserAvatar? Avatar { get; set; }
         public ICollection<Chat> CreatedChats { get; set; } = [];

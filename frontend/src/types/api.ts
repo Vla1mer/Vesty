@@ -180,3 +180,14 @@ export interface FriendDto {
   isIncoming: boolean;
   createdAt: string;
 }
+
+export const PRIVACY_LEVEL = {
+  EVERYONE: 1,
+  FRIENDS_ONLY: 2,
+  NOBODY: 3,
+} as const;
+
+export interface PrivacySettingsDto {
+  whoCanMessage: number;
+  whoCanInvite: number;
+}
