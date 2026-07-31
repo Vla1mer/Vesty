@@ -3,7 +3,8 @@ import { Ban, Check, Clock, MessageSquare, Search, UserPlus, UserX, X } from "lu
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSearchUsersQuery } from "../store/userApi";
-import { useBlockUserMutation } from "../store/blockApi";
+import { useBlockWithChatPrompt } from "../hooks/useBlockWithChatPrompt";
+import { ConfirmDialog } from "./ConfirmDialog";
 import { TextInput } from "./ui/TextInput";
 import { useAuth } from "../context/useAuth";
 import {
@@ -68,14 +69,14 @@ export function FriendsContent() {
   const [acceptRequest, acceptState] = useAcceptFriendRequestMutation();
   const [removeFriend, removeState] = useRemoveFriendMutation();
   const [sendRequest, sendState] = useSendFriendRequestMutation();
-  const [blockUser, blockState] = useBlockUserMutation();
+  const blocking = useBlockWithChatPrompt();
   const { data: found = [], isFetching: searching } = useSearchUsersQuery(term, {
     skip: term.length === 0,
   });
 
   // блокируем только ту строку, по которой идёт запрос, а не весь список
   function isBusy(userId: number): boolean {
-    return [acceptState, removeState, sendState, blockState].some(
+    return [acceptState, removeState, sendState].some(
       (state) => state.isLoading && state.originalArgs === userId
     );
   }
@@ -91,6 +92,21 @@ export function FriendsContent() {
 
   return (
     <div className="space-y-8">
+      <AnimatePresence>
+        {blocking.askedForChatId !== null && (
+          <ConfirmDialog
+            title="Delete this chat?"
+            message="You blocked this user. The conversation can be removed from your list — they keep their copy."
+            confirmText="Delete for me"
+            cancelText="Keep"
+            variant="danger"
+            loading={blocking.isClearing}
+            onConfirm={blocking.confirmClear}
+            onCancel={blocking.dismissClear}
+          />
+        )}
+      </AnimatePresence>
+
       <section>
         <div className="relative">
           <Search
@@ -275,7 +291,7 @@ export function FriendsContent() {
                         size="xs"
                         variant="danger"
                         disabled={isBusy(friend.userId)}
-                        onClick={() => blockUser(friend.userId)}
+                        onClick={() => blocking.block(friend.userId)}
                         aria-label="Block user"
                         title="Block user"
                       >
