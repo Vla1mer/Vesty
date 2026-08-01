@@ -6,8 +6,13 @@ import {
   useDeleteChatMutation,
   useGetChatMembersQuery,
   useRemoveChatMemberMutation,
+  useRenameChatMutation,
   useUpdateChatPermissionsMutation,
 } from "../store/chatApi";
+import { ChatAvatarEditor } from "./ChatAvatarEditor";
+import { TextInput } from "./ui/TextInput";
+import { chatNameSchema } from "../validation/chatSchemas";
+import { ValidationError } from "yup";
 import { useAuth } from "../context/useAuth";
 import { getApiErrorMessage } from "../utils/apiError";
 import { getChatDisplayName } from "../utils/chats";
@@ -38,6 +43,11 @@ export function ChatSettingsModal({ chat, onBack, onClose, onDeleted }: Props) {
   const [removeChatMember] = useRemoveChatMemberMutation();
   const [deleteChat] = useDeleteChatMutation();
   const [clearChatForMe, { isLoading: clearing }] = useClearChatForMeMutation();
+  const [renameChat] = useRenameChatMutation();
+
+  const [nameDraft, setNameDraft] = useState(chat.name ?? "");
+  const [descriptionDraft, setDescriptionDraft] = useState(chat.description ?? "");
+  const [savingProfile, setSavingProfile] = useState(false);
 
   const [saved, setSaved] = useState<
     ({ chatId: number } & ChatPermissionsDto) | null
@@ -61,6 +71,11 @@ export function ChatSettingsModal({ chat, onBack, onClose, onDeleted }: Props) {
   const canInvite =
     isGroup && myRoleId !== undefined && permissionAllows(chat.whoCanInvite, myRoleId);
   const canDelete = chat.isPrivate || isOwner;
+  const canEditProfile =
+    isGroup && myRoleId !== undefined && permissionAllows(chat.whoCanEdit, myRoleId);
+  const profileChanged =
+    nameDraft.trim() !== (chat.name ?? "") ||
+    descriptionDraft.trim() !== (chat.description ?? "");
 
   const permissions =
     saved?.chatId === chat.id
@@ -71,6 +86,32 @@ export function ChatSettingsModal({ chat, onBack, onClose, onDeleted }: Props) {
           whoCanEdit: chat.whoCanEdit,
           whoCanPost: chat.whoCanPost,
         };
+
+  async function handleSaveProfile() {
+    if (savingProfile) return;
+    const newName = nameDraft.trim();
+
+    try {
+      await chatNameSchema.validate({ name: newName });
+    } catch (validationErr) {
+      setError((validationErr as ValidationError).message);
+      return;
+    }
+
+    setSavingProfile(true);
+    setError(null);
+    try {
+      await renameChat({
+        chatId: chat.id,
+        name: newName,
+        description: descriptionDraft.trim() || null,
+      }).unwrap();
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Failed to save the chat profile"));
+    } finally {
+      setSavingProfile(false);
+    }
+  }
 
   async function handlePermissionChange(
     key: (typeof permissionFields)[number]["key"],
@@ -130,7 +171,8 @@ export function ChatSettingsModal({ chat, onBack, onClose, onDeleted }: Props) {
     }
   }
 
-  const busy = savingPermission !== null || leaving || deleting || clearing;
+  const busy =
+    savingPermission !== null || leaving || deleting || clearing || savingProfile;
 
   return (
     <>
@@ -159,8 +201,41 @@ export function ChatSettingsModal({ chat, onBack, onClose, onDeleted }: Props) {
         <div className="space-y-4">
           <FormError message={error} />
 
+          {canEditProfile && (
+            <section className="space-y-3">
+              <ChatAvatarEditor
+                chatId={chat.id}
+                name={getChatDisplayName(chat)}
+                avatarUpdatedAt={chat.avatarUpdatedAt}
+              />
+              <TextInput
+                type="text"
+                value={nameDraft}
+                onChange={(e) => setNameDraft(e.target.value)}
+                maxLength={200}
+                placeholder="Chat name"
+                className="font-semibold"
+              />
+              <textarea
+                value={descriptionDraft}
+                onChange={(e) => setDescriptionDraft(e.target.value)}
+                maxLength={500}
+                rows={3}
+                placeholder="Description (optional)"
+                className="w-full resize-none rounded-lg border border-line bg-surface-sunken px-3 py-2 text-sm text-content placeholder:text-content-subtle focus:border-accent focus:outline-none"
+              />
+              <Button
+                size="xs"
+                onClick={handleSaveProfile}
+                disabled={busy || !profileChanged || !nameDraft.trim()}
+              >
+                {savingProfile ? "..." : "Save"}
+              </Button>
+            </section>
+          )}
+
           {isOwner && isGroup && (
-            <section className="space-y-2">
+            <section className="space-y-2 border-t border-line pt-3">
               <h3 className="text-sm font-semibold text-content-muted">
                 Permissions
               </h3>

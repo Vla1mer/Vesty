@@ -1,7 +1,6 @@
-import { ArrowDown, ArrowUp, Crown, Pencil, Settings, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Crown, Settings, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
-  useRenameChatMutation,
   useGetChatMembersQuery,
   useAddChatMemberMutation,
   useRemoveChatMemberMutation,
@@ -10,16 +9,13 @@ import {
 } from "../store/chatApi";
 import { useGetAllUsersQuery } from "../store/userApi";
 import { useAuth } from "../context/useAuth";
-import { Avatar } from "./Avatar";
-import { ChatAvatarEditor } from "./ChatAvatarEditor";
+import { Avatar, ChatAvatar } from "./Avatar";
 import { Button } from "./ui/Button";
 import { TextInput } from "./ui/TextInput";
 import { Modal } from "./ui/Modal";
 import { ConfirmDialog } from "./ConfirmDialog";
-import { permissionAllows, UserRole } from "../types/api";
+import { UserRole } from "../types/api";
 import { getChatDisplayName } from "../utils/chats";
-import { chatNameSchema } from "../validation/chatSchemas";
-import { ValidationError } from "yup";
 import type { ChatDto, UserDto, ChatMemberWithRoleDto } from "../types/api";
 import type { AxiosBaseQueryError } from "../api/axiosBaseQuery";
 import { FormError } from "./FormError";
@@ -40,7 +36,6 @@ const roleLabel: Record<number, string> = {
 
 export function ChatInfoModal({ chat, onClose, onOpenSettings }: Props) {
   const { userId: currentUserId } = useAuth();
-  const [renameChat] = useRenameChatMutation();
   const [addChatMember] = useAddChatMemberMutation();
   const [removeChatMember] = useRemoveChatMemberMutation();
   const [updateMemberRole] = useUpdateMemberRoleMutation();
@@ -50,10 +45,6 @@ export function ChatInfoModal({ chat, onClose, onOpenSettings }: Props) {
   const [search, setSearch] = useState("");
   const [busyUserId, setBusyUserId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isRenaming, setIsRenaming] = useState(false);
-  const [nameDraft, setNameDraft] = useState(chat.name ?? "");
-  const [descriptionDraft, setDescriptionDraft] = useState(chat.description ?? "");
-  const [renaming, setRenaming] = useState(false);
 
   const isGroup = !chat.isPrivate;
 
@@ -75,18 +66,7 @@ export function ChatInfoModal({ chat, onClose, onOpenSettings }: Props) {
     [members, currentUserId]
   );
 
-  const myRoleId = useMemo(
-    () => members.find((m) => m.userId === currentUserId)?.roleId,
-    [members, currentUserId]
-  );
-  const canEditProfile =
-    isGroup &&
-    myRoleId !== undefined &&
-    permissionAllows(chat.whoCanEdit, myRoleId);
 
-  const canRename = canEditProfile;
-
-  const canManageAvatar = canEditProfile;
 
   const memberIds = useMemo(
     () => new Set(members.map((m) => m.userId)),
@@ -168,33 +148,6 @@ export function ChatInfoModal({ chat, onClose, onOpenSettings }: Props) {
     }
   }
 
-  async function handleRename() {
-    if (renaming) return;
-    const newName = nameDraft.trim();
-
-    try {
-      await chatNameSchema.validate({ name: newName });
-    } catch (validationErr) {
-      setError((validationErr as ValidationError).message);
-      return;
-    }
-
-    setRenaming(true);
-    setError(null);
-    try {
-      await renameChat({
-        chatId: chat.id,
-        name: newName,
-        description: descriptionDraft.trim() || null,
-      }).unwrap();
-      setIsRenaming(false);
-    } catch (err) {
-      setError(getApiErrorMessage(err, "Failed to rename chat"));
-    } finally {
-      setRenaming(false);
-    }
-  }
-
   const title = getChatDisplayName(chat);
 
   return (
@@ -208,89 +161,41 @@ export function ChatInfoModal({ chat, onClose, onOpenSettings }: Props) {
         layer="base"
         title={
           <div className="flex-1 pr-2">
-              {isRenaming ? (
-                <div className="flex flex-col gap-2">
-                  <TextInput
-                    type="text"
-                    value={nameDraft}
-                    onChange={(e) => setNameDraft(e.target.value)}
-                    autoFocus
-                    maxLength={200}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleRename();
-                      if (e.key === "Escape") setIsRenaming(false);
-                    }}
-                    className="text-xl font-bold"
-                  />
-                  <textarea
-                    value={descriptionDraft}
-                    onChange={(e) => setDescriptionDraft(e.target.value)}
-                    maxLength={500}
-                    rows={2}
-                    placeholder="Description (optional)"
-                    className="w-full resize-none rounded-lg border border-line bg-surface-sunken px-3 py-2 text-sm text-content placeholder:text-content-subtle focus:border-accent focus:outline-none"
-                  />
-                  <div className="flex gap-2">
-                    <Button size="xs" onClick={handleRename} disabled={renaming || !nameDraft.trim()}>
-                      {renaming ? "..." : "Save"}
-                    </Button>
-                    <Button size="xs" variant="neutral" onClick={() => setIsRenaming(false)} disabled={renaming}>
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <h2 className="text-2xl font-bold text-content break-words">
-                    {title}
-                  </h2>
-                  <button
-                    type="button"
-                    onClick={onOpenSettings}
-                    className="text-content-muted hover:text-accent-strong transition"
-                    aria-label="Chat settings"
-                    title="Chat settings"
-                  >
-                    <Settings size={16} />
-                  </button>
-                  {canRename && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setNameDraft(chat.name ?? "");
-                        setDescriptionDraft(chat.description ?? "");
-                        setIsRenaming(true);
-                      }}
-                      className="text-content-muted hover:text-accent-strong transition text-sm"
-                      aria-label="Rename chat"
-                      title="Rename chat"
-                    >
-                      <Pencil size={14} />
-                    </button>
-                  )}
-                </div>
-              )}
-              {!isRenaming && (
-                <>
-                  {isGroup && chat.description && (
-                    <p className="mt-1 whitespace-pre-line text-sm text-content-muted">
-                      {chat.description}
-                    </p>
-                  )}
-                  <p className="text-sm text-content-muted mt-1">
-                    {loading ? "Loading..." : `Members (${members.length})`}
-                  </p>
-                </>
-              )}
-              {canManageAvatar && (
-                <div className="mt-4">
-                  <ChatAvatarEditor
+              {isGroup && (
+                <div className="mb-3">
+                  <ChatAvatar
                     chatId={chat.id}
                     name={title}
                     avatarUpdatedAt={chat.avatarUpdatedAt}
+                    size="xl"
                   />
                 </div>
               )}
+
+              <div className="flex items-center gap-2">
+                <h2 className="text-2xl font-bold text-content break-words">
+                  {title}
+                </h2>
+                <button
+                  type="button"
+                  onClick={onOpenSettings}
+                  className="text-content-muted transition hover:text-accent-strong"
+                  aria-label="Chat settings"
+                  title="Chat settings"
+                >
+                  <Settings size={16} />
+                </button>
+              </div>
+
+              {isGroup && chat.description && (
+                <p className="mt-1 whitespace-pre-line text-sm text-content-muted">
+                  {chat.description}
+                </p>
+              )}
+
+              <p className="mt-1 text-sm text-content-muted">
+                {loading ? "Loading..." : `Members (${members.length})`}
+              </p>
           </div>
         }
       >
