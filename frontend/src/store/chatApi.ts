@@ -193,6 +193,18 @@ export const chatApi = apiSlice.injectEndpoints({
           );
 
           subscriptions.push(
+            onChatUpdated(({ chatId: updatedChatId }) => {
+              if (updatedChatId !== chatId) return;
+              dispatch(
+                apiSlice.util.invalidateTags([
+                  { type: CHAT_API_TAGS.CHAT, id: chatId },
+                  { type: CHAT_API_TAGS.CHAT_MEMBER, id: chatId },
+                ])
+              );
+            })
+          );
+
+          subscriptions.push(
             onReconnected(() => {
               dispatch(
                 apiSlice.util.invalidateTags([{ type: CHAT_API_TAGS.CHAT, id: chatId }])

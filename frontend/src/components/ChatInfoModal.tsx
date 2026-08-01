@@ -277,12 +277,7 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
       }).unwrap();
       setIsRenaming(false);
     } catch (err) {
-      const status = (err as AxiosBaseQueryError).status;
-      setError(
-        status === 403
-          ? "Only the owner can rename this chat"
-          : "Failed to rename chat"
-      );
+      setError(getApiErrorMessage(err, "Failed to rename chat"));
     } finally {
       setRenaming(false);
     }

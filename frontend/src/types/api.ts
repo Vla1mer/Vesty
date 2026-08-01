@@ -83,7 +83,8 @@ export function permissionAllows(permission: number, roleId: number): boolean {
   if (permission === ChatPermission.Members) return true;
   if (permission === ChatPermission.Admins)
     return roleId === UserRole.Owner || roleId === UserRole.Admin;
-  return roleId === UserRole.Owner;
+  if (permission === ChatPermission.Owner) return roleId === UserRole.Owner;
+  return false;
 }
 
 export interface ChatPermissionsDto {

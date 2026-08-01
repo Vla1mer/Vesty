@@ -235,7 +235,7 @@ namespace Services
             if (chat.IsPrivate)
                 throw new OperationNotAllowedInPrivateChatException("rename");
             await EnsureCallerIsAllowedAsync(chat, chat.WhoCanEdit, "rename this chat");
-            chat.Name = chatDto.Name;
+            chat.Name = chatDto.Name.Trim();
             chat.Description = string.IsNullOrWhiteSpace(chatDto.Description)
                 ? null
                 : chatDto.Description.Trim();
@@ -243,7 +243,7 @@ namespace Services
 
             var memberIds = await GetMemberIdsAsync(id);
             await _notifier.ChatRenamedAsync(memberIds,
-                new ChatRenamedSignalrDto { ChatId = id, Name = chatDto.Name });
+                new ChatRenamedSignalrDto { ChatId = id, Name = chat.Name });
             await _notifier.ChatUpdatedAsync(memberIds, new ChatUpdatedSignalrDto { ChatId = id });
         }
 
