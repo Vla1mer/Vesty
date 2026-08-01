@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using AutoMapper;
+using System.Security.Cryptography;
 using Entities.Models;
 using Repository.Interfaces;
 using Services.DataTransferObjects;
@@ -15,13 +16,15 @@ namespace Services
         private readonly IRepositoryManager _repository;
         private readonly ICurrentUserService _currentUser;
         private readonly IChatNotifier _notifier;
+        private readonly IMapper _mapper;
 
         public ChatInviteService(IRepositoryManager repository, ICurrentUserService currentUser,
-            IChatNotifier notifier)
+            IChatNotifier notifier, IMapper mapper)
         {
             _repository = repository;
             _currentUser = currentUser;
             _notifier = notifier;
+            _mapper = mapper;
         }
 
         public async Task<ChatInviteDto?> GetActiveAsync(int chatId)
@@ -97,10 +100,20 @@ namespace Services
                 UserId = userId,
                 RoleId = UserRole.User
             });
-            await _repository.SaveAsync();
 
+            try
+            {
+                await _repository.SaveAsync();
+            }
+            catch (DuplicateResourceException)
+            {
+                return invite.ChatId;
+            }
+
+            var memberIds = await GetMemberIdsAsync(invite.ChatId);
+            await _notifier.ChatCreatedAsync(new[] { userId }, _mapper.Map<ChatDto>(invite.Chat));
             await _notifier.ChatUpdatedAsync(
-                await GetMemberIdsAsync(invite.ChatId),
+                memberIds.Where(id => id != userId),
                 new ChatUpdatedSignalrDto { ChatId = invite.ChatId });
 
             return invite.ChatId;

@@ -92,6 +92,7 @@ namespace Repository
                  .WithMany(r => r.ChatMembers)
                  .HasForeignKey(cm => cm.RoleId)
                  .OnDelete(DeleteBehavior.Restrict);
+                e.HasIndex(cm => new { cm.ChatId, cm.UserId }).IsUnique();
             });
 
             modelBuilder.Entity<UserRole>(e => {
@@ -167,7 +168,7 @@ namespace Repository
                 e.HasOne(i => i.CreatedBy)
                  .WithMany()
                  .HasForeignKey(i => i.CreatedById)
-                 .OnDelete(DeleteBehavior.Cascade);
+                 .OnDelete(DeleteBehavior.SetNull);
             });
 
             modelBuilder.Entity<Friendship>(e => {

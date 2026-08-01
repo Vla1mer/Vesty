@@ -37,7 +37,7 @@ namespace Services
             _attachmentService = new Lazy<IAttachmentService>(() => new AttachmentService(repositoryManager, currentUser, fileStorage));
             _friendService = new Lazy<IFriendService>(() => new FriendService(repositoryManager, currentUser, chatNotifier));
             _blockService = new Lazy<IBlockService>(() => new BlockService(repositoryManager, currentUser));
-            _chatInviteService = new Lazy<IChatInviteService>(() => new ChatInviteService(repositoryManager, currentUser, chatNotifier));
+            _chatInviteService = new Lazy<IChatInviteService>(() => new ChatInviteService(repositoryManager, currentUser, chatNotifier, mapper));
         }
 
         public IUserService User => _userService.Value;

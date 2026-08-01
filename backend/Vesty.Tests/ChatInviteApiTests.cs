@@ -113,6 +113,34 @@ namespace Vesty.Tests
         }
 
         [Fact]
+        public async Task JoinByLink_ConcurrentlyStillAddsOneMembership()
+        {
+            var owner = await AuthenticatedClientAsync(UniqueName("inv11a"));
+            var guestName = UniqueName("inv11b");
+            var guest = await AuthenticatedClientAsync(guestName);
+            var guestId = await UserIdAsync(owner, guestName);
+
+            var chat = await CreateChatAsync(owner, "Race");
+            var code = await CreateInviteAsync(owner, chat.Id);
+
+            var start = new TaskCompletionSource();
+            var attempts = Enumerable.Range(0, 4).Select(async _ =>
+            {
+                await start.Task;
+                return await guest.PostAsync($"/api/Chat/invite/{code}/join", null);
+            }).ToList();
+
+            start.SetResult();
+            var responses = await Task.WhenAll(attempts);
+
+            Assert.All(responses, r => Assert.Equal(HttpStatusCode.OK, r.StatusCode));
+
+            var members = await owner.GetFromJsonAsync<List<ChatMemberWithRoleDto>>(
+                $"/api/Chat/{chat.Id}/users");
+            Assert.Single(members!, m => m.UserId == guestId);
+        }
+
+        [Fact]
         public async Task RevokedLink_StopsWorking()
         {
             var owner = await AuthenticatedClientAsync(UniqueName("inv4a"));
