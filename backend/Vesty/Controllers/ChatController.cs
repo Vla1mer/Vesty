@@ -162,6 +162,22 @@ namespace Vesty.Controllers
             return NoContent();
         }
 
+        [HttpPut("{id:int}/permissions")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UpdatePermissions(
+            int id, [FromBody] ChatPermissionsDto permissions)
+        {
+            if (permissions is null)
+                return BadRequest("ChatPermissionsDto object is null");
+            if (!ModelState.IsValid)
+                return UnprocessableEntity(ModelState);
+            await _service.Chat.UpdatePermissionsAsync(id, permissions);
+            return NoContent();
+        }
+
         [HttpGet("direct/{otherUserId:int}")]
         [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

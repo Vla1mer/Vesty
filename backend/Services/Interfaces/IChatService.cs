@@ -14,6 +14,7 @@ namespace Services.Interfaces
         Task DeleteAsync(int id);
         Task ClearForCurrentUserAsync(int id);
         Task RenameAsync(int id, ChatForRenameDto chatDto);
+        Task UpdatePermissionsAsync(int id, ChatPermissionsDto permissions);
         Task MarkReadAsync(int id);
     }
 }

@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using AutoMapper;
 using Shared.Exceptions;
 using Entities.Models;
 using Shared.RequestFeatures;
@@ -141,6 +141,10 @@ namespace Services
             {
                 Id = chat.Id,
                 Name = chat.Name,
+                Description = chat.Description,
+                WhoCanInvite = chat.WhoCanInvite,
+                WhoCanEdit = chat.WhoCanEdit,
+                WhoCanPost = chat.WhoCanPost,
                 CreatorId = chat.CreatorId,
                 IsPrivate = chat.IsPrivate,
                 CreatedAt = chat.CreatedAt,
@@ -180,6 +184,30 @@ namespace Services
             await _notifier.ChatDeletedAsync(memberIds, new ChatDeletedSignalrDto { ChatId = id });
         }
 
+        public async Task UpdatePermissionsAsync(int id, ChatPermissionsDto permissions)
+        {
+            var chat = await GetChatOrThrowAsync(id, trackChanges: true);
+            if (chat.IsPrivate)
+                throw new OperationNotAllowedInPrivateChatException("change permissions");
+
+            await EnsureCallerIsChatOwner(id, "change permissions");
+
+            foreach (var level in new[]
+                     { permissions.WhoCanInvite, permissions.WhoCanEdit, permissions.WhoCanPost })
+            {
+                if (!ChatPermission.IsDefined(level))
+                    throw new InvalidChatPermissionException(level);
+            }
+
+            chat.WhoCanInvite = permissions.WhoCanInvite;
+            chat.WhoCanEdit = permissions.WhoCanEdit;
+            chat.WhoCanPost = permissions.WhoCanPost;
+            await _repository.SaveAsync();
+
+            await _notifier.ChatUpdatedAsync(await GetMemberIdsAsync(id),
+                new ChatUpdatedSignalrDto { ChatId = id });
+        }
+
         public async Task<int?> FindDirectChatIdAsync(int otherUserId)
         {
             var chat = await _repository.Chat.GetPrivateChatBetweenAsync(
@@ -206,12 +234,17 @@ namespace Services
             var chat = await GetChatOrThrowAsync(id, trackChanges: true);
             if (chat.IsPrivate)
                 throw new OperationNotAllowedInPrivateChatException("rename");
-            await EnsureCallerIsChatOwner(id, "rename this chat");
-            chat.Name = chatDto.Name;
+            await EnsureCallerIsAllowedAsync(chat, chat.WhoCanEdit, "rename this chat");
+            chat.Name = chatDto.Name.Trim();
+            chat.Description = string.IsNullOrWhiteSpace(chatDto.Description)
+                ? null
+                : chatDto.Description.Trim();
             await _repository.SaveAsync();
 
-            var renamedDto = new ChatRenamedSignalrDto { ChatId = id, Name = chatDto.Name };
-            await _notifier.ChatRenamedAsync(await GetMemberIdsAsync(id), renamedDto);
+            var memberIds = await GetMemberIdsAsync(id);
+            await _notifier.ChatRenamedAsync(memberIds,
+                new ChatRenamedSignalrDto { ChatId = id, Name = chat.Name });
+            await _notifier.ChatUpdatedAsync(memberIds, new ChatUpdatedSignalrDto { ChatId = id });
         }
 
         private async Task<List<int>> GetMemberIdsAsync(int chatId)
@@ -353,6 +386,13 @@ namespace Services
                     throw new ChatAccessDeniedException(chatId, _currentUser.UserId);
                 throw new InsufficientChatPermissionException(action, chatId);
             }
+        }
+
+        private async Task EnsureCallerIsAllowedAsync(Chat chat, int permission, string action)
+        {
+            var caller = await _currentUser.GetMembershipAsync(chat.Id);
+            if (caller is null || !ChatPermission.Allows(permission, caller.RoleId))
+                throw new InsufficientChatPermissionException(action, chat.Id);
         }
 
         private async Task EnsureCallerIsChatOwner(int chatId, string action)

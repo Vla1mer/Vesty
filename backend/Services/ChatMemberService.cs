@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using AutoMapper;
 using Shared.Exceptions;
 using Entities.Models;
 using Repository.Interfaces;
@@ -48,7 +48,7 @@ namespace Services
         public async Task<ChatMemberDto> AddUserToChatAsync(int chatId, ChatMemberForCreationDto memberDto)
         {
             var chat = await GetChatOrThrowAsync(chatId, mustBeGroupChat: "add members");
-            await EnsureCallerCanInvite(chatId);
+            await EnsureCallerCanInvite(chat);
 
             var target = await _repository.User.GetUserAsync(memberDto.UserId, trackChanges: false)
                 ?? throw new UserNotFoundException(memberDto.UserId);
@@ -113,6 +113,8 @@ namespace Services
 
             target.RoleId = roleDto.RoleId;
             await _repository.SaveAsync();
+
+            await NotifyChatUpdatedAsync(chatId);
         }
 
         public async Task TransferOwnershipAsync(int chatId, int newOwnerUserId)
@@ -130,6 +132,15 @@ namespace Services
             target.RoleId = UserRole.Owner;
             caller.RoleId = UserRole.Admin;
             await _repository.SaveAsync();
+
+            await NotifyChatUpdatedAsync(chatId);
+        }
+
+        private async Task NotifyChatUpdatedAsync(int chatId)
+        {
+            var members = await _repository.ChatMember.GetMembersByChatIdAsync(chatId, trackChanges: false);
+            await _notifier.ChatUpdatedAsync(
+                members.Select(m => m.UserId), new ChatUpdatedSignalrDto { ChatId = chatId });
         }
 
         private async Task<Chat> GetChatOrThrowAsync(int chatId, string? mustBeGroupChat = null)
@@ -190,11 +201,11 @@ namespace Services
             throw new PrivacyRestrictedException("group invites");
         }
 
-        private async Task EnsureCallerCanInvite(int chatId)
+        private async Task EnsureCallerCanInvite(Chat chat)
         {
-            var caller = await _currentUser.GetMembershipAsync(chatId);
-            if (caller is null || (caller.RoleId != UserRole.Owner && caller.RoleId != UserRole.Admin))
-                throw new InsufficientChatPermissionException("invite members", chatId);
+            var caller = await _currentUser.GetMembershipAsync(chat.Id);
+            if (caller is null || !ChatPermission.Allows(chat.WhoCanInvite, caller.RoleId))
+                throw new InsufficientChatPermissionException("invite members", chat.Id);
         }
 
         private static void EnsureCallerCanRemove(int chatId, ChatMember caller, ChatMember target)

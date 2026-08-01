@@ -9,6 +9,7 @@ import {
   useRemoveChatMemberMutation,
   useUpdateMemberRoleMutation,
   useTransferChatOwnershipMutation,
+  useUpdateChatPermissionsMutation,
 } from "../store/chatApi";
 import { useGetAllUsersQuery } from "../store/userApi";
 import { useAuth } from "../context/useAuth";
@@ -18,7 +19,7 @@ import { Button } from "./ui/Button";
 import { TextInput } from "./ui/TextInput";
 import { Modal } from "./ui/Modal";
 import { ConfirmDialog } from "./ConfirmDialog";
-import { isDirectChat, UserRole } from "../types/api";
+import { ChatPermission, isDirectChat, permissionAllows, UserRole } from "../types/api";
 import { getChatDisplayName } from "../utils/chats";
 import { chatNameSchema } from "../validation/chatSchemas";
 import { ValidationError } from "yup";
@@ -33,6 +34,12 @@ interface Props {
   onClose: () => void;
   onDeleted: () => void;
 }
+
+const permissionFields = [
+  { key: "whoCanInvite", label: "Who can add members" },
+  { key: "whoCanEdit", label: "Who can edit name and photo" },
+  { key: "whoCanPost", label: "Who can send messages" },
+] as const;
 
 const roleLabel: Record<number, string> = {
   [UserRole.Owner]: "Owner",
@@ -50,6 +57,8 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
   const [removeChatMember] = useRemoveChatMemberMutation();
   const [updateMemberRole] = useUpdateMemberRoleMutation();
   const [transferChatOwnership] = useTransferChatOwnershipMutation();
+  const [updateChatPermissions] = useUpdateChatPermissionsMutation();
+  const [savingPermission, setSavingPermission] = useState<string | null>(null);
   const [transferTarget, setTransferTarget] =
     useState<ChatMemberWithRoleDto | null>(null);
   const [isLeaveOpen, setIsLeaveOpen] = useState(false);
@@ -61,6 +70,7 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
   const [deleting, setDeleting] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const [nameDraft, setNameDraft] = useState(chat.name ?? "");
+  const [descriptionDraft, setDescriptionDraft] = useState(chat.description ?? "");
   const [renaming, setRenaming] = useState(false);
 
   const isGroup = !chat.isPrivate;
@@ -84,19 +94,19 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
     [members, currentUserId]
   );
 
-  const canDelete = chat.isPrivate || isCallerOwner;
-  const canRename = isGroup && isCallerOwner;
-
-  const canManageAvatar = useMemo(
-    () =>
-      isGroup &&
-      members.some(
-        (m) =>
-          m.userId === currentUserId &&
-          (m.roleId === UserRole.Owner || m.roleId === UserRole.Admin)
-      ),
-    [isGroup, members, currentUserId]
+  const myRoleId = useMemo(
+    () => members.find((m) => m.userId === currentUserId)?.roleId,
+    [members, currentUserId]
   );
+  const canEditProfile =
+    isGroup &&
+    myRoleId !== undefined &&
+    permissionAllows(chat.whoCanEdit, myRoleId);
+
+  const canDelete = chat.isPrivate || isCallerOwner;
+  const canRename = canEditProfile;
+
+  const canManageAvatar = canEditProfile;
 
   const memberIds = useMemo(
     () => new Set(members.map((m) => m.userId)),
@@ -158,6 +168,28 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
       );
     } finally {
       setBusyUserId(null);
+    }
+  }
+
+  async function handlePermissionChange(
+    key: (typeof permissionFields)[number]["key"],
+    value: number
+  ) {
+    setSavingPermission(key);
+    setError(null);
+    const next = {
+      chatId: chat.id,
+      whoCanInvite: chat.whoCanInvite,
+      whoCanEdit: chat.whoCanEdit,
+      whoCanPost: chat.whoCanPost,
+    };
+    next[key] = value;
+    try {
+      await updateChatPermissions(next).unwrap();
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Failed to update permissions"));
+    } finally {
+      setSavingPermission(null);
     }
   }
 
@@ -238,15 +270,14 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
     setRenaming(true);
     setError(null);
     try {
-      await renameChat({ chatId: chat.id, name: newName }).unwrap();
+      await renameChat({
+        chatId: chat.id,
+        name: newName,
+        description: descriptionDraft.trim() || null,
+      }).unwrap();
       setIsRenaming(false);
     } catch (err) {
-      const status = (err as AxiosBaseQueryError).status;
-      setError(
-        status === 403
-          ? "Only the owner can rename this chat"
-          : "Failed to rename chat"
-      );
+      setError(getApiErrorMessage(err, "Failed to rename chat"));
     } finally {
       setRenaming(false);
     }
@@ -279,6 +310,14 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                     }}
                     className="text-xl font-bold"
                   />
+                  <textarea
+                    value={descriptionDraft}
+                    onChange={(e) => setDescriptionDraft(e.target.value)}
+                    maxLength={500}
+                    rows={2}
+                    placeholder="Description (optional)"
+                    className="w-full resize-none rounded-lg border border-line bg-surface-sunken px-3 py-2 text-sm text-content placeholder:text-content-subtle focus:border-accent focus:outline-none"
+                  />
                   <div className="flex gap-2">
                     <Button size="xs" onClick={handleRename} disabled={renaming || !nameDraft.trim()}>
                       {renaming ? "..." : "Save"}
@@ -298,6 +337,7 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                       type="button"
                       onClick={() => {
                         setNameDraft(chat.name ?? "");
+                        setDescriptionDraft(chat.description ?? "");
                         setIsRenaming(true);
                       }}
                       className="text-content-muted hover:text-accent-strong transition text-sm"
@@ -310,9 +350,16 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                 </div>
               )}
               {!isRenaming && (
-                <p className="text-sm text-content-muted mt-1">
-                  {loading ? "Loading..." : `Members (${members.length})`}
-                </p>
+                <>
+                  {isGroup && chat.description && (
+                    <p className="mt-1 whitespace-pre-line text-sm text-content-muted">
+                      {chat.description}
+                    </p>
+                  )}
+                  <p className="text-sm text-content-muted mt-1">
+                    {loading ? "Loading..." : `Members (${members.length})`}
+                  </p>
+                </>
               )}
               {canManageAvatar && (
                 <div className="mt-4">
@@ -527,6 +574,34 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                     <Eraser size={15} aria-hidden="true" />
                     Delete for me
                   </Button>
+                </section>
+              )}
+
+              {isGroup && isCallerOwner && (
+                <section className="space-y-2 border-t border-line pt-3">
+                  <h3 className="text-sm font-semibold text-content-muted">
+                    Permissions
+                  </h3>
+                  {permissionFields.map(({ key, label }) => (
+                    <label
+                      key={key}
+                      className="flex items-center justify-between gap-3"
+                    >
+                      <span className="text-sm text-content">{label}</span>
+                      <select
+                        value={chat[key]}
+                        onChange={(e) =>
+                          handlePermissionChange(key, Number(e.target.value))
+                        }
+                        disabled={savingPermission !== null}
+                        className="rounded-lg border border-line bg-surface-sunken px-2 py-1 text-sm text-content focus:border-accent focus:outline-none disabled:opacity-60"
+                      >
+                        <option value={ChatPermission.Owner}>Owner only</option>
+                        <option value={ChatPermission.Admins}>Admins</option>
+                        <option value={ChatPermission.Members}>All members</option>
+                      </select>
+                    </label>
+                  ))}
                 </section>
               )}
 

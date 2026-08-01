@@ -8,6 +8,7 @@ import {
   onChatCreated,
   onChatDeleted,
   onChatRenamed,
+  onChatUpdated,
   onMessageReceived,
   onReconnected,
 } from "../lib/signalr";
@@ -15,6 +16,7 @@ import type {
   ChatDto,
   ChatForCreationDto,
   ChatMemberWithRoleDto,
+  ChatPermissionsDto,
 } from "../types/api";
 
 export const chatApi = apiSlice.injectEndpoints({
@@ -65,6 +67,17 @@ export const chatApi = apiSlice.injectEndpoints({
                 const chat = draft.find((c) => c.id === chatId);
                 if (chat) chat.name = name;
               });
+            })
+          );
+
+          subscriptions.push(
+            onChatUpdated(({ chatId }) => {
+              dispatch(
+                apiSlice.util.invalidateTags([
+                  { type: CHAT_API_TAGS.CHAT, id: chatId },
+                  { type: CHAT_API_TAGS.CHAT_MEMBER, id: chatId },
+                ])
+              );
             })
           );
 
@@ -130,11 +143,29 @@ export const chatApi = apiSlice.injectEndpoints({
       query: (otherUserId) => ({ url: endpoints.chat.direct(otherUserId) }),
     }),
 
-    renameChat: builder.mutation<void, { chatId: number; name: string }>({
-      query: ({ chatId, name }) => ({
+    renameChat: builder.mutation<
+      void,
+      { chatId: number; name: string; description?: string | null }
+    >({
+      query: ({ chatId, name, description }) => ({
         url: endpoints.chat.byId(chatId),
         method: HTTP_METHOD.PUT,
-        data: { name },
+        data: { name, description },
+      }),
+      invalidatesTags: (_result, _error, { chatId }) => [
+        { type: CHAT_API_TAGS.CHAT, id: chatId },
+        { type: CHAT_API_TAGS.CHAT, id: TAG_ID.LIST },
+      ],
+    }),
+
+    updateChatPermissions: builder.mutation<
+      void,
+      { chatId: number } & ChatPermissionsDto
+    >({
+      query: ({ chatId, ...permissions }) => ({
+        url: endpoints.chat.permissions(chatId),
+        method: HTTP_METHOD.PUT,
+        data: permissions,
       }),
       invalidatesTags: (_result, _error, { chatId }) => [
         { type: CHAT_API_TAGS.CHAT, id: chatId },
@@ -158,6 +189,18 @@ export const chatApi = apiSlice.injectEndpoints({
               updateCachedData((draft) => {
                 draft.name = name;
               });
+            })
+          );
+
+          subscriptions.push(
+            onChatUpdated(({ chatId: updatedChatId }) => {
+              if (updatedChatId !== chatId) return;
+              dispatch(
+                apiSlice.util.invalidateTags([
+                  { type: CHAT_API_TAGS.CHAT, id: chatId },
+                  { type: CHAT_API_TAGS.CHAT_MEMBER, id: chatId },
+                ])
+              );
             })
           );
 
@@ -314,6 +357,7 @@ export const {
   useClearChatForMeMutation,
   useLazyFindDirectChatQuery,
   useRenameChatMutation,
+  useUpdateChatPermissionsMutation,
   useGetChatByIdQuery,
   useGetChatMembersQuery,
   useAddChatMemberMutation,

@@ -64,8 +64,12 @@ namespace Repository
             modelBuilder.Entity<Chat>(e => {
                 e.HasKey(c => c.Id);
                 e.Property(c => c.Name).HasMaxLength(200);
+                e.Property(c => c.Description).HasMaxLength(500);
                 e.Property(c => c.CreatedAt);
                 e.Property(c => c.IsPrivate).HasDefaultValue(false);
+                e.Property(c => c.WhoCanInvite).HasDefaultValue(ChatPermission.Admins);
+                e.Property(c => c.WhoCanEdit).HasDefaultValue(ChatPermission.Admins);
+                e.Property(c => c.WhoCanPost).HasDefaultValue(ChatPermission.Members);
                 e.HasOne(c => c.Creator)
                  .WithMany(u => u.CreatedChats)
                  .HasForeignKey(c => c.CreatorId)

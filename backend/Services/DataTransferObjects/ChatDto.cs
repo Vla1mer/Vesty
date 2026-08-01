@@ -7,6 +7,10 @@ namespace Services.DataTransferObjects
     {
         public int Id { get; init; }
         public string? Name { get; init; }
+        public string? Description { get; init; }
+        public int WhoCanInvite { get; init; }
+        public int WhoCanEdit { get; init; }
+        public int WhoCanPost { get; init; }
         public int? CreatorId { get; init; }
         public bool IsPrivate { get; init; }
         public DateTime CreatedAt { get; init; }
