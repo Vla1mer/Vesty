@@ -65,6 +65,16 @@ namespace Services
         public async Task<ChatDto> CreateAsync(ChatForCreationDto chatDto)
         {
             var currentUserId = _currentUser.UserId;
+
+            var memberIds = chatDto.Members
+                .Select(m => m.UserId)
+                .Where(id => id != currentUserId)
+                .Distinct()
+                .ToList();
+
+            foreach (var userId in memberIds)
+                await EnsureCanBeInvitedAsync(userId);
+
             var chat = _mapper.Map<Chat>(chatDto);
             chat.CreatorId = currentUserId;
             chat.IsPrivate = false;
@@ -72,21 +82,13 @@ namespace Services
             await _repository.SaveAsync();
 
             AddMember(chat.Id, currentUserId, UserRole.Owner);
-
-            var seenUserIds = new HashSet<int> { currentUserId };
-            foreach (var memberDto in chatDto.Members)
-            {
-                if (!seenUserIds.Add(memberDto.UserId))
-                    throw new UserAlreadyInChatException(chat.Id, memberDto.UserId);
-
-                await EnsureUserExistsAsync(memberDto.UserId);
-                AddMember(chat.Id, memberDto.UserId, UserRole.User);
-            }
+            foreach (var userId in memberIds)
+                AddMember(chat.Id, userId, UserRole.User);
 
             await _repository.SaveAsync();
 
             var createdDto = _mapper.Map<ChatDto>(chat);
-            await _notifier.ChatCreatedAsync(seenUserIds, createdDto);
+            await _notifier.ChatCreatedAsync(memberIds.Append(currentUserId), createdDto);
             return createdDto;
         }
 
@@ -288,6 +290,17 @@ namespace Services
             ).ToList();
         }
 
+        private async Task EnsureCanBeInvitedAsync(int targetUserId)
+        {
+            var target = await _repository.User.GetUserAsync(targetUserId, trackChanges: false)
+                ?? throw new UserNotFoundException(targetUserId);
+
+            if (await _repository.UserBlock.IsBlockedEitherWayAsync(_currentUser.UserId, targetUserId))
+                throw new BlockedUserException();
+
+            await EnsurePrivacyAllowsAsync(target.WhoCanInvite, targetUserId, "group invites");
+        }
+
         private async Task EnsurePrivacyAllowsAsync(int level, int targetUserId, string action)
         {
             if (level == PrivacyLevel.Everyone) return;
@@ -349,11 +362,5 @@ namespace Services
                 throw new InsufficientChatPermissionException(action, chatId);
         }
 
-        private async Task EnsureUserExistsAsync(int userId)
-        {
-            var user = await _repository.User.GetUserAsync(userId, trackChanges: false);
-            if (user is null)
-                throw new UserNotFoundException(userId);
-        }
     }
 }

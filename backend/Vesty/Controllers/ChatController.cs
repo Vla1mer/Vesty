@@ -53,6 +53,8 @@ namespace Vesty.Controllers
         [HttpPost]
         [ProducesResponseType(typeof(ChatDto), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
         public async Task<IActionResult> CreateChat([FromBody] ChatForCreationDto chat)
         {
@@ -130,6 +132,17 @@ namespace Vesty.Controllers
             if (!ModelState.IsValid)
                 return UnprocessableEntity(ModelState);
             await _service.ChatMember.UpdateMemberRoleAsync(chatId, userId, roleDto);
+            return NoContent();
+        }
+
+        [HttpPost("{chatId:int}/users/{userId:int}/owner")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> TransferOwnership(int chatId, int userId)
+        {
+            await _service.ChatMember.TransferOwnershipAsync(chatId, userId);
             return NoContent();
         }
 

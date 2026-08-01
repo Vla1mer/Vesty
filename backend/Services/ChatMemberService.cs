@@ -49,12 +49,15 @@ namespace Services
         {
             var chat = await GetChatOrThrowAsync(chatId, mustBeGroupChat: "add members");
             await EnsureCallerCanInvite(chatId);
-            await EnsureUserExistsAsync(memberDto.UserId);
+
+            var target = await _repository.User.GetUserAsync(memberDto.UserId, trackChanges: false)
+                ?? throw new UserNotFoundException(memberDto.UserId);
+
             await EnsureUserNotInChatAsync(chatId, memberDto.UserId);
             if (await _repository.UserBlock.IsBlockedEitherWayAsync(_currentUser.UserId, memberDto.UserId))
                 throw new BlockedUserException();
 
-            await EnsureTargetAllowsInviteAsync(memberDto.UserId);
+            await EnsureTargetAllowsInviteAsync(target);
 
             var member = new ChatMember { ChatId = chatId, UserId = memberDto.UserId };
             _repository.ChatMember.CreateMember(member);
@@ -75,7 +78,8 @@ namespace Services
             if (targetUserId == currentUserId)
             {
                 if (target.RoleId == UserRole.Owner)
-                    throw new InvalidRoleAssignmentException("Owner cannot leave the chat.");
+                    throw new InvalidRoleAssignmentException(
+                        "Owner cannot leave the chat. Transfer ownership first.");
             }
             else
             {
@@ -111,6 +115,23 @@ namespace Services
             await _repository.SaveAsync();
         }
 
+        public async Task TransferOwnershipAsync(int chatId, int newOwnerUserId)
+        {
+            await GetChatOrThrowAsync(chatId, mustBeGroupChat: "transfer ownership");
+
+            var caller = await EnsureCallerIsOwnerAsync(
+                chatId, "transfer ownership", trackChanges: true);
+
+            if (newOwnerUserId == _currentUser.UserId)
+                throw new InvalidRoleAssignmentException("You already own this chat.");
+
+            var target = await GetMemberOrThrowAsync(chatId, newOwnerUserId, trackChanges: true);
+
+            target.RoleId = UserRole.Owner;
+            caller.RoleId = UserRole.Admin;
+            await _repository.SaveAsync();
+        }
+
         private async Task<Chat> GetChatOrThrowAsync(int chatId, string? mustBeGroupChat = null)
         {
             var chat = await _repository.Chat.GetChatAsync(chatId, trackChanges: false);
@@ -131,10 +152,22 @@ namespace Services
             return member;
         }
 
-        private async Task<ChatMember> GetCallerMembershipAsync(int chatId, string action)
+        private async Task<ChatMember> GetCallerMembershipAsync(
+            int chatId, string action, bool trackChanges = false)
         {
-            var caller = await _currentUser.GetMembershipAsync(chatId);
+            var caller = trackChanges
+                ? await _repository.ChatMember.GetMemberAsync(chatId, _currentUser.UserId, trackChanges)
+                : await _currentUser.GetMembershipAsync(chatId);
             if (caller is null)
+                throw new InsufficientChatPermissionException(action, chatId);
+            return caller;
+        }
+
+        private async Task<ChatMember> EnsureCallerIsOwnerAsync(
+            int chatId, string action, bool trackChanges = false)
+        {
+            var caller = await GetCallerMembershipAsync(chatId, action, trackChanges);
+            if (caller.RoleId != UserRole.Owner)
                 throw new InsufficientChatPermissionException(action, chatId);
             return caller;
         }
@@ -146,15 +179,12 @@ namespace Services
                 throw new ChatAccessDeniedException(chatId, _currentUser.UserId);
         }
 
-        private async Task EnsureTargetAllowsInviteAsync(int targetUserId)
+        private async Task EnsureTargetAllowsInviteAsync(User target)
         {
-            var target = await _repository.User.GetUserAsync(targetUserId, trackChanges: false)
-                ?? throw new UserNotFoundException(targetUserId);
-
             if (target.WhoCanInvite == PrivacyLevel.Everyone) return;
 
             if (target.WhoCanInvite == PrivacyLevel.FriendsOnly &&
-                await _repository.Friendship.AreFriendsAsync(_currentUser.UserId, targetUserId))
+                await _repository.Friendship.AreFriendsAsync(_currentUser.UserId, target.Id))
                 return;
 
             throw new PrivacyRestrictedException("group invites");
@@ -177,13 +207,6 @@ namespace Services
             };
             if (!allowed)
                 throw new InsufficientChatPermissionException("remove this member", chatId);
-        }
-
-        private async Task EnsureUserExistsAsync(int userId)
-        {
-            var user = await _repository.User.GetUserAsync(userId, trackChanges: false);
-            if (user is null)
-                throw new UserNotFoundException(userId);
         }
 
         private async Task EnsureUserNotInChatAsync(int chatId, int userId)

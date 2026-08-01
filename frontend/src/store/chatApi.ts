@@ -241,6 +241,19 @@ export const chatApi = apiSlice.injectEndpoints({
       ],
     }),
 
+    transferChatOwnership: builder.mutation<
+      void,
+      { chatId: number; userId: number }
+    >({
+      query: ({ chatId, userId }) => ({
+        url: endpoints.chat.memberOwner(chatId, userId),
+        method: HTTP_METHOD.POST,
+      }),
+      invalidatesTags: (_result, _error, { chatId }) => [
+        { type: CHAT_API_TAGS.CHAT_MEMBER, id: chatId },
+      ],
+    }),
+
     uploadChatAvatar: builder.mutation<void, { chatId: number; file: Blob }>({
       query: ({ chatId, file }) => {
         const form = new FormData();
@@ -306,6 +319,7 @@ export const {
   useAddChatMemberMutation,
   useRemoveChatMemberMutation,
   useUpdateMemberRoleMutation,
+  useTransferChatOwnershipMutation,
   useMarkChatReadMutation,
   useUploadChatAvatarMutation,
   useDeleteChatAvatarMutation,

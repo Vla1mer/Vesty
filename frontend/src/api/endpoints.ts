@@ -33,6 +33,8 @@ export const endpoints = {
       `/api/Chat/${chatId}/users/${userId}`,
     memberRole: (chatId: number, userId: number) =>
       `/api/Chat/${chatId}/users/${userId}/role`,
+    memberOwner: (chatId: number, userId: number) =>
+      `/api/Chat/${chatId}/users/${userId}/owner`,
   },
   message: {
     byId: (id: number) => `/api/Message/${id}`,

@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Entities.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Services.DataTransferObjects;
 
@@ -290,6 +291,167 @@ namespace Vesty.Tests
             var sent = await client.PostAsJsonAsync($"/api/Message/{chatId}/messages",
                 new { content = text });
             sent.EnsureSuccessStatusCode();
+        }
+
+        private static async Task<int> UserIdAsync(HttpClient client, string userName)
+        {
+            var search = await client.GetFromJsonAsync<List<UserDto>>(
+                $"/api/User?searchTerm={userName}&pageSize=20");
+            return search!.Single(u => u.UserName == userName).Id;
+        }
+
+        [Fact]
+        public async Task TransferOwnership_LetsTheFormerOwnerLeave()
+        {
+            var ownerName = UniqueName("towna");
+            var heirName = UniqueName("townb");
+            var owner = await AuthenticatedClientAsync(ownerName);
+            var heir = await AuthenticatedClientAsync(heirName);
+
+            var ownerId = await UserIdAsync(owner, ownerName);
+            var heirId = await UserIdAsync(owner, heirName);
+
+            var chat = await CreateChatAsync(owner, "Group " + ownerName);
+            var added = await owner.PostAsJsonAsync($"/api/Chat/{chat.Id}/users",
+                new { userId = heirId });
+            added.EnsureSuccessStatusCode();
+
+            var earlyLeave = await owner.DeleteAsync($"/api/Chat/{chat.Id}/users/{ownerId}");
+            Assert.Equal(HttpStatusCode.BadRequest, earlyLeave.StatusCode);
+
+            var transfer = await owner.PostAsync($"/api/Chat/{chat.Id}/users/{heirId}/owner", null);
+            Assert.Equal(HttpStatusCode.NoContent, transfer.StatusCode);
+
+            var members = await heir.GetFromJsonAsync<List<ChatMemberWithRoleDto>>(
+                $"/api/Chat/{chat.Id}/users");
+            Assert.Equal(UserRole.Owner, members!.Single(m => m.UserId == heirId).RoleId);
+            Assert.Equal(UserRole.Admin, members!.Single(m => m.UserId == ownerId).RoleId);
+
+            var leave = await owner.DeleteAsync($"/api/Chat/{chat.Id}/users/{ownerId}");
+            Assert.Equal(HttpStatusCode.NoContent, leave.StatusCode);
+
+            var ownerChats = await owner.GetFromJsonAsync<List<ChatDto>>("/api/Chat");
+            Assert.DoesNotContain(ownerChats!, c => c.Id == chat.Id);
+
+            var heirChats = await heir.GetFromJsonAsync<List<ChatDto>>("/api/Chat");
+            Assert.Contains(heirChats!, c => c.Id == chat.Id);
+        }
+
+        private static async Task SetWhoCanInviteAsync(HttpClient client, int level)
+        {
+            var updated = await client.PutAsJsonAsync("/api/User/privacy",
+                new { whoCanMessage = 1, whoCanInvite = level });
+            updated.EnsureSuccessStatusCode();
+        }
+
+        [Fact]
+        public async Task CreateChat_CannotPullInAUserWhoAllowsNoInvites()
+        {
+            var hostName = UniqueName("inva");
+            var shyName = UniqueName("invb");
+            var host = await AuthenticatedClientAsync(hostName);
+            var shy = await AuthenticatedClientAsync(shyName);
+
+            await SetWhoCanInviteAsync(shy, PrivacyLevel.Nobody);
+            var shyId = await UserIdAsync(host, shyName);
+
+            var created = await host.PostAsJsonAsync("/api/Chat",
+                new { name = "G" + hostName, members = new[] { new { userId = shyId } } });
+
+            Assert.Equal(HttpStatusCode.Forbidden, created.StatusCode);
+
+            var shyChats = await shy.GetFromJsonAsync<List<ChatDto>>("/api/Chat");
+            Assert.Empty(shyChats!);
+        }
+
+        [Fact]
+        public async Task CreateChat_CannotPullInABlockedUser()
+        {
+            var hostName = UniqueName("blka");
+            var otherName = UniqueName("blkb");
+            var host = await AuthenticatedClientAsync(hostName);
+            var other = await AuthenticatedClientAsync(otherName);
+
+            var otherId = await UserIdAsync(host, otherName);
+            var blocked = await host.PostAsync($"/api/Block/{otherId}", null);
+            blocked.EnsureSuccessStatusCode();
+
+            var created = await host.PostAsJsonAsync("/api/Chat",
+                new { name = "G" + hostName, members = new[] { new { userId = otherId } } });
+
+            Assert.Equal(HttpStatusCode.Forbidden, created.StatusCode);
+
+            var otherChats = await other.GetFromJsonAsync<List<ChatDto>>("/api/Chat");
+            Assert.Empty(otherChats!);
+        }
+
+        [Fact]
+        public async Task CreateChat_RejectedInviteLeavesNoChatBehind()
+        {
+            var hostName = UniqueName("orpa");
+            var shyName = UniqueName("orpb");
+            var host = await AuthenticatedClientAsync(hostName);
+            var shy = await AuthenticatedClientAsync(shyName);
+
+            await SetWhoCanInviteAsync(shy, PrivacyLevel.Nobody);
+            var shyId = await UserIdAsync(host, shyName);
+
+            await host.PostAsJsonAsync("/api/Chat",
+                new { name = "G" + hostName, members = new[] { new { userId = shyId } } });
+
+            var hostChats = await host.GetFromJsonAsync<List<ChatDto>>("/api/Chat");
+            Assert.Empty(hostChats!);
+        }
+
+        [Fact]
+        public async Task CreateChat_WithTheSameMemberTwice_AddsThemOnce()
+        {
+            var hostName = UniqueName("dupa");
+            var guestName = UniqueName("dupb");
+            var host = await AuthenticatedClientAsync(hostName);
+            await AuthenticatedClientAsync(guestName);
+
+            var guestId = await UserIdAsync(host, guestName);
+            var hostId = await UserIdAsync(host, hostName);
+
+            var created = await host.PostAsJsonAsync("/api/Chat",
+                new
+                {
+                    name = "G" + hostName,
+                    members = new[]
+                    {
+                        new { userId = guestId },
+                        new { userId = guestId },
+                        new { userId = hostId }
+                    }
+                });
+
+            Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+            var chat = await created.Content.ReadFromJsonAsync<ChatDto>();
+
+            var members = await host.GetFromJsonAsync<List<ChatMemberWithRoleDto>>(
+                $"/api/Chat/{chat!.Id}/users");
+            Assert.Equal(2, members!.Count);
+            Assert.Equal(UserRole.Owner, members.Single(m => m.UserId == hostId).RoleId);
+        }
+
+        [Fact]
+        public async Task TransferOwnership_ByANonOwner_IsForbidden()
+        {
+            var ownerName = UniqueName("nowna");
+            var memberName = UniqueName("nownb");
+            var owner = await AuthenticatedClientAsync(ownerName);
+            var member = await AuthenticatedClientAsync(memberName);
+
+            var memberId = await UserIdAsync(owner, memberName);
+
+            var chat = await CreateChatAsync(owner, "Group " + ownerName);
+            var added = await owner.PostAsJsonAsync($"/api/Chat/{chat.Id}/users",
+                new { userId = memberId });
+            added.EnsureSuccessStatusCode();
+
+            var transfer = await member.PostAsync($"/api/Chat/{chat.Id}/users/{memberId}/owner", null);
+            Assert.Equal(HttpStatusCode.Forbidden, transfer.StatusCode);
         }
 
         [Fact]
