@@ -160,32 +160,31 @@ export function ChatInfoModal({ chat, onClose, onOpenSettings }: Props) {
         layout="column"
         layer="base"
         title={
-          <div className="flex-1 pr-2">
+          <div className="relative flex-1">
+            <button
+              type="button"
+              onClick={onOpenSettings}
+              className="absolute left-0 top-0 text-content-muted transition hover:text-accent-strong"
+              aria-label="Chat settings"
+              title="Chat settings"
+            >
+              <Settings size={20} />
+            </button>
+
+            <div className="flex flex-col items-center pl-[38px] text-center">
               {isGroup && (
-                <div className="mb-3">
-                  <ChatAvatar
-                    chatId={chat.id}
-                    name={title}
-                    avatarUpdatedAt={chat.avatarUpdatedAt}
-                    size="xl"
-                  />
-                </div>
+                <ChatAvatar
+                  chatId={chat.id}
+                  name={title}
+                  avatarUpdatedAt={chat.avatarUpdatedAt}
+                  size="xl"
+                  className="mb-3"
+                />
               )}
 
-              <div className="flex items-center gap-2">
-                <h2 className="text-2xl font-bold text-content break-words">
-                  {title}
-                </h2>
-                <button
-                  type="button"
-                  onClick={onOpenSettings}
-                  className="text-content-muted transition hover:text-accent-strong"
-                  aria-label="Chat settings"
-                  title="Chat settings"
-                >
-                  <Settings size={16} />
-                </button>
-              </div>
+              <h2 className="break-words text-2xl font-bold text-content">
+                {title}
+              </h2>
 
               {isGroup && chat.description && (
                 <p className="mt-1 whitespace-pre-line text-sm text-content-muted">
@@ -196,6 +195,7 @@ export function ChatInfoModal({ chat, onClose, onOpenSettings }: Props) {
               <p className="mt-1 text-sm text-content-muted">
                 {loading ? "Loading..." : `Members (${members.length})`}
               </p>
+            </div>
           </div>
         }
       >
