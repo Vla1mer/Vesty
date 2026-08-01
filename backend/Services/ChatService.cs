@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using AutoMapper;
 using Shared.Exceptions;
 using Entities.Models;
 using Shared.RequestFeatures;
@@ -203,6 +203,9 @@ namespace Services
             chat.WhoCanEdit = permissions.WhoCanEdit;
             chat.WhoCanPost = permissions.WhoCanPost;
             await _repository.SaveAsync();
+
+            await _notifier.ChatUpdatedAsync(await GetMemberIdsAsync(id),
+                new ChatUpdatedSignalrDto { ChatId = id });
         }
 
         public async Task<int?> FindDirectChatIdAsync(int otherUserId)
@@ -238,8 +241,10 @@ namespace Services
                 : chatDto.Description.Trim();
             await _repository.SaveAsync();
 
-            var renamedDto = new ChatRenamedSignalrDto { ChatId = id, Name = chatDto.Name };
-            await _notifier.ChatRenamedAsync(await GetMemberIdsAsync(id), renamedDto);
+            var memberIds = await GetMemberIdsAsync(id);
+            await _notifier.ChatRenamedAsync(memberIds,
+                new ChatRenamedSignalrDto { ChatId = id, Name = chatDto.Name });
+            await _notifier.ChatUpdatedAsync(memberIds, new ChatUpdatedSignalrDto { ChatId = id });
         }
 
         private async Task<List<int>> GetMemberIdsAsync(int chatId)

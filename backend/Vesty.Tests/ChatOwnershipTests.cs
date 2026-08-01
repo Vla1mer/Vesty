@@ -3,6 +3,7 @@ using Entities.Models;
 using Moq;
 using Repository.Interfaces;
 using Services;
+using Services.DataTransferObjects;
 using Services.Interfaces;
 using Shared.Exceptions;
 
@@ -57,6 +58,20 @@ namespace Vesty.Tests
             Assert.Equal(UserRole.Owner, member.RoleId);
             Assert.Equal(UserRole.Admin, owner.RoleId);
             _repository.Verify(r => r.SaveAsync(), Times.Once);
+        }
+
+        [Fact]
+        public async Task TransferOwnershipAsync_NotifiesEveryMember()
+        {
+            var (owner, member) = Membership();
+            _members.Setup(r => r.GetMembersByChatIdAsync(ChatId, false))
+                .ReturnsAsync([owner, member]);
+
+            await _service.TransferOwnershipAsync(ChatId, MemberId);
+
+            _notifier.Verify(n => n.ChatUpdatedAsync(
+                It.Is<IEnumerable<int>>(ids => ids.Contains(OwnerId) && ids.Contains(MemberId)),
+                It.Is<ChatUpdatedSignalrDto>(d => d.ChatId == ChatId)), Times.Once);
         }
 
         [Fact]

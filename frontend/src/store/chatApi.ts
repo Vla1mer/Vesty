@@ -8,6 +8,7 @@ import {
   onChatCreated,
   onChatDeleted,
   onChatRenamed,
+  onChatUpdated,
   onMessageReceived,
   onReconnected,
 } from "../lib/signalr";
@@ -66,6 +67,17 @@ export const chatApi = apiSlice.injectEndpoints({
                 const chat = draft.find((c) => c.id === chatId);
                 if (chat) chat.name = name;
               });
+            })
+          );
+
+          subscriptions.push(
+            onChatUpdated(({ chatId }) => {
+              dispatch(
+                apiSlice.util.invalidateTags([
+                  { type: CHAT_API_TAGS.CHAT, id: chatId },
+                  { type: CHAT_API_TAGS.CHAT_MEMBER, id: chatId },
+                ])
+              );
             })
           );
 

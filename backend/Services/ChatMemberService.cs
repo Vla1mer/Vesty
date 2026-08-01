@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using AutoMapper;
 using Shared.Exceptions;
 using Entities.Models;
 using Repository.Interfaces;
@@ -113,6 +113,8 @@ namespace Services
 
             target.RoleId = roleDto.RoleId;
             await _repository.SaveAsync();
+
+            await NotifyChatUpdatedAsync(chatId);
         }
 
         public async Task TransferOwnershipAsync(int chatId, int newOwnerUserId)
@@ -130,6 +132,15 @@ namespace Services
             target.RoleId = UserRole.Owner;
             caller.RoleId = UserRole.Admin;
             await _repository.SaveAsync();
+
+            await NotifyChatUpdatedAsync(chatId);
+        }
+
+        private async Task NotifyChatUpdatedAsync(int chatId)
+        {
+            var members = await _repository.ChatMember.GetMembersByChatIdAsync(chatId, trackChanges: false);
+            await _notifier.ChatUpdatedAsync(
+                members.Select(m => m.UserId), new ChatUpdatedSignalrDto { ChatId = chatId });
         }
 
         private async Task<Chat> GetChatOrThrowAsync(int chatId, string? mustBeGroupChat = null)
