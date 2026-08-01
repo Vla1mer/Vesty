@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Repository.Interfaces;
 using Shared.Exceptions;
@@ -20,6 +20,7 @@ namespace Repository
         private readonly Lazy<IAttachmentRepository> _attachmentRepository;
         private readonly Lazy<IFriendshipRepository> _friendshipRepository;
         private readonly Lazy<IUserBlockRepository> _userBlockRepository;
+        private readonly Lazy<IChatInviteRepository> _chatInviteRepository;
 
         public RepositoryManager(AppDbContext context)
         {
@@ -34,6 +35,7 @@ namespace Repository
             _attachmentRepository = new Lazy<IAttachmentRepository>(() => new AttachmentRepository(context));
             _friendshipRepository = new Lazy<IFriendshipRepository>(() => new FriendshipRepository(context));
             _userBlockRepository = new Lazy<IUserBlockRepository>(() => new UserBlockRepository(context));
+            _chatInviteRepository = new Lazy<IChatInviteRepository>(() => new ChatInviteRepository(context));
         }
 
         public IUserRepository User => _userRepository.Value;
@@ -46,6 +48,7 @@ namespace Repository
         public IAttachmentRepository Attachment => _attachmentRepository.Value;
         public IFriendshipRepository Friendship => _friendshipRepository.Value;
         public IUserBlockRepository UserBlock => _userBlockRepository.Value;
+        public IChatInviteRepository ChatInvite => _chatInviteRepository.Value;
 
         // вставка не состоялась, но EF держит сущность как Added и повторит её
         // при следующем SaveChanges — снимаем с отслеживания
