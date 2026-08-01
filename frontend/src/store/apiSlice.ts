@@ -14,6 +14,7 @@ export const apiSlice = createApi({
   tagTypes: [
     CHAT_API_TAGS.CHAT,
     CHAT_API_TAGS.CHAT_MEMBER,
+    CHAT_API_TAGS.CHAT_INVITE,
     MESSAGE_API_TAGS.MESSAGE,
     USER_API_TAGS.USER,
     FRIEND_API_TAGS.FRIEND,

@@ -1,4 +1,4 @@
-using Entities.Models;
+﻿using Entities.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -22,6 +22,7 @@ namespace Repository
         public DbSet<MessageAttachment> MessageAttachments { get; set; }
         public DbSet<Friendship> Friendships { get; set; }
         public DbSet<UserBlock> UserBlocks { get; set; }
+        public DbSet<ChatInvite> ChatInvites { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -91,6 +92,7 @@ namespace Repository
                  .WithMany(r => r.ChatMembers)
                  .HasForeignKey(cm => cm.RoleId)
                  .OnDelete(DeleteBehavior.Restrict);
+                e.HasIndex(cm => new { cm.ChatId, cm.UserId }).IsUnique();
             });
 
             modelBuilder.Entity<UserRole>(e => {
@@ -150,6 +152,23 @@ namespace Repository
                  .WithMany()
                  .HasForeignKey(b => b.BlockedId)
                  .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<ChatInvite>(e => {
+                e.HasKey(i => i.Id);
+                e.Property(i => i.Id).ValueGeneratedOnAdd();
+                e.Property(i => i.Code).HasMaxLength(32).IsRequired();
+                e.Property(i => i.CreatedAt);
+                e.HasIndex(i => i.Code).IsUnique();
+                e.HasIndex(i => i.ChatId);
+                e.HasOne(i => i.Chat)
+                 .WithMany()
+                 .HasForeignKey(i => i.ChatId)
+                 .OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(i => i.CreatedBy)
+                 .WithMany()
+                 .HasForeignKey(i => i.CreatedById)
+                 .OnDelete(DeleteBehavior.SetNull);
             });
 
             modelBuilder.Entity<Friendship>(e => {

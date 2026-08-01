@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Entities.Models;
@@ -7,7 +7,8 @@ using Services.DataTransferObjects;
 
 namespace Vesty.Tests
 {
-    public class ChatApiTests : IClassFixture<VestyApiFactory>
+    [Collection(ApiCollection.Name)]
+    public class ChatApiTests
     {
         private readonly VestyApiFactory _factory;
 

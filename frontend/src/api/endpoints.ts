@@ -27,6 +27,10 @@ export const endpoints = {
     clearForMe: (chatId: number) => `/api/Chat/${chatId}/for-me`,
     direct: (otherUserId: number) => `/api/Chat/direct/${otherUserId}`,
     permissions: (chatId: number) => `/api/Chat/${chatId}/permissions`,
+    invite: (chatId: number) => `/api/Chat/${chatId}/invite`,
+    inviteByCode: (code: string) => `/api/Chat/invite/${encodeURIComponent(code)}`,
+    joinByCode: (code: string) =>
+      `/api/Chat/invite/${encodeURIComponent(code)}/join`,
     avatar: (chatId: number) => `/api/Chat/${chatId}/avatar`,
     messages: (chatId: number) => `/api/Chat/${chatId}/messages`,
     members: (chatId: number) => `/api/Chat/${chatId}/users`,

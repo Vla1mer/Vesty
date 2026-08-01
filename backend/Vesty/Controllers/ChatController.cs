@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Net.Http.Headers;
 using Services;
@@ -176,6 +176,55 @@ namespace Vesty.Controllers
                 return UnprocessableEntity(ModelState);
             await _service.Chat.UpdatePermissionsAsync(id, permissions);
             return NoContent();
+        }
+
+        [HttpGet("{chatId:int}/invite")]
+        [ProducesResponseType(typeof(ChatInviteDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetInvite(int chatId)
+        {
+            var invite = await _service.ChatInvite.GetActiveAsync(chatId);
+            return invite is null ? NoContent() : Ok(invite);
+        }
+
+        [HttpPost("{chatId:int}/invite")]
+        [ProducesResponseType(typeof(ChatInviteDto), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> CreateInvite(
+            int chatId, [FromBody] ChatInviteForCreationDto? dto)
+        {
+            var invite = await _service.ChatInvite.CreateAsync(
+                chatId, dto ?? new ChatInviteForCreationDto());
+            return Created($"/api/Chat/{chatId}/invite", invite);
+        }
+
+        [HttpDelete("{chatId:int}/invite")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> RevokeInvite(int chatId)
+        {
+            await _service.ChatInvite.RevokeAsync(chatId);
+            return NoContent();
+        }
+
+        [HttpGet("invite/{code}")]
+        [ProducesResponseType(typeof(ChatInvitePreviewDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> PreviewInvite(string code) =>
+            Ok(await _service.ChatInvite.PreviewAsync(code));
+
+        [HttpPost("invite/{code}/join")]
+        [ProducesResponseType(typeof(ChatDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> JoinByInvite(string code)
+        {
+            var chatId = await _service.ChatInvite.JoinAsync(code);
+            return Ok(await _service.Chat.GetByIdAsync(chatId));
         }
 
         [HttpGet("direct/{otherUserId:int}")]

@@ -19,6 +19,7 @@ import { Button } from "./ui/Button";
 import { TextInput } from "./ui/TextInput";
 import { Modal } from "./ui/Modal";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { ChatInviteSection } from "./ChatInviteSection";
 import { ChatPermission, isDirectChat, permissionAllows, UserRole } from "../types/api";
 import { getChatDisplayName } from "../utils/chats";
 import { chatNameSchema } from "../validation/chatSchemas";
@@ -107,6 +108,10 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
   const canRename = canEditProfile;
 
   const canManageAvatar = canEditProfile;
+  const canInvite =
+    isGroup &&
+    myRoleId !== undefined &&
+    permissionAllows(chat.whoCanInvite, myRoleId);
 
   const memberIds = useMemo(
     () => new Set(members.map((m) => m.userId)),
@@ -576,6 +581,8 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                   </Button>
                 </section>
               )}
+
+              {canInvite && <ChatInviteSection chatId={chat.id} />}
 
               {isGroup && isCallerOwner && (
                 <section className="space-y-2 border-t border-line pt-3">
