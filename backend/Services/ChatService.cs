@@ -65,6 +65,10 @@ namespace Services
         public async Task<ChatDto> CreateAsync(ChatForCreationDto chatDto)
         {
             var currentUserId = _currentUser.UserId;
+
+            foreach (var memberDto in chatDto.Members)
+                await EnsureCanBeInvitedAsync(memberDto.UserId);
+
             var chat = _mapper.Map<Chat>(chatDto);
             chat.CreatorId = currentUserId;
             chat.IsPrivate = false;
@@ -79,7 +83,6 @@ namespace Services
                 if (!seenUserIds.Add(memberDto.UserId))
                     throw new UserAlreadyInChatException(chat.Id, memberDto.UserId);
 
-                await EnsureUserExistsAsync(memberDto.UserId);
                 AddMember(chat.Id, memberDto.UserId, UserRole.User);
             }
 
@@ -288,6 +291,17 @@ namespace Services
             ).ToList();
         }
 
+        private async Task EnsureCanBeInvitedAsync(int targetUserId)
+        {
+            var target = await _repository.User.GetUserAsync(targetUserId, trackChanges: false)
+                ?? throw new UserNotFoundException(targetUserId);
+
+            if (await _repository.UserBlock.IsBlockedEitherWayAsync(_currentUser.UserId, targetUserId))
+                throw new BlockedUserException();
+
+            await EnsurePrivacyAllowsAsync(target.WhoCanInvite, targetUserId, "group invites");
+        }
+
         private async Task EnsurePrivacyAllowsAsync(int level, int targetUserId, string action)
         {
             if (level == PrivacyLevel.Everyone) return;
@@ -349,11 +363,5 @@ namespace Services
                 throw new InsufficientChatPermissionException(action, chatId);
         }
 
-        private async Task EnsureUserExistsAsync(int userId)
-        {
-            var user = await _repository.User.GetUserAsync(userId, trackChanges: false);
-            if (user is null)
-                throw new UserNotFoundException(userId);
-        }
     }
 }

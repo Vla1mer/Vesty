@@ -68,6 +68,7 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
   const {
     data: members = [],
     isLoading: loading,
+    isFetching: membersFetching,
     isError: membersError,
   } = useGetChatMembersQuery(chat.id);
   const { data: allUsers = [], isFetching: usersFetching } = useGetAllUsersQuery(
@@ -257,7 +258,7 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
     <>
       <Modal
         onClose={onClose}
-        closeDisabled={busyUserId !== null || deleting}
+        closeDisabled={busyUserId !== null || deleting || leaving}
         ariaLabel="Chat info"
         size="md"
         layout="column"
@@ -529,7 +530,7 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                 </section>
               )}
 
-              {isGroup && (
+              {isGroup && !loading && (
                 <section className="space-y-2 border-t border-line pt-2">
                   {isCallerOwner ? (
                     members.length > 1 && (
@@ -558,7 +559,7 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                     variant="danger"
                     fullWidth
                     onClick={() => setIsDeleteOpen(true)}
-                    disabled={busyUserId !== null || deleting}
+                    disabled={busyUserId !== null || deleting || membersFetching}
                   >
                     <Trash2 size={15} aria-hidden="true" />
                     Delete chat
