@@ -371,6 +371,7 @@ namespace Vesty.Tests
                 new { content = "original" });
             posted.EnsureSuccessStatusCode();
             var message = await posted.Content.ReadFromJsonAsync<MessageDto>();
+            Assert.NotNull(message);
 
             (await owner.PutAsJsonAsync($"/api/Chat/{chat.Id}/permissions",
                 new
@@ -414,6 +415,7 @@ namespace Vesty.Tests
                 new { content = "secret original" });
             posted.EnsureSuccessStatusCode();
             var message = await posted.Content.ReadFromJsonAsync<MessageDto>();
+            Assert.NotNull(message);
 
             (await owner.PutAsJsonAsync($"/api/Chat/{locked.Id}/permissions",
                 new

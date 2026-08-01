@@ -1,6 +1,6 @@
 import { AnimatePresence } from "framer-motion";
 import { ArrowLeft, ChevronRight, Crown, Eraser, LogOut, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   useClearChatForMeMutation,
   useDeleteChatMutation,
@@ -79,9 +79,11 @@ export function ChatSettingsModal({ chat, onBack, onClose, onDeleted }: Props) {
     nameDraft.trim() !== (chat.name ?? "") ||
     descriptionDraft.trim() !== (chat.description ?? "");
 
-  const adminCount = members.filter(
-    (m) => m.roleId === UserRole.Owner || m.roleId === UserRole.Admin
-  ).length;
+  const adminCount = members.filter((m) => m.roleId === UserRole.Admin).length;
+
+  useEffect(() => {
+    setSaved(null);
+  }, [chat.whoCanInvite, chat.whoCanEdit, chat.whoCanPost]);
 
   const permissions =
     saved?.chatId === chat.id
@@ -382,9 +384,13 @@ export function ChatSettingsModal({ chat, onBack, onClose, onDeleted }: Props) {
         {isDeleteOpen && (
           <ConfirmDialog
             title="Delete chat?"
-            message={`Are you sure you want to delete "${getChatDisplayName(
-              chat
-            )}"? All messages will be permanently lost.`}
+            message={
+              isGroup
+                ? `Are you sure you want to delete "${getChatDisplayName(
+                    chat
+                  )}"? All messages and members will be permanently lost.`
+                : `Are you sure you want to delete this conversation? All messages will be permanently lost.`
+            }
             confirmText="Delete"
             variant="danger"
             loading={deleting}
