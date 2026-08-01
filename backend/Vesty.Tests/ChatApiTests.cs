@@ -323,6 +323,8 @@ namespace Vesty.Tests
             var owner = await AuthenticatedClientAsync(ownerName);
             var member = await AuthenticatedClientAsync(memberName);
             var memberId = await UserIdAsync(owner, memberName);
+            var ownerId = await UserIdAsync(owner, ownerName);
+            await FriendshipSetup.BefriendAsync(owner, ownerId, member, memberId);
 
             var chat = await CreateChatAsync(owner, "G" + ownerName);
             (await owner.PostAsJsonAsync($"/api/Chat/{chat.Id}/users",
@@ -358,6 +360,8 @@ namespace Vesty.Tests
             var owner = await AuthenticatedClientAsync(ownerName);
             var admin = await AuthenticatedClientAsync(adminName);
             var adminId = await UserIdAsync(owner, adminName);
+            var ownerId = await UserIdAsync(owner, ownerName);
+            await FriendshipSetup.BefriendAsync(owner, ownerId, admin, adminId);
 
             var chat = await CreateChatAsync(owner, "G" + ownerName);
             (await owner.PostAsJsonAsync($"/api/Chat/{chat.Id}/users",
@@ -415,6 +419,7 @@ namespace Vesty.Tests
 
             var ownerId = await UserIdAsync(owner, ownerName);
             var heirId = await UserIdAsync(owner, heirName);
+            await FriendshipSetup.BefriendAsync(owner, ownerId, heir, heirId);
 
             var chat = await CreateChatAsync(owner, "Group " + ownerName);
             var added = await owner.PostAsJsonAsync($"/api/Chat/{chat.Id}/users",
@@ -514,10 +519,11 @@ namespace Vesty.Tests
             var hostName = UniqueName("dupa");
             var guestName = UniqueName("dupb");
             var host = await AuthenticatedClientAsync(hostName);
-            await AuthenticatedClientAsync(guestName);
+            var guest = await AuthenticatedClientAsync(guestName);
 
             var guestId = await UserIdAsync(host, guestName);
             var hostId = await UserIdAsync(host, hostName);
+            await FriendshipSetup.BefriendAsync(host, hostId, guest, guestId);
 
             var created = await host.PostAsJsonAsync("/api/Chat",
                 new
@@ -549,6 +555,8 @@ namespace Vesty.Tests
             var member = await AuthenticatedClientAsync(memberName);
 
             var memberId = await UserIdAsync(owner, memberName);
+            var ownerId = await UserIdAsync(owner, ownerName);
+            await FriendshipSetup.BefriendAsync(owner, ownerId, member, memberId);
 
             var chat = await CreateChatAsync(owner, "Group " + ownerName);
             var added = await owner.PostAsJsonAsync($"/api/Chat/{chat.Id}/users",

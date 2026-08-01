@@ -54,6 +54,66 @@ namespace Vesty.Tests
         }
 
         [Fact]
+        public async Task NewUser_DefaultsToFriendsOnlyGroupInvites()
+        {
+            var user = await AuthenticatedClientAsync(UniqueName("dflt1"));
+
+            var privacy = await user.GetFromJsonAsync<PrivacySettingsDto>("/api/User/privacy");
+
+            Assert.Equal(PrivacyLevel.FriendsOnly, privacy!.WhoCanInvite);
+            Assert.Equal(PrivacyLevel.Everyone, privacy.WhoCanMessage);
+        }
+
+        [Fact]
+        public async Task AStranger_CannotAddYouToAGroupByDefault()
+        {
+            var host = await AuthenticatedClientAsync(UniqueName("strg1"));
+            var targetName = UniqueName("strg2");
+            await AuthenticatedClientAsync(targetName);
+            var targetId = await UserIdAsync(host, targetName);
+
+            var chat = await CreateChatAsync(host, "Strangers");
+            var added = await host.PostAsJsonAsync($"/api/Chat/{chat.Id}/users",
+                new { userId = targetId });
+
+            Assert.Equal(HttpStatusCode.Forbidden, added.StatusCode);
+        }
+
+        [Fact]
+        public async Task AFriend_CanStillAddYouToAGroup()
+        {
+            var hostName = UniqueName("frnd1");
+            var targetName = UniqueName("frnd2");
+            var host = await AuthenticatedClientAsync(hostName);
+            var target = await AuthenticatedClientAsync(targetName);
+            var hostId = await UserIdAsync(target, hostName);
+            var targetId = await UserIdAsync(host, targetName);
+
+            (await host.PostAsync($"/api/Friend/{targetId}", null)).EnsureSuccessStatusCode();
+            (await target.PostAsync($"/api/Friend/{hostId}/accept", null)).EnsureSuccessStatusCode();
+
+            var chat = await CreateChatAsync(host, "Friends");
+            var added = await host.PostAsJsonAsync($"/api/Chat/{chat.Id}/users",
+                new { userId = targetId });
+
+            Assert.Equal(HttpStatusCode.Created, added.StatusCode);
+        }
+
+        [Fact]
+        public async Task AStrangerCanStillBeReachedByAnInviteLink()
+        {
+            var host = await AuthenticatedClientAsync(UniqueName("lnkd1"));
+            var stranger = await AuthenticatedClientAsync(UniqueName("lnkd2"));
+
+            var chat = await CreateChatAsync(host, "Link beats privacy");
+            var code = await CreateInviteAsync(host, chat.Id);
+
+            var joined = await stranger.PostAsync($"/api/Chat/invite/{code}/join", null);
+
+            Assert.Equal(HttpStatusCode.OK, joined.StatusCode);
+        }
+
+        [Fact]
         public async Task JoinByLink_AddsTheUserAsAPlainMember()
         {
             var owner = await AuthenticatedClientAsync(UniqueName("inv1a"));
@@ -178,10 +238,13 @@ namespace Vesty.Tests
         [Fact]
         public async Task PlainMember_CannotCreateALinkWhenInvitesAreAdminsOnly()
         {
-            var owner = await AuthenticatedClientAsync(UniqueName("inv6a"));
+            var ownerName = UniqueName("inv6a");
+            var owner = await AuthenticatedClientAsync(ownerName);
             var memberName = UniqueName("inv6b");
             var member = await AuthenticatedClientAsync(memberName);
             var memberId = await UserIdAsync(owner, memberName);
+            var ownerId = await UserIdAsync(owner, ownerName);
+            await FriendshipSetup.BefriendAsync(owner, ownerId, member, memberId);
 
             var chat = await CreateChatAsync(owner, "Guarded");
             (await owner.PostAsJsonAsync($"/api/Chat/{chat.Id}/users", new { userId = memberId }))
@@ -195,10 +258,13 @@ namespace Vesty.Tests
         [Fact]
         public async Task PlainMember_CanCreateALinkWhenInvitesAreOpen()
         {
-            var owner = await AuthenticatedClientAsync(UniqueName("inv7a"));
+            var ownerName = UniqueName("inv7a");
+            var owner = await AuthenticatedClientAsync(ownerName);
             var memberName = UniqueName("inv7b");
             var member = await AuthenticatedClientAsync(memberName);
             var memberId = await UserIdAsync(owner, memberName);
+            var ownerId = await UserIdAsync(owner, ownerName);
+            await FriendshipSetup.BefriendAsync(owner, ownerId, member, memberId);
 
             var chat = await CreateChatAsync(owner, "Open invites");
             (await owner.PostAsJsonAsync($"/api/Chat/{chat.Id}/users", new { userId = memberId }))
