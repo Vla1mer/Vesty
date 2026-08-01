@@ -155,6 +155,8 @@ export function ChatInfoModal({ chat, onClose, onOpenSettings }: Props) {
       <Modal
         onClose={onClose}
         closeDisabled={busyUserId !== null}
+        closeIcon="back"
+        closeSide="left"
         ariaLabel="Chat info"
         size="md"
         layout="column"
@@ -164,14 +166,14 @@ export function ChatInfoModal({ chat, onClose, onOpenSettings }: Props) {
             <button
               type="button"
               onClick={onOpenSettings}
-              className="absolute left-0 top-0 text-content-muted transition hover:text-accent-strong"
+              className="absolute right-0 top-0 text-content-muted transition hover:text-accent-strong"
               aria-label="Chat settings"
               title="Chat settings"
             >
               <Settings size={20} />
             </button>
 
-            <div className="flex flex-col items-center pl-[38px] text-center">
+            <div className="flex flex-col items-center pr-[38px] text-center">
               {isGroup && (
                 <ChatAvatar
                   chatId={chat.id}

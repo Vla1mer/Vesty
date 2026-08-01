@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
-import { X } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
 import { motion } from "framer-motion";
 
 const WIDTHS = {
@@ -22,6 +22,8 @@ interface Props {
   size?: keyof typeof WIDTHS;
   layout?: keyof typeof LAYOUTS;
   closeDisabled?: boolean;
+  closeIcon?: "close" | "back";
+  closeSide?: "left" | "right";
   layer?: "base" | "top";
   children: ReactNode;
 }
@@ -33,6 +35,8 @@ export function Modal({
   size = "sm",
   layout = "auto",
   closeDisabled = false,
+  closeIcon = "close",
+  closeSide = "right",
   layer = "top",
   children,
 }: Props) {
@@ -45,6 +49,18 @@ export function Modal({
     window.addEventListener("keydown", handleEsc);
     return () => window.removeEventListener("keydown", handleEsc);
   }, [onClose, closeDisabled]);
+
+  const closeButton = (
+    <button
+      type="button"
+      onClick={onClose}
+      disabled={closeDisabled}
+      aria-label={closeIcon === "back" ? "Back" : "Close"}
+      className="shrink-0 text-content-muted transition hover:text-content disabled:opacity-50"
+    >
+      {closeIcon === "back" ? <ArrowLeft size={22} /> : <X size={22} />}
+    </button>
+  );
 
   return (
     <motion.div
@@ -80,20 +96,13 @@ export function Modal({
       >
         {title && (
           <div className="mb-4 flex shrink-0 items-start justify-between gap-4">
+            {closeSide === "left" && closeButton}
             {typeof title === "string" ? (
               <h2 className="text-xl font-bold text-content">{title}</h2>
             ) : (
               title
             )}
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={closeDisabled}
-              aria-label="Close"
-              className="text-content-muted transition hover:text-content disabled:opacity-50"
-            >
-              <X size={22} />
-            </button>
+            {closeSide === "right" && closeButton}
           </div>
         )}
         {children}
