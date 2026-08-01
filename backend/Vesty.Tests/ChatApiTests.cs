@@ -404,6 +404,38 @@ namespace Vesty.Tests
         }
 
         [Fact]
+        public async Task CreateChat_WithTheSameMemberTwice_AddsThemOnce()
+        {
+            var hostName = UniqueName("dupa");
+            var guestName = UniqueName("dupb");
+            var host = await AuthenticatedClientAsync(hostName);
+            await AuthenticatedClientAsync(guestName);
+
+            var guestId = await UserIdAsync(host, guestName);
+            var hostId = await UserIdAsync(host, hostName);
+
+            var created = await host.PostAsJsonAsync("/api/Chat",
+                new
+                {
+                    name = "G" + hostName,
+                    members = new[]
+                    {
+                        new { userId = guestId },
+                        new { userId = guestId },
+                        new { userId = hostId }
+                    }
+                });
+
+            Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+            var chat = await created.Content.ReadFromJsonAsync<ChatDto>();
+
+            var members = await host.GetFromJsonAsync<List<ChatMemberWithRoleDto>>(
+                $"/api/Chat/{chat!.Id}/users");
+            Assert.Equal(2, members!.Count);
+            Assert.Equal(UserRole.Owner, members.Single(m => m.UserId == hostId).RoleId);
+        }
+
+        [Fact]
         public async Task TransferOwnership_ByANonOwner_IsForbidden()
         {
             var ownerName = UniqueName("nowna");

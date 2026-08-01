@@ -530,15 +530,12 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                 </section>
               )}
 
-              {isGroup && !loading && (
+              {isGroup && !loading && !(isCallerOwner && members.length === 1) && (
                 <section className="space-y-2 border-t border-line pt-2">
                   {isCallerOwner ? (
-                    members.length > 1 && (
-                      <p className="text-xs text-content-subtle">
-                        To leave this chat, hand ownership to another member
-                        first.
-                      </p>
-                    )
+                    <p className="text-xs text-content-subtle">
+                      To leave this chat, hand ownership to another member first.
+                    </p>
                   ) : (
                     <Button
                       variant="neutral"

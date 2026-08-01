@@ -66,8 +66,14 @@ namespace Services
         {
             var currentUserId = _currentUser.UserId;
 
-            foreach (var memberDto in chatDto.Members)
-                await EnsureCanBeInvitedAsync(memberDto.UserId);
+            var memberIds = chatDto.Members
+                .Select(m => m.UserId)
+                .Where(id => id != currentUserId)
+                .Distinct()
+                .ToList();
+
+            foreach (var userId in memberIds)
+                await EnsureCanBeInvitedAsync(userId);
 
             var chat = _mapper.Map<Chat>(chatDto);
             chat.CreatorId = currentUserId;
@@ -76,20 +82,13 @@ namespace Services
             await _repository.SaveAsync();
 
             AddMember(chat.Id, currentUserId, UserRole.Owner);
-
-            var seenUserIds = new HashSet<int> { currentUserId };
-            foreach (var memberDto in chatDto.Members)
-            {
-                if (!seenUserIds.Add(memberDto.UserId))
-                    throw new UserAlreadyInChatException(chat.Id, memberDto.UserId);
-
-                AddMember(chat.Id, memberDto.UserId, UserRole.User);
-            }
+            foreach (var userId in memberIds)
+                AddMember(chat.Id, userId, UserRole.User);
 
             await _repository.SaveAsync();
 
             var createdDto = _mapper.Map<ChatDto>(chat);
-            await _notifier.ChatCreatedAsync(seenUserIds, createdDto);
+            await _notifier.ChatCreatedAsync(memberIds.Append(currentUserId), createdDto);
             return createdDto;
         }
 

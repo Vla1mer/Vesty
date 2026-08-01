@@ -53,6 +53,8 @@ namespace Vesty.Controllers
         [HttpPost]
         [ProducesResponseType(typeof(ChatDto), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
         public async Task<IActionResult> CreateChat([FromBody] ChatForCreationDto chat)
         {
