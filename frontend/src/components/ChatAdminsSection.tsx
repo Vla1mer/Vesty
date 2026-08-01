@@ -64,6 +64,7 @@ export function ChatAdminsSection({ chatId, members }: Props) {
   const [handingOver, setHandingOver] = useState<ChatMemberWithRoleDto | null>(
     null
   );
+  const [demoting, setDemoting] = useState<ChatMemberWithRoleDto | null>(null);
 
   const owner = useMemo(
     () => members.find((m) => m.roleId === UserRole.Owner),
@@ -106,6 +107,21 @@ export function ChatAdminsSection({ chatId, members }: Props) {
     );
   }
 
+  async function confirmDemote() {
+    if (!demoting) return;
+    const target = demoting;
+    setDemoting(null);
+    await run(
+      () =>
+        updateMemberRole({
+          chatId,
+          userId: target.userId,
+          roleId: UserRole.User,
+        }).unwrap(),
+      "Failed to remove admin rights"
+    );
+  }
+
   async function confirmHandOver() {
     if (!handingOver) return;
     const target = handingOver;
@@ -144,17 +160,7 @@ export function ChatAdminsSection({ chatId, members }: Props) {
                   size="xs"
                   variant="danger"
                   disabled={busy}
-                  onClick={() =>
-                    run(
-                      () =>
-                        updateMemberRole({
-                          chatId,
-                          userId: admin.userId,
-                          roleId: UserRole.User,
-                        }).unwrap(),
-                      "Failed to remove admin rights"
-                    )
-                  }
+                  onClick={() => setDemoting(admin)}
                   aria-label="Remove admin"
                   title="Remove admin"
                 >
@@ -247,6 +253,22 @@ export function ChatAdminsSection({ chatId, members }: Props) {
             loading={busy}
             onConfirm={confirmPromote}
             onCancel={() => setPromoting(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {demoting && (
+          <ConfirmDialog
+            title="Remove admin rights?"
+            message={`${displayName(
+              demoting
+            )} will stay in the chat as a regular member and lose the ability to manage it.`}
+            confirmText="Remove rights"
+            variant="danger"
+            loading={busy}
+            onConfirm={confirmDemote}
+            onCancel={() => setDemoting(null)}
           />
         )}
       </AnimatePresence>

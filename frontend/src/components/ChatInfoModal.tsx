@@ -1,4 +1,6 @@
 import { Settings, X } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
+import { ConfirmDialog } from "./ConfirmDialog";
 import { useMemo, useState } from "react";
 import {
   useGetChatMembersQuery,
@@ -35,6 +37,7 @@ export function ChatInfoModal({ chat, onClose, onOpenSettings }: Props) {
   const [removeChatMember] = useRemoveChatMemberMutation();
   const [search, setSearch] = useState("");
   const [busyUserId, setBusyUserId] = useState<number | null>(null);
+  const [removing, setRemoving] = useState<ChatMemberWithRoleDto | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const isGroup = !chat.isPrivate;
@@ -62,7 +65,10 @@ export function ChatInfoModal({ chat, onClose, onOpenSettings }: Props) {
     return myRoleId === UserRole.Admin && member.roleId === UserRole.User;
   }
 
-  async function handleRemove(member: ChatMemberWithRoleDto) {
+  async function handleRemove() {
+    const member = removing;
+    if (!member) return;
+    setRemoving(null);
     setBusyUserId(member.userId);
     setError(null);
     try {
@@ -221,7 +227,7 @@ export function ChatInfoModal({ chat, onClose, onOpenSettings }: Props) {
                               size="xs"
                               variant="danger"
                               disabled={busyUserId !== null}
-                              onClick={() => handleRemove(m)}
+                              onClick={() => setRemoving(m)}
                               aria-label="Remove member"
                               title="Remove from chat"
                             >
@@ -296,6 +302,22 @@ export function ChatInfoModal({ chat, onClose, onOpenSettings }: Props) {
           )}
       </Modal>
 
+      <AnimatePresence>
+        {removing && (
+          <ConfirmDialog
+            title="Remove from chat?"
+            message={`${
+              [removing.name, removing.surname].filter(Boolean).join(" ") ||
+              removing.userName
+            } will lose access to this chat and its history. They can be added back later.`}
+            confirmText="Remove"
+            variant="danger"
+            loading={busyUserId === removing.userId}
+            onConfirm={handleRemove}
+            onCancel={() => setRemoving(null)}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 }
