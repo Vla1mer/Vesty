@@ -1,5 +1,5 @@
 import { AnimatePresence } from "framer-motion";
-import { ArrowLeft, Eraser, LogOut, Trash2 } from "lucide-react";
+import { ArrowLeft, ChevronRight, Crown, Eraser, LogOut, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
   useClearChatForMeMutation,
@@ -22,6 +22,7 @@ import { Button } from "./ui/Button";
 import { Modal } from "./ui/Modal";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { ChatInviteSection } from "./ChatInviteSection";
+import { ChatAdminsSection } from "./ChatAdminsSection";
 import { FormError } from "./FormError";
 
 const permissionFields = [
@@ -48,6 +49,7 @@ export function ChatSettingsModal({ chat, onBack, onClose, onDeleted }: Props) {
   const [nameDraft, setNameDraft] = useState(chat.name ?? "");
   const [descriptionDraft, setDescriptionDraft] = useState(chat.description ?? "");
   const [savingProfile, setSavingProfile] = useState(false);
+  const [view, setView] = useState<"settings" | "admins">("settings");
 
   const [saved, setSaved] = useState<
     ({ chatId: number } & ChatPermissionsDto) | null
@@ -76,6 +78,10 @@ export function ChatSettingsModal({ chat, onBack, onClose, onDeleted }: Props) {
   const profileChanged =
     nameDraft.trim() !== (chat.name ?? "") ||
     descriptionDraft.trim() !== (chat.description ?? "");
+
+  const adminCount = members.filter(
+    (m) => m.roleId === UserRole.Owner || m.roleId === UserRole.Admin
+  ).length;
 
   const permissions =
     saved?.chatId === chat.id
@@ -188,7 +194,7 @@ export function ChatSettingsModal({ chat, onBack, onClose, onDeleted }: Props) {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={onBack}
+              onClick={view === "admins" ? () => setView("settings") : onBack}
               disabled={busy}
               className="text-content-muted transition hover:text-accent-strong disabled:opacity-50"
               aria-label="Back to chat info"
@@ -196,10 +202,15 @@ export function ChatSettingsModal({ chat, onBack, onClose, onDeleted }: Props) {
             >
               <ArrowLeft size={18} />
             </button>
-            <h2 className="text-xl font-bold text-content">Settings</h2>
+            <h2 className="text-xl font-bold text-content">
+              {view === "admins" ? "Administrators" : "Settings"}
+            </h2>
           </div>
         }
       >
+        {view === "admins" ? (
+          <ChatAdminsSection chatId={chat.id} members={members} />
+        ) : (
         <div className="space-y-4">
           <FormError message={error} />
 
@@ -267,6 +278,23 @@ export function ChatSettingsModal({ chat, onBack, onClose, onDeleted }: Props) {
             </section>
           )}
 
+          {!loading && isOwner && isGroup && (
+            <button
+              type="button"
+              onClick={() => setView("admins")}
+              className="flex w-full items-center justify-between gap-2 rounded-lg border border-line px-3 py-2 text-sm text-content transition-colors hover:bg-surface-muted"
+            >
+              <span className="flex items-center gap-2">
+                <Crown size={15} aria-hidden="true" />
+                Administrators
+              </span>
+              <span className="flex items-center gap-1 text-content-muted">
+                {adminCount}
+                <ChevronRight size={15} aria-hidden="true" />
+              </span>
+            </button>
+          )}
+
           {!loading && canInvite && <ChatInviteSection chatId={chat.id} />}
 
           {!loading && chat.isPrivate && (
@@ -317,6 +345,7 @@ export function ChatSettingsModal({ chat, onBack, onClose, onDeleted }: Props) {
             </section>
           )}
         </div>
+        )}
       </Modal>
 
       <AnimatePresence>

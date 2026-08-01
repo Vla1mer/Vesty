@@ -1,11 +1,9 @@
-import { ArrowDown, ArrowUp, Crown, Settings, X } from "lucide-react";
+import { Settings, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
   useGetChatMembersQuery,
   useAddChatMemberMutation,
   useRemoveChatMemberMutation,
-  useUpdateMemberRoleMutation,
-  useTransferChatOwnershipMutation,
 } from "../store/chatApi";
 import { useGetAllUsersQuery } from "../store/userApi";
 import { useAuth } from "../context/useAuth";
@@ -13,13 +11,10 @@ import { Avatar, ChatAvatar } from "./Avatar";
 import { Button } from "./ui/Button";
 import { TextInput } from "./ui/TextInput";
 import { Modal } from "./ui/Modal";
-import { ConfirmDialog } from "./ConfirmDialog";
 import { UserRole } from "../types/api";
 import { getChatDisplayName } from "../utils/chats";
 import type { ChatDto, UserDto, ChatMemberWithRoleDto } from "../types/api";
-import type { AxiosBaseQueryError } from "../api/axiosBaseQuery";
 import { FormError } from "./FormError";
-import { AnimatePresence } from "framer-motion";
 import { getApiErrorMessage } from "../utils/apiError";
 
 interface Props {
@@ -38,10 +33,6 @@ export function ChatInfoModal({ chat, onClose, onOpenSettings }: Props) {
   const { userId: currentUserId } = useAuth();
   const [addChatMember] = useAddChatMemberMutation();
   const [removeChatMember] = useRemoveChatMemberMutation();
-  const [updateMemberRole] = useUpdateMemberRoleMutation();
-  const [transferChatOwnership] = useTransferChatOwnershipMutation();
-  const [transferTarget, setTransferTarget] =
-    useState<ChatMemberWithRoleDto | null>(null);
   const [search, setSearch] = useState("");
   const [busyUserId, setBusyUserId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -58,15 +49,30 @@ export function ChatInfoModal({ chat, onClose, onOpenSettings }: Props) {
     { skip: !isGroup || search.trim().length === 0 }
   );
 
-  const isCallerOwner = useMemo(
-    () =>
-      members.some(
-        (m) => m.userId === currentUserId && m.roleId === UserRole.Owner
-      ),
+  const myRoleId = useMemo(
+    () => members.find((m) => m.userId === currentUserId)?.roleId,
     [members, currentUserId]
   );
 
 
+
+  function canRemove(member: ChatMemberWithRoleDto): boolean {
+    if (!isGroup || member.userId === currentUserId) return false;
+    if (myRoleId === UserRole.Owner) return member.roleId !== UserRole.Owner;
+    return myRoleId === UserRole.Admin && member.roleId === UserRole.User;
+  }
+
+  async function handleRemove(member: ChatMemberWithRoleDto) {
+    setBusyUserId(member.userId);
+    setError(null);
+    try {
+      await removeChatMember({ chatId: chat.id, userId: member.userId }).unwrap();
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Failed to remove member"));
+    } finally {
+      setBusyUserId(null);
+    }
+  }
 
   const memberIds = useMemo(
     () => new Set(members.map((m) => m.userId)),
@@ -89,61 +95,6 @@ export function ChatInfoModal({ chat, onClose, onOpenSettings }: Props) {
     } catch (err) {
       setError(getApiErrorMessage(err, "Failed to add member"));
     } finally {
-      setBusyUserId(null);
-    }
-  }
-
-  async function handleRemove(member: ChatMemberWithRoleDto) {
-    setBusyUserId(member.userId);
-    setError(null);
-    try {
-      await removeChatMember({ chatId: chat.id, userId: member.userId }).unwrap();
-    } catch (err) {
-      const status = (err as AxiosBaseQueryError).status;
-      setError(
-        status === 403
-          ? "You don't have permission to remove this member"
-          : "Failed to remove member"
-      );
-    } finally {
-      setBusyUserId(null);
-    }
-  }
-
-  async function handleChangeRole(member: ChatMemberWithRoleDto, newRole: number) {
-    setBusyUserId(member.userId);
-    setError(null);
-    try {
-      await updateMemberRole({
-        chatId: chat.id,
-        userId: member.userId,
-        roleId: newRole,
-      }).unwrap();
-    } catch (err) {
-      const status = (err as AxiosBaseQueryError).status;
-      setError(
-        status === 403
-          ? "Only the owner can change roles"
-          : "Failed to change role"
-      );
-    } finally {
-      setBusyUserId(null);
-    }
-  }
-
-  async function handleTransferOwnership() {
-    if (!transferTarget) return;
-    setBusyUserId(transferTarget.userId);
-    setError(null);
-    try {
-      await transferChatOwnership({
-        chatId: chat.id,
-        userId: transferTarget.userId,
-      }).unwrap();
-    } catch (err) {
-      setError(getApiErrorMessage(err, "Failed to transfer ownership"));
-    } finally {
-      setTransferTarget(null);
       setBusyUserId(null);
     }
   }
@@ -224,38 +175,37 @@ export function ChatInfoModal({ chat, onClose, onOpenSettings }: Props) {
                     {members.map((m) => (
                       <li
                         key={m.userId}
-                        className="flex items-center justify-between rounded bg-surface px-3 py-2 gap-2"
+                        className="flex items-center justify-between gap-2 rounded px-3 py-2"
                       >
-                        <div className="min-w-0 flex items-center gap-2.5">
-                          <Avatar
-                            userId={m.userId}
-                            userName={m.userName}
-                            name={m.name}
-                            surname={m.surname}
-                            avatarUpdatedAt={m.avatarUpdatedAt}
-                            size="sm"
-                          />
-                          <div className="min-w-0">
-                          <p className="text-content text-sm truncate">
-                            {m.userName}
-                            {m.userId === currentUserId && (
-                              <span className="text-xs text-accent-strong ml-2">
-                                (you)
-                              </span>
-                            )}
-                          </p>
-                          {(m.name || m.surname) && (
-                            <p className="text-xs text-content-muted truncate">
-                              {[m.name, m.surname].filter(Boolean).join(" ")}
-                            </p>
-                          )}
+                          <div className="flex min-w-0 items-center gap-2.5">
+                            <Avatar
+                              userId={m.userId}
+                              userName={m.userName}
+                              name={m.name}
+                              surname={m.surname}
+                              avatarUpdatedAt={m.avatarUpdatedAt}
+                              size="sm"
+                            />
+                            <div className="min-w-0">
+                              <p className="truncate text-sm text-content">
+                                {m.userName}
+                                {m.userId === currentUserId && (
+                                  <span className="ml-2 text-xs text-accent-strong">
+                                    (you)
+                                  </span>
+                                )}
+                              </p>
+                              {(m.name || m.surname) && (
+                                <p className="truncate text-xs text-content-muted">
+                                  {[m.name, m.surname].filter(Boolean).join(" ")}
+                                </p>
+                              )}
+                            </div>
                           </div>
-                        </div>
 
-                        <div className="flex items-center gap-1 shrink-0">
-                          {/* Бейдж роли */}
+                        <div className="flex shrink-0 items-center gap-2">
                           <span
-                            className={`text-xs px-2 py-0.5 rounded ${
+                            className={`rounded px-2 py-0.5 text-xs ${
                               m.roleId === UserRole.Owner
                                 ? "bg-accent-soft text-accent-strong"
                                 : m.roleId === UserRole.Admin
@@ -266,63 +216,14 @@ export function ChatInfoModal({ chat, onClose, onOpenSettings }: Props) {
                             {roleLabel[m.roleId]}
                           </span>
 
-                          {/* Управление ролью — только Owner, не для себя и не для Owner */}
-                          {isGroup &&
-                            isCallerOwner &&
-                            m.userId !== currentUserId &&
-                            m.roleId !== UserRole.Owner && (
-                              <>
-                                {m.roleId === UserRole.User ? (
-                                  <Button
-                                    size="xs"
-                                    variant="info"
-                                    className="py-0.5"
-                                    onClick={() => handleChangeRole(m, UserRole.Admin)}
-                                    disabled={busyUserId !== null}
-                                    title="Make admin"
-                                  >
-                                    <ArrowUp size={11} aria-hidden="true" /> Admin
-                                  </Button>
-                                ) : (
-                                  <Button
-                                    size="xs"
-                                    variant="neutral"
-                                    className="py-0.5"
-                                    onClick={() => handleChangeRole(m, UserRole.User)}
-                                    disabled={busyUserId !== null}
-                                    title="Remove admin"
-                                  >
-                                    <ArrowDown size={11} aria-hidden="true" /> Member
-                                  </Button>
-                                )}
-                              </>
-                            )}
-
-                          {isGroup &&
-                            isCallerOwner &&
-                            m.userId !== currentUserId &&
-                            m.roleId !== UserRole.Owner && (
-                              <Button
-                                size="xs"
-                                variant="neutral"
-                                className="py-0.5"
-                                onClick={() => setTransferTarget(m)}
-                                disabled={busyUserId !== null}
-                                aria-label="Make owner"
-                                title="Make owner"
-                              >
-                                <Crown size={11} aria-hidden="true" />
-                              </Button>
-                            )}
-
-                          {/* Удалить участника */}
-                          {isGroup && m.userId !== currentUserId && (
+                          {canRemove(m) && (
                             <Button
                               size="xs"
                               variant="danger"
-                              onClick={() => handleRemove(m)}
                               disabled={busyUserId !== null}
+                              onClick={() => handleRemove(m)}
                               aria-label="Remove member"
+                              title="Remove from chat"
                             >
                               {busyUserId === m.userId ? "..." : <X size={12} />}
                             </Button>
@@ -394,20 +295,6 @@ export function ChatInfoModal({ chat, onClose, onOpenSettings }: Props) {
             </div>
           )}
       </Modal>
-
-      <AnimatePresence>
-        {transferTarget && (
-          <ConfirmDialog
-            title="Make owner?"
-            message={`${transferTarget.userName} will own this chat and you become an admin. Only they will be able to hand it back.`}
-            confirmText="Make owner"
-            variant="primary"
-            loading={busyUserId === transferTarget.userId}
-            onConfirm={handleTransferOwnership}
-            onCancel={() => setTransferTarget(null)}
-          />
-        )}
-      </AnimatePresence>
 
     </>
   );
