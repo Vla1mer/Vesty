@@ -1,6 +1,7 @@
 export const CHAT_API_TAGS = {
   CHAT: "Chat",
   CHAT_MEMBER: "ChatMember",
+  CHAT_INVITE: "ChatInvite",
 } as const;
 
 export const MESSAGE_API_TAGS = {

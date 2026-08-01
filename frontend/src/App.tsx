@@ -10,6 +10,7 @@ import { NewDirectChatPage } from "./pages/NewDirectChatPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { FriendsPage } from "./pages/FriendsPage";
+import { JoinChatPage } from "./pages/JoinChatPage";
 
 function App() {
   return (
@@ -43,6 +44,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <FriendsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/join/:code"
+            element={
+              <ProtectedRoute>
+                <JoinChatPage />
               </ProtectedRoute>
             }
           />

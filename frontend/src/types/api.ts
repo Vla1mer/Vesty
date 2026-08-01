@@ -93,6 +93,21 @@ export interface ChatPermissionsDto {
   whoCanPost: number;
 }
 
+export interface ChatInviteDto {
+  code: string;
+  expiresAt?: string | null;
+  createdAt: string;
+}
+
+export interface ChatInvitePreviewDto {
+  chatId: number;
+  name: string | null;
+  description?: string | null;
+  memberCount: number;
+  avatarUpdatedAt?: string | null;
+  alreadyMember: boolean;
+}
+
 export interface ChatMemberWithRoleDto {
   userId: number;
   userName: string;

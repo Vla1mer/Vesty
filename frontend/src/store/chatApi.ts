@@ -17,6 +17,8 @@ import type {
   ChatForCreationDto,
   ChatMemberWithRoleDto,
   ChatPermissionsDto,
+  ChatInviteDto,
+  ChatInvitePreviewDto,
 } from "../types/api";
 
 export const chatApi = apiSlice.injectEndpoints({
@@ -170,6 +172,50 @@ export const chatApi = apiSlice.injectEndpoints({
       invalidatesTags: (_result, _error, { chatId }) => [
         { type: CHAT_API_TAGS.CHAT, id: chatId },
       ],
+    }),
+
+    getChatInvite: builder.query<ChatInviteDto | null, number>({
+      query: (chatId) => ({ url: endpoints.chat.invite(chatId) }),
+      transformResponse: (response: ChatInviteDto | "" | null) => response || null,
+      providesTags: (_result, _error, chatId) => [
+        { type: CHAT_API_TAGS.CHAT_INVITE, id: chatId },
+      ],
+    }),
+
+    createChatInvite: builder.mutation<
+      ChatInviteDto,
+      { chatId: number; expiresInDays: number | null }
+    >({
+      query: ({ chatId, expiresInDays }) => ({
+        url: endpoints.chat.invite(chatId),
+        method: HTTP_METHOD.POST,
+        data: { expiresInDays },
+      }),
+      invalidatesTags: (_result, _error, { chatId }) => [
+        { type: CHAT_API_TAGS.CHAT_INVITE, id: chatId },
+      ],
+    }),
+
+    revokeChatInvite: builder.mutation<void, number>({
+      query: (chatId) => ({
+        url: endpoints.chat.invite(chatId),
+        method: HTTP_METHOD.DELETE,
+      }),
+      invalidatesTags: (_result, _error, chatId) => [
+        { type: CHAT_API_TAGS.CHAT_INVITE, id: chatId },
+      ],
+    }),
+
+    previewChatInvite: builder.query<ChatInvitePreviewDto, string>({
+      query: (code) => ({ url: endpoints.chat.inviteByCode(code) }),
+    }),
+
+    joinChatByInvite: builder.mutation<ChatDto, string>({
+      query: (code) => ({
+        url: endpoints.chat.joinByCode(code),
+        method: HTTP_METHOD.POST,
+      }),
+      invalidatesTags: [{ type: CHAT_API_TAGS.CHAT, id: TAG_ID.LIST }],
     }),
 
     getChatById: builder.query<ChatDto, number>({
@@ -358,6 +404,11 @@ export const {
   useLazyFindDirectChatQuery,
   useRenameChatMutation,
   useUpdateChatPermissionsMutation,
+  useGetChatInviteQuery,
+  useCreateChatInviteMutation,
+  useRevokeChatInviteMutation,
+  usePreviewChatInviteQuery,
+  useJoinChatByInviteMutation,
   useGetChatByIdQuery,
   useGetChatMembersQuery,
   useAddChatMemberMutation,
