@@ -394,6 +394,45 @@ namespace Vesty.Tests
         }
 
         [Fact]
+        public async Task Permissions_CannotEditALockedChatMessageThroughAnotherChat()
+        {
+            var ownerName = UniqueName("xcha");
+            var memberName = UniqueName("xchb");
+            var owner = await AuthenticatedClientAsync(ownerName);
+            var member = await AuthenticatedClientAsync(memberName);
+            var memberId = await UserIdAsync(owner, memberName);
+            var ownerId = await UserIdAsync(owner, ownerName);
+            await FriendshipSetup.BefriendAsync(owner, ownerId, member, memberId);
+
+            var locked = await CreateChatAsync(owner, "Locked " + ownerName);
+            var open = await CreateChatAsync(owner, "Open " + ownerName);
+            foreach (var chatId in new[] { locked.Id, open.Id })
+                (await owner.PostAsJsonAsync($"/api/Chat/{chatId}/users",
+                    new { userId = memberId })).EnsureSuccessStatusCode();
+
+            var posted = await member.PostAsJsonAsync($"/api/Message/{locked.Id}/messages",
+                new { content = "secret original" });
+            posted.EnsureSuccessStatusCode();
+            var message = await posted.Content.ReadFromJsonAsync<MessageDto>();
+
+            (await owner.PutAsJsonAsync($"/api/Chat/{locked.Id}/permissions",
+                new
+                {
+                    whoCanInvite = ChatPermission.Admins,
+                    whoCanEdit = ChatPermission.Admins,
+                    whoCanPost = ChatPermission.Admins
+                })).EnsureSuccessStatusCode();
+
+            var throughOpenChat = await member.PutAsJsonAsync(
+                $"/api/Message/{open.Id}/messages/{message!.Id}",
+                new { content = "bypassed via another chat" });
+            Assert.Equal(HttpStatusCode.NotFound, throughOpenChat.StatusCode);
+
+            var stored = await owner.GetFromJsonAsync<MessageDto>($"/api/Message/{message.Id}");
+            Assert.Equal("secret original", stored!.Content);
+        }
+
+        [Fact]
         public async Task Permissions_AnAdminCannotWidenThem()
         {
             var ownerName = UniqueName("wida");

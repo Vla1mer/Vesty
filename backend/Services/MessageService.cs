@@ -165,6 +165,8 @@ namespace Services
             await EnsureCallerCanPostAsync(chat, "edit messages");
 
             var message = await GetMessageOrThrowAsync(id, trackChanges: true);
+            if (message.ChatId != chatId)
+                throw new MessageNotFoundException(id);
             if (message.UserId != _currentUser.UserId)
                 throw new MessageOwnershipException(id);
             message.Content = _cipher.Encrypt(content);

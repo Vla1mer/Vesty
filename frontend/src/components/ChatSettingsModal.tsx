@@ -163,10 +163,12 @@ export function ChatSettingsModal({ chat, onBack, onClose, onDeleted }: Props) {
     setError(null);
     try {
       await deleteChat(chat.id).unwrap();
+      setIsDeleteOpen(false);
       onDeleted();
     } catch (err) {
       setError(getApiErrorMessage(err, "Failed to delete the chat"));
       setIsDeleteOpen(false);
+    } finally {
       setDeleting(false);
     }
   }
@@ -201,7 +203,13 @@ export function ChatSettingsModal({ chat, onBack, onClose, onDeleted }: Props) {
         <div className="space-y-4">
           <FormError message={error} />
 
-          {canEditProfile && (
+          {loading && (
+            <p className="py-6 text-center text-sm text-content-subtle">
+              Loading settings...
+            </p>
+          )}
+
+          {!loading && canEditProfile && (
             <section className="space-y-3">
               <ChatAvatarEditor
                 chatId={chat.id}
@@ -234,7 +242,7 @@ export function ChatSettingsModal({ chat, onBack, onClose, onDeleted }: Props) {
             </section>
           )}
 
-          {isOwner && isGroup && (
+          {!loading && isOwner && isGroup && (
             <section className="space-y-2 border-t border-line pt-3">
               <h3 className="text-sm font-semibold text-content-muted">
                 Permissions
@@ -259,9 +267,9 @@ export function ChatSettingsModal({ chat, onBack, onClose, onDeleted }: Props) {
             </section>
           )}
 
-          {canInvite && <ChatInviteSection chatId={chat.id} />}
+          {!loading && canInvite && <ChatInviteSection chatId={chat.id} />}
 
-          {chat.isPrivate && (
+          {!loading && chat.isPrivate && (
             <section className="space-y-2 border-t border-line pt-3">
               <Button
                 variant="neutral"
@@ -295,7 +303,7 @@ export function ChatSettingsModal({ chat, onBack, onClose, onDeleted }: Props) {
             </section>
           )}
 
-          {canDelete && (
+          {!loading && canDelete && (
             <section className="border-t border-line pt-3">
               <Button
                 variant="danger"
