@@ -15,6 +15,7 @@ import type {
   ChatDto,
   ChatForCreationDto,
   ChatMemberWithRoleDto,
+  ChatPermissionsDto,
 } from "../types/api";
 
 export const chatApi = apiSlice.injectEndpoints({
@@ -130,11 +131,29 @@ export const chatApi = apiSlice.injectEndpoints({
       query: (otherUserId) => ({ url: endpoints.chat.direct(otherUserId) }),
     }),
 
-    renameChat: builder.mutation<void, { chatId: number; name: string }>({
-      query: ({ chatId, name }) => ({
+    renameChat: builder.mutation<
+      void,
+      { chatId: number; name: string; description?: string | null }
+    >({
+      query: ({ chatId, name, description }) => ({
         url: endpoints.chat.byId(chatId),
         method: HTTP_METHOD.PUT,
-        data: { name },
+        data: { name, description },
+      }),
+      invalidatesTags: (_result, _error, { chatId }) => [
+        { type: CHAT_API_TAGS.CHAT, id: chatId },
+        { type: CHAT_API_TAGS.CHAT, id: TAG_ID.LIST },
+      ],
+    }),
+
+    updateChatPermissions: builder.mutation<
+      void,
+      { chatId: number } & ChatPermissionsDto
+    >({
+      query: ({ chatId, ...permissions }) => ({
+        url: endpoints.chat.permissions(chatId),
+        method: HTTP_METHOD.PUT,
+        data: permissions,
       }),
       invalidatesTags: (_result, _error, { chatId }) => [
         { type: CHAT_API_TAGS.CHAT, id: chatId },
@@ -314,6 +333,7 @@ export const {
   useClearChatForMeMutation,
   useLazyFindDirectChatQuery,
   useRenameChatMutation,
+  useUpdateChatPermissionsMutation,
   useGetChatByIdQuery,
   useGetChatMembersQuery,
   useAddChatMemberMutation,

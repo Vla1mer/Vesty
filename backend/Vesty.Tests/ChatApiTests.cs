@@ -301,6 +301,110 @@ namespace Vesty.Tests
         }
 
         [Fact]
+        public async Task Permissions_DefaultToTheSafeValues()
+        {
+            var ownerName = UniqueName("perma");
+            var owner = await AuthenticatedClientAsync(ownerName);
+
+            var chat = await CreateChatAsync(owner, "G" + ownerName);
+            var fetched = await owner.GetFromJsonAsync<ChatDto>($"/api/Chat/{chat.Id}");
+
+            Assert.Equal(ChatPermission.Admins, fetched!.WhoCanInvite);
+            Assert.Equal(ChatPermission.Admins, fetched.WhoCanEdit);
+            Assert.Equal(ChatPermission.Members, fetched.WhoCanPost);
+        }
+
+        [Fact]
+        public async Task Permissions_OwnerCanCloseThePostingAndItStopsMembers()
+        {
+            var ownerName = UniqueName("locka");
+            var memberName = UniqueName("lockb");
+            var owner = await AuthenticatedClientAsync(ownerName);
+            var member = await AuthenticatedClientAsync(memberName);
+            var memberId = await UserIdAsync(owner, memberName);
+
+            var chat = await CreateChatAsync(owner, "G" + ownerName);
+            (await owner.PostAsJsonAsync($"/api/Chat/{chat.Id}/users",
+                new { userId = memberId })).EnsureSuccessStatusCode();
+
+            var before = await member.PostAsJsonAsync($"/api/Message/{chat.Id}/messages",
+                new { content = "before" });
+            Assert.Equal(HttpStatusCode.Created, before.StatusCode);
+
+            var locked = await owner.PutAsJsonAsync($"/api/Chat/{chat.Id}/permissions",
+                new
+                {
+                    whoCanInvite = ChatPermission.Admins,
+                    whoCanEdit = ChatPermission.Admins,
+                    whoCanPost = ChatPermission.Admins
+                });
+            Assert.Equal(HttpStatusCode.NoContent, locked.StatusCode);
+
+            var after = await member.PostAsJsonAsync($"/api/Message/{chat.Id}/messages",
+                new { content = "after" });
+            Assert.Equal(HttpStatusCode.Forbidden, after.StatusCode);
+
+            var byOwner = await owner.PostAsJsonAsync($"/api/Message/{chat.Id}/messages",
+                new { content = "owner still can" });
+            Assert.Equal(HttpStatusCode.Created, byOwner.StatusCode);
+        }
+
+        [Fact]
+        public async Task Permissions_AnAdminCannotWidenThem()
+        {
+            var ownerName = UniqueName("wida");
+            var adminName = UniqueName("widb");
+            var owner = await AuthenticatedClientAsync(ownerName);
+            var admin = await AuthenticatedClientAsync(adminName);
+            var adminId = await UserIdAsync(owner, adminName);
+
+            var chat = await CreateChatAsync(owner, "G" + ownerName);
+            (await owner.PostAsJsonAsync($"/api/Chat/{chat.Id}/users",
+                new { userId = adminId })).EnsureSuccessStatusCode();
+            (await owner.PatchAsJsonAsync($"/api/Chat/{chat.Id}/users/{adminId}/role",
+                new { roleId = UserRole.Admin })).EnsureSuccessStatusCode();
+
+            var attempt = await admin.PutAsJsonAsync($"/api/Chat/{chat.Id}/permissions",
+                new
+                {
+                    whoCanInvite = ChatPermission.Members,
+                    whoCanEdit = ChatPermission.Members,
+                    whoCanPost = ChatPermission.Members
+                });
+
+            Assert.Equal(HttpStatusCode.Forbidden, attempt.StatusCode);
+        }
+
+        [Fact]
+        public async Task Permissions_RejectAnUnknownLevel()
+        {
+            var ownerName = UniqueName("bada");
+            var owner = await AuthenticatedClientAsync(ownerName);
+            var chat = await CreateChatAsync(owner, "G" + ownerName);
+
+            var attempt = await owner.PutAsJsonAsync($"/api/Chat/{chat.Id}/permissions",
+                new { whoCanInvite = 99, whoCanEdit = 2, whoCanPost = 3 });
+
+            Assert.Equal(HttpStatusCode.BadRequest, attempt.StatusCode);
+        }
+
+        [Fact]
+        public async Task Description_IsSavedAndReturned()
+        {
+            var ownerName = UniqueName("desca");
+            var owner = await AuthenticatedClientAsync(ownerName);
+            var chat = await CreateChatAsync(owner, "G" + ownerName);
+
+            var renamed = await owner.PutAsJsonAsync($"/api/Chat/{chat.Id}",
+                new { name = "Renamed", description = "  Team standup notes  " });
+            Assert.Equal(HttpStatusCode.NoContent, renamed.StatusCode);
+
+            var fetched = await owner.GetFromJsonAsync<ChatDto>($"/api/Chat/{chat.Id}");
+            Assert.Equal("Renamed", fetched!.Name);
+            Assert.Equal("Team standup notes", fetched.Description);
+        }
+
+        [Fact]
         public async Task TransferOwnership_LetsTheFormerOwnerLeave()
         {
             var ownerName = UniqueName("towna");

@@ -81,7 +81,7 @@ namespace Services
                 throw new OperationNotAllowedInPrivateChatException("change the chat avatar");
 
             var caller = await _currentUser.GetMembershipAsync(chatId);
-            if (caller is null || (caller.RoleId != UserRole.Owner && caller.RoleId != UserRole.Admin))
+            if (caller is null || !ChatPermission.Allows(chat.WhoCanEdit, caller.RoleId))
                 throw new InsufficientChatPermissionException("change the chat avatar", chatId);
 
             return chat;

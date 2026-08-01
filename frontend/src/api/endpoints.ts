@@ -26,6 +26,7 @@ export const endpoints = {
     read: (chatId: number) => `/api/Chat/${chatId}/read`,
     clearForMe: (chatId: number) => `/api/Chat/${chatId}/for-me`,
     direct: (otherUserId: number) => `/api/Chat/direct/${otherUserId}`,
+    permissions: (chatId: number) => `/api/Chat/${chatId}/permissions`,
     avatar: (chatId: number) => `/api/Chat/${chatId}/avatar`,
     messages: (chatId: number) => `/api/Chat/${chatId}/messages`,
     members: (chatId: number) => `/api/Chat/${chatId}/users`,

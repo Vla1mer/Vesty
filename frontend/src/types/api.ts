@@ -38,6 +38,10 @@ export interface UserForUpdateDto {
 export interface ChatDto {
   id: number;
   name: string | null;
+  description?: string | null;
+  whoCanInvite: number;
+  whoCanEdit: number;
+  whoCanPost: number;
   creatorId: number | null;
   isPrivate: boolean;
   createdAt: string;
@@ -68,6 +72,25 @@ export const UserRole = {
   Admin: 2,
   User: 3,
 } as const;
+
+export const ChatPermission = {
+  Owner: 1,
+  Admins: 2,
+  Members: 3,
+} as const;
+
+export function permissionAllows(permission: number, roleId: number): boolean {
+  if (permission === ChatPermission.Members) return true;
+  if (permission === ChatPermission.Admins)
+    return roleId === UserRole.Owner || roleId === UserRole.Admin;
+  return roleId === UserRole.Owner;
+}
+
+export interface ChatPermissionsDto {
+  whoCanInvite: number;
+  whoCanEdit: number;
+  whoCanPost: number;
+}
 
 export interface ChatMemberWithRoleDto {
   userId: number;

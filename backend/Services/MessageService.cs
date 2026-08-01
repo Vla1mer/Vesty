@@ -101,7 +101,9 @@ namespace Services
             int? replyToMessageId = null, IEnumerable<int>? attachmentIds = null)
         {
             var chat = await GetChatOrThrowAsync(chatId);
-            await EnsureCallerIsChatMember(chatId);
+            var membership = await EnsureCallerIsChatMember(chatId);
+            if (!ChatPermission.Allows(chat.WhoCanPost, membership.RoleId))
+                throw new InsufficientChatPermissionException("post messages", chatId);
             await EnsureDirectChatNotBlockedAsync(chat);
 
             var text = content ?? string.Empty;
