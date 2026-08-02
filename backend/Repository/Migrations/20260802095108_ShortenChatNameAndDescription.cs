@@ -4,7 +4,13 @@
 
 namespace Repository.Migrations
 {
-    /// <inheritdoc />
+    /// <summary>
+    /// Narrows Chats.Name to 100 and Chats.Description to 255. Postgres refuses to
+    /// shrink a column while longer values exist, so anything over the new limit is
+    /// truncated first. That truncation is one-way: Down widens the columns back but
+    /// cannot restore the cut characters. Back up the table before applying this to
+    /// data you care about.
+    /// </summary>
     public partial class ShortenChatNameAndDescription : Migration
     {
         /// <inheritdoc />

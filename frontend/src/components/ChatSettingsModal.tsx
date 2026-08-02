@@ -1,5 +1,5 @@
 import { AnimatePresence } from "framer-motion";
-import { ArrowLeft, ChevronRight, Crown, Eraser, LogOut, Trash2 } from "lucide-react";
+import { ChevronRight, Crown, Eraser, LogOut, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   useClearChatForMeMutation,
@@ -32,7 +32,7 @@ import { FormError } from "./FormError";
 const permissionFields = [
   { key: "whoCanInvite", label: "Who can add members" },
   { key: "whoCanEdit", label: "Who can edit name and photo" },
-  { key: "whoCanPost", label: "Who can send messages" },
+  { key: "whoCanPost", label: "Who can send and edit messages" },
 ] as const;
 
 function CharCounter({ value, max }: { value: string; max: number }) {
@@ -53,11 +53,10 @@ function CharCounter({ value, max }: { value: string; max: number }) {
 interface Props {
   chat: ChatDto;
   onBack: () => void;
-  onClose: () => void;
   onDeleted: () => void;
 }
 
-export function ChatSettingsModal({ chat, onBack, onClose, onDeleted }: Props) {
+export function ChatSettingsModal({ chat, onBack, onDeleted }: Props) {
   const { userId: currentUserId } = useAuth();
   const [updateChatPermissions] = useUpdateChatPermissionsMutation();
   const [removeChatMember] = useRemoveChatMemberMutation();
@@ -146,6 +145,12 @@ export function ChatSettingsModal({ chat, onBack, onClose, onDeleted }: Props) {
           whoCanPost: chat.whoCanPost,
         };
 
+  // ошибка относится к покинутому экрану, иначе она всплывёт при возврате
+  function showView(next: "settings" | "admins") {
+    setError(null);
+    setView(next);
+  }
+
   async function handleSaveProfile() {
     if (savingProfile) return;
     const newName = nameDraft.trim();
@@ -199,11 +204,11 @@ export function ChatSettingsModal({ chat, onBack, onClose, onDeleted }: Props) {
     try {
       await removeChatMember({ chatId: chat.id, userId: currentUserId }).unwrap();
       setIsLeaveOpen(false);
+      setLeaving(false);
       onDeleted();
     } catch (err) {
       setError(getApiErrorMessage(err, "Failed to leave the chat"));
       setIsLeaveOpen(false);
-    } finally {
       setLeaving(false);
     }
   }
@@ -215,7 +220,7 @@ export function ChatSettingsModal({ chat, onBack, onClose, onDeleted }: Props) {
       setIsClearOpen(false);
       onDeleted();
     } catch (err) {
-      setError(getApiErrorMessage(err, "Failed to delete the chat"));
+      setError(getApiErrorMessage(err, "Failed to clear the conversation"));
       setIsClearOpen(false);
     }
   }
@@ -226,11 +231,11 @@ export function ChatSettingsModal({ chat, onBack, onClose, onDeleted }: Props) {
     try {
       await deleteChat(chat.id).unwrap();
       setIsDeleteOpen(false);
+      setDeleting(false);
       onDeleted();
     } catch (err) {
       setError(getApiErrorMessage(err, "Failed to delete the chat"));
       setIsDeleteOpen(false);
-    } finally {
       setDeleting(false);
     }
   }
@@ -241,27 +246,18 @@ export function ChatSettingsModal({ chat, onBack, onClose, onDeleted }: Props) {
   return (
     <>
       <Modal
-        onClose={onClose}
+        onClose={view === "admins" ? () => showView("settings") : onBack}
         size="md"
         layout="column"
         layer="base"
+        closeIcon="back"
+        closeSide="left"
         closeDisabled={busy}
+        ariaLabel="Chat settings"
         title={
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={view === "admins" ? () => setView("settings") : onBack}
-              disabled={busy}
-              className="text-content-muted transition hover:text-accent-strong disabled:opacity-50"
-              aria-label="Back to chat info"
-              title="Back"
-            >
-              <ArrowLeft size={18} />
-            </button>
-            <h2 className="text-xl font-bold text-content">
-              {view === "admins" ? "Administrators" : "Settings"}
-            </h2>
-          </div>
+          <h2 className="min-w-0 flex-1 text-xl font-bold text-content">
+            {view === "admins" ? "Administrators" : "Settings"}
+          </h2>
         }
       >
         <div className="flex-1 overflow-y-auto">
@@ -345,7 +341,7 @@ export function ChatSettingsModal({ chat, onBack, onClose, onDeleted }: Props) {
           {!loading && isOwner && isGroup && (
             <button
               type="button"
-              onClick={() => setView("admins")}
+              onClick={() => showView("admins")}
               className="flex w-full items-center justify-between gap-2 rounded-lg border border-line px-3 py-2 text-sm text-content transition-colors hover:bg-surface-muted"
             >
               <span className="flex items-center gap-2">

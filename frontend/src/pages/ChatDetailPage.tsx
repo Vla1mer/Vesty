@@ -624,7 +624,6 @@ export function ChatDetailPage() {
               setIsSettingsOpen(false);
               setIsInfoOpen(true);
             }}
-            onClose={() => setIsSettingsOpen(false)}
             onDeleted={() => navigate("/chats", { replace: true })}
           />
         )}
