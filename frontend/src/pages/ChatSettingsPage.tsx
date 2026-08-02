@@ -15,23 +15,27 @@ export function ChatSettingsPage() {
   const isValidChat = Number.isFinite(chatId);
 
   const [view, setView] = useState<ChatSettingsView>("settings");
+  const [busy, setBusy] = useState(false);
 
   const { data: chat, isLoading } = useGetChatByIdQuery(chatId, {
     skip: !isValidChat,
   });
 
   function goBack() {
+    if (busy) return;
+
     if (view === "admins") {
       setView("settings");
       return;
     }
-    navigate(`/chats/${chatId}`);
+    navigate(isValidChat ? `/chats/${chatId}` : "/chats");
   }
 
   return (
     <PageShell
       title={view === "admins" ? "Administrators" : "Settings"}
       onBack={goBack}
+      backDisabled={busy}
     >
       {!isValidChat ? (
         <FormError message="Invalid chat id" />
@@ -47,6 +51,7 @@ export function ChatSettingsPage() {
           view={view}
           onViewChange={setView}
           onDeleted={() => navigate("/chats", { replace: true })}
+          onBusyChange={setBusy}
         />
       )}
     </PageShell>
