@@ -6,6 +6,7 @@ import { ChatEmptyState } from "./components/ChatEmptyState";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { ChatDetailPage } from "./pages/ChatDetailPage";
+import { ChatSettingsPage } from "./pages/ChatSettingsPage";
 import { NewDirectChatPage } from "./pages/NewDirectChatPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { SettingsPage } from "./pages/SettingsPage";
@@ -30,6 +31,7 @@ function App() {
             <Route index element={<ChatEmptyState />} />
             <Route path="new/:userId" element={<NewDirectChatPage />} />
             <Route path=":id" element={<ChatDetailPage />} />
+            <Route path=":id/settings" element={<ChatSettingsPage />} />
           </Route>
           <Route
             path="/profile"

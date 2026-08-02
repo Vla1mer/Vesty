@@ -26,6 +26,7 @@ import { onChatDeleted } from "../lib/signalr";
 import { setActiveChat } from "../lib/activeChat";
 import { useTypingIndicator } from "../hooks/useTypingIndicator";
 import { useAttachmentUploads } from "../hooks/useAttachmentUploads";
+import { useIsMobile } from "../hooks/useIsMobile";
 import { ArrowDown, ArrowLeft, ChevronRight, Copy, MessageCircle, Paperclip, Pencil, Pin, Reply, Trash2, X } from "lucide-react";
 import { AttachmentDrafts } from "../components/AttachmentDrafts";
 import type { AxiosBaseQueryError } from "../api/axiosBaseQuery";
@@ -95,6 +96,7 @@ export function ChatDetailPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDraggingFile, setIsDraggingFile] = useState(false);
   const { typingNames, notifyTyping } = useTypingIndicator(chatId, isValidChat);
+  const isMobile = useIsMobile();
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const [replyTo, setReplyTo] = useState<MessageDto | null>(null);
@@ -610,7 +612,10 @@ export function ChatDetailPage() {
             onClose={() => setIsInfoOpen(false)}
             onOpenSettings={() => {
               setIsInfoOpen(false);
-              setIsSettingsOpen(true);
+              // на узком экране настройки — отдельный маршрут, чтобы работала
+              // системная кнопка «назад»
+              if (isMobile) navigate(`/chats/${chatId}/settings`);
+              else setIsSettingsOpen(true);
             }}
           />
         )}
@@ -624,7 +629,6 @@ export function ChatDetailPage() {
               setIsSettingsOpen(false);
               setIsInfoOpen(true);
             }}
-            onClose={() => setIsSettingsOpen(false)}
             onDeleted={() => navigate("/chats", { replace: true })}
           />
         )}

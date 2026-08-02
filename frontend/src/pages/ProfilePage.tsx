@@ -1,14 +1,10 @@
-import { BottomNav } from "../components/BottomNav";
 import { ProfileContent } from "../components/ProfileContent";
+import { PageShell } from "../components/ui/PageShell";
 
 export function ProfilePage() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 pb-28">
-      <h1 className="text-3xl font-bold text-content mb-6">Profile</h1>
-      <div className="w-full max-w-md bg-surface border border-line rounded-card shadow-float p-6">
-        <ProfileContent />
-      </div>
-      <BottomNav />
-    </div>
+    <PageShell title="Profile" showNav>
+      <ProfileContent />
+    </PageShell>
   );
 }
