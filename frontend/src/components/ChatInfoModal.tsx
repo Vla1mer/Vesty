@@ -119,7 +119,7 @@ export function ChatInfoModal({ chat, onClose, onOpenSettings }: Props) {
         layout="column"
         layer="base"
         title={
-          <div className="relative flex-1">
+          <div className="relative min-w-0 flex-1">
             <button
               type="button"
               onClick={onOpenSettings}
@@ -130,7 +130,7 @@ export function ChatInfoModal({ chat, onClose, onOpenSettings }: Props) {
               <Settings size={20} />
             </button>
 
-            <div className="flex flex-col items-center pr-[38px] text-center">
+            <div className="flex w-full min-w-0 flex-col items-center pr-[38px] text-center">
               {isGroup && (
                 <ChatAvatar
                   chatId={chat.id}
@@ -146,7 +146,7 @@ export function ChatInfoModal({ chat, onClose, onOpenSettings }: Props) {
               </h2>
 
               {isGroup && chat.description && (
-                <p className="mt-1 whitespace-pre-line text-sm text-content-muted">
+                <p className="mt-1 max-h-24 w-full overflow-y-auto whitespace-pre-line break-words text-sm text-content-muted">
                   {chat.description}
                 </p>
               )}

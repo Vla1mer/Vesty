@@ -11,7 +11,11 @@ import {
 } from "../store/chatApi";
 import { ChatAvatarEditor } from "./ChatAvatarEditor";
 import { TextInput } from "./ui/TextInput";
-import { chatNameSchema } from "../validation/chatSchemas";
+import {
+  chatNameSchema,
+  CHAT_DESCRIPTION_LIMIT,
+  CHAT_NAME_LIMIT,
+} from "../validation/chatSchemas";
 import { ValidationError } from "yup";
 import { useAuth } from "../context/useAuth";
 import { getApiErrorMessage } from "../utils/apiError";
@@ -30,6 +34,21 @@ const permissionFields = [
   { key: "whoCanEdit", label: "Who can edit name and photo" },
   { key: "whoCanPost", label: "Who can send messages" },
 ] as const;
+
+function CharCounter({ value, max }: { value: string; max: number }) {
+  const left = max - value.length;
+
+  return (
+    <p
+      aria-live="polite"
+      className={`text-right text-xs tabular-nums ${
+        left === 0 ? "text-danger" : "text-content-subtle"
+      }`}
+    >
+      {value.length} / {max}
+    </p>
+  );
+}
 
 interface Props {
   chat: ChatDto;
@@ -264,22 +283,29 @@ export function ChatSettingsModal({ chat, onBack, onClose, onDeleted }: Props) {
                 name={getChatDisplayName(chat)}
                 avatarUpdatedAt={chat.avatarUpdatedAt}
               />
-              <TextInput
-                type="text"
-                value={nameDraft}
-                onChange={(e) => setNameDraft(e.target.value)}
-                maxLength={200}
-                placeholder="Chat name"
-                className="font-semibold"
-              />
-              <textarea
-                value={descriptionDraft}
-                onChange={(e) => setDescriptionDraft(e.target.value)}
-                maxLength={500}
-                rows={3}
-                placeholder="Description (optional)"
-                className="w-full resize-none rounded-lg border border-line bg-surface-sunken px-3 py-2 text-sm text-content placeholder:text-content-subtle focus:border-accent focus:outline-none"
-              />
+              <div className="space-y-1">
+                <TextInput
+                  type="text"
+                  value={nameDraft}
+                  onChange={(e) => setNameDraft(e.target.value)}
+                  maxLength={CHAT_NAME_LIMIT}
+                  placeholder="Chat name"
+                  className="font-semibold"
+                />
+                <CharCounter value={nameDraft} max={CHAT_NAME_LIMIT} />
+              </div>
+
+              <div className="space-y-1">
+                <textarea
+                  value={descriptionDraft}
+                  onChange={(e) => setDescriptionDraft(e.target.value)}
+                  maxLength={CHAT_DESCRIPTION_LIMIT}
+                  rows={3}
+                  placeholder="Description (optional)"
+                  className="w-full resize-none rounded-lg border border-line bg-surface-sunken px-3 py-2 text-sm text-content placeholder:text-content-subtle focus:border-accent focus:outline-none"
+                />
+                <CharCounter value={descriptionDraft} max={CHAT_DESCRIPTION_LIMIT} />
+              </div>
               <Button
                 size="xs"
                 onClick={handleSaveProfile}

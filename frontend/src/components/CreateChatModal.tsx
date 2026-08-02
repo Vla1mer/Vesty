@@ -8,7 +8,7 @@ import { Button } from "./ui/Button";
 import { Modal } from "./ui/Modal";
 import { TextInput } from "./ui/TextInput";
 import { FormError } from "./FormError";
-import { chatNameSchema } from "../validation/chatSchemas";
+import { chatNameSchema, CHAT_NAME_LIMIT } from "../validation/chatSchemas";
 import { getApiErrorMessage } from "../utils/apiError";
 import type { UserDto } from "../types/api";
 
@@ -95,7 +95,7 @@ export function CreateChatModal({ onClose }: Props) {
                   if (e.key === "Enter") handleNext();
                 }}
                 autoFocus
-                maxLength={200}
+                maxLength={CHAT_NAME_LIMIT}
                 invalid={Boolean(nameError)}
               />
               {nameError && (
