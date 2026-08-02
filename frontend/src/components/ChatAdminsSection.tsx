@@ -172,9 +172,13 @@ export function ChatAdminsSection({ chatId, members }: Props) {
         ))}
       </ul>
 
-      {admins.length === 0 && (
+      {admins.length === 0 ? (
         <p className="px-3 text-sm text-content-subtle">
           No administrators yet.
+        </p>
+      ) : (
+        <p className="px-3 text-xs text-content-subtle">
+          Ownership can only be handed to an administrator.
         </p>
       )}
 

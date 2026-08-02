@@ -68,7 +68,6 @@ export function ChatInfoModal({ chat, onClose, onOpenSettings }: Props) {
   async function handleRemove() {
     const member = removing;
     if (!member) return;
-    setRemoving(null);
     setBusyUserId(member.userId);
     setError(null);
     try {
@@ -76,6 +75,7 @@ export function ChatInfoModal({ chat, onClose, onOpenSettings }: Props) {
     } catch (err) {
       setError(getApiErrorMessage(err, "Failed to remove member"));
     } finally {
+      setRemoving(null);
       setBusyUserId(null);
     }
   }

@@ -1,6 +1,6 @@
 import { AnimatePresence } from "framer-motion";
 import { ArrowLeft, ChevronRight, Crown, Eraser, LogOut, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   useClearChatForMeMutation,
   useDeleteChatMutation,
@@ -46,8 +46,11 @@ export function ChatSettingsModal({ chat, onBack, onClose, onDeleted }: Props) {
   const [clearChatForMe, { isLoading: clearing }] = useClearChatForMeMutation();
   const [renameChat] = useRenameChatMutation();
 
-  const [nameDraft, setNameDraft] = useState(chat.name ?? "");
-  const [descriptionDraft, setDescriptionDraft] = useState(chat.description ?? "");
+  const serverName = chat.name ?? "";
+  const serverDescription = chat.description ?? "";
+
+  const [nameDraft, setNameDraft] = useState(serverName);
+  const [descriptionDraft, setDescriptionDraft] = useState(serverDescription);
   const [savingProfile, setSavingProfile] = useState(false);
   const [view, setView] = useState<"settings" | "admins">("settings");
 
@@ -76,14 +79,43 @@ export function ChatSettingsModal({ chat, onBack, onClose, onDeleted }: Props) {
   const canEditProfile =
     isGroup && myRoleId !== undefined && permissionAllows(chat.whoCanEdit, myRoleId);
   const profileChanged =
-    nameDraft.trim() !== (chat.name ?? "") ||
-    descriptionDraft.trim() !== (chat.description ?? "");
+    nameDraft.trim() !== serverName || descriptionDraft.trim() !== serverDescription;
 
   const adminCount = members.filter((m) => m.roleId === UserRole.Admin).length;
 
   useEffect(() => {
     setSaved(null);
   }, [chat.whoCanInvite, chat.whoCanEdit, chat.whoCanPost]);
+
+  // подхватываем чужие правки профиля, но не затираем то, что печатает владелец
+  const known = useRef({
+    chatId: chat.id,
+    name: serverName,
+    description: serverDescription,
+  });
+
+  useEffect(() => {
+    const previous = known.current;
+    known.current = {
+      chatId: chat.id,
+      name: serverName,
+      description: serverDescription,
+    };
+
+    if (previous.chatId !== chat.id) {
+      setNameDraft(serverName);
+      setDescriptionDraft(serverDescription);
+      return;
+    }
+
+    if (previous.name !== serverName)
+      setNameDraft((draft) => (draft === previous.name ? serverName : draft));
+
+    if (previous.description !== serverDescription)
+      setDescriptionDraft((draft) =>
+        draft === previous.description ? serverDescription : draft
+      );
+  }, [chat.id, serverName, serverDescription]);
 
   const permissions =
     saved?.chatId === chat.id
@@ -139,7 +171,10 @@ export function ChatSettingsModal({ chat, onBack, onClose, onDeleted }: Props) {
   }
 
   async function handleLeave() {
-    if (currentUserId === null) return;
+    if (currentUserId === null) {
+      setIsLeaveOpen(false);
+      return;
+    }
     setLeaving(true);
     setError(null);
     try {
