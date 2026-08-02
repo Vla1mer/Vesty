@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using AutoMapper;
 using Shared.Exceptions;
 using Entities.Models;
 using Shared.RequestFeatures;
@@ -101,9 +101,7 @@ namespace Services
             int? replyToMessageId = null, IEnumerable<int>? attachmentIds = null)
         {
             var chat = await GetChatOrThrowAsync(chatId);
-            var membership = await EnsureCallerIsChatMember(chatId);
-            if (!ChatPermission.Allows(chat.WhoCanPost, membership.RoleId))
-                throw new InsufficientChatPermissionException("post messages", chatId);
+            await EnsureCallerCanPostAsync(chat, "post messages");
             await EnsureDirectChatNotBlockedAsync(chat);
 
             var text = content ?? string.Empty;
@@ -163,10 +161,12 @@ namespace Services
 
         public async Task UpdateMessageForChatAsync(int chatId, int id, string content)
         {
-            await GetChatOrThrowAsync(chatId);
-            await EnsureCallerIsChatMember(chatId);
+            var chat = await GetChatOrThrowAsync(chatId);
+            await EnsureCallerCanPostAsync(chat, "edit messages");
 
             var message = await GetMessageOrThrowAsync(id, trackChanges: true);
+            if (message.ChatId != chatId)
+                throw new MessageNotFoundException(id);
             if (message.UserId != _currentUser.UserId)
                 throw new MessageOwnershipException(id);
             message.Content = _cipher.Encrypt(content);
@@ -286,6 +286,13 @@ namespace Services
             if (message is null)
                 throw new MessageNotFoundException(id);
             return message;
+        }
+
+        private async Task EnsureCallerCanPostAsync(Chat chat, string action)
+        {
+            var membership = await EnsureCallerIsChatMember(chat.Id);
+            if (!ChatPermission.Allows(chat.WhoCanPost, membership.RoleId))
+                throw new InsufficientChatPermissionException(action, chat.Id);
         }
 
         private static bool IsCleared(Message message, ChatMember membership) =>

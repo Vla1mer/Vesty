@@ -18,6 +18,7 @@ import { useAuth } from "../context/useAuth";
 import { Avatar, ChatAvatar } from "../components/Avatar";
 import { MessageBubble } from "../components/MessageBubble";
 import { ChatInfoModal } from "../components/ChatInfoModal";
+import { ChatSettingsModal } from "../components/ChatSettingsModal";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { getChatDisplayName } from "../utils/chats";
 import { formatDateSeparator, isSameDay } from "../utils/date";
@@ -57,6 +58,7 @@ export function ChatDetailPage() {
   const [actionError, setActionError] = useState<string | null>(null);
   const { data: blockedUsers = [] } = useGetBlockedUsersQuery();
   const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
@@ -606,6 +608,23 @@ export function ChatDetailPage() {
           <ChatInfoModal
             chat={chat}
             onClose={() => setIsInfoOpen(false)}
+            onOpenSettings={() => {
+              setIsInfoOpen(false);
+              setIsSettingsOpen(true);
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isSettingsOpen && chat && (
+          <ChatSettingsModal
+            chat={chat}
+            onBack={() => {
+              setIsSettingsOpen(false);
+              setIsInfoOpen(true);
+            }}
+            onClose={() => setIsSettingsOpen(false)}
             onDeleted={() => navigate("/chats", { replace: true })}
           />
         )}

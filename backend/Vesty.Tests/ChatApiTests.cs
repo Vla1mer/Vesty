@@ -353,6 +353,88 @@ namespace Vesty.Tests
         }
 
         [Fact]
+        public async Task Permissions_ClosedPostingAlsoStopsEditingOldMessages()
+        {
+            var ownerName = UniqueName("edta");
+            var memberName = UniqueName("edtb");
+            var owner = await AuthenticatedClientAsync(ownerName);
+            var member = await AuthenticatedClientAsync(memberName);
+            var memberId = await UserIdAsync(owner, memberName);
+            var ownerId = await UserIdAsync(owner, ownerName);
+            await FriendshipSetup.BefriendAsync(owner, ownerId, member, memberId);
+
+            var chat = await CreateChatAsync(owner, "G" + ownerName);
+            (await owner.PostAsJsonAsync($"/api/Chat/{chat.Id}/users",
+                new { userId = memberId })).EnsureSuccessStatusCode();
+
+            var posted = await member.PostAsJsonAsync($"/api/Message/{chat.Id}/messages",
+                new { content = "original" });
+            posted.EnsureSuccessStatusCode();
+            var message = await posted.Content.ReadFromJsonAsync<MessageDto>();
+            Assert.NotNull(message);
+
+            (await owner.PutAsJsonAsync($"/api/Chat/{chat.Id}/permissions",
+                new
+                {
+                    whoCanInvite = ChatPermission.Admins,
+                    whoCanEdit = ChatPermission.Admins,
+                    whoCanPost = ChatPermission.Admins
+                })).EnsureSuccessStatusCode();
+
+            var edited = await member.PutAsJsonAsync(
+                $"/api/Message/{chat.Id}/messages/{message!.Id}",
+                new { content = "sneaked in after the lock" });
+            Assert.Equal(HttpStatusCode.Forbidden, edited.StatusCode);
+
+            var stored = await owner.GetFromJsonAsync<MessageDto>($"/api/Message/{message.Id}");
+            Assert.Equal("original", stored!.Content);
+
+            var byOwner = await owner.PostAsJsonAsync($"/api/Message/{chat.Id}/messages",
+                new { content = "owner posts" });
+            Assert.Equal(HttpStatusCode.Created, byOwner.StatusCode);
+        }
+
+        [Fact]
+        public async Task Permissions_CannotEditALockedChatMessageThroughAnotherChat()
+        {
+            var ownerName = UniqueName("xcha");
+            var memberName = UniqueName("xchb");
+            var owner = await AuthenticatedClientAsync(ownerName);
+            var member = await AuthenticatedClientAsync(memberName);
+            var memberId = await UserIdAsync(owner, memberName);
+            var ownerId = await UserIdAsync(owner, ownerName);
+            await FriendshipSetup.BefriendAsync(owner, ownerId, member, memberId);
+
+            var locked = await CreateChatAsync(owner, "Locked " + ownerName);
+            var open = await CreateChatAsync(owner, "Open " + ownerName);
+            foreach (var chatId in new[] { locked.Id, open.Id })
+                (await owner.PostAsJsonAsync($"/api/Chat/{chatId}/users",
+                    new { userId = memberId })).EnsureSuccessStatusCode();
+
+            var posted = await member.PostAsJsonAsync($"/api/Message/{locked.Id}/messages",
+                new { content = "secret original" });
+            posted.EnsureSuccessStatusCode();
+            var message = await posted.Content.ReadFromJsonAsync<MessageDto>();
+            Assert.NotNull(message);
+
+            (await owner.PutAsJsonAsync($"/api/Chat/{locked.Id}/permissions",
+                new
+                {
+                    whoCanInvite = ChatPermission.Admins,
+                    whoCanEdit = ChatPermission.Admins,
+                    whoCanPost = ChatPermission.Admins
+                })).EnsureSuccessStatusCode();
+
+            var throughOpenChat = await member.PutAsJsonAsync(
+                $"/api/Message/{open.Id}/messages/{message!.Id}",
+                new { content = "bypassed via another chat" });
+            Assert.Equal(HttpStatusCode.NotFound, throughOpenChat.StatusCode);
+
+            var stored = await owner.GetFromJsonAsync<MessageDto>($"/api/Message/{message.Id}");
+            Assert.Equal("secret original", stored!.Content);
+        }
+
+        [Fact]
         public async Task Permissions_AnAdminCannotWidenThem()
         {
             var ownerName = UniqueName("wida");

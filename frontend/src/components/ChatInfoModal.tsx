@@ -1,46 +1,29 @@
-import { ArrowDown, ArrowUp, Crown, Eraser, LogOut, Pencil, Trash2, X } from "lucide-react";
+import { Settings, X } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
+import { ConfirmDialog } from "./ConfirmDialog";
 import { useMemo, useState } from "react";
 import {
-  useClearChatForMeMutation,
-  useDeleteChatMutation,
-  useRenameChatMutation,
   useGetChatMembersQuery,
   useAddChatMemberMutation,
   useRemoveChatMemberMutation,
-  useUpdateMemberRoleMutation,
-  useTransferChatOwnershipMutation,
-  useUpdateChatPermissionsMutation,
 } from "../store/chatApi";
 import { useGetAllUsersQuery } from "../store/userApi";
 import { useAuth } from "../context/useAuth";
-import { Avatar } from "./Avatar";
-import { ChatAvatarEditor } from "./ChatAvatarEditor";
+import { Avatar, ChatAvatar } from "./Avatar";
 import { Button } from "./ui/Button";
 import { TextInput } from "./ui/TextInput";
 import { Modal } from "./ui/Modal";
-import { ConfirmDialog } from "./ConfirmDialog";
-import { ChatInviteSection } from "./ChatInviteSection";
-import { ChatPermission, isDirectChat, permissionAllows, UserRole } from "../types/api";
+import { UserRole } from "../types/api";
 import { getChatDisplayName } from "../utils/chats";
-import { chatNameSchema } from "../validation/chatSchemas";
-import { ValidationError } from "yup";
 import type { ChatDto, UserDto, ChatMemberWithRoleDto } from "../types/api";
-import type { AxiosBaseQueryError } from "../api/axiosBaseQuery";
 import { FormError } from "./FormError";
-import { AnimatePresence } from "framer-motion";
 import { getApiErrorMessage } from "../utils/apiError";
 
 interface Props {
   chat: ChatDto;
   onClose: () => void;
-  onDeleted: () => void;
+  onOpenSettings: () => void;
 }
-
-const permissionFields = [
-  { key: "whoCanInvite", label: "Who can add members" },
-  { key: "whoCanEdit", label: "Who can edit name and photo" },
-  { key: "whoCanPost", label: "Who can send messages" },
-] as const;
 
 const roleLabel: Record<number, string> = {
   [UserRole.Owner]: "Owner",
@@ -48,38 +31,20 @@ const roleLabel: Record<number, string> = {
   [UserRole.User]: "Member",
 };
 
-export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
+export function ChatInfoModal({ chat, onClose, onOpenSettings }: Props) {
   const { userId: currentUserId } = useAuth();
-  const [deleteChat] = useDeleteChatMutation();
-  const [clearChatForMe, { isLoading: clearing }] = useClearChatForMeMutation();
-  const [isClearOpen, setIsClearOpen] = useState(false);
-  const [renameChat] = useRenameChatMutation();
   const [addChatMember] = useAddChatMemberMutation();
   const [removeChatMember] = useRemoveChatMemberMutation();
-  const [updateMemberRole] = useUpdateMemberRoleMutation();
-  const [transferChatOwnership] = useTransferChatOwnershipMutation();
-  const [updateChatPermissions] = useUpdateChatPermissionsMutation();
-  const [savingPermission, setSavingPermission] = useState<string | null>(null);
-  const [transferTarget, setTransferTarget] =
-    useState<ChatMemberWithRoleDto | null>(null);
-  const [isLeaveOpen, setIsLeaveOpen] = useState(false);
-  const [leaving, setLeaving] = useState(false);
   const [search, setSearch] = useState("");
   const [busyUserId, setBusyUserId] = useState<number | null>(null);
+  const [removing, setRemoving] = useState<ChatMemberWithRoleDto | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [isRenaming, setIsRenaming] = useState(false);
-  const [nameDraft, setNameDraft] = useState(chat.name ?? "");
-  const [descriptionDraft, setDescriptionDraft] = useState(chat.description ?? "");
-  const [renaming, setRenaming] = useState(false);
 
   const isGroup = !chat.isPrivate;
 
   const {
     data: members = [],
     isLoading: loading,
-    isFetching: membersFetching,
     isError: membersError,
   } = useGetChatMembersQuery(chat.id);
   const { data: allUsers = [], isFetching: usersFetching } = useGetAllUsersQuery(
@@ -87,31 +52,33 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
     { skip: !isGroup || search.trim().length === 0 }
   );
 
-  const isCallerOwner = useMemo(
-    () =>
-      members.some(
-        (m) => m.userId === currentUserId && m.roleId === UserRole.Owner
-      ),
-    [members, currentUserId]
-  );
-
   const myRoleId = useMemo(
     () => members.find((m) => m.userId === currentUserId)?.roleId,
     [members, currentUserId]
   );
-  const canEditProfile =
-    isGroup &&
-    myRoleId !== undefined &&
-    permissionAllows(chat.whoCanEdit, myRoleId);
 
-  const canDelete = chat.isPrivate || isCallerOwner;
-  const canRename = canEditProfile;
 
-  const canManageAvatar = canEditProfile;
-  const canInvite =
-    isGroup &&
-    myRoleId !== undefined &&
-    permissionAllows(chat.whoCanInvite, myRoleId);
+
+  function canRemove(member: ChatMemberWithRoleDto): boolean {
+    if (!isGroup || member.userId === currentUserId) return false;
+    if (myRoleId === UserRole.Owner) return member.roleId !== UserRole.Owner;
+    return myRoleId === UserRole.Admin && member.roleId === UserRole.User;
+  }
+
+  async function handleRemove() {
+    const member = removing;
+    if (!member) return;
+    setBusyUserId(member.userId);
+    setError(null);
+    try {
+      await removeChatMember({ chatId: chat.id, userId: member.userId }).unwrap();
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Failed to remove member"));
+    } finally {
+      setRemoving(null);
+      setBusyUserId(null);
+    }
+  }
 
   const memberIds = useMemo(
     () => new Set(members.map((m) => m.userId)),
@@ -138,243 +105,56 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
     }
   }
 
-  async function handleRemove(member: ChatMemberWithRoleDto) {
-    setBusyUserId(member.userId);
-    setError(null);
-    try {
-      await removeChatMember({ chatId: chat.id, userId: member.userId }).unwrap();
-    } catch (err) {
-      const status = (err as AxiosBaseQueryError).status;
-      setError(
-        status === 403
-          ? "You don't have permission to remove this member"
-          : "Failed to remove member"
-      );
-    } finally {
-      setBusyUserId(null);
-    }
-  }
-
-  async function handleChangeRole(member: ChatMemberWithRoleDto, newRole: number) {
-    setBusyUserId(member.userId);
-    setError(null);
-    try {
-      await updateMemberRole({
-        chatId: chat.id,
-        userId: member.userId,
-        roleId: newRole,
-      }).unwrap();
-    } catch (err) {
-      const status = (err as AxiosBaseQueryError).status;
-      setError(
-        status === 403
-          ? "Only the owner can change roles"
-          : "Failed to change role"
-      );
-    } finally {
-      setBusyUserId(null);
-    }
-  }
-
-  async function handlePermissionChange(
-    key: (typeof permissionFields)[number]["key"],
-    value: number
-  ) {
-    setSavingPermission(key);
-    setError(null);
-    const next = {
-      chatId: chat.id,
-      whoCanInvite: chat.whoCanInvite,
-      whoCanEdit: chat.whoCanEdit,
-      whoCanPost: chat.whoCanPost,
-    };
-    next[key] = value;
-    try {
-      await updateChatPermissions(next).unwrap();
-    } catch (err) {
-      setError(getApiErrorMessage(err, "Failed to update permissions"));
-    } finally {
-      setSavingPermission(null);
-    }
-  }
-
-  async function handleTransferOwnership() {
-    if (!transferTarget) return;
-    setBusyUserId(transferTarget.userId);
-    setError(null);
-    try {
-      await transferChatOwnership({
-        chatId: chat.id,
-        userId: transferTarget.userId,
-      }).unwrap();
-    } catch (err) {
-      setError(getApiErrorMessage(err, "Failed to transfer ownership"));
-    } finally {
-      setTransferTarget(null);
-      setBusyUserId(null);
-    }
-  }
-
-  async function handleLeave() {
-    if (currentUserId === null) return;
-    setLeaving(true);
-    setError(null);
-    try {
-      await removeChatMember({ chatId: chat.id, userId: currentUserId }).unwrap();
-      setIsLeaveOpen(false);
-      onDeleted();
-    } catch (err) {
-      setError(getApiErrorMessage(err, "Failed to leave the chat"));
-      setIsLeaveOpen(false);
-    } finally {
-      setLeaving(false);
-    }
-  }
-
-  async function handleClearForMe() {
-    setError(null);
-    try {
-      await clearChatForMe(chat.id).unwrap();
-      setIsClearOpen(false);
-      onClose();
-      onDeleted?.();
-    } catch (err) {
-      setError(getApiErrorMessage(err, "Failed to delete the chat"));
-      setIsClearOpen(false);
-    }
-  }
-
-  async function handleDelete() {
-    setDeleting(true);
-    try {
-      await deleteChat(chat.id).unwrap();
-      onDeleted();
-    } catch (err) {
-      const status = (err as AxiosBaseQueryError).status;
-      setError(
-        status === 403
-          ? "You don't have permission to delete this chat"
-          : "Failed to delete chat"
-      );
-      setIsDeleteOpen(false);
-      setDeleting(false);
-    }
-  }
-
-  async function handleRename() {
-    if (renaming) return;
-    const newName = nameDraft.trim();
-
-    try {
-      await chatNameSchema.validate({ name: newName });
-    } catch (validationErr) {
-      setError((validationErr as ValidationError).message);
-      return;
-    }
-
-    setRenaming(true);
-    setError(null);
-    try {
-      await renameChat({
-        chatId: chat.id,
-        name: newName,
-        description: descriptionDraft.trim() || null,
-      }).unwrap();
-      setIsRenaming(false);
-    } catch (err) {
-      setError(getApiErrorMessage(err, "Failed to rename chat"));
-    } finally {
-      setRenaming(false);
-    }
-  }
-
   const title = getChatDisplayName(chat);
 
   return (
     <>
       <Modal
         onClose={onClose}
-        closeDisabled={busyUserId !== null || deleting || leaving}
+        closeDisabled={busyUserId !== null}
+        closeIcon="back"
+        closeSide="left"
         ariaLabel="Chat info"
         size="md"
         layout="column"
         layer="base"
         title={
-          <div className="flex-1 pr-2">
-              {isRenaming ? (
-                <div className="flex flex-col gap-2">
-                  <TextInput
-                    type="text"
-                    value={nameDraft}
-                    onChange={(e) => setNameDraft(e.target.value)}
-                    autoFocus
-                    maxLength={200}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleRename();
-                      if (e.key === "Escape") setIsRenaming(false);
-                    }}
-                    className="text-xl font-bold"
-                  />
-                  <textarea
-                    value={descriptionDraft}
-                    onChange={(e) => setDescriptionDraft(e.target.value)}
-                    maxLength={500}
-                    rows={2}
-                    placeholder="Description (optional)"
-                    className="w-full resize-none rounded-lg border border-line bg-surface-sunken px-3 py-2 text-sm text-content placeholder:text-content-subtle focus:border-accent focus:outline-none"
-                  />
-                  <div className="flex gap-2">
-                    <Button size="xs" onClick={handleRename} disabled={renaming || !nameDraft.trim()}>
-                      {renaming ? "..." : "Save"}
-                    </Button>
-                    <Button size="xs" variant="neutral" onClick={() => setIsRenaming(false)} disabled={renaming}>
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <h2 className="text-2xl font-bold text-content break-words">
-                    {title}
-                  </h2>
-                  {canRename && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setNameDraft(chat.name ?? "");
-                        setDescriptionDraft(chat.description ?? "");
-                        setIsRenaming(true);
-                      }}
-                      className="text-content-muted hover:text-accent-strong transition text-sm"
-                      aria-label="Rename chat"
-                      title="Rename chat"
-                    >
-                      <Pencil size={14} />
-                    </button>
-                  )}
-                </div>
+          <div className="relative min-w-0 flex-1">
+            <button
+              type="button"
+              onClick={onOpenSettings}
+              className="absolute right-0 top-0 text-content-muted transition hover:text-accent-strong"
+              aria-label="Chat settings"
+              title="Chat settings"
+            >
+              <Settings size={20} />
+            </button>
+
+            <div className="flex w-full min-w-0 flex-col items-center pr-[38px] text-center">
+              {isGroup && (
+                <ChatAvatar
+                  chatId={chat.id}
+                  name={title}
+                  avatarUpdatedAt={chat.avatarUpdatedAt}
+                  size="xl"
+                  className="mb-3"
+                />
               )}
-              {!isRenaming && (
-                <>
-                  {isGroup && chat.description && (
-                    <p className="mt-1 whitespace-pre-line text-sm text-content-muted">
-                      {chat.description}
-                    </p>
-                  )}
-                  <p className="text-sm text-content-muted mt-1">
-                    {loading ? "Loading..." : `Members (${members.length})`}
-                  </p>
-                </>
+
+              <h2 className="w-full min-w-0 break-words text-2xl font-bold text-content">
+                {title}
+              </h2>
+
+              {isGroup && chat.description && (
+                <p className="mt-1 max-h-24 w-full overflow-y-auto whitespace-pre-line break-words text-sm text-content-muted">
+                  {chat.description}
+                </p>
               )}
-              {canManageAvatar && (
-                <div className="mt-4">
-                  <ChatAvatarEditor
-                    chatId={chat.id}
-                    name={title}
-                    avatarUpdatedAt={chat.avatarUpdatedAt}
-                  />
-                </div>
-              )}
+
+              <p className="mt-1 text-sm text-content-muted">
+                {loading ? "Loading..." : `Members (${members.length})`}
+              </p>
+            </div>
           </div>
         }
       >
@@ -401,38 +181,37 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                     {members.map((m) => (
                       <li
                         key={m.userId}
-                        className="flex items-center justify-between rounded bg-surface px-3 py-2 gap-2"
+                        className="flex items-center justify-between gap-2 rounded px-3 py-2"
                       >
-                        <div className="min-w-0 flex items-center gap-2.5">
-                          <Avatar
-                            userId={m.userId}
-                            userName={m.userName}
-                            name={m.name}
-                            surname={m.surname}
-                            avatarUpdatedAt={m.avatarUpdatedAt}
-                            size="sm"
-                          />
-                          <div className="min-w-0">
-                          <p className="text-content text-sm truncate">
-                            {m.userName}
-                            {m.userId === currentUserId && (
-                              <span className="text-xs text-accent-strong ml-2">
-                                (you)
-                              </span>
-                            )}
-                          </p>
-                          {(m.name || m.surname) && (
-                            <p className="text-xs text-content-muted truncate">
-                              {[m.name, m.surname].filter(Boolean).join(" ")}
-                            </p>
-                          )}
+                          <div className="flex min-w-0 items-center gap-2.5">
+                            <Avatar
+                              userId={m.userId}
+                              userName={m.userName}
+                              name={m.name}
+                              surname={m.surname}
+                              avatarUpdatedAt={m.avatarUpdatedAt}
+                              size="sm"
+                            />
+                            <div className="min-w-0">
+                              <p className="truncate text-sm text-content">
+                                {m.userName}
+                                {m.userId === currentUserId && (
+                                  <span className="ml-2 text-xs text-accent-strong">
+                                    (you)
+                                  </span>
+                                )}
+                              </p>
+                              {(m.name || m.surname) && (
+                                <p className="truncate text-xs text-content-muted">
+                                  {[m.name, m.surname].filter(Boolean).join(" ")}
+                                </p>
+                              )}
+                            </div>
                           </div>
-                        </div>
 
-                        <div className="flex items-center gap-1 shrink-0">
-                          {/* Бейдж роли */}
+                        <div className="flex shrink-0 items-center gap-2">
                           <span
-                            className={`text-xs px-2 py-0.5 rounded ${
+                            className={`rounded px-2 py-0.5 text-xs ${
                               m.roleId === UserRole.Owner
                                 ? "bg-accent-soft text-accent-strong"
                                 : m.roleId === UserRole.Admin
@@ -443,63 +222,14 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                             {roleLabel[m.roleId]}
                           </span>
 
-                          {/* Управление ролью — только Owner, не для себя и не для Owner */}
-                          {isGroup &&
-                            isCallerOwner &&
-                            m.userId !== currentUserId &&
-                            m.roleId !== UserRole.Owner && (
-                              <>
-                                {m.roleId === UserRole.User ? (
-                                  <Button
-                                    size="xs"
-                                    variant="info"
-                                    className="py-0.5"
-                                    onClick={() => handleChangeRole(m, UserRole.Admin)}
-                                    disabled={busyUserId !== null}
-                                    title="Make admin"
-                                  >
-                                    <ArrowUp size={11} aria-hidden="true" /> Admin
-                                  </Button>
-                                ) : (
-                                  <Button
-                                    size="xs"
-                                    variant="neutral"
-                                    className="py-0.5"
-                                    onClick={() => handleChangeRole(m, UserRole.User)}
-                                    disabled={busyUserId !== null}
-                                    title="Remove admin"
-                                  >
-                                    <ArrowDown size={11} aria-hidden="true" /> Member
-                                  </Button>
-                                )}
-                              </>
-                            )}
-
-                          {isGroup &&
-                            isCallerOwner &&
-                            m.userId !== currentUserId &&
-                            m.roleId !== UserRole.Owner && (
-                              <Button
-                                size="xs"
-                                variant="neutral"
-                                className="py-0.5"
-                                onClick={() => setTransferTarget(m)}
-                                disabled={busyUserId !== null}
-                                aria-label="Make owner"
-                                title="Make owner"
-                              >
-                                <Crown size={11} aria-hidden="true" />
-                              </Button>
-                            )}
-
-                          {/* Удалить участника */}
-                          {isGroup && m.userId !== currentUserId && (
+                          {canRemove(m) && (
                             <Button
                               size="xs"
                               variant="danger"
-                              onClick={() => handleRemove(m)}
                               disabled={busyUserId !== null}
+                              onClick={() => setRemoving(m)}
                               aria-label="Remove member"
+                              title="Remove from chat"
                             >
                               {busyUserId === m.userId ? "..." : <X size={12} />}
                             </Button>
@@ -568,149 +298,23 @@ export function ChatInfoModal({ chat, onClose, onDeleted }: Props) {
                 </section>
               )}
 
-              {chat.isPrivate && (
-                <section className="space-y-2 border-t border-line pt-2">
-                  <Button
-                    variant="neutral"
-                    fullWidth
-                    onClick={() => setIsClearOpen(true)}
-                    disabled={busyUserId !== null || deleting || clearing}
-                  >
-                    <Eraser size={15} aria-hidden="true" />
-                    Delete for me
-                  </Button>
-                </section>
-              )}
-
-              {canInvite && <ChatInviteSection chatId={chat.id} />}
-
-              {isGroup && isCallerOwner && (
-                <section className="space-y-2 border-t border-line pt-3">
-                  <h3 className="text-sm font-semibold text-content-muted">
-                    Permissions
-                  </h3>
-                  {permissionFields.map(({ key, label }) => (
-                    <label
-                      key={key}
-                      className="flex items-center justify-between gap-3"
-                    >
-                      <span className="text-sm text-content">{label}</span>
-                      <select
-                        value={chat[key]}
-                        onChange={(e) =>
-                          handlePermissionChange(key, Number(e.target.value))
-                        }
-                        disabled={savingPermission !== null}
-                        className="rounded-lg border border-line bg-surface-sunken px-2 py-1 text-sm text-content focus:border-accent focus:outline-none disabled:opacity-60"
-                      >
-                        <option value={ChatPermission.Owner}>Owner only</option>
-                        <option value={ChatPermission.Admins}>Admins</option>
-                        <option value={ChatPermission.Members}>All members</option>
-                      </select>
-                    </label>
-                  ))}
-                </section>
-              )}
-
-              {isGroup && !loading && !(isCallerOwner && members.length === 1) && (
-                <section className="space-y-2 border-t border-line pt-2">
-                  {isCallerOwner ? (
-                    <p className="text-xs text-content-subtle">
-                      To leave this chat, hand ownership to another member first.
-                    </p>
-                  ) : (
-                    <Button
-                      variant="neutral"
-                      fullWidth
-                      onClick={() => setIsLeaveOpen(true)}
-                      disabled={busyUserId !== null || deleting || leaving}
-                    >
-                      <LogOut size={15} aria-hidden="true" />
-                      Leave chat
-                    </Button>
-                  )}
-                </section>
-              )}
-
-              {canDelete && (
-                <section className="pt-2">
-                  <Button
-                    variant="danger"
-                    fullWidth
-                    onClick={() => setIsDeleteOpen(true)}
-                    disabled={busyUserId !== null || deleting || membersFetching}
-                  >
-                    <Trash2 size={15} aria-hidden="true" />
-                    Delete chat
-                  </Button>
-                </section>
-              )}
             </div>
           )}
       </Modal>
 
       <AnimatePresence>
-        {isClearOpen && (
+        {removing && (
           <ConfirmDialog
-            title="Delete for me?"
-            message="The conversation will disappear from your list. The other person keeps their copy, and the chat comes back if they write again."
-            confirmText="Delete"
+            title="Remove from chat?"
+            message={`${
+              [removing.name, removing.surname].filter(Boolean).join(" ") ||
+              removing.userName
+            } will lose access to this chat and its history. They can be added back later.`}
+            confirmText="Remove"
             variant="danger"
-            loading={clearing}
-            onConfirm={handleClearForMe}
-            onCancel={() => setIsClearOpen(false)}
-          />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {transferTarget && (
-          <ConfirmDialog
-            title="Make owner?"
-            message={`${transferTarget.userName} will own this chat and you become an admin. Only they will be able to hand it back.`}
-            confirmText="Make owner"
-            variant="primary"
-            loading={busyUserId === transferTarget.userId}
-            onConfirm={handleTransferOwnership}
-            onCancel={() => setTransferTarget(null)}
-          />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {isLeaveOpen && (
-          <ConfirmDialog
-            title="Leave chat?"
-            message={`You will stop receiving messages from "${getChatDisplayName(
-              chat
-            )}". Someone will have to add you back to return.`}
-            confirmText="Leave"
-            variant="danger"
-            loading={leaving}
-            onConfirm={handleLeave}
-            onCancel={() => setIsLeaveOpen(false)}
-          />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {isDeleteOpen && (
-          <ConfirmDialog
-            title="Delete chat?"
-            message={
-              isDirectChat(chat)
-                ? `Are you sure you want to delete this conversation with ${
-                    chat.partnerUserName ?? "this user"
-                  }? All messages will be permanently lost.`
-                : `Are you sure you want to delete "${
-                    chat.name ?? `chat #${chat.id}`
-                  }"? All messages and members will be permanently lost.`
-            }
-            confirmText="Delete"
-            variant="danger"
-            loading={deleting}
-            onConfirm={handleDelete}
-            onCancel={() => setIsDeleteOpen(false)}
+            loading={busyUserId === removing.userId}
+            onConfirm={handleRemove}
+            onCancel={() => setRemoving(null)}
           />
         )}
       </AnimatePresence>
