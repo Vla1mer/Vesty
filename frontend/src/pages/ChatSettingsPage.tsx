@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
 import { useGetChatByIdQuery } from "../store/chatApi";
 import {
   ChatSettingsContent,
   type ChatSettingsView,
 } from "../components/ChatSettingsContent";
 import { FormError } from "../components/FormError";
+import { PageShell } from "../components/ui/PageShell";
 
 export function ChatSettingsPage() {
   const { id } = useParams<{ id: string }>();
@@ -29,39 +29,26 @@ export function ChatSettingsPage() {
   }
 
   return (
-    <div className="flex h-full flex-col overflow-hidden">
-      <header className="flex shrink-0 items-center gap-2 border-b border-line px-4 py-3">
-        <button
-          type="button"
-          onClick={goBack}
-          className="text-content-muted transition hover:text-content"
-          aria-label="Back"
-        >
-          <ArrowLeft size={22} />
-        </button>
-        <h1 className="min-w-0 flex-1 truncate text-lg font-bold text-content">
-          {view === "admins" ? "Administrators" : "Settings"}
-        </h1>
-      </header>
-
-      <div className="flex-1 overflow-y-auto p-4">
-        {!isValidChat ? (
-          <FormError message="Invalid chat id" />
-        ) : isLoading ? (
-          <p className="py-6 text-center text-sm text-content-subtle">
-            Loading settings...
-          </p>
-        ) : !chat ? (
-          <FormError message="Chat not found" />
-        ) : (
-          <ChatSettingsContent
-            chat={chat}
-            view={view}
-            onViewChange={setView}
-            onDeleted={() => navigate("/chats", { replace: true })}
-          />
-        )}
-      </div>
-    </div>
+    <PageShell
+      title={view === "admins" ? "Administrators" : "Settings"}
+      onBack={goBack}
+    >
+      {!isValidChat ? (
+        <FormError message="Invalid chat id" />
+      ) : isLoading ? (
+        <p className="py-6 text-center text-sm text-content-subtle">
+          Loading settings...
+        </p>
+      ) : !chat ? (
+        <FormError message="Chat not found" />
+      ) : (
+        <ChatSettingsContent
+          chat={chat}
+          view={view}
+          onViewChange={setView}
+          onDeleted={() => navigate("/chats", { replace: true })}
+        />
+      )}
+    </PageShell>
   );
 }
