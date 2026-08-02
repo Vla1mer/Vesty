@@ -31,7 +31,7 @@ export function ConfirmDialog({
       onClose={onCancel}
       closeDisabled={loading}
     >
-      <p className="text-sm text-content-muted">{message}</p>
+      <p className="break-words text-sm text-content-muted">{message}</p>
       <FormError message={error} className="mt-4" />
 
       <div className="flex justify-end gap-2 pt-6">

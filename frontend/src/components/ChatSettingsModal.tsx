@@ -264,6 +264,7 @@ export function ChatSettingsModal({ chat, onBack, onClose, onDeleted }: Props) {
           </div>
         }
       >
+        <div className="flex-1 overflow-y-auto">
         {view === "admins" ? (
           <ChatAdminsSection chatId={chat.id} members={members} />
         ) : (
@@ -409,6 +410,7 @@ export function ChatSettingsModal({ chat, onBack, onClose, onDeleted }: Props) {
           )}
         </div>
         )}
+        </div>
       </Modal>
 
       <AnimatePresence>

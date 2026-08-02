@@ -141,7 +141,7 @@ export function ChatInfoModal({ chat, onClose, onOpenSettings }: Props) {
                 />
               )}
 
-              <h2 className="break-words text-2xl font-bold text-content">
+              <h2 className="w-full min-w-0 break-words text-2xl font-bold text-content">
                 {title}
               </h2>
 

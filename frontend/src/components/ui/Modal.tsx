@@ -98,7 +98,9 @@ export function Modal({
           <div className="mb-4 flex shrink-0 items-start justify-between gap-4">
             {closeSide === "left" && closeButton}
             {typeof title === "string" ? (
-              <h2 className="text-xl font-bold text-content">{title}</h2>
+              <h2 className="min-w-0 break-words text-xl font-bold text-content">
+                {title}
+              </h2>
             ) : (
               title
             )}

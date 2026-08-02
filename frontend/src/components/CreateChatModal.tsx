@@ -81,6 +81,7 @@ export function CreateChatModal({ onClose }: Props) {
       onClose={onClose}
       layout="column"
     >
+      <div className="flex-1 overflow-y-auto">
       {step === 1 ? (
           <div className="space-y-4">
             <div>
@@ -196,6 +197,7 @@ export function CreateChatModal({ onClose }: Props) {
             </div>
           </div>
       )}
+      </div>
     </Modal>
   );
 }
