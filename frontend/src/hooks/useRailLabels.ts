@@ -1,50 +1,19 @@
 import { useSyncExternalStore } from "react";
+import { createPersistedStore } from "../lib/persistedStore";
 
-const STORAGE_KEY = "vesty.rail-labels";
+const store = createPersistedStore<boolean>(
+  "vesty.rail-labels",
+  true,
+  (raw) => raw !== "off",
+  (value) => (value ? "on" : "off")
+);
 
-function read(): boolean {
-  try {
-    return localStorage.getItem(STORAGE_KEY) !== "off";
-  } catch {
-    return true;
-  }
-}
-
-let enabled = read();
-const listeners = new Set<() => void>();
-
-function notify(): void {
-  listeners.forEach((listener) => listener());
-}
-
-function handleStorage(event: StorageEvent): void {
-  if (event.key !== null && event.key !== STORAGE_KEY) return;
-  const next = read();
-  if (next === enabled) return;
-  enabled = next;
-  notify();
-}
-
-function subscribe(listener: () => void): () => void {
-  if (listeners.size === 0) window.addEventListener("storage", handleStorage);
-  listeners.add(listener);
-
-  return () => {
-    listeners.delete(listener);
-    if (listeners.size === 0) window.removeEventListener("storage", handleStorage);
-  };
-}
-
-export function setRailLabels(next: boolean): void {
-  enabled = next;
-  try {
-    localStorage.setItem(STORAGE_KEY, next ? "on" : "off");
-  } catch {
-    /* empty */
-  }
-  notify();
-}
+export const setRailLabels = store.set;
 
 export function useRailLabels(): boolean {
-  return useSyncExternalStore(subscribe, () => enabled, () => true);
+  return useSyncExternalStore(
+    store.subscribe,
+    store.getSnapshot,
+    store.getServerSnapshot
+  );
 }
