@@ -15,7 +15,7 @@ import {
   useTogglePinMutation,
 } from "../store/messageApi";
 import { useAuth } from "../context/useAuth";
-import { Avatar, ChatAvatar } from "../components/Avatar";
+import { ChatTopBar } from "../components/ChatTopBar";
 import { MessageList } from "../components/MessageList";
 import { ChatInfoModal } from "../components/ChatInfoModal";
 import { ChatSettingsModal } from "../components/ChatSettingsModal";
@@ -26,19 +26,13 @@ import { setActiveChat } from "../lib/activeChat";
 import { useTypingIndicator } from "../hooks/useTypingIndicator";
 import { useAttachmentUploads } from "../hooks/useAttachmentUploads";
 import { useIsMobile } from "../hooks/useIsMobile";
-import { ArrowDown, ArrowLeft, ChevronRight, Copy, Pencil, Pin, Trash2, X } from "lucide-react";
+import { ArrowDown } from "lucide-react";
 import { MessageComposer } from "../components/MessageComposer";
 import type { AxiosBaseQueryError } from "../api/axiosBaseQuery";
 import { isDirectChat, UserRole, type ChatMemberWithRoleDto, type MessageDto } from "../types/api";
 import { AnimatePresence, motion } from "framer-motion";
 import { getApiErrorMessage } from "../utils/apiError";
 import { useGetBlockedUsersQuery } from "../store/blockApi";
-
-function typingText(names: string[]): string {
-  if (names.length === 1) return `${names[0]} is typing`;
-  if (names.length === 2) return `${names[0]} and ${names[1]} are typing`;
-  return "Several people are typing";
-}
 
 export function ChatDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -367,126 +361,33 @@ export function ChatDetailPage() {
           <p className="text-lg font-medium text-accent-strong">Drop files to attach</p>
         </div>
       )}
-      <div className="absolute top-0 inset-x-0 overflow-hidden min-h-[88px] z-10">
-        <header
-          className={`absolute inset-0 flex items-center gap-4 p-4 border-b border-line bg-surface/80 backdrop-blur transition-transform duration-200 ${
-            selectionMode ? "-translate-y-full" : "translate-y-0"
-          }`}
-        >
-          <button
-            onClick={() => navigate("/chats")}
-            className="md:hidden text-content-muted hover:text-content"
-            aria-label="Back"
-          >
-            <ArrowLeft size={22} />
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              if (!chat) return;
-              if (isMobile) navigate(`/chats/${chatId}/info`);
-              else setIsInfoOpen(true);
-            }}
-            disabled={!chat}
-            className="group flex-1 flex items-center gap-2 text-left rounded px-2 -mx-2 hover:bg-surface-muted transition disabled:cursor-default disabled:hover:bg-transparent"
-          >
-            {chat &&
-              (isDirectChat(chat) && chat.partnerUserId ? (
-                <Avatar
-                  userId={chat.partnerUserId}
-                  userName={chat.partnerUserName ?? undefined}
-                  avatarUpdatedAt={chat.partnerAvatarUpdatedAt}
-                />
-              ) : (
-                <ChatAvatar
-                  chatId={chat.id}
-                  name={title}
-                  avatarUpdatedAt={chat.avatarUpdatedAt}
-                />
-              ))}
-            <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-bold text-content truncate">{title}</h1>
-              {chat &&
-                (typingNames.length > 0 ? (
-                  <p className="text-xs text-accent-strong italic">
-                    {typingText(typingNames)}
-                    <span className="typing-dots" />
-                  </p>
-                ) : !chat.isPrivate ? (
-                  <p className="text-xs text-content-muted">
-                    {members.length > 0
-                      ? `${members.length} ${members.length === 1 ? "member" : "members"}`
-                      : "Loading..."}
-                  </p>
-                ) : null)}
-            </div>
-            {chat && (
-              <ChevronRight
-                size={20}
-                aria-hidden="true"
-                className="shrink-0 text-content-subtle transition group-hover:translate-x-0.5 group-hover:text-accent-strong"
-              />
-            )}
-          </button>
-        </header>
-
-        <header
-          className={`absolute inset-0 flex items-center gap-4 p-4 border-b border-line bg-surface/80 backdrop-blur transition-transform duration-200 ${
-            selectionMode ? "translate-y-0" : "-translate-y-full"
-          }`}
-        >
-          <button
-            onClick={clearSelection}
-            className="text-content-muted hover:text-content"
-            aria-label="Cancel selection"
-          >
-            <X size={22} />
-          </button>
-          <span className="flex-1 font-semibold text-content">
-            {selectedIds.size} selected
-          </span>
-          <div className="flex items-center gap-4 text-content-muted">
-            <button onClick={copySelected} aria-label="Copy" title="Copy">
-              <Copy size={20} />
-            </button>
-            {selectedIds.size === 1 && ownSelectedIds.length === 1 && (
-              <button onClick={editSelected} aria-label="Edit" title="Edit">
-                <Pencil size={20} />
-              </button>
-            )}
-            {ownSelectedIds.length > 0 && (
-              <button
-                onClick={() => setBulkDeleteOpen(true)}
-                aria-label="Delete"
-                title="Delete"
-                className="text-danger"
-              >
-                <Trash2 size={20} />
-              </button>
-            )}
-          </div>
-        </header>
-      </div>
-
-      {activePinned && !selectionMode && (
-        <button
-          type="button"
-          onClick={showNextPinned}
-          className="absolute top-[88px] inset-x-0 z-10 flex items-center gap-3 px-4 py-2 border-b border-line bg-surface-muted/95 backdrop-blur text-left hover:bg-surface transition"
-        >
-          <Pin size={15} aria-hidden="true" className="shrink-0 text-accent-strong" />
-          <div className="min-w-0 flex-1 border-l-2 border-accent-strong pl-3">
-            <p className="text-xs font-medium text-accent-strong">
-              {pinnedMessages.length > 1
-                ? `Pinned message ${(pinnedIndex % pinnedMessages.length) + 1} of ${pinnedMessages.length}`
-                : "Pinned message"}
-            </p>
-            <p className="text-sm text-content-muted truncate">
-              {activePinned.content}
-            </p>
-          </div>
-        </button>
-      )}
+      <ChatTopBar
+        chat={chat}
+        title={title}
+        memberCount={members.length}
+        typingNames={typingNames}
+        onBack={() => navigate("/chats")}
+        onOpenInfo={() => {
+          if (!chat) return;
+          if (isMobile) navigate(`/chats/${chatId}/info`);
+          else setIsInfoOpen(true);
+        }}
+        selection={{
+          mode: selectionMode,
+          count: selectedIds.size,
+          ownCount: ownSelectedIds.length,
+          onClear: clearSelection,
+          onCopy: copySelected,
+          onEdit: editSelected,
+          onDelete: () => setBulkDeleteOpen(true),
+        }}
+        pinned={{
+          message: activePinned,
+          index: pinnedMessages.length > 0 ? pinnedIndex % pinnedMessages.length : 0,
+          total: pinnedMessages.length,
+          onNext: showNextPinned,
+        }}
+      />
 
       <MessageList
         chat={chat}
