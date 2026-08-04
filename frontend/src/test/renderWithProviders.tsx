@@ -4,14 +4,19 @@ import { Provider } from "react-redux";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { makeStore } from "../store/store";
 import { AuthProvider } from "../context/AuthContext";
+import { ACCESS_TOKEN_KEY } from "../api/client";
 
-export function fakeToken(userId: number, userName: string): string {
+function fakeToken(userId: number, userName: string): string {
   const payload = {
     "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier":
       String(userId),
     "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name": userName,
   };
   return `header.${btoa(JSON.stringify(payload))}.signature`;
+}
+
+export function signIn(userId: number, userName: string): void {
+  localStorage.setItem(ACCESS_TOKEN_KEY, fakeToken(userId, userName));
 }
 
 interface Options {

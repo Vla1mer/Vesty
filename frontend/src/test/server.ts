@@ -12,6 +12,7 @@ type Handler = (request: StubbedRequest) => unknown;
 
 const handlers = new Map<string, Handler>();
 export const requests: StubbedRequest[] = [];
+let spy: { mockRestore: () => void } | null = null;
 
 function key(method: string, url: string): string {
   return `${method.toUpperCase()} ${url}`;
@@ -28,10 +29,12 @@ export function stubJson(method: string, url: string, body: unknown): void {
 export function resetServer(): void {
   handlers.clear();
   requests.length = 0;
+  spy?.mockRestore();
+  spy = null;
 }
 
 export function installServer(): void {
-  vi.spyOn(api, "request").mockImplementation(async (config) => {
+  spy = vi.spyOn(api, "request").mockImplementation(async (config) => {
     const request: StubbedRequest = {
       url: config.url ?? "",
       method: (config.method ?? "get").toString(),

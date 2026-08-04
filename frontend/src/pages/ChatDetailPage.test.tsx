@@ -1,12 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { signalrMock } from "../test/signalrMock";
-
-vi.mock("../lib/signalr", () => signalrMock);
+vi.mock("../lib/signalr", async () => (await import("../test/signalrMock")).signalrMock);
 
 import { ChatDetailPage } from "./ChatDetailPage";
-import { fakeToken, renderWithProviders } from "../test/renderWithProviders";
+import { renderWithProviders, signIn } from "../test/renderWithProviders";
 import { installServer, requests, resetServer, stub, stubJson } from "../test/server";
 
 const ME = 1;
@@ -62,7 +60,7 @@ describe("ChatDetailPage", () => {
   beforeEach(() => {
     resetServer();
     installServer();
-    localStorage.setItem("accessToken", fakeToken(ME, "vlad"));
+    signIn(ME, "vlad");
 
     stubJson("get", `/api/Chat/${CHAT_ID}`, chat);
     stubJson("get", `/api/Chat/${CHAT_ID}/users`, members);
