@@ -1,3 +1,4 @@
+using System.Data;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Repository.Interfaces;
@@ -8,6 +9,8 @@ namespace Repository
     public sealed class RepositoryManager : IRepositoryManager
     {
         private const string UniqueViolation = "23505";
+        private const string SerializationFailure = "40001";
+        private const string DeadlockDetected = "40P01";
 
         private readonly AppDbContext _context;
         private readonly Lazy<IUserRepository> _userRepository;
@@ -66,6 +69,37 @@ namespace Repository
             {
                 DetachPendingInserts(ex);
                 throw new DuplicateResourceException();
+            }
+        }
+
+        private static bool IsConcurrencyConflict(Exception exception) =>
+            Unwrap(exception) is PostgresException
+            {
+                SqlState: SerializationFailure or DeadlockDetected
+            };
+
+        private static Exception Unwrap(Exception exception) =>
+            exception is DbUpdateException { InnerException: { } inner } ? inner : exception;
+
+        public async Task ExecuteInTransactionAsync(Func<Task> action)
+        {
+            if (_context.Database.CurrentTransaction is not null)
+            {
+                await action();
+                return;
+            }
+
+            await using var transaction =
+                await _context.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+
+            try
+            {
+                await action();
+                await transaction.CommitAsync();
+            }
+            catch (Exception ex) when (IsConcurrencyConflict(ex))
+            {
+                throw new ConcurrentUpdateException();
             }
         }
     }

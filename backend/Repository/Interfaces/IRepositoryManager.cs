@@ -14,5 +14,6 @@
         IUserBlockRepository UserBlock { get; }
         IChatInviteRepository ChatInvite { get; }
         Task SaveAsync();
+        Task ExecuteInTransactionAsync(Func<Task> action);
     }
 }
