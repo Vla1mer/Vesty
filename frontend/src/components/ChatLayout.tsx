@@ -52,7 +52,7 @@ export function ChatLayout() {
           hasSelection ? "hidden md:flex" : "flex"
         } relative h-screen w-full shrink-0 md:border-r border-line flex-col overflow-hidden`}
       >
-        <ChatsPage />
+        <ChatsPage isResizing={dragWidth !== null} />
 
         <div
           role="separator"

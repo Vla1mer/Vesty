@@ -23,7 +23,11 @@ import { AnimatePresence, motion } from "framer-motion";
 import { EmptyState } from "../components/ui/EmptyState";
 import { ChatListSkeleton } from "../components/ui/Skeleton";
 
-export function ChatsPage() {
+interface Props {
+  isResizing?: boolean;
+}
+
+export function ChatsPage({ isResizing = false }: Props) {
   const navigate = useNavigate();
   const { userName, userId, logout } = useAuth();
   const { data: currentUser } = useGetUserByIdQuery(userId as number, {
@@ -147,7 +151,7 @@ export function ChatsPage() {
                   {chats.map((chat) => (
                     <motion.div
                       key={chat.id}
-                      layout
+                      layout={!isResizing}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0, height: 0 }}
