@@ -167,6 +167,68 @@ describe("MessageBubble", () => {
     });
   });
 
+  describe("menu position", () => {
+    function sizeMenu(width: number, height: number) {
+      vi.spyOn(Element.prototype, "getBoundingClientRect").mockReturnValue({
+        x: 0,
+        y: 0,
+        top: 0,
+        left: 0,
+        right: width,
+        bottom: height,
+        width,
+        height,
+        toJSON: () => ({}),
+      });
+    }
+
+    function openAt(x: number, y: number) {
+      fireEvent.contextMenu(bubble(), { clientX: x, clientY: y });
+      return document.querySelector(".fixed.z-50") as HTMLElement;
+    }
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it("sits above the pointer when there is room", () => {
+      setup();
+      sizeMenu(200, 150);
+
+      const menu = openAt(100, 400);
+
+      expect(menu.style.top).toBe("246px");
+      expect(menu.style.left).toBe("100px");
+    });
+
+    it("drops below the pointer when it would run off the top", () => {
+      setup();
+      sizeMenu(200, 150);
+
+      const menu = openAt(100, 20);
+
+      expect(menu.style.top).toBe("24px");
+    });
+
+    it("keeps clear of the right edge", () => {
+      setup();
+      sizeMenu(200, 150);
+
+      const menu = openAt(1000, 400);
+
+      expect(menu.style.left).toBe("816px");
+    });
+
+    it("keeps clear of the bottom edge", () => {
+      setup();
+      sizeMenu(200, 760);
+
+      const menu = openAt(100, 20);
+
+      expect(menu.style.top).toBe("8px");
+    });
+  });
+
   describe("touch", () => {
     it("starts selection on a long press", () => {
       const { onSelectStart } = setup();

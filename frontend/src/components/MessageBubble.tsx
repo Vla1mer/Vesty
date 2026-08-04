@@ -1,13 +1,12 @@
 import type { TouchEvent as ReactTouchEvent } from "react";
-import { Check, Copy, Pencil, Pin, PinOff, Reply, Trash2 } from "lucide-react";
+import { Check, Pin } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLongPress } from "../hooks/useLongPress";
 import { useMessageMenu } from "../hooks/useMessageMenu";
 import { Avatar } from "./Avatar";
 import { MessageAttachments } from "./MessageAttachments";
+import { MessageContextMenu } from "./MessageContextMenu";
 import type { MessageDto } from "../types/api";
-
-const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🔥"];
 
 interface Props {
   message: MessageDto;
@@ -56,11 +55,6 @@ export function MessageBubble({
     onEdit || onDelete || onReply || onTogglePin || onToggleReaction
   );
   const menu = useMessageMenu(Boolean(message.content) || hasActions);
-
-  function handleCopy() {
-    if (message.content) navigator.clipboard?.writeText(message.content);
-    menu.close();
-  }
 
   function handleTap(e: ReactTouchEvent) {
     if (selectionMode) {
@@ -243,109 +237,19 @@ export function MessageBubble({
       </div>
 
       {menu.open && (
-        <motion.div
-          ref={menu.menuRef}
-          initial={{ opacity: 0, scale: 0.94 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.13, ease: [0.22, 1, 0.36, 1] }}
-          className="fixed z-50 w-max max-w-[13rem] origin-top-left rounded-lg border border-line bg-surface-raised py-1 shadow-float"
-          style={{ top: menu.position.top, left: menu.position.left }}
+        <MessageContextMenu
+          message={message}
+          currentUserId={currentUserId}
+          menuRef={menu.menuRef}
+          position={menu.position}
           onClickCapture={menu.guardClick}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {onToggleReaction && (
-            <div className="flex gap-0.5 px-1.5 py-1.5 border-b border-line">
-              {QUICK_REACTIONS.map((emoji) => {
-                const mine = Boolean(
-                  currentUserId != null &&
-                    message.reactions?.some(
-                      (r) => r.emoji === emoji && r.userIds.includes(currentUserId)
-                    )
-                );
-                return (
-                  <button
-                    key={emoji}
-                    type="button"
-                    onClick={() => {
-                      menu.close();
-                      onToggleReaction(message.id, emoji, mine);
-                    }}
-                    className={`w-7 h-7 rounded-full text-base leading-none transition ${
-                      mine ? "bg-accent/30" : "hover:bg-surface-overlay"
-                    }`}
-                  >
-                    {emoji}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-          {onReply && (
-            <button
-              type="button"
-              onClick={() => {
-                menu.close();
-                onReply(message);
-              }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-sm text-content hover:bg-surface-overlay transition"
-            >
-              <Reply size={15} aria-hidden="true" /> Reply
-            </button>
-          )}
-          {message.content && (
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-sm text-content hover:bg-surface-overlay transition"
-            >
-              <Copy size={15} aria-hidden="true" /> Copy
-            </button>
-          )}
-          {onTogglePin && (
-            <button
-              type="button"
-              onClick={() => {
-                menu.close();
-                onTogglePin(message.id, Boolean(message.pinnedAt));
-              }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-sm text-content hover:bg-surface-overlay transition"
-            >
-              {message.pinnedAt ? (
-                <>
-                  <PinOff size={15} aria-hidden="true" /> Unpin
-                </>
-              ) : (
-                <>
-                  <Pin size={15} aria-hidden="true" /> Pin
-                </>
-              )}
-            </button>
-          )}
-          {onEdit && (
-            <button
-              type="button"
-              onClick={() => {
-                menu.close();
-                onEdit(message.id, message.content ?? "");
-              }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-sm text-content hover:bg-surface-overlay transition"
-            >
-              <Pencil size={15} aria-hidden="true" /> Edit
-            </button>
-          )}
-          {onDelete && (
-            <button
-              type="button"
-              onClick={() => {
-                menu.close();
-                onDelete(message.id);
-              }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-sm text-danger hover:bg-surface-overlay transition"
-            >
-              <Trash2 size={15} aria-hidden="true" /> Delete
-            </button>
-          )}
-        </motion.div>
+          onClose={menu.close}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onReply={onReply}
+          onToggleReaction={onToggleReaction}
+          onTogglePin={onTogglePin}
+        />
       )}
     </>
   );
