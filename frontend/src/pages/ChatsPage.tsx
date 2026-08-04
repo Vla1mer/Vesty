@@ -54,6 +54,8 @@ export function ChatsPage() {
     openOnDesktopOrNavigate(setIsSettingsOpen, "/settings");
   const openCreateChat = () =>
     openOnDesktopOrNavigate(setIsCreateModalOpen, "/chats/new-group");
+  const openSelectUser = () =>
+    openOnDesktopOrNavigate(setIsSelectUserOpen, "/chats/new-direct");
 
   useEffect(() => {
     if (!isMenuOpen) return;
@@ -104,7 +106,7 @@ export function ChatsPage() {
               Icon: MessageSquarePlus,
               label: "New direct message",
               description: "Start a private conversation with someone",
-              onClick: () => setIsSelectUserOpen(true),
+              onClick: openSelectUser,
             },
             {
               Icon: Users,
