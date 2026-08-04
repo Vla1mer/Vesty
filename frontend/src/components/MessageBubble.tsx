@@ -1,7 +1,7 @@
-import { useRef, useState } from "react";
 import type { TouchEvent as ReactTouchEvent } from "react";
 import { Check, Copy, Pencil, Pin, PinOff, Reply, Trash2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useLongPress } from "../hooks/useLongPress";
 import { useMessageMenu } from "../hooks/useMessageMenu";
 import { Avatar } from "./Avatar";
 import { MessageAttachments } from "./MessageAttachments";
@@ -52,11 +52,6 @@ export function MessageBubble({
   onToggleReaction,
   onTogglePin,
 }: Props) {
-  const [pressing, setPressing] = useState(false);
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const longPressFired = useRef(false);
-  const moved = useRef(false);
-
   const hasActions = Boolean(
     onEdit || onDelete || onReply || onTogglePin || onToggleReaction
   );
@@ -67,37 +62,7 @@ export function MessageBubble({
     menu.close();
   }
 
-  function clearLongPress() {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-  }
-
-  function handleTouchStart() {
-    longPressFired.current = false;
-    moved.current = false;
-    setPressing(true);
-    longPressTimer.current = setTimeout(() => {
-      longPressFired.current = true;
-      setPressing(false);
-      onSelectStart?.(message.id);
-    }, 500);
-  }
-
-  function handleTouchMove() {
-    moved.current = true;
-    setPressing(false);
-    clearLongPress();
-  }
-
-  function handleTouchEnd(e: ReactTouchEvent) {
-    setPressing(false);
-    const fired = longPressFired.current;
-    const didMove = moved.current;
-    clearLongPress();
-    if (fired || didMove) return;
-
+  function handleTap(e: ReactTouchEvent) {
     if (selectionMode) {
       onToggleSelect?.(message.id);
       return;
@@ -110,10 +75,10 @@ export function MessageBubble({
     menu.openAt(touch.clientX, touch.clientY);
   }
 
-  function cancelTouch() {
-    setPressing(false);
-    clearLongPress();
-  }
+  const longPress = useLongPress({
+    onLongPress: () => onSelectStart?.(message.id),
+    onTap: handleTap,
+  });
 
   const time = new Date(message.createdAt).toLocaleTimeString([], {
     hour: "2-digit",
@@ -159,13 +124,10 @@ export function MessageBubble({
             <div
               ref={menu.bubbleRef}
               {...menu.triggerProps}
-              onTouchStart={handleTouchStart}
-              onTouchEnd={handleTouchEnd}
-              onTouchMove={handleTouchMove}
-              onTouchCancel={cancelTouch}
+              {...longPress.handlers}
               style={{ WebkitTouchCallout: "none" }}
               className={`rounded-bubble px-4 py-2 select-none md:select-text shadow-raised transition ${
-                menu.open || isEditing || pressing || selected
+                menu.open || isEditing || longPress.pressing || selected
                   ? "ring-2 ring-accent-strong"
                   : ""
               } ${
