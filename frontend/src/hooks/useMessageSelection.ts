@@ -38,7 +38,10 @@ export function useMessageSelection(
   }
 
   function copy() {
-    const text = selected.map((message) => message.content ?? "").join("\n");
+    const text = selected
+      .map((message) => message.content ?? "")
+      .filter((content) => content.length > 0)
+      .join("\n");
     if (text) navigator.clipboard?.writeText(text);
     clear();
   }

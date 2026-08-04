@@ -79,6 +79,34 @@ describe("useMessageSelection", () => {
     expect(result.current.mode).toBe(false);
   });
 
+  it("skips messages without text instead of copying blank lines", () => {
+    const writeText = vi.fn();
+    Object.assign(navigator, { clipboard: { writeText } });
+    const { result } = renderHook(() =>
+      useMessageSelection([message(20, ME, null), message(21, ME, null)], ME)
+    );
+
+    act(() => result.current.start(20));
+    act(() => result.current.toggle(21));
+    act(() => result.current.copy());
+
+    expect(writeText).not.toHaveBeenCalled();
+  });
+
+  it("keeps only the messages that carry text", () => {
+    const writeText = vi.fn();
+    Object.assign(navigator, { clipboard: { writeText } });
+    const { result } = renderHook(() =>
+      useMessageSelection([message(30, ME, null), message(31, ME, "real")], ME)
+    );
+
+    act(() => result.current.start(30));
+    act(() => result.current.toggle(31));
+    act(() => result.current.copy());
+
+    expect(writeText).toHaveBeenCalledWith("real");
+  });
+
   it("survives a message without text", () => {
     const writeText = vi.fn();
     Object.assign(navigator, { clipboard: { writeText } });

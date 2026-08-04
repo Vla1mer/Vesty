@@ -18,6 +18,7 @@ interface Props {
   inputRef: RefObject<HTMLInputElement | null>;
   attachments: Attachments;
   editingMessage?: MessageDto;
+  isEditing: boolean;
   onCancelEdit: () => void;
   replyTo: MessageDto | null;
   replyAuthorName?: string;
@@ -34,6 +35,7 @@ export function MessageComposer({
   inputRef,
   attachments,
   editingMessage,
+  isEditing,
   onCancelEdit,
   replyTo,
   replyAuthorName,
@@ -43,7 +45,6 @@ export function MessageComposer({
   blocked,
 }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const isEditing = editingMessage !== undefined;
 
   return (
     <div className="relative border-t border-line bg-surface sticky bottom-0">

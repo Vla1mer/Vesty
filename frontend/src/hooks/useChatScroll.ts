@@ -19,6 +19,9 @@ export function useChatScroll({ chatId, messages, chat, chatFailed }: Options) {
   const [initialScrollDone, setInitialScrollDone] = useState(false);
   const [showJumpToBottom, setShowJumpToBottom] = useState(false);
   const [highlightedId, setHighlightedId] = useState<number | null>(null);
+  const lastSeenMessageId = useRef<number | null>(null);
+
+  const lastMessageId = messages[messages.length - 1]?.id ?? null;
 
   const firstUnreadId = useMemo(() => {
     if (!unreadOnEntry || unreadOnEntry > messages.length) return null;
@@ -28,6 +31,7 @@ export function useChatScroll({ chatId, messages, chat, chatFailed }: Options) {
   useEffect(() => {
     setUnreadOnEntry(null);
     setInitialScrollDone(false);
+    lastSeenMessageId.current = null;
   }, [chatId]);
 
   useEffect(() => {
@@ -50,11 +54,14 @@ export function useChatScroll({ chatId, messages, chat, chatFailed }: Options) {
       if (anchor) anchor.scrollIntoView({ block: "center" });
       else bottomRef.current?.scrollIntoView();
       setInitialScrollDone(true);
+      lastSeenMessageId.current = lastMessageId;
       return;
     }
 
+    if (lastMessageId === lastSeenMessageId.current) return;
+    lastSeenMessageId.current = lastMessageId;
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, firstUnreadId, unreadOnEntry, initialScrollDone]);
+  }, [messages, firstUnreadId, unreadOnEntry, initialScrollDone, lastMessageId]);
 
   function handleScroll() {
     const element = containerRef.current;

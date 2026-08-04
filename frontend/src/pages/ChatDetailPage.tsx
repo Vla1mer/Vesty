@@ -430,6 +430,7 @@ export function ChatDetailPage() {
           inputRef={inputRef}
           attachments={attachments}
           editingMessage={editingMessage}
+          isEditing={editingId !== null}
           onCancelEdit={cancelEdit}
           replyTo={replyTo}
           replyAuthorName={
