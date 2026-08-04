@@ -25,6 +25,7 @@ import { onChatDeleted } from "../lib/signalr";
 import { setActiveChat } from "../lib/activeChat";
 import { useTypingIndicator } from "../hooks/useTypingIndicator";
 import { useAttachmentUploads } from "../hooks/useAttachmentUploads";
+import { useMessageSelection } from "../hooks/useMessageSelection";
 import { useIsMobile } from "../hooks/useIsMobile";
 import { ArrowDown } from "lucide-react";
 import { MessageComposer } from "../components/MessageComposer";
@@ -48,7 +49,6 @@ export function ChatDetailPage() {
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [unreadOnEntry, setUnreadOnEntry] = useState<number | null>(null);
   const [showJumpToBottom, setShowJumpToBottom] = useState(false);
@@ -93,14 +93,7 @@ export function ChatDetailPage() {
   const editingMessage =
     editingId !== null ? messages.find((m) => m.id === editingId) : undefined;
 
-  const selectionMode = selectedIds.size > 0;
-  const selectedMessages = useMemo(
-    () => messages.filter((m) => selectedIds.has(m.id)),
-    [messages, selectedIds]
-  );
-  const ownSelectedIds = selectedMessages
-    .filter((m) => m.userId === userId)
-    .map((m) => m.id);
+  const selection = useMessageSelection(messages, userId);
 
   const memberById = useMemo(() => {
     const map = new Map<number, ChatMemberWithRoleDto>();
@@ -287,44 +280,21 @@ export function ChatDetailPage() {
     window.setTimeout(() => setHighlightedId(null), 1600);
   }
 
-  function selectStart(id: number) {
-    setSelectedIds((prev) => new Set(prev).add(id));
-  }
-
-  function toggleSelect(id: number) {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }
-
-  function clearSelection() {
-    setSelectedIds(new Set());
-  }
-
-  function copySelected() {
-    const text = selectedMessages.map((m) => m.content ?? "").join("\n");
-    if (text) navigator.clipboard?.writeText(text);
-    clearSelection();
-  }
-
   function editSelected() {
-    const target = selectedMessages[0];
+    const target = selection.selected[0];
     if (target && target.userId === userId) {
       startEdit(target.id, target.content ?? "");
     }
-    clearSelection();
+    selection.clear();
   }
 
   async function confirmBulkDelete() {
     try {
       await Promise.all(
-        ownSelectedIds.map((id) => deleteMessage({ chatId, id }).unwrap())
+        selection.ownIds.map((id) => deleteMessage({ chatId, id }).unwrap())
       );
       setBulkDeleteOpen(false);
-      clearSelection();
+      selection.clear();
     } catch {
       setActionError("Failed to delete messages");
       setBulkDeleteOpen(false);
@@ -373,11 +343,11 @@ export function ChatDetailPage() {
           else setIsInfoOpen(true);
         }}
         selection={{
-          mode: selectionMode,
-          count: selectedIds.size,
-          ownCount: ownSelectedIds.length,
-          onClear: clearSelection,
-          onCopy: copySelected,
+          mode: selection.mode,
+          count: selection.ids.size,
+          ownCount: selection.ownIds.length,
+          onClear: selection.clear,
+          onCopy: selection.copy,
           onEdit: editSelected,
           onDelete: () => setBulkDeleteOpen(true),
         }}
@@ -402,10 +372,10 @@ export function ChatDetailPage() {
         highlightedId={highlightedId}
         editingId={editingId}
         selection={{
-          mode: selectionMode,
-          ids: selectedIds,
-          onStart: selectStart,
-          onToggle: toggleSelect,
+          mode: selection.mode,
+          ids: selection.ids,
+          onStart: selection.start,
+          onToggle: selection.toggle,
         }}
         actions={{
           onReply: setReplyTo,
@@ -421,7 +391,7 @@ export function ChatDetailPage() {
         containerRef={scrollRef}
         bottomRef={bottomRef}
         onScroll={handleScroll}
-        compact={!activePinned || selectionMode}
+        compact={!activePinned || selection.mode}
       />
 
       <AnimatePresence>
@@ -468,8 +438,8 @@ export function ChatDetailPage() {
       <AnimatePresence>
         {bulkDeleteOpen && (
           <ConfirmDialog
-            title={`Delete ${ownSelectedIds.length} ${
-              ownSelectedIds.length === 1 ? "message" : "messages"
+            title={`Delete ${selection.ownIds.length} ${
+              selection.ownIds.length === 1 ? "message" : "messages"
             }?`}
             message="The selected messages will be permanently deleted."
             confirmText="Delete"
