@@ -1,7 +1,8 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { MouseEvent, TouchEvent as ReactTouchEvent } from "react";
+import { useRef, useState } from "react";
+import type { TouchEvent as ReactTouchEvent } from "react";
 import { Check, Copy, Pencil, Pin, PinOff, Reply, Trash2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useMessageMenu } from "../hooks/useMessageMenu";
 import { Avatar } from "./Avatar";
 import { MessageAttachments } from "./MessageAttachments";
 import type { MessageDto } from "../types/api";
@@ -51,89 +52,19 @@ export function MessageBubble({
   onToggleReaction,
   onTogglePin,
 }: Props) {
-  const [menu, setMenu] = useState(false);
-  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const [pressing, setPressing] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const bubbleRef = useRef<HTMLDivElement>(null);
-  const anchorRef = useRef({ x: 0, y: 0 });
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressFired = useRef(false);
   const moved = useRef(false);
-  const pointerTypeRef = useRef<string>("mouse");
-  const menuOpenedAtRef = useRef(0);
 
   const hasActions = Boolean(
     onEdit || onDelete || onReply || onTogglePin || onToggleReaction
   );
-
-  useLayoutEffect(() => {
-    if (!menu || !menuRef.current || !bubbleRef.current) return;
-    const m = menuRef.current.getBoundingClientRect();
-    const scroller = bubbleRef.current.closest(".overflow-y-auto");
-    const bounds = scroller
-      ? scroller.getBoundingClientRect()
-      : new DOMRect(0, 0, window.innerWidth, window.innerHeight);
-    const { x, y } = anchorRef.current;
-
-    let top = y - m.height - 4;
-    if (top < bounds.top + 8) {
-      top = y + 4;
-    }
-    top = Math.max(bounds.top + 8, Math.min(top, bounds.bottom - m.height - 8));
-
-    const left = Math.max(
-      bounds.left + 8,
-      Math.min(x, bounds.right - m.width - 8)
-    );
-
-    setMenuPos({ top, left });
-  }, [menu]);
-
-  useEffect(() => {
-    if (!menu) return;
-    const openedAt = Date.now();
-    const close = () => {
-      if (Date.now() - openedAt < 250) return;
-      setMenu(false);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setMenu(false);
-    };
-    const closeOther = () => setMenu(false);
-    window.addEventListener("click", close);
-    window.addEventListener("scroll", close, true);
-    window.addEventListener("keydown", onKey);
-    window.addEventListener("message-menu-open", closeOther);
-    return () => {
-      window.removeEventListener("click", close);
-      window.removeEventListener("scroll", close, true);
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener("message-menu-open", closeOther);
-    };
-  }, [menu]);
-
-  function openMenu(x: number, y: number) {
-    menuOpenedAtRef.current = Date.now();
-    anchorRef.current = { x, y };
-    window.dispatchEvent(new Event("message-menu-open"));
-    setMenu(true);
-  }
+  const menu = useMessageMenu(Boolean(message.content) || hasActions);
 
   function handleCopy() {
     if (message.content) navigator.clipboard?.writeText(message.content);
-    setMenu(false);
-  }
-
-  function handleContextMenu(e: MouseEvent) {
-    e.preventDefault();
-    if (pointerTypeRef.current === "touch") return;
-    if (!message.content && !hasActions) return;
-    if (menu) {
-      setMenu(false);
-      return;
-    }
-    openMenu(e.clientX, e.clientY);
+    menu.close();
   }
 
   function clearLongPress() {
@@ -176,7 +107,7 @@ export function MessageBubble({
     if (!touch) return;
 
     e.preventDefault();
-    openMenu(touch.clientX, touch.clientY);
+    menu.openAt(touch.clientX, touch.clientY);
   }
 
   function cancelTouch() {
@@ -226,18 +157,15 @@ export function MessageBubble({
           </span>
           <div className="relative flex flex-col max-w-[78%] md:max-w-md">
             <div
-              ref={bubbleRef}
-              onPointerDown={(e) => {
-                pointerTypeRef.current = e.pointerType;
-              }}
-              onContextMenu={handleContextMenu}
+              ref={menu.bubbleRef}
+              {...menu.triggerProps}
               onTouchStart={handleTouchStart}
               onTouchEnd={handleTouchEnd}
               onTouchMove={handleTouchMove}
               onTouchCancel={cancelTouch}
               style={{ WebkitTouchCallout: "none" }}
               className={`rounded-bubble px-4 py-2 select-none md:select-text shadow-raised transition ${
-                menu || isEditing || pressing || selected
+                menu.open || isEditing || pressing || selected
                   ? "ring-2 ring-accent-strong"
                   : ""
               } ${
@@ -352,20 +280,15 @@ export function MessageBubble({
         </div>
       </div>
 
-      {menu && (
+      {menu.open && (
         <motion.div
-          ref={menuRef}
+          ref={menu.menuRef}
           initial={{ opacity: 0, scale: 0.94 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.13, ease: [0.22, 1, 0.36, 1] }}
           className="fixed z-50 w-max max-w-[13rem] origin-top-left rounded-lg border border-line bg-surface-raised py-1 shadow-float"
-          style={{ top: menuPos.top, left: menuPos.left }}
-          onClickCapture={(e) => {
-            if (Date.now() - menuOpenedAtRef.current < 400) {
-              e.preventDefault();
-              e.stopPropagation();
-            }
-          }}
+          style={{ top: menu.position.top, left: menu.position.left }}
+          onClickCapture={menu.guardClick}
           onClick={(e) => e.stopPropagation()}
         >
           {onToggleReaction && (
@@ -382,7 +305,7 @@ export function MessageBubble({
                     key={emoji}
                     type="button"
                     onClick={() => {
-                      setMenu(false);
+                      menu.close();
                       onToggleReaction(message.id, emoji, mine);
                     }}
                     className={`w-7 h-7 rounded-full text-base leading-none transition ${
@@ -399,7 +322,7 @@ export function MessageBubble({
             <button
               type="button"
               onClick={() => {
-                setMenu(false);
+                menu.close();
                 onReply(message);
               }}
               className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-sm text-content hover:bg-surface-overlay transition"
@@ -420,7 +343,7 @@ export function MessageBubble({
             <button
               type="button"
               onClick={() => {
-                setMenu(false);
+                menu.close();
                 onTogglePin(message.id, Boolean(message.pinnedAt));
               }}
               className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-sm text-content hover:bg-surface-overlay transition"
@@ -440,7 +363,7 @@ export function MessageBubble({
             <button
               type="button"
               onClick={() => {
-                setMenu(false);
+                menu.close();
                 onEdit(message.id, message.content ?? "");
               }}
               className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-sm text-content hover:bg-surface-overlay transition"
@@ -452,7 +375,7 @@ export function MessageBubble({
             <button
               type="button"
               onClick={() => {
-                setMenu(false);
+                menu.close();
                 onDelete(message.id);
               }}
               className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-sm text-danger hover:bg-surface-overlay transition"
