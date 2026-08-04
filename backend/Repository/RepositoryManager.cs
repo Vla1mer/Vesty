@@ -83,17 +83,17 @@ namespace Repository
 
         public async Task ExecuteInTransactionAsync(Func<Task> action)
         {
-            if (_context.Database.CurrentTransaction is not null)
-            {
-                await action();
-                return;
-            }
-
-            await using var transaction =
-                await _context.Database.BeginTransactionAsync(IsolationLevel.Serializable);
-
             try
             {
+                if (_context.Database.CurrentTransaction is not null)
+                {
+                    await action();
+                    return;
+                }
+
+                await using var transaction =
+                    await _context.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+
                 await action();
                 await transaction.CommitAsync();
             }

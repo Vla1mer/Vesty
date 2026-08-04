@@ -119,10 +119,10 @@ namespace Services
 
         public async Task TransferOwnershipAsync(int chatId, int newOwnerUserId)
         {
-            await GetChatOrThrowAsync(chatId, mustBeGroupChat: "transfer ownership");
-
             await _repository.ExecuteInTransactionAsync(async () =>
             {
+                await GetChatOrThrowAsync(chatId, mustBeGroupChat: "transfer ownership");
+
                 var caller = await EnsureCallerIsOwnerAsync(
                     chatId, "transfer ownership", trackChanges: true);
 
