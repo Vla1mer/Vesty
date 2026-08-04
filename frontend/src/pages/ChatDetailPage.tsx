@@ -16,18 +16,17 @@ import {
 } from "../store/messageApi";
 import { useAuth } from "../context/useAuth";
 import { Avatar, ChatAvatar } from "../components/Avatar";
-import { MessageBubble } from "../components/MessageBubble";
+import { MessageList } from "../components/MessageList";
 import { ChatInfoModal } from "../components/ChatInfoModal";
 import { ChatSettingsModal } from "../components/ChatSettingsModal";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { getChatDisplayName } from "../utils/chats";
-import { formatDateSeparator, isSameDay } from "../utils/date";
 import { onChatDeleted } from "../lib/signalr";
 import { setActiveChat } from "../lib/activeChat";
 import { useTypingIndicator } from "../hooks/useTypingIndicator";
 import { useAttachmentUploads } from "../hooks/useAttachmentUploads";
 import { useIsMobile } from "../hooks/useIsMobile";
-import { ArrowDown, ArrowLeft, ChevronRight, Copy, MessageCircle, Paperclip, Pencil, Pin, Reply, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowLeft, ChevronRight, Copy, Paperclip, Pencil, Pin, Reply, Trash2, X } from "lucide-react";
 import { AttachmentDrafts } from "../components/AttachmentDrafts";
 import type { AxiosBaseQueryError } from "../api/axiosBaseQuery";
 import { isDirectChat, UserRole, type ChatMemberWithRoleDto, type MessageDto } from "../types/api";
@@ -35,9 +34,6 @@ import { Button } from "../components/ui/Button";
 import { TextInput } from "../components/ui/TextInput";
 import { FormError } from "../components/FormError";
 import { AnimatePresence, motion } from "framer-motion";
-import { EmptyState } from "../components/ui/EmptyState";
-import { MessageListSkeleton } from "../components/ui/Skeleton";
-import { StrangerBanner } from "../components/StrangerBanner";
 import { getApiErrorMessage } from "../utils/apiError";
 import { useGetBlockedUsersQuery } from "../store/blockApi";
 
@@ -496,117 +492,40 @@ export function ChatDetailPage() {
         </button>
       )}
 
-      <div
-        ref={scrollRef}
+      <MessageList
+        chat={chat}
+        messages={messages}
+        members={memberById}
+        currentUserId={userId}
+        loading={chatLoading || messagesLoading}
+        error={
+          loadError ?? (messagesError ? "Failed to load messages" : null)
+        }
+        firstUnreadId={firstUnreadId}
+        highlightedId={highlightedId}
+        editingId={editingId}
+        selection={{
+          mode: selectionMode,
+          ids: selectedIds,
+          onStart: selectStart,
+          onToggle: toggleSelect,
+        }}
+        actions={{
+          onReply: setReplyTo,
+          onToggleReaction: (messageId, emoji, active) =>
+            toggleReaction({ chatId, messageId, emoji, active }),
+          onTogglePin: canPin
+            ? (messageId, pinned) => togglePin({ chatId, messageId, pinned })
+            : undefined,
+          onJumpTo: jumpToMessage,
+          onEdit: startEdit,
+          onDelete: (id) => setDeleteTargetId(id),
+        }}
+        containerRef={scrollRef}
+        bottomRef={bottomRef}
         onScroll={handleScroll}
-        className={`flex-1 min-h-0 overflow-y-auto px-4 pb-4 flex flex-col ${
-          activePinned && !selectionMode ? "pt-[140px]" : "pt-[88px]"
-        }`}
-      >
-        {chat && isDirectChat(chat) && chat.partnerUserId && (
-          <StrangerBanner
-            partnerUserId={chat.partnerUserId}
-            partnerName={chat.partnerUserName ?? "This user"}
-          />
-        )}
-
-        {(chatLoading || messagesLoading) && <MessageListSkeleton />}
-
-        {(loadError || messagesError) && (
-          <FormError
-            className="mt-auto"
-            message={loadError ?? "Failed to load messages"}
-          />
-        )}
-
-        {!chatLoading &&
-          !messagesLoading &&
-          !loadError &&
-          !messagesError &&
-          messages.length === 0 && (
-            <EmptyState
-              className="m-auto"
-              Icon={MessageCircle}
-              title="No messages yet"
-              description="Say hello — your first message will appear here."
-            />
-          )}
-
-        <div className={messages.length > 0 ? "mt-auto space-y-3" : "space-y-3"}>
-        <AnimatePresence initial={false}>
-          {messages.map((msg, index) => {
-          const prev = messages[index - 1];
-          const showDate =
-            !prev || !isSameDay(prev.createdAt, msg.createdAt);
-          return (
-            <motion.div
-              key={msg.id}
-              layout="position"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96 }}
-              transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-            >
-              {showDate && (
-                <div className="flex justify-center my-2">
-                  <span className="text-xs text-content-muted bg-surface-raised px-3 py-1 rounded-full">
-                    {formatDateSeparator(msg.createdAt)}
-                  </span>
-                </div>
-              )}
-
-              {msg.id === firstUnreadId && (
-                <div className="my-3 flex items-center gap-3">
-                  <span className="h-px flex-1 bg-accent-strong/40" />
-                  <span className="text-xs font-medium text-accent-strong">
-                    Unread messages
-                  </span>
-                  <span className="h-px flex-1 bg-accent-strong/40" />
-                </div>
-              )}
-              <MessageBubble
-                message={msg}
-                isOwn={msg.userId === userId}
-                authorName={memberById.get(msg.userId)?.userName}
-                authorAvatarUpdatedAt={memberById.get(msg.userId)?.avatarUpdatedAt}
-                replyAuthorName={
-                  msg.replyTo
-                    ? memberById.get(msg.replyTo.userId)?.userName
-                    : undefined
-                }
-                onReply={setReplyTo}
-                currentUserId={userId}
-                onToggleReaction={(messageId, emoji, active) =>
-                  toggleReaction({ chatId, messageId, emoji, active })
-                }
-                onTogglePin={
-                  canPin
-                    ? (messageId, pinned) =>
-                        togglePin({ chatId, messageId, pinned })
-                    : undefined
-                }
-                onJumpToMessage={jumpToMessage}
-                highlighted={highlightedId === msg.id}
-                showAuthor={chat ? !chat.isPrivate : false}
-                isEditing={editingId === msg.id}
-                selectionMode={selectionMode}
-                selected={selectedIds.has(msg.id)}
-                onSelectStart={selectStart}
-                onToggleSelect={toggleSelect}
-                onEdit={msg.userId === userId ? startEdit : undefined}
-                onDelete={
-                  msg.userId === userId
-                    ? (id) => setDeleteTargetId(id)
-                    : undefined
-                }
-              />
-            </motion.div>
-          );
-          })}
-        </AnimatePresence>
-        <div ref={bottomRef} />
-        </div>
-      </div>
+        compact={!activePinned || selectionMode}
+      />
 
       <AnimatePresence>
         {isInfoOpen && chat && (
