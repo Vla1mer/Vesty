@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { ChatsPage } from "../pages/ChatsPage";
+import { RAIL_WIDTH_COMPACT, RAIL_WIDTH_WITH_LABELS } from "./SideRail";
 import { useRailLabels } from "../hooks/useRailLabels";
 import { useIsMobile } from "../hooks/useIsMobile";
 import {
@@ -20,7 +21,7 @@ export function ChatLayout() {
   const [dragWidth, setDragWidth] = useState<number | null>(null);
   const dragRef = useRef<{ startX: number; startWidth: number } | null>(null);
 
-  const railWidth = showRailLabels ? 72 : 64;
+  const railWidth = showRailLabels ? RAIL_WIDTH_WITH_LABELS : RAIL_WIDTH_COMPACT;
   const listWidth = dragWidth ?? storedWidth;
 
   function handlePointerDown(event: ReactPointerEvent<HTMLDivElement>) {
@@ -36,11 +37,21 @@ export function ChatLayout() {
     setDragWidth(clampChatListWidth(drag.startWidth + event.clientX - drag.startX));
   }
 
-  function handlePointerUp(event: ReactPointerEvent<HTMLDivElement>) {
-    if (!dragRef.current) return;
+  function endDrag(event: ReactPointerEvent<HTMLDivElement>): boolean {
+    if (!dragRef.current) return false;
     dragRef.current = null;
     event.currentTarget.releasePointerCapture(event.pointerId);
+    return true;
+  }
+
+  function handlePointerUp(event: ReactPointerEvent<HTMLDivElement>) {
+    if (!endDrag(event)) return;
     if (dragWidth !== null) setChatListWidth(dragWidth);
+    setDragWidth(null);
+  }
+
+  function handlePointerCancel(event: ReactPointerEvent<HTMLDivElement>) {
+    if (!endDrag(event)) return;
     setDragWidth(null);
   }
 
@@ -61,7 +72,7 @@ export function ChatLayout() {
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerUp}
+          onPointerCancel={handlePointerCancel}
           onDoubleClick={() => setChatListWidth(CHAT_LIST_DEFAULT_WIDTH)}
           className="absolute inset-y-0 right-0 hidden w-1.5 cursor-col-resize select-none md:block"
         />

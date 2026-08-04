@@ -37,7 +37,10 @@ export function createPersistedStore<T>(
 
   return {
     subscribe(listener) {
-      if (listeners.size === 0) window.addEventListener("storage", handleStorage);
+      if (listeners.size === 0) {
+        window.addEventListener("storage", handleStorage);
+        value = read();
+      }
       listeners.add(listener);
 
       return () => {
@@ -50,6 +53,7 @@ export function createPersistedStore<T>(
     getSnapshot: () => value,
     getServerSnapshot: () => fallback,
     set(next) {
+      if (next === value) return;
       value = next;
       try {
         localStorage.setItem(key, encode(next));

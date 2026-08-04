@@ -4,7 +4,7 @@ import { createPersistedStore } from "../lib/persistedStore";
 const store = createPersistedStore<boolean>(
   "vesty.rail-labels",
   true,
-  (raw) => raw !== "off",
+  (raw) => (raw === "on" ? true : raw === "off" ? false : null),
   (value) => (value ? "on" : "off")
 );
 

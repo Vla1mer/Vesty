@@ -2,6 +2,9 @@ import type { ReactNode } from "react";
 import { LogOut, Settings, Users } from "lucide-react";
 import { useRailLabels } from "../hooks/useRailLabels";
 
+export const RAIL_WIDTH_WITH_LABELS = 72;
+export const RAIL_WIDTH_COMPACT = 64;
+
 interface RailButtonProps {
   icon: ReactNode;
   label: string;
@@ -62,9 +65,10 @@ export function SideRail({
 
   return (
     <nav
-      className={`hidden shrink-0 flex-col items-center gap-1 border-r border-line bg-surface px-1.5 py-3 md:flex ${
-        showLabels ? "w-[72px]" : "w-16"
-      }`}
+      style={{
+        width: showLabels ? RAIL_WIDTH_WITH_LABELS : RAIL_WIDTH_COMPACT,
+      }}
+      className="hidden shrink-0 flex-col items-center gap-1 border-r border-line bg-surface px-1.5 py-3 md:flex"
     >
       <RailButton
         icon={avatar}
