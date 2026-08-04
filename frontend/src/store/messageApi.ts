@@ -112,12 +112,16 @@ export const messageApi = apiSlice.injectEndpoints({
         data: { content, replyToMessageId, attachmentIds },
       }),
       async onQueryStarted({ chatId }, { dispatch, queryFulfilled }) {
-        const { data } = await queryFulfilled;
-        dispatch(
-          messageApi.util.updateQueryData("getMessagesByChat", chatId, (draft) => {
-            if (!draft.some((m) => m.id === data.id)) draft.push(data);
-          })
-        );
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(
+            messageApi.util.updateQueryData("getMessagesByChat", chatId, (draft) => {
+              if (!draft.some((m) => m.id === data.id)) draft.push(data);
+            })
+          );
+        } catch {
+          return;
+        }
       },
     }),
 
