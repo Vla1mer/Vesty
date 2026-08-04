@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { LogOut, Settings, Users } from "lucide-react";
+import { useRailLabels } from "../hooks/useRailLabels";
 
 interface RailButtonProps {
   icon: ReactNode;
@@ -10,6 +11,8 @@ interface RailButtonProps {
 }
 
 function RailButton({ icon, label, onClick, badge = 0, danger = false }: RailButtonProps) {
+  const showLabels = useRailLabels();
+
   return (
     <button
       type="button"
@@ -27,7 +30,7 @@ function RailButton({ icon, label, onClick, badge = 0, danger = false }: RailBut
           </span>
         )}
       </span>
-      <span className="text-[11px] leading-none">{label}</span>
+      {showLabels && <span className="text-[11px] leading-none">{label}</span>}
     </button>
   );
 }
@@ -49,8 +52,14 @@ export function SideRail({
   onSettings,
   onLogout,
 }: Props) {
+  const showLabels = useRailLabels();
+
   return (
-    <nav className="hidden w-[72px] shrink-0 flex-col items-center gap-1 border-r border-line bg-surface px-1.5 py-3 md:flex">
+    <nav
+      className={`hidden shrink-0 flex-col items-center gap-1 border-r border-line bg-surface px-1.5 py-3 md:flex ${
+        showLabels ? "w-[72px]" : "w-16"
+      }`}
+    >
       <RailButton icon={avatar} label="Profile" onClick={onProfile} />
       <RailButton
         icon={<Users size={22} aria-hidden="true" />}

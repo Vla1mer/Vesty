@@ -83,7 +83,7 @@ export function ChatsPage() {
         onLogout={handleLogout}
       />
 
-      <div className="relative flex min-h-0 flex-1 flex-col">
+      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
       <header className="flex items-center justify-between gap-2 p-4 border-b border-line">
         <div className="flex items-center gap-3 min-w-0">
           <div className="min-w-0">
