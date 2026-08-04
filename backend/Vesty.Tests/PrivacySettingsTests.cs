@@ -74,7 +74,6 @@ namespace Vesty.Tests
             _currentUser.Setup(u => u.GetMembershipAsync(ChatId))
                 .ReturnsAsync(new ChatMember { ChatId = ChatId, UserId = CurrentUserId, RoleId = UserRole.Owner });
 
-        // --- личные сообщения ---
 
         [Fact]
         public async Task DirectChat_WhenTargetAllowsEveryone_IsNotBlocked()
@@ -133,7 +132,6 @@ namespace Vesty.Tests
             Assert.IsNotType<PrivacyRestrictedException>(exception);
         }
 
-        // --- приглашения в группы ---
 
         [Fact]
         public async Task Invite_WhenTargetAllowsNobody_Throws()
@@ -162,7 +160,6 @@ namespace Vesty.Tests
                 _memberService.AddUserToChatAsync(ChatId, new ChatMemberForCreationDto { UserId = TargetUserId }));
         }
 
-        // --- блокировка ---
 
         private void Blocked() =>
             _blocks.Setup(r => r.IsBlockedEitherWayAsync(CurrentUserId, TargetUserId))
@@ -204,7 +201,6 @@ namespace Vesty.Tests
                 _memberService.AddUserToChatAsync(ChatId, new ChatMemberForCreationDto { UserId = TargetUserId }));
         }
 
-        // --- настройки ---
 
         [Theory]
         [InlineData(0, PrivacyLevel.Everyone)]

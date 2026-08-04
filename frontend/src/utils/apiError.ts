@@ -40,7 +40,6 @@ function extractErrorDict(data: unknown): Record<string, string[]> | null {
   return Object.keys(result).length > 0 ? result : null;
 }
 
-/** Ответы обработчика исключений имеют вид { StatusCode, Message }. */
 function extractMessage(data: unknown): string | null {
   if (!data || typeof data !== "object") return null;
   const message = (data as Record<string, unknown>).Message ??

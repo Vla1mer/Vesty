@@ -74,7 +74,6 @@ export function FriendsContent() {
     skip: term.length === 0,
   });
 
-  // блокируем только ту строку, по которой идёт запрос, а не весь список
   function isBusy(userId: number): boolean {
     return (
       blocking.blockingUserId === userId ||

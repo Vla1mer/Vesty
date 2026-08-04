@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import type { ReactNode } from "react";
 import { ArrowLeft, X } from "lucide-react";
 import { motion } from "framer-motion";
@@ -62,7 +63,7 @@ export function Modal({
     </button>
   );
 
-  return (
+  return createPortal(
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -109,6 +110,7 @@ export function Modal({
         )}
         {children}
       </motion.div>
-    </motion.div>
+    </motion.div>,
+    document.body
   );
 }

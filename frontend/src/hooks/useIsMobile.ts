@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 
-// граница совпадает с брейкпоинтом md у Tailwind, по которому ChatLayout
-// переключается между одной колонкой и двумя
 const MOBILE_QUERY = "(max-width: 767.98px)";
 
 export function useIsMobile(): boolean {
