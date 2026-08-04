@@ -2,7 +2,6 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Entities.Models;
-using Microsoft.Extensions.DependencyInjection;
 using Services.DataTransferObjects;
 
 namespace Vesty.Tests
@@ -20,7 +19,7 @@ namespace Vesty.Tests
             var host = await AuthenticatedClientAsync(hostName);
             var shy = await AuthenticatedClientAsync(shyName);
 
-            await SetWhoCanInviteAsync(shy, PrivacyLevel.Nobody);
+            await SetPrivacyAsync(shy, PrivacyLevel.Nobody);
             var shyId = await UserIdAsync(host, shyName);
 
             var created = await host.PostAsJsonAsync("/api/Chat",
@@ -61,7 +60,7 @@ namespace Vesty.Tests
             var host = await AuthenticatedClientAsync(hostName);
             var shy = await AuthenticatedClientAsync(shyName);
 
-            await SetWhoCanInviteAsync(shy, PrivacyLevel.Nobody);
+            await SetPrivacyAsync(shy, PrivacyLevel.Nobody);
             var shyId = await UserIdAsync(host, shyName);
 
             await host.PostAsJsonAsync("/api/Chat",

@@ -1,8 +1,6 @@
 ﻿using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using Entities.Models;
-using Microsoft.Extensions.DependencyInjection;
 using Services.DataTransferObjects;
 
 namespace Vesty.Tests
@@ -22,10 +20,11 @@ namespace Vesty.Tests
                 new { userName, password = "Test123" });
             var login = await client.PostAsJsonAsync("/api/User/login",
                 new { userName, password = "Test123" });
-            var tokens = await login.Content.ReadFromJsonAsync<TokenDto>();
 
             Assert.Equal(HttpStatusCode.Created, register.StatusCode);
             Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+
+            var tokens = await login.Content.ReadFromJsonAsync<TokenDto>();
             Assert.False(string.IsNullOrWhiteSpace(tokens!.AccessToken));
         }
 

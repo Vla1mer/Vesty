@@ -1,8 +1,6 @@
 ﻿using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using Entities.Models;
-using Microsoft.Extensions.DependencyInjection;
 using Services.DataTransferObjects;
 
 namespace Vesty.Tests
@@ -69,6 +67,7 @@ namespace Vesty.Tests
             var chat = await CreateChatAsync(first, "Shared chat");
             var upload = await first.PostAsync($"/api/Message/{chat.Id}/attachments",
                 FileForm("mine.txt", new byte[] { 7 }, "text/plain"));
+            upload.EnsureSuccessStatusCode();
             var attachment = await upload.Content.ReadFromJsonAsync<MessageAttachmentDto>();
 
             var second = await AuthenticatedClientAsync(UniqueName("attthief"));
@@ -88,6 +87,7 @@ namespace Vesty.Tests
 
             var upload = await client.PostAsync($"/api/Message/{chat.Id}/attachments",
                 FileForm(fileName, System.Text.Encoding.UTF8.GetBytes("%PDF-1.4"), "application/pdf"));
+            upload.EnsureSuccessStatusCode();
             var attachment = await upload.Content.ReadFromJsonAsync<MessageAttachmentDto>();
 
             Assert.Equal(fileName, attachment!.FileName);

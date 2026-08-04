@@ -1,11 +1,11 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Entities.Models;
 using Services.DataTransferObjects;
 
 namespace Vesty.Tests
 {
-    [Collection(ApiCollection.Name)]
     public abstract class ApiTestBase
     {
         protected readonly VestyApiFactory Factory;
@@ -68,10 +68,11 @@ namespace Vesty.Tests
             sent.EnsureSuccessStatusCode();
         }
 
-        protected static async Task SetWhoCanInviteAsync(HttpClient client, int level)
+        protected static async Task SetPrivacyAsync(
+            HttpClient client, int whoCanInvite, int whoCanMessage = PrivacyLevel.Everyone)
         {
             var updated = await client.PutAsJsonAsync("/api/User/privacy",
-                new { whoCanMessage = 1, whoCanInvite = level });
+                new { whoCanMessage, whoCanInvite });
             updated.EnsureSuccessStatusCode();
         }
 
