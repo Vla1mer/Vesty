@@ -26,13 +26,10 @@ import { setActiveChat } from "../lib/activeChat";
 import { useTypingIndicator } from "../hooks/useTypingIndicator";
 import { useAttachmentUploads } from "../hooks/useAttachmentUploads";
 import { useIsMobile } from "../hooks/useIsMobile";
-import { ArrowDown, ArrowLeft, ChevronRight, Copy, Paperclip, Pencil, Pin, Reply, Trash2, X } from "lucide-react";
-import { AttachmentDrafts } from "../components/AttachmentDrafts";
+import { ArrowDown, ArrowLeft, ChevronRight, Copy, Pencil, Pin, Trash2, X } from "lucide-react";
+import { MessageComposer } from "../components/MessageComposer";
 import type { AxiosBaseQueryError } from "../api/axiosBaseQuery";
 import { isDirectChat, UserRole, type ChatMemberWithRoleDto, type MessageDto } from "../types/api";
-import { Button } from "../components/ui/Button";
-import { TextInput } from "../components/ui/TextInput";
-import { FormError } from "../components/FormError";
 import { AnimatePresence, motion } from "framer-motion";
 import { getApiErrorMessage } from "../utils/apiError";
 import { useGetBlockedUsersQuery } from "../store/blockApi";
@@ -89,7 +86,6 @@ export function ChatDetailPage() {
   const [toggleReaction] = useToggleReactionMutation();
   const [togglePin] = useTogglePinMutation();
   const attachments = useAttachmentUploads(chatId);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDraggingFile, setIsDraggingFile] = useState(false);
   const { typingNames, notifyTyping } = useTypingIndicator(chatId, isValidChat);
   const isMobile = useIsMobile();
@@ -603,117 +599,26 @@ export function ChatDetailPage() {
       </AnimatePresence>
 
       {!loadError && (
-        <div className="relative border-t border-line bg-surface sticky bottom-0">
-          <AnimatePresence>
-            {actionError && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
-                className="overflow-hidden px-4 pt-3"
-              >
-                <FormError message={actionError} />
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {editingMessage && (
-            <div className="flex items-center gap-3 px-4 pt-3 -mb-1">
-              <Pencil size={18} aria-hidden="true" className="shrink-0 text-accent-strong" />
-              <div className="flex-1 min-w-0 border-l-2 border-accent-strong pl-3">
-                <p className="text-xs font-medium text-accent-strong">Editing</p>
-                <p className="text-sm text-content-muted truncate">
-                  {editingMessage.content}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={cancelEdit}
-                aria-label="Cancel editing"
-                className="text-content-muted hover:text-content"
-              >
-                <X size={20} />
-              </button>
-            </div>
-          )}
-          {replyTo && !editingMessage && (
-            <div className="flex items-center gap-3 px-4 pt-3 -mb-1">
-              <Reply size={18} aria-hidden="true" className="shrink-0 text-accent-strong" />
-              <div className="flex-1 min-w-0 border-l-2 border-accent-strong pl-3">
-                <p className="text-xs font-medium text-accent-strong">
-                  Reply to {memberById.get(replyTo.userId)?.userName ?? `User #${replyTo.userId}`}
-                </p>
-                <p className="text-sm text-content-muted truncate">
-                  {replyTo.content}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setReplyTo(null)}
-                aria-label="Cancel reply"
-                className="text-content-muted hover:text-content"
-              >
-                <X size={20} />
-              </button>
-            </div>
-          )}
-          <AttachmentDrafts uploads={attachments.uploads} onRemove={attachments.remove} />
-          <form onSubmit={handleSend} className="flex gap-2 p-4">
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              aria-label="Attach file"
-              title="Attach file"
-              className="shrink-0 px-2 text-content-muted hover:text-accent-strong transition"
-            >
-              <Paperclip size={20} />
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              onChange={(e) => {
-                attachments.add(Array.from(e.target.files ?? []));
-                e.target.value = "";
-              }}
-              className="hidden"
-            />
-            <TextInput
-              ref={inputRef}
-              type="text"
-              value={input}
-              onChange={(e) => {
-                setInput(e.target.value);
-                notifyTyping();
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Escape" && editingId !== null) cancelEdit();
-              }}
-              placeholder={
-                blockedPartner
-                  ? "Unblock this user to send messages"
-                  : "Type a message..."
-              }
-              maxLength={2000}
-              disabled={sending || saving || blockedPartner}
-              className="flex-1"
-            />
-            <Button
-              type="submit"
-              disabled={
-                sending ||
-                saving ||
-                blockedPartner ||
-                attachments.isUploading ||
-                (!input.trim() && attachments.readyIds.length === 0)
-              }
-              className="px-5"
-            >
-              {sending || saving ? "..." : editingId !== null ? "Save" : "Send"}
-            </Button>
-          </form>
-        </div>
+        <MessageComposer
+          value={input}
+          onChange={(next) => {
+            setInput(next);
+            notifyTyping();
+          }}
+          onSubmit={handleSend}
+          inputRef={inputRef}
+          attachments={attachments}
+          editingMessage={editingMessage}
+          onCancelEdit={cancelEdit}
+          replyTo={replyTo}
+          replyAuthorName={
+            replyTo ? memberById.get(replyTo.userId)?.userName : undefined
+          }
+          onCancelReply={() => setReplyTo(null)}
+          error={actionError}
+          busy={sending || saving}
+          blocked={blockedPartner}
+        />
       )}
     </div>
   );
