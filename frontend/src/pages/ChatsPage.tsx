@@ -14,6 +14,7 @@ import { FloatingActionButton } from "../components/FloatingActionButton";
 import { ProfileModal } from "../components/ProfileModal";
 import { SettingsModal } from "../components/SettingsModal";
 import { FriendsModal } from "../components/FriendsModal";
+import { useIsMobile } from "../hooks/useIsMobile";
 import { useIncomingFriendRequests } from "../hooks/useIncomingFriendRequests";
 import { BottomNav } from "../components/BottomNav";
 import { FormError } from "../components/FormError";
@@ -36,33 +37,23 @@ export function ChatsPage() {
   const [isFriendsOpen, setIsFriendsOpen] = useState(false);
   const incomingRequests = useIncomingFriendRequests();
   const [searchQuery, setSearchQuery] = useState("");
+  const isMobile = useIsMobile();
 
-  function openProfile() {
+  function openOnDesktopOrNavigate(
+    openModal: (open: boolean) => void,
+    path: string
+  ) {
     setIsMenuOpen(false);
-    if (window.matchMedia("(min-width: 768px)").matches) {
-      setIsProfileOpen(true);
-    } else {
-      navigate("/profile");
-    }
+    if (isMobile) navigate(path);
+    else openModal(true);
   }
 
-  function openFriends() {
-    setIsMenuOpen(false);
-    if (window.matchMedia("(min-width: 768px)").matches) {
-      setIsFriendsOpen(true);
-    } else {
-      navigate("/friends");
-    }
-  }
-
-  function openSettings() {
-    setIsMenuOpen(false);
-    if (window.matchMedia("(min-width: 768px)").matches) {
-      setIsSettingsOpen(true);
-    } else {
-      navigate("/settings");
-    }
-  }
+  const openProfile = () => openOnDesktopOrNavigate(setIsProfileOpen, "/profile");
+  const openFriends = () => openOnDesktopOrNavigate(setIsFriendsOpen, "/friends");
+  const openSettings = () =>
+    openOnDesktopOrNavigate(setIsSettingsOpen, "/settings");
+  const openCreateChat = () =>
+    openOnDesktopOrNavigate(setIsCreateModalOpen, "/chats/new-group");
 
   useEffect(() => {
     if (!isMenuOpen) return;
@@ -119,7 +110,7 @@ export function ChatsPage() {
               Icon: Users,
               label: "New group chat",
               description: "Create a chat for multiple people",
-              onClick: () => setIsCreateModalOpen(true),
+              onClick: openCreateChat,
             },
           ]}
         />
