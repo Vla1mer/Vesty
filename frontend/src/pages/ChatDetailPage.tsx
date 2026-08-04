@@ -391,7 +391,13 @@ export function ChatDetailPage() {
           </button>
           <button
             type="button"
-            onClick={() => chat && setIsInfoOpen(true)}
+            onClick={() => {
+              if (!chat) return;
+              // на узком экране информация — отдельный маршрут, чтобы работала
+              // системная кнопка «назад»
+              if (isMobile) navigate(`/chats/${chatId}/info`);
+              else setIsInfoOpen(true);
+            }}
             disabled={!chat}
             className="group flex-1 flex items-center gap-2 text-left rounded px-2 -mx-2 hover:bg-surface-muted transition disabled:cursor-default disabled:hover:bg-transparent"
           >
