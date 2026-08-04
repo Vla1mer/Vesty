@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using AutoMapper;
 using Shared.Exceptions;
 using Entities.Models;
 using Shared.RequestFeatures;
@@ -16,7 +16,7 @@ namespace Services
         private readonly IMapper _mapper;
         private readonly ICurrentUserService _currentUser;
         private readonly IChatNotifier _notifier;
-        private readonly IMessageCipher _cipher;
+        private readonly ChatEnricher _enricher;
 
         public ChatService(IRepositoryManager repository, ILoggerManager logger, IMapper mapper,
             ICurrentUserService currentUser, IChatNotifier notifier, IMessageCipher cipher)
@@ -26,7 +26,7 @@ namespace Services
             _mapper = mapper;
             _currentUser = currentUser;
             _notifier = notifier;
-            _cipher = cipher;
+            _enricher = new ChatEnricher(repository, currentUser, cipher);
         }
 
         public async Task<(IEnumerable<ChatDto> chats, MetaData metaData)> GetAllAsync(ChatParameters chatParameters)
@@ -34,10 +34,7 @@ namespace Services
             var allowedChatIds = await _repository.ChatMember.GetChatIdsForUserAsync(_currentUser.UserId);
             var chatsWithMetaData = await _repository.Chat.GetAllChatsAsync(chatParameters, allowedChatIds, trackChanges: false);
             var chatsDto = _mapper.Map<IEnumerable<ChatDto>>(chatsWithMetaData).ToList();
-            var result = await ConvertDirectChatsAsync(chatsDto);
-            result = await AttachLastMessagesAsync(result);
-            result = await AttachUnreadCountsAsync(result);
-            result = await HideClearedDirectChatsAsync(result);
+            var result = await _enricher.EnrichListAsync(chatsDto);
             return (chats: result, metaData: chatsWithMetaData.MetaData);
         }
 
@@ -59,7 +56,7 @@ namespace Services
                 dto = _mapper.Map<ChatDto>(chat);
             }
 
-            return (await AttachUnreadCountsAsync([dto]))[0];
+            return (await _enricher.AttachUnreadCountsAsync([dto]))[0];
         }
 
         public async Task<ChatDto> CreateAsync(ChatForCreationDto chatDto)
@@ -107,7 +104,7 @@ namespace Services
 
             var existing = await _repository.Chat.GetPrivateChatBetweenAsync(currentUserId, otherUserId);
             if (existing is not null)
-                return MapToDirectChatDto(existing, ToPartner(otherUser));
+                return MapToDirectChatDto(existing, ChatMapper.ToPartner(otherUser));
 
             await EnsurePrivacyAllowsAsync(otherUser.WhoCanMessage, otherUserId, "direct messages");
 
@@ -126,46 +123,15 @@ namespace Services
 
             var currentUser = await _repository.User.GetUserAsync(currentUserId, trackChanges: false);
 
-            await _notifier.ChatCreatedAsync(new[] { currentUserId }, MapToDirectChatDto(chat, ToPartner(otherUser)));
+            await _notifier.ChatCreatedAsync(new[] { currentUserId }, MapToDirectChatDto(chat, ChatMapper.ToPartner(otherUser)));
             await _notifier.ChatCreatedAsync(new[] { otherUserId },
-                MapToDirectChatDto(chat, currentUser is null ? null : ToPartner(currentUser)));
+                MapToDirectChatDto(chat, currentUser is null ? null : ChatMapper.ToPartner(currentUser)));
 
-            return MapToDirectChatDto(chat, ToPartner(otherUser));
+            return MapToDirectChatDto(chat, ChatMapper.ToPartner(otherUser));
         }
 
         private DirectChatDto MapToDirectChatDto(Chat chat, DirectChatPartner? partner) =>
-            MapToDirectChatDto(_mapper.Map<ChatDto>(chat), partner);
-
-        private static DirectChatDto MapToDirectChatDto(ChatDto chat, DirectChatPartner? partner) =>
-            new DirectChatDto
-            {
-                Id = chat.Id,
-                Name = chat.Name,
-                Description = chat.Description,
-                WhoCanInvite = chat.WhoCanInvite,
-                WhoCanEdit = chat.WhoCanEdit,
-                WhoCanPost = chat.WhoCanPost,
-                CreatorId = chat.CreatorId,
-                IsPrivate = chat.IsPrivate,
-                CreatedAt = chat.CreatedAt,
-                LastMessageContent = chat.LastMessageContent,
-                LastMessageSenderName = chat.LastMessageSenderName,
-                LastMessageSenderId = chat.LastMessageSenderId,
-                LastMessageAt = chat.LastMessageAt,
-                UnreadCount = chat.UnreadCount,
-                AvatarUpdatedAt = chat.AvatarUpdatedAt,
-                PartnerUserName = partner?.UserName,
-                PartnerUserId = partner?.UserId,
-                PartnerAvatarUpdatedAt = partner?.AvatarUpdatedAt
-            };
-
-        private static DirectChatPartner ToPartner(User user) =>
-            new DirectChatPartner
-            {
-                UserId = user.Id,
-                UserName = user.UserName,
-                AvatarUpdatedAt = user.AvatarUpdatedAt
-            };
+            ChatMapper.ToDirectChatDto(_mapper.Map<ChatDto>(chat), partner);
 
         public async Task DeleteAsync(int id)
         {
@@ -261,67 +227,6 @@ namespace Services
             return chat;
         }
 
-        private async Task<List<ChatDto>> ConvertDirectChatsAsync(List<ChatDto> chats)
-        {
-            var directChatIds = chats.Where(c => c.IsPrivate).Select(c => c.Id).ToList();
-            if (directChatIds.Count == 0) return chats;
-
-            var partners = await _repository.ChatMember.GetDirectChatPartnersAsync(
-                directChatIds, _currentUser.UserId);
-
-            var result = new List<ChatDto>(chats.Count);
-            foreach (var chat in chats)
-            {
-                if (chat.IsPrivate)
-                {
-                    partners.TryGetValue(chat.Id, out var partner);
-                    result.Add(MapToDirectChatDto(chat, partner));
-                }
-                else
-                {
-                    result.Add(chat);
-                }
-            }
-            return result;
-        }
-
-        private async Task<List<ChatDto>> HideClearedDirectChatsAsync(List<ChatDto> chats)
-        {
-            if (chats.Count == 0) return chats;
-
-            var cleared = await _repository.ChatMember.GetClearedAtByChatIdsAsync(
-                _currentUser.UserId, chats.Select(c => c.Id));
-
-            if (cleared.Count == 0) return chats;
-
-            return chats.Where(c =>
-                !c.IsPrivate ||
-                !cleared.TryGetValue(c.Id, out var clearedAt) ||
-                (c.LastMessageAt is not null && c.LastMessageAt > clearedAt)
-            ).ToList();
-        }
-
-        private async Task<List<ChatDto>> AttachLastMessagesAsync(List<ChatDto> chats)
-        {
-            if (chats.Count == 0) return chats;
-
-            var lastMessages = await _repository.Message.GetLastMessagesByChatIdsAsync(
-                chats.Select(c => c.Id), _currentUser.UserId);
-            var lastByChat = lastMessages.ToDictionary(m => m.ChatId);
-
-            return chats.Select(c =>
-                lastByChat.TryGetValue(c.Id, out var lm)
-                    ? c with
-                    {
-                        LastMessageContent = _cipher.Decrypt(lm.Content),
-                        LastMessageSenderName = lm.User?.UserName,
-                        LastMessageSenderId = lm.UserId,
-                        LastMessageAt = lm.CreatedAt
-                    }
-                    : c
-            ).ToList();
-        }
-
         private async Task EnsureCanBeInvitedAsync(int targetUserId)
         {
             var target = await _repository.User.GetUserAsync(targetUserId, trackChanges: false)
@@ -342,18 +247,6 @@ namespace Services
                 return;
 
             throw new PrivacyRestrictedException(action);
-        }
-
-        private async Task<List<ChatDto>> AttachUnreadCountsAsync(List<ChatDto> chats)
-        {
-            if (chats.Count == 0) return chats;
-
-            var counts = await _repository.Message.GetUnreadCountsAsync(
-                _currentUser.UserId, chats.Select(c => c.Id));
-
-            return chats.Select(c =>
-                counts.TryGetValue(c.Id, out var n) ? c with { UnreadCount = n } : c
-            ).ToList();
         }
 
         public async Task MarkReadAsync(int chatId)
