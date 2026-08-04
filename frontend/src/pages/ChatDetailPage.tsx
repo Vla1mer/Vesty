@@ -26,6 +26,7 @@ import { setActiveChat } from "../lib/activeChat";
 import { useTypingIndicator } from "../hooks/useTypingIndicator";
 import { useAttachmentUploads } from "../hooks/useAttachmentUploads";
 import { useMessageSelection } from "../hooks/useMessageSelection";
+import { useChatScroll } from "../hooks/useChatScroll";
 import { useIsMobile } from "../hooks/useIsMobile";
 import { ArrowDown } from "lucide-react";
 import { MessageComposer } from "../components/MessageComposer";
@@ -50,10 +51,6 @@ export function ChatDetailPage() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
-  const [unreadOnEntry, setUnreadOnEntry] = useState<number | null>(null);
-  const [showJumpToBottom, setShowJumpToBottom] = useState(false);
-  const [initialScrollDone, setInitialScrollDone] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   const { data: chat, isLoading: chatLoading, error: chatError } =
     useGetChatByIdQuery(chatId, {
@@ -84,9 +81,7 @@ export function ChatDetailPage() {
   const { typingNames, notifyTyping } = useTypingIndicator(chatId, isValidChat);
   const isMobile = useIsMobile();
 
-  const bottomRef = useRef<HTMLDivElement>(null);
   const [replyTo, setReplyTo] = useState<MessageDto | null>(null);
-  const [highlightedId, setHighlightedId] = useState<number | null>(null);
   const [pinnedIndex, setPinnedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -94,6 +89,12 @@ export function ChatDetailPage() {
     editingId !== null ? messages.find((m) => m.id === editingId) : undefined;
 
   const selection = useMessageSelection(messages, userId);
+  const scroll = useChatScroll({
+    chatId,
+    messages,
+    chat,
+    chatFailed: Boolean(chatError),
+  });
 
   const memberById = useMemo(() => {
     const map = new Map<number, ChatMemberWithRoleDto>();
@@ -123,7 +124,7 @@ export function ChatDetailPage() {
 
   function showNextPinned() {
     if (!activePinned) return;
-    jumpToMessage(activePinned.id);
+    scroll.jumpToMessage(activePinned.id);
     if (pinnedMessages.length > 1) {
       setPinnedIndex((prev) => (prev + 1) % pinnedMessages.length);
     }
@@ -138,46 +139,10 @@ export function ChatDetailPage() {
     return "Failed to load chat";
   }, [isValidChat, chatError]);
 
-  function handleScroll() {
-    const el = scrollRef.current;
-    if (!el) return;
-    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-    setShowJumpToBottom(distanceFromBottom > 240);
-  }
-
-  function jumpToBottom() {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }
-
   const blockedPartner =
     chat && isDirectChat(chat) && chat.partnerUserId
       ? blockedUsers.some((b) => b.userId === chat.partnerUserId)
       : false;
-
-  const firstUnreadId = useMemo(() => {
-    if (!unreadOnEntry || unreadOnEntry > messages.length) return null;
-    return messages[messages.length - unreadOnEntry]?.id ?? null;
-  }, [messages, unreadOnEntry]);
-
-  useEffect(() => {
-    if (messages.length === 0) return;
-
-    if (!initialScrollDone) {
-      if (unreadOnEntry === null) return;
-
-      const anchor =
-        firstUnreadId !== null
-          ? document.getElementById(`message-${firstUnreadId}`)
-          : null;
-
-      if (anchor) anchor.scrollIntoView({ block: "center" });
-      else bottomRef.current?.scrollIntoView();
-      setInitialScrollDone(true);
-      return;
-    }
-
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, firstUnreadId, unreadOnEntry, initialScrollDone]);
 
   useEffect(() => {
     if (!isValidChat) return;
@@ -187,19 +152,11 @@ export function ChatDetailPage() {
 
   useEffect(() => {
     setPinnedIndex(0);
-    setUnreadOnEntry(null);
-    setInitialScrollDone(false);
   }, [chatId]);
 
   useEffect(() => {
-    if (unreadOnEntry !== null) return;
-    if (chat) setUnreadOnEntry(chat.unreadCount ?? 0);
-    else if (chatError) setUnreadOnEntry(0);
-  }, [chat, chatError, unreadOnEntry]);
-
-  useEffect(() => {
-    if (isValidChat && initialScrollDone) markChatRead(chatId);
-  }, [chatId, isValidChat, initialScrollDone, messages.length, markChatRead]);
+    if (isValidChat && scroll.initialScrollDone) markChatRead(chatId);
+  }, [chatId, isValidChat, scroll.initialScrollDone, messages.length, markChatRead]);
 
   useEffect(() => {
     if (!isValidChat) return;
@@ -272,13 +229,6 @@ export function ChatDetailPage() {
     }
   }
 
-  function jumpToMessage(id: number) {
-    const node = document.getElementById(`message-${id}`);
-    if (!node) return;
-    node.scrollIntoView({ behavior: "smooth", block: "center" });
-    setHighlightedId(id);
-    window.setTimeout(() => setHighlightedId(null), 1600);
-  }
 
   function editSelected() {
     const target = selection.selected[0];
@@ -368,8 +318,8 @@ export function ChatDetailPage() {
         error={
           loadError ?? (messagesError ? "Failed to load messages" : null)
         }
-        firstUnreadId={firstUnreadId}
-        highlightedId={highlightedId}
+        firstUnreadId={scroll.firstUnreadId}
+        highlightedId={scroll.highlightedId}
         editingId={editingId}
         selection={{
           mode: selection.mode,
@@ -384,13 +334,13 @@ export function ChatDetailPage() {
           onTogglePin: canPin
             ? (messageId, pinned) => togglePin({ chatId, messageId, pinned })
             : undefined,
-          onJumpTo: jumpToMessage,
+          onJumpTo: scroll.jumpToMessage,
           onEdit: startEdit,
           onDelete: (id) => setDeleteTargetId(id),
         }}
-        containerRef={scrollRef}
-        bottomRef={bottomRef}
-        onScroll={handleScroll}
+        containerRef={scroll.containerRef}
+        bottomRef={scroll.bottomRef}
+        onScroll={scroll.handleScroll}
         compact={!activePinned || selection.mode}
       />
 
@@ -452,10 +402,10 @@ export function ChatDetailPage() {
       </AnimatePresence>
 
       <AnimatePresence>
-        {showJumpToBottom && (
+        {scroll.showJumpToBottom && (
           <motion.button
             type="button"
-            onClick={jumpToBottom}
+            onClick={scroll.jumpToBottom}
             aria-label="Jump to latest message"
             title="Jump to latest message"
             initial={{ opacity: 0, scale: 0.8, y: 8 }}
