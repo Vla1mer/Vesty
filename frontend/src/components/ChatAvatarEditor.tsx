@@ -1,9 +1,6 @@
 import { ChatAvatar } from "./Avatar";
 import { AvatarUpload } from "./AvatarUpload";
-import {
-  useUploadChatAvatarMutation,
-  useDeleteChatAvatarMutation,
-} from "../store/chatApi";
+import { useUploadChatAvatarMutation } from "../store/chatApi";
 
 interface ChatAvatarEditorProps {
   chatId: number;
@@ -18,8 +15,6 @@ export function ChatAvatarEditor({
 }: ChatAvatarEditorProps) {
   const [uploadAvatar, { isLoading: uploading }] =
     useUploadChatAvatarMutation();
-  const [deleteAvatar, { isLoading: removing }] =
-    useDeleteChatAvatarMutation();
 
   return (
     <AvatarUpload
@@ -33,9 +28,7 @@ export function ChatAvatarEditor({
       }
       hasAvatar={Boolean(avatarUpdatedAt)}
       uploading={uploading}
-      removing={removing}
       onUpload={(file) => uploadAvatar({ chatId, file }).unwrap()}
-      onRemove={() => deleteAvatar(chatId).unwrap()}
     />
   );
 }
