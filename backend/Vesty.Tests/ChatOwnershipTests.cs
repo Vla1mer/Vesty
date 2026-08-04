@@ -29,6 +29,8 @@ namespace Vesty.Tests
         {
             _repository.SetupGet(r => r.Chat).Returns(_chats.Object);
             _repository.SetupGet(r => r.ChatMember).Returns(_members.Object);
+            _repository.Setup(r => r.ExecuteInTransactionAsync(It.IsAny<Func<Task>>()))
+                .Returns((Func<Task> action) => action());
             _currentUser.SetupGet(u => u.UserId).Returns(OwnerId);
 
             _chats.Setup(r => r.GetChatAsync(ChatId, It.IsAny<bool>()))
@@ -58,6 +60,29 @@ namespace Vesty.Tests
             Assert.Equal(UserRole.Owner, member.RoleId);
             Assert.Equal(UserRole.Admin, owner.RoleId);
             _repository.Verify(r => r.SaveAsync(), Times.Once);
+        }
+
+        [Fact]
+        public async Task TransferOwnershipAsync_RunsInsideATransaction()
+        {
+            Membership();
+
+            await _service.TransferOwnershipAsync(ChatId, MemberId);
+
+            _repository.Verify(
+                r => r.ExecuteInTransactionAsync(It.IsAny<Func<Task>>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task TransferOwnershipAsync_WithoutTransactionSupport_SavesNothing()
+        {
+            Membership();
+            _repository.Setup(r => r.ExecuteInTransactionAsync(It.IsAny<Func<Task>>()))
+                .Returns(Task.CompletedTask);
+
+            await _service.TransferOwnershipAsync(ChatId, MemberId);
+
+            _repository.Verify(r => r.SaveAsync(), Times.Never);
         }
 
         [Fact]

@@ -650,6 +650,49 @@ namespace Vesty.Tests
         }
 
         [Fact]
+        public async Task TransferOwnership_RunTwiceAtOnce_LeavesOneOwner()
+        {
+            var ownerName = UniqueName("racea");
+            var owner = await AuthenticatedClientAsync(ownerName);
+            var ownerId = await UserIdAsync(owner, ownerName);
+
+            var chat = await CreateChatAsync(owner, "Race " + ownerName);
+
+            var candidateIds = new List<int>();
+            HttpClient? firstCandidate = null;
+            for (var i = 0; i < 4; i++)
+            {
+                var name = UniqueName($"racec{i}");
+                var client = await AuthenticatedClientAsync(name);
+                firstCandidate ??= client;
+
+                var id = await UserIdAsync(owner, name);
+                await FriendshipSetup.BefriendAsync(owner, ownerId, client, id);
+
+                var added = await owner.PostAsJsonAsync($"/api/Chat/{chat.Id}/users",
+                    new { userId = id });
+                added.EnsureSuccessStatusCode();
+                candidateIds.Add(id);
+            }
+
+            var start = new TaskCompletionSource();
+            var attempts = candidateIds.Select(async id =>
+            {
+                await start.Task;
+                return await owner.PostAsync($"/api/Chat/{chat.Id}/users/{id}/owner", null);
+            }).ToList();
+
+            start.SetResult();
+            var responses = await Task.WhenAll(attempts);
+
+            Assert.Single(responses, r => r.StatusCode == HttpStatusCode.NoContent);
+
+            var members = await firstCandidate!.GetFromJsonAsync<List<ChatMemberWithRoleDto>>(
+                $"/api/Chat/{chat.Id}/users");
+            Assert.Single(members!, m => m.RoleId == UserRole.Owner);
+        }
+
+        [Fact]
         public async Task ClearForMe_HidesTheChatOnlyForTheCaller()
         {
             var aliceName = UniqueName("clra");

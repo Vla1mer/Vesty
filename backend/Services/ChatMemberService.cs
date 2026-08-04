@@ -119,19 +119,22 @@ namespace Services
 
         public async Task TransferOwnershipAsync(int chatId, int newOwnerUserId)
         {
-            await GetChatOrThrowAsync(chatId, mustBeGroupChat: "transfer ownership");
+            await _repository.ExecuteInTransactionAsync(async () =>
+            {
+                await GetChatOrThrowAsync(chatId, mustBeGroupChat: "transfer ownership");
 
-            var caller = await EnsureCallerIsOwnerAsync(
-                chatId, "transfer ownership", trackChanges: true);
+                var caller = await EnsureCallerIsOwnerAsync(
+                    chatId, "transfer ownership", trackChanges: true);
 
-            if (newOwnerUserId == _currentUser.UserId)
-                throw new InvalidRoleAssignmentException("You already own this chat.");
+                if (newOwnerUserId == _currentUser.UserId)
+                    throw new InvalidRoleAssignmentException("You already own this chat.");
 
-            var target = await GetMemberOrThrowAsync(chatId, newOwnerUserId, trackChanges: true);
+                var target = await GetMemberOrThrowAsync(chatId, newOwnerUserId, trackChanges: true);
 
-            target.RoleId = UserRole.Owner;
-            caller.RoleId = UserRole.Admin;
-            await _repository.SaveAsync();
+                target.RoleId = UserRole.Owner;
+                caller.RoleId = UserRole.Admin;
+                await _repository.SaveAsync();
+            });
 
             await NotifyChatUpdatedAsync(chatId);
         }
