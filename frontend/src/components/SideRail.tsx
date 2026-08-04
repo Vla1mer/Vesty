@@ -5,14 +5,20 @@ import { useRailLabels } from "../hooks/useRailLabels";
 interface RailButtonProps {
   icon: ReactNode;
   label: string;
+  showLabel: boolean;
   onClick: () => void;
   badge?: number;
   danger?: boolean;
 }
 
-function RailButton({ icon, label, onClick, badge = 0, danger = false }: RailButtonProps) {
-  const showLabels = useRailLabels();
-
+function RailButton({
+  icon,
+  label,
+  showLabel,
+  onClick,
+  badge = 0,
+  danger = false,
+}: RailButtonProps) {
   return (
     <button
       type="button"
@@ -30,7 +36,7 @@ function RailButton({ icon, label, onClick, badge = 0, danger = false }: RailBut
           </span>
         )}
       </span>
-      {showLabels && <span className="text-[11px] leading-none">{label}</span>}
+      {showLabel && <span className="text-[11px] leading-none">{label}</span>}
     </button>
   );
 }
@@ -60,16 +66,23 @@ export function SideRail({
         showLabels ? "w-[72px]" : "w-16"
       }`}
     >
-      <RailButton icon={avatar} label="Profile" onClick={onProfile} />
+      <RailButton
+        icon={avatar}
+        label="Profile"
+        showLabel={showLabels}
+        onClick={onProfile}
+      />
       <RailButton
         icon={<Users size={22} aria-hidden="true" />}
         label="Friends"
+        showLabel={showLabels}
         onClick={onFriends}
         badge={incomingRequests}
       />
       <RailButton
         icon={<Settings size={22} aria-hidden="true" />}
         label="Settings"
+        showLabel={showLabels}
         onClick={onSettings}
       />
 
@@ -78,6 +91,7 @@ export function SideRail({
       <RailButton
         icon={<LogOut size={22} aria-hidden="true" />}
         label="Logout"
+        showLabel={showLabels}
         onClick={onLogout}
         danger
       />

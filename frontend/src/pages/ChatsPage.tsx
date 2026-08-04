@@ -7,7 +7,7 @@ import { Avatar } from "../components/Avatar";
 import { ChatListItem } from "../components/ChatListItem";
 import { CreateChatModal } from "../components/CreateChatModal";
 import { SelectUserModal } from "../components/SelectUserModal";
-import { MessageSquarePlus, MessagesSquare, Users } from "lucide-react";
+import { MessageSquarePlus, MessagesSquare, User, Users } from "lucide-react";
 import { SearchBar } from "../components/SearchBar";
 import { SearchResults } from "../components/SearchResults";
 import { FloatingActionButton } from "../components/FloatingActionButton";
@@ -67,14 +67,18 @@ export function ChatsPage() {
     <div className="relative flex-1 min-h-0 flex bg-surface">
       <SideRail
         avatar={
-          <Avatar
-            userId={userId ?? 0}
-            userName={currentUser?.userName ?? userName ?? undefined}
-            name={currentUser?.name}
-            surname={currentUser?.surname}
-            avatarUpdatedAt={currentUser?.avatarUpdatedAt}
-            size="sm"
-          />
+          userId === null ? (
+            <User size={22} aria-hidden="true" />
+          ) : (
+            <Avatar
+              userId={userId}
+              userName={currentUser?.userName ?? userName ?? undefined}
+              name={currentUser?.name}
+              surname={currentUser?.surname}
+              avatarUpdatedAt={currentUser?.avatarUpdatedAt}
+              size="sm"
+            />
+          )
         }
         incomingRequests={incomingRequests}
         onProfile={openProfile}

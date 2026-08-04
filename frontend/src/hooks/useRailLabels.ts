@@ -13,9 +13,26 @@ function read(): boolean {
 let enabled = read();
 const listeners = new Set<() => void>();
 
+function notify(): void {
+  listeners.forEach((listener) => listener());
+}
+
+function handleStorage(event: StorageEvent): void {
+  if (event.key !== null && event.key !== STORAGE_KEY) return;
+  const next = read();
+  if (next === enabled) return;
+  enabled = next;
+  notify();
+}
+
 function subscribe(listener: () => void): () => void {
+  if (listeners.size === 0) window.addEventListener("storage", handleStorage);
   listeners.add(listener);
-  return () => listeners.delete(listener);
+
+  return () => {
+    listeners.delete(listener);
+    if (listeners.size === 0) window.removeEventListener("storage", handleStorage);
+  };
 }
 
 export function setRailLabels(next: boolean): void {
@@ -25,7 +42,7 @@ export function setRailLabels(next: boolean): void {
   } catch {
     /* empty */
   }
-  listeners.forEach((listener) => listener());
+  notify();
 }
 
 export function useRailLabels(): boolean {
