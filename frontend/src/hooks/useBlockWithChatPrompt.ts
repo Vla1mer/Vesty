@@ -6,10 +6,6 @@ import {
 } from "../store/chatApi";
 import { getApiErrorMessage } from "../utils/apiError";
 
-/**
- * Блокирует пользователя и, если с ним есть личная переписка,
- * предлагает убрать её у себя. У собеседника чат остаётся.
- */
 export function useBlockWithChatPrompt() {
   const [blockUser, blockState] = useBlockUserMutation();
   const [clearChatForMe, clearState] = useClearChatForMeMutation();

@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Shared.Exceptions;
 using Entities.Models;
 using Shared.RequestFeatures;
@@ -285,7 +285,6 @@ namespace Services
             return result;
         }
 
-        // личный чат, очищенный у себя, прячется до первого нового сообщения
         private async Task<List<ChatDto>> HideClearedDirectChatsAsync(List<ChatDto> chats)
         {
             if (chats.Count == 0) return chats;

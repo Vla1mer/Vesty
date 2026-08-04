@@ -184,7 +184,6 @@ export function ChatDetailPage() {
     if (messages.length === 0) return;
 
     if (!initialScrollDone) {
-      // ждём счётчик непрочитанных: запрос за чатом приходит позже сообщений
       if (unreadOnEntry === null) return;
 
       const anchor =
@@ -393,8 +392,6 @@ export function ChatDetailPage() {
             type="button"
             onClick={() => {
               if (!chat) return;
-              // на узком экране информация — отдельный маршрут, чтобы работала
-              // системная кнопка «назад»
               if (isMobile) navigate(`/chats/${chatId}/info`);
               else setIsInfoOpen(true);
             }}
@@ -618,8 +615,6 @@ export function ChatDetailPage() {
             onClose={() => setIsInfoOpen(false)}
             onOpenSettings={() => {
               setIsInfoOpen(false);
-              // на узком экране настройки — отдельный маршрут, чтобы работала
-              // системная кнопка «назад»
               if (isMobile) navigate(`/chats/${chatId}/settings`);
               else setIsSettingsOpen(true);
             }}

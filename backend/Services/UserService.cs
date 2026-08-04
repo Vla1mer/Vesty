@@ -41,8 +41,6 @@ namespace Services
             if (!userParameters.ValidBirthdayRange)
                 throw new MaxBirthdayRangeBadRequestException();
 
-            // заблокированные в обе стороны отсекаются до постраничности,
-            // иначе счётчики страниц врут
             userParameters.ExcludedUserIds =
                 (await _repository.UserBlock.GetRelatedUserIdsAsync(_currentUser.UserId)).ToList();
 

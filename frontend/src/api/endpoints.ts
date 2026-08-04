@@ -1,4 +1,3 @@
-// Central place for backend API paths. Keep these in sync with the server routes.
 export const endpoints = {
   auth: {
     register: "/api/User/register",

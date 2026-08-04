@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Repository.Interfaces;
 using Shared.Exceptions;
@@ -50,8 +50,6 @@ namespace Repository
         public IUserBlockRepository UserBlock => _userBlockRepository.Value;
         public IChatInviteRepository ChatInvite => _chatInviteRepository.Value;
 
-        // вставка не состоялась, но EF держит сущность как Added и повторит её
-        // при следующем SaveChanges — снимаем с отслеживания
         private static void DetachPendingInserts(DbUpdateException ex)
         {
             foreach (var entry in ex.Entries.Where(e => e.State == EntityState.Added))

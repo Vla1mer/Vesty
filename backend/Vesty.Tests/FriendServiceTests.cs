@@ -156,7 +156,6 @@ namespace Vesty.Tests
             await Assert.ThrowsAsync<BlockedUserException>(() =>
                 _service.AcceptAsync(OtherUserId));
 
-            // запрет срабатывает до обращения к связи, а не после
             _friendships.Verify(
                 r => r.GetBetweenAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<bool>()),
                 Times.Never);

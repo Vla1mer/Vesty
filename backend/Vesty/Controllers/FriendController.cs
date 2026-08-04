@@ -38,7 +38,6 @@ namespace Vesty.Controllers
         {
             var result = await _service.Friend.SendRequestAsync(userId);
 
-            // встречная заявка подтверждает дружбу — ничего не создано
             return result.Status == Friendship.Accepted
                 ? Ok(result)
                 : CreatedAtAction(nameof(GetPendingRequests), result);

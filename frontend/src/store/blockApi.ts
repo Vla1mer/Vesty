@@ -11,13 +11,11 @@ import type { BlockedUserDto } from "../types/api";
 
 const BLOCK_LIST = { type: BLOCK_API_TAGS.BLOCK, id: TAG_ID.LIST } as const;
 
-// блокировка рвёт дружбу, поэтому оба списка друзей устаревают
 const FRIEND_LISTS = [
   { type: FRIEND_API_TAGS.FRIEND, id: TAG_ID.LIST },
   { type: FRIEND_API_TAGS.FRIEND_REQUEST, id: TAG_ID.LIST },
 ] as const;
 
-// заблокированные пропадают из поиска, разблокированные возвращаются
 const USER_LIST = { type: USER_API_TAGS.USER, id: TAG_ID.LIST } as const;
 
 export const blockApi = apiSlice.injectEndpoints({

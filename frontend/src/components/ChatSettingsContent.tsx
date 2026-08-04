@@ -116,7 +116,6 @@ export function ChatSettingsContent({
     onBusyChange?.(busy);
   }, [busy, onBusyChange]);
 
-  // ошибка относится к покинутому экрану, иначе она всплывёт при возврате
   useEffect(() => {
     setError(null);
   }, [view]);
@@ -125,7 +124,6 @@ export function ChatSettingsContent({
     setSaved(null);
   }, [chat.whoCanInvite, chat.whoCanEdit, chat.whoCanPost]);
 
-  // подхватываем чужие правки профиля, но не затираем то, что печатает владелец
   const known = useRef({
     chatId: chat.id,
     name: serverName,

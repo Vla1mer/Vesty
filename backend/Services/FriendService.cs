@@ -50,7 +50,6 @@ namespace Services
 
             if (existing is not null)
             {
-                // встречная заявка подтверждает дружбу, а не создаёт вторую запись
                 if (existing.Status == Friendship.Pending && existing.AddresseeId == currentUserId)
                     return await AcceptExistingAsync(existing);
 
@@ -72,7 +71,6 @@ namespace Services
             }
             catch (DuplicateResourceException)
             {
-                // встречная заявка успела вставиться первой — принимаем её
                 return await AcceptRaceWinnerAsync(targetUserId);
             }
 

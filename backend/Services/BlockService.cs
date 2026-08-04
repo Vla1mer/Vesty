@@ -53,7 +53,6 @@ namespace Services
                 };
                 _repository.UserBlock.CreateBlock(block);
 
-                // блокировка разрывает дружбу и снимает висящие заявки
                 var friendship = await _repository.Friendship.GetBetweenAsync(
                     currentUserId, targetUserId, trackChanges: true);
                 if (friendship is not null)

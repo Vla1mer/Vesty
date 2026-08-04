@@ -32,7 +32,6 @@ export function storePreference(preference: ThemePreference): void {
   try {
     localStorage.setItem(THEME_STORAGE_KEY, preference);
   } catch {
-    // недоступное хранилище не должно ломать переключение темы
   }
 }
 
