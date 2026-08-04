@@ -49,7 +49,8 @@ function extractMessage(data: unknown): string | null {
 
 export function parseApiErrors(err: unknown, fallback: string): ParsedApiErrors {
   const data =
-    (err as AxiosError).response?.data ?? (err as { data?: unknown }).data;
+    (err as AxiosError | undefined)?.response?.data ??
+    (err as { data?: unknown } | undefined)?.data;
   const errors = extractErrorDict(data);
   if (!errors) {
     return { fieldErrors: {}, generalError: extractMessage(data) ?? fallback };
