@@ -15,37 +15,26 @@ import {
   useTogglePinMutation,
 } from "../store/messageApi";
 import { useAuth } from "../context/useAuth";
-import { Avatar, ChatAvatar } from "../components/Avatar";
-import { MessageBubble } from "../components/MessageBubble";
+import { ChatTopBar } from "../components/ChatTopBar";
+import { MessageList } from "../components/MessageList";
 import { ChatInfoModal } from "../components/ChatInfoModal";
 import { ChatSettingsModal } from "../components/ChatSettingsModal";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { getChatDisplayName } from "../utils/chats";
-import { formatDateSeparator, isSameDay } from "../utils/date";
 import { onChatDeleted } from "../lib/signalr";
 import { setActiveChat } from "../lib/activeChat";
 import { useTypingIndicator } from "../hooks/useTypingIndicator";
 import { useAttachmentUploads } from "../hooks/useAttachmentUploads";
+import { useMessageSelection } from "../hooks/useMessageSelection";
+import { useChatScroll } from "../hooks/useChatScroll";
 import { useIsMobile } from "../hooks/useIsMobile";
-import { ArrowDown, ArrowLeft, ChevronRight, Copy, MessageCircle, Paperclip, Pencil, Pin, Reply, Trash2, X } from "lucide-react";
-import { AttachmentDrafts } from "../components/AttachmentDrafts";
+import { ArrowDown } from "lucide-react";
+import { MessageComposer } from "../components/MessageComposer";
 import type { AxiosBaseQueryError } from "../api/axiosBaseQuery";
 import { isDirectChat, UserRole, type ChatMemberWithRoleDto, type MessageDto } from "../types/api";
-import { Button } from "../components/ui/Button";
-import { TextInput } from "../components/ui/TextInput";
-import { FormError } from "../components/FormError";
 import { AnimatePresence, motion } from "framer-motion";
-import { EmptyState } from "../components/ui/EmptyState";
-import { MessageListSkeleton } from "../components/ui/Skeleton";
-import { StrangerBanner } from "../components/StrangerBanner";
 import { getApiErrorMessage } from "../utils/apiError";
 import { useGetBlockedUsersQuery } from "../store/blockApi";
-
-function typingText(names: string[]): string {
-  if (names.length === 1) return `${names[0]} is typing`;
-  if (names.length === 2) return `${names[0]} and ${names[1]} are typing`;
-  return "Several people are typing";
-}
 
 export function ChatDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -61,12 +50,7 @@ export function ChatDetailPage() {
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
-  const [unreadOnEntry, setUnreadOnEntry] = useState<number | null>(null);
-  const [showJumpToBottom, setShowJumpToBottom] = useState(false);
-  const [initialScrollDone, setInitialScrollDone] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   const { data: chat, isLoading: chatLoading, error: chatError } =
     useGetChatByIdQuery(chatId, {
@@ -93,28 +77,24 @@ export function ChatDetailPage() {
   const [toggleReaction] = useToggleReactionMutation();
   const [togglePin] = useTogglePinMutation();
   const attachments = useAttachmentUploads(chatId);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDraggingFile, setIsDraggingFile] = useState(false);
   const { typingNames, notifyTyping } = useTypingIndicator(chatId, isValidChat);
   const isMobile = useIsMobile();
 
-  const bottomRef = useRef<HTMLDivElement>(null);
   const [replyTo, setReplyTo] = useState<MessageDto | null>(null);
-  const [highlightedId, setHighlightedId] = useState<number | null>(null);
   const [pinnedIndex, setPinnedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const editingMessage =
     editingId !== null ? messages.find((m) => m.id === editingId) : undefined;
 
-  const selectionMode = selectedIds.size > 0;
-  const selectedMessages = useMemo(
-    () => messages.filter((m) => selectedIds.has(m.id)),
-    [messages, selectedIds]
-  );
-  const ownSelectedIds = selectedMessages
-    .filter((m) => m.userId === userId)
-    .map((m) => m.id);
+  const selection = useMessageSelection(messages, userId);
+  const scroll = useChatScroll({
+    chatId,
+    messages,
+    chat,
+    chatFailed: Boolean(chatError),
+  });
 
   const memberById = useMemo(() => {
     const map = new Map<number, ChatMemberWithRoleDto>();
@@ -144,7 +124,7 @@ export function ChatDetailPage() {
 
   function showNextPinned() {
     if (!activePinned) return;
-    jumpToMessage(activePinned.id);
+    scroll.jumpToMessage(activePinned.id);
     if (pinnedMessages.length > 1) {
       setPinnedIndex((prev) => (prev + 1) % pinnedMessages.length);
     }
@@ -159,46 +139,10 @@ export function ChatDetailPage() {
     return "Failed to load chat";
   }, [isValidChat, chatError]);
 
-  function handleScroll() {
-    const el = scrollRef.current;
-    if (!el) return;
-    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-    setShowJumpToBottom(distanceFromBottom > 240);
-  }
-
-  function jumpToBottom() {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }
-
   const blockedPartner =
     chat && isDirectChat(chat) && chat.partnerUserId
       ? blockedUsers.some((b) => b.userId === chat.partnerUserId)
       : false;
-
-  const firstUnreadId = useMemo(() => {
-    if (!unreadOnEntry || unreadOnEntry > messages.length) return null;
-    return messages[messages.length - unreadOnEntry]?.id ?? null;
-  }, [messages, unreadOnEntry]);
-
-  useEffect(() => {
-    if (messages.length === 0) return;
-
-    if (!initialScrollDone) {
-      if (unreadOnEntry === null) return;
-
-      const anchor =
-        firstUnreadId !== null
-          ? document.getElementById(`message-${firstUnreadId}`)
-          : null;
-
-      if (anchor) anchor.scrollIntoView({ block: "center" });
-      else bottomRef.current?.scrollIntoView();
-      setInitialScrollDone(true);
-      return;
-    }
-
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, firstUnreadId, unreadOnEntry, initialScrollDone]);
 
   useEffect(() => {
     if (!isValidChat) return;
@@ -208,19 +152,11 @@ export function ChatDetailPage() {
 
   useEffect(() => {
     setPinnedIndex(0);
-    setUnreadOnEntry(null);
-    setInitialScrollDone(false);
   }, [chatId]);
 
   useEffect(() => {
-    if (unreadOnEntry !== null) return;
-    if (chat) setUnreadOnEntry(chat.unreadCount ?? 0);
-    else if (chatError) setUnreadOnEntry(0);
-  }, [chat, chatError, unreadOnEntry]);
-
-  useEffect(() => {
-    if (isValidChat && initialScrollDone) markChatRead(chatId);
-  }, [chatId, isValidChat, initialScrollDone, messages.length, markChatRead]);
+    if (isValidChat && scroll.initialScrollDone) markChatRead(chatId);
+  }, [chatId, isValidChat, scroll.initialScrollDone, messages.length, markChatRead]);
 
   useEffect(() => {
     if (!isValidChat) return;
@@ -293,52 +229,22 @@ export function ChatDetailPage() {
     }
   }
 
-  function jumpToMessage(id: number) {
-    const node = document.getElementById(`message-${id}`);
-    if (!node) return;
-    node.scrollIntoView({ behavior: "smooth", block: "center" });
-    setHighlightedId(id);
-    window.setTimeout(() => setHighlightedId(null), 1600);
-  }
-
-  function selectStart(id: number) {
-    setSelectedIds((prev) => new Set(prev).add(id));
-  }
-
-  function toggleSelect(id: number) {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }
-
-  function clearSelection() {
-    setSelectedIds(new Set());
-  }
-
-  function copySelected() {
-    const text = selectedMessages.map((m) => m.content ?? "").join("\n");
-    if (text) navigator.clipboard?.writeText(text);
-    clearSelection();
-  }
 
   function editSelected() {
-    const target = selectedMessages[0];
+    const target = selection.selected[0];
     if (target && target.userId === userId) {
       startEdit(target.id, target.content ?? "");
     }
-    clearSelection();
+    selection.clear();
   }
 
   async function confirmBulkDelete() {
     try {
       await Promise.all(
-        ownSelectedIds.map((id) => deleteMessage({ chatId, id }).unwrap())
+        selection.ownIds.map((id) => deleteMessage({ chatId, id }).unwrap())
       );
       setBulkDeleteOpen(false);
-      clearSelection();
+      selection.clear();
     } catch {
       setActionError("Failed to delete messages");
       setBulkDeleteOpen(false);
@@ -375,238 +281,68 @@ export function ChatDetailPage() {
           <p className="text-lg font-medium text-accent-strong">Drop files to attach</p>
         </div>
       )}
-      <div className="absolute top-0 inset-x-0 overflow-hidden min-h-[88px] z-10">
-        <header
-          className={`absolute inset-0 flex items-center gap-4 p-4 border-b border-line bg-surface/80 backdrop-blur transition-transform duration-200 ${
-            selectionMode ? "-translate-y-full" : "translate-y-0"
-          }`}
-        >
-          <button
-            onClick={() => navigate("/chats")}
-            className="md:hidden text-content-muted hover:text-content"
-            aria-label="Back"
-          >
-            <ArrowLeft size={22} />
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              if (!chat) return;
-              if (isMobile) navigate(`/chats/${chatId}/info`);
-              else setIsInfoOpen(true);
-            }}
-            disabled={!chat}
-            className="group flex-1 flex items-center gap-2 text-left rounded px-2 -mx-2 hover:bg-surface-muted transition disabled:cursor-default disabled:hover:bg-transparent"
-          >
-            {chat &&
-              (isDirectChat(chat) && chat.partnerUserId ? (
-                <Avatar
-                  userId={chat.partnerUserId}
-                  userName={chat.partnerUserName ?? undefined}
-                  avatarUpdatedAt={chat.partnerAvatarUpdatedAt}
-                />
-              ) : (
-                <ChatAvatar
-                  chatId={chat.id}
-                  name={title}
-                  avatarUpdatedAt={chat.avatarUpdatedAt}
-                />
-              ))}
-            <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-bold text-content truncate">{title}</h1>
-              {chat &&
-                (typingNames.length > 0 ? (
-                  <p className="text-xs text-accent-strong italic">
-                    {typingText(typingNames)}
-                    <span className="typing-dots" />
-                  </p>
-                ) : !chat.isPrivate ? (
-                  <p className="text-xs text-content-muted">
-                    {members.length > 0
-                      ? `${members.length} ${members.length === 1 ? "member" : "members"}`
-                      : "Loading..."}
-                  </p>
-                ) : null)}
-            </div>
-            {chat && (
-              <ChevronRight
-                size={20}
-                aria-hidden="true"
-                className="shrink-0 text-content-subtle transition group-hover:translate-x-0.5 group-hover:text-accent-strong"
-              />
-            )}
-          </button>
-        </header>
+      <ChatTopBar
+        chat={chat}
+        title={title}
+        memberCount={members.length}
+        typingNames={typingNames}
+        onBack={() => navigate("/chats")}
+        onOpenInfo={() => {
+          if (!chat) return;
+          if (isMobile) navigate(`/chats/${chatId}/info`);
+          else setIsInfoOpen(true);
+        }}
+        selection={{
+          mode: selection.mode,
+          count: selection.ids.size,
+          ownCount: selection.ownIds.length,
+          onClear: selection.clear,
+          onCopy: selection.copy,
+          onEdit: editSelected,
+          onDelete: () => setBulkDeleteOpen(true),
+        }}
+        pinned={{
+          message: activePinned,
+          index: pinnedMessages.length > 0 ? pinnedIndex % pinnedMessages.length : 0,
+          total: pinnedMessages.length,
+          onNext: showNextPinned,
+        }}
+      />
 
-        <header
-          className={`absolute inset-0 flex items-center gap-4 p-4 border-b border-line bg-surface/80 backdrop-blur transition-transform duration-200 ${
-            selectionMode ? "translate-y-0" : "-translate-y-full"
-          }`}
-        >
-          <button
-            onClick={clearSelection}
-            className="text-content-muted hover:text-content"
-            aria-label="Cancel selection"
-          >
-            <X size={22} />
-          </button>
-          <span className="flex-1 font-semibold text-content">
-            {selectedIds.size} selected
-          </span>
-          <div className="flex items-center gap-4 text-content-muted">
-            <button onClick={copySelected} aria-label="Copy" title="Copy">
-              <Copy size={20} />
-            </button>
-            {selectedIds.size === 1 && ownSelectedIds.length === 1 && (
-              <button onClick={editSelected} aria-label="Edit" title="Edit">
-                <Pencil size={20} />
-              </button>
-            )}
-            {ownSelectedIds.length > 0 && (
-              <button
-                onClick={() => setBulkDeleteOpen(true)}
-                aria-label="Delete"
-                title="Delete"
-                className="text-danger"
-              >
-                <Trash2 size={20} />
-              </button>
-            )}
-          </div>
-        </header>
-      </div>
-
-      {activePinned && !selectionMode && (
-        <button
-          type="button"
-          onClick={showNextPinned}
-          className="absolute top-[88px] inset-x-0 z-10 flex items-center gap-3 px-4 py-2 border-b border-line bg-surface-muted/95 backdrop-blur text-left hover:bg-surface transition"
-        >
-          <Pin size={15} aria-hidden="true" className="shrink-0 text-accent-strong" />
-          <div className="min-w-0 flex-1 border-l-2 border-accent-strong pl-3">
-            <p className="text-xs font-medium text-accent-strong">
-              {pinnedMessages.length > 1
-                ? `Pinned message ${(pinnedIndex % pinnedMessages.length) + 1} of ${pinnedMessages.length}`
-                : "Pinned message"}
-            </p>
-            <p className="text-sm text-content-muted truncate">
-              {activePinned.content}
-            </p>
-          </div>
-        </button>
-      )}
-
-      <div
-        ref={scrollRef}
-        onScroll={handleScroll}
-        className={`flex-1 min-h-0 overflow-y-auto px-4 pb-4 flex flex-col ${
-          activePinned && !selectionMode ? "pt-[140px]" : "pt-[88px]"
-        }`}
-      >
-        {chat && isDirectChat(chat) && chat.partnerUserId && (
-          <StrangerBanner
-            partnerUserId={chat.partnerUserId}
-            partnerName={chat.partnerUserName ?? "This user"}
-          />
-        )}
-
-        {(chatLoading || messagesLoading) && <MessageListSkeleton />}
-
-        {(loadError || messagesError) && (
-          <FormError
-            className="mt-auto"
-            message={loadError ?? "Failed to load messages"}
-          />
-        )}
-
-        {!chatLoading &&
-          !messagesLoading &&
-          !loadError &&
-          !messagesError &&
-          messages.length === 0 && (
-            <EmptyState
-              className="m-auto"
-              Icon={MessageCircle}
-              title="No messages yet"
-              description="Say hello — your first message will appear here."
-            />
-          )}
-
-        <div className={messages.length > 0 ? "mt-auto space-y-3" : "space-y-3"}>
-        <AnimatePresence initial={false}>
-          {messages.map((msg, index) => {
-          const prev = messages[index - 1];
-          const showDate =
-            !prev || !isSameDay(prev.createdAt, msg.createdAt);
-          return (
-            <motion.div
-              key={msg.id}
-              layout="position"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96 }}
-              transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-            >
-              {showDate && (
-                <div className="flex justify-center my-2">
-                  <span className="text-xs text-content-muted bg-surface-raised px-3 py-1 rounded-full">
-                    {formatDateSeparator(msg.createdAt)}
-                  </span>
-                </div>
-              )}
-
-              {msg.id === firstUnreadId && (
-                <div className="my-3 flex items-center gap-3">
-                  <span className="h-px flex-1 bg-accent-strong/40" />
-                  <span className="text-xs font-medium text-accent-strong">
-                    Unread messages
-                  </span>
-                  <span className="h-px flex-1 bg-accent-strong/40" />
-                </div>
-              )}
-              <MessageBubble
-                message={msg}
-                isOwn={msg.userId === userId}
-                authorName={memberById.get(msg.userId)?.userName}
-                authorAvatarUpdatedAt={memberById.get(msg.userId)?.avatarUpdatedAt}
-                replyAuthorName={
-                  msg.replyTo
-                    ? memberById.get(msg.replyTo.userId)?.userName
-                    : undefined
-                }
-                onReply={setReplyTo}
-                currentUserId={userId}
-                onToggleReaction={(messageId, emoji, active) =>
-                  toggleReaction({ chatId, messageId, emoji, active })
-                }
-                onTogglePin={
-                  canPin
-                    ? (messageId, pinned) =>
-                        togglePin({ chatId, messageId, pinned })
-                    : undefined
-                }
-                onJumpToMessage={jumpToMessage}
-                highlighted={highlightedId === msg.id}
-                showAuthor={chat ? !chat.isPrivate : false}
-                isEditing={editingId === msg.id}
-                selectionMode={selectionMode}
-                selected={selectedIds.has(msg.id)}
-                onSelectStart={selectStart}
-                onToggleSelect={toggleSelect}
-                onEdit={msg.userId === userId ? startEdit : undefined}
-                onDelete={
-                  msg.userId === userId
-                    ? (id) => setDeleteTargetId(id)
-                    : undefined
-                }
-              />
-            </motion.div>
-          );
-          })}
-        </AnimatePresence>
-        <div ref={bottomRef} />
-        </div>
-      </div>
+      <MessageList
+        chat={chat}
+        messages={messages}
+        members={memberById}
+        currentUserId={userId}
+        loading={chatLoading || messagesLoading}
+        error={
+          loadError ?? (messagesError ? "Failed to load messages" : null)
+        }
+        firstUnreadId={scroll.firstUnreadId}
+        highlightedId={scroll.highlightedId}
+        editingId={editingId}
+        selection={{
+          mode: selection.mode,
+          ids: selection.ids,
+          onStart: selection.start,
+          onToggle: selection.toggle,
+        }}
+        actions={{
+          onReply: setReplyTo,
+          onToggleReaction: (messageId, emoji, active) =>
+            toggleReaction({ chatId, messageId, emoji, active }),
+          onTogglePin: canPin
+            ? (messageId, pinned) => togglePin({ chatId, messageId, pinned })
+            : undefined,
+          onJumpTo: scroll.jumpToMessage,
+          onEdit: startEdit,
+          onDelete: (id) => setDeleteTargetId(id),
+        }}
+        containerRef={scroll.containerRef}
+        bottomRef={scroll.bottomRef}
+        onScroll={scroll.handleScroll}
+        compact={!activePinned || selection.mode}
+      />
 
       <AnimatePresence>
         {isInfoOpen && chat && (
@@ -652,8 +388,8 @@ export function ChatDetailPage() {
       <AnimatePresence>
         {bulkDeleteOpen && (
           <ConfirmDialog
-            title={`Delete ${ownSelectedIds.length} ${
-              ownSelectedIds.length === 1 ? "message" : "messages"
+            title={`Delete ${selection.ownIds.length} ${
+              selection.ownIds.length === 1 ? "message" : "messages"
             }?`}
             message="The selected messages will be permanently deleted."
             confirmText="Delete"
@@ -666,10 +402,10 @@ export function ChatDetailPage() {
       </AnimatePresence>
 
       <AnimatePresence>
-        {showJumpToBottom && (
+        {scroll.showJumpToBottom && (
           <motion.button
             type="button"
-            onClick={jumpToBottom}
+            onClick={scroll.jumpToBottom}
             aria-label="Jump to latest message"
             title="Jump to latest message"
             initial={{ opacity: 0, scale: 0.8, y: 8 }}
@@ -684,117 +420,27 @@ export function ChatDetailPage() {
       </AnimatePresence>
 
       {!loadError && (
-        <div className="relative border-t border-line bg-surface sticky bottom-0">
-          <AnimatePresence>
-            {actionError && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
-                className="overflow-hidden px-4 pt-3"
-              >
-                <FormError message={actionError} />
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {editingMessage && (
-            <div className="flex items-center gap-3 px-4 pt-3 -mb-1">
-              <Pencil size={18} aria-hidden="true" className="shrink-0 text-accent-strong" />
-              <div className="flex-1 min-w-0 border-l-2 border-accent-strong pl-3">
-                <p className="text-xs font-medium text-accent-strong">Editing</p>
-                <p className="text-sm text-content-muted truncate">
-                  {editingMessage.content}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={cancelEdit}
-                aria-label="Cancel editing"
-                className="text-content-muted hover:text-content"
-              >
-                <X size={20} />
-              </button>
-            </div>
-          )}
-          {replyTo && !editingMessage && (
-            <div className="flex items-center gap-3 px-4 pt-3 -mb-1">
-              <Reply size={18} aria-hidden="true" className="shrink-0 text-accent-strong" />
-              <div className="flex-1 min-w-0 border-l-2 border-accent-strong pl-3">
-                <p className="text-xs font-medium text-accent-strong">
-                  Reply to {memberById.get(replyTo.userId)?.userName ?? `User #${replyTo.userId}`}
-                </p>
-                <p className="text-sm text-content-muted truncate">
-                  {replyTo.content}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setReplyTo(null)}
-                aria-label="Cancel reply"
-                className="text-content-muted hover:text-content"
-              >
-                <X size={20} />
-              </button>
-            </div>
-          )}
-          <AttachmentDrafts uploads={attachments.uploads} onRemove={attachments.remove} />
-          <form onSubmit={handleSend} className="flex gap-2 p-4">
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              aria-label="Attach file"
-              title="Attach file"
-              className="shrink-0 px-2 text-content-muted hover:text-accent-strong transition"
-            >
-              <Paperclip size={20} />
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              onChange={(e) => {
-                attachments.add(Array.from(e.target.files ?? []));
-                e.target.value = "";
-              }}
-              className="hidden"
-            />
-            <TextInput
-              ref={inputRef}
-              type="text"
-              value={input}
-              onChange={(e) => {
-                setInput(e.target.value);
-                notifyTyping();
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Escape" && editingId !== null) cancelEdit();
-              }}
-              placeholder={
-                blockedPartner
-                  ? "Unblock this user to send messages"
-                  : "Type a message..."
-              }
-              maxLength={2000}
-              disabled={sending || saving || blockedPartner}
-              className="flex-1"
-            />
-            <Button
-              type="submit"
-              disabled={
-                sending ||
-                saving ||
-                blockedPartner ||
-                attachments.isUploading ||
-                (!input.trim() && attachments.readyIds.length === 0)
-              }
-              className="px-5"
-            >
-              {sending || saving ? "..." : editingId !== null ? "Save" : "Send"}
-            </Button>
-          </form>
-        </div>
+        <MessageComposer
+          value={input}
+          onChange={(next) => {
+            setInput(next);
+            notifyTyping();
+          }}
+          onSubmit={handleSend}
+          inputRef={inputRef}
+          attachments={attachments}
+          editingMessage={editingMessage}
+          isEditing={editingId !== null}
+          onCancelEdit={cancelEdit}
+          replyTo={replyTo}
+          replyAuthorName={
+            replyTo ? memberById.get(replyTo.userId)?.userName : undefined
+          }
+          onCancelReply={() => setReplyTo(null)}
+          error={actionError}
+          busy={sending || saving}
+          blocked={blockedPartner}
+        />
       )}
     </div>
   );
