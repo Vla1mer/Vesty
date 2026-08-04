@@ -11,6 +11,7 @@ namespace Repository
         private const string UniqueViolation = "23505";
         private const string SerializationFailure = "40001";
         private const string DeadlockDetected = "40P01";
+        private const int MaxTransactionAttempts = 3;
 
         private readonly AppDbContext _context;
         private readonly Lazy<IUserRepository> _userRepository;
@@ -83,23 +84,37 @@ namespace Repository
 
         public async Task ExecuteInTransactionAsync(Func<Task> action)
         {
-            try
+            if (_context.Database.CurrentTransaction is not null)
             {
-                if (_context.Database.CurrentTransaction is not null)
+                try
                 {
                     await action();
+                }
+                catch (Exception ex) when (IsConcurrencyConflict(ex))
+                {
+                    throw new ConcurrentUpdateException();
+                }
+                return;
+            }
+
+            for (var attempt = 1; ; attempt++)
+            {
+                try
+                {
+                    await using var transaction =
+                        await _context.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+
+                    await action();
+                    await transaction.CommitAsync();
                     return;
                 }
+                catch (Exception ex) when (IsConcurrencyConflict(ex))
+                {
+                    _context.ChangeTracker.Clear();
 
-                await using var transaction =
-                    await _context.Database.BeginTransactionAsync(IsolationLevel.Serializable);
-
-                await action();
-                await transaction.CommitAsync();
-            }
-            catch (Exception ex) when (IsConcurrencyConflict(ex))
-            {
-                throw new ConcurrentUpdateException();
+                    if (attempt == MaxTransactionAttempts)
+                        throw new ConcurrentUpdateException();
+                }
             }
         }
     }
