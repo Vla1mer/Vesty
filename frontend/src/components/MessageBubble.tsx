@@ -1,12 +1,12 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { MouseEvent, TouchEvent as ReactTouchEvent } from "react";
-import { Check, Copy, Pencil, Pin, PinOff, Reply, Trash2 } from "lucide-react";
+import type { TouchEvent as ReactTouchEvent } from "react";
+import { Check, Pin } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useLongPress } from "../hooks/useLongPress";
+import { useMessageMenu } from "../hooks/useMessageMenu";
 import { Avatar } from "./Avatar";
 import { MessageAttachments } from "./MessageAttachments";
+import { MessageContextMenu } from "./MessageContextMenu";
 import type { MessageDto } from "../types/api";
-
-const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🔥"];
 
 interface Props {
   message: MessageDto;
@@ -51,122 +51,12 @@ export function MessageBubble({
   onToggleReaction,
   onTogglePin,
 }: Props) {
-  const [menu, setMenu] = useState(false);
-  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
-  const [pressing, setPressing] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const bubbleRef = useRef<HTMLDivElement>(null);
-  const anchorRef = useRef({ x: 0, y: 0 });
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const longPressFired = useRef(false);
-  const moved = useRef(false);
-  const pointerTypeRef = useRef<string>("mouse");
-  const menuOpenedAtRef = useRef(0);
-
   const hasActions = Boolean(
     onEdit || onDelete || onReply || onTogglePin || onToggleReaction
   );
+  const menu = useMessageMenu(Boolean(message.content) || hasActions);
 
-  useLayoutEffect(() => {
-    if (!menu || !menuRef.current || !bubbleRef.current) return;
-    const m = menuRef.current.getBoundingClientRect();
-    const scroller = bubbleRef.current.closest(".overflow-y-auto");
-    const bounds = scroller
-      ? scroller.getBoundingClientRect()
-      : new DOMRect(0, 0, window.innerWidth, window.innerHeight);
-    const { x, y } = anchorRef.current;
-
-    let top = y - m.height - 4;
-    if (top < bounds.top + 8) {
-      top = y + 4;
-    }
-    top = Math.max(bounds.top + 8, Math.min(top, bounds.bottom - m.height - 8));
-
-    const left = Math.max(
-      bounds.left + 8,
-      Math.min(x, bounds.right - m.width - 8)
-    );
-
-    setMenuPos({ top, left });
-  }, [menu]);
-
-  useEffect(() => {
-    if (!menu) return;
-    const openedAt = Date.now();
-    const close = () => {
-      if (Date.now() - openedAt < 250) return;
-      setMenu(false);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setMenu(false);
-    };
-    const closeOther = () => setMenu(false);
-    window.addEventListener("click", close);
-    window.addEventListener("scroll", close, true);
-    window.addEventListener("keydown", onKey);
-    window.addEventListener("message-menu-open", closeOther);
-    return () => {
-      window.removeEventListener("click", close);
-      window.removeEventListener("scroll", close, true);
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener("message-menu-open", closeOther);
-    };
-  }, [menu]);
-
-  function openMenu(x: number, y: number) {
-    menuOpenedAtRef.current = Date.now();
-    anchorRef.current = { x, y };
-    window.dispatchEvent(new Event("message-menu-open"));
-    setMenu(true);
-  }
-
-  function handleCopy() {
-    if (message.content) navigator.clipboard?.writeText(message.content);
-    setMenu(false);
-  }
-
-  function handleContextMenu(e: MouseEvent) {
-    e.preventDefault();
-    if (pointerTypeRef.current === "touch") return;
-    if (!message.content && !hasActions) return;
-    if (menu) {
-      setMenu(false);
-      return;
-    }
-    openMenu(e.clientX, e.clientY);
-  }
-
-  function clearLongPress() {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-  }
-
-  function handleTouchStart() {
-    longPressFired.current = false;
-    moved.current = false;
-    setPressing(true);
-    longPressTimer.current = setTimeout(() => {
-      longPressFired.current = true;
-      setPressing(false);
-      onSelectStart?.(message.id);
-    }, 500);
-  }
-
-  function handleTouchMove() {
-    moved.current = true;
-    setPressing(false);
-    clearLongPress();
-  }
-
-  function handleTouchEnd(e: ReactTouchEvent) {
-    setPressing(false);
-    const fired = longPressFired.current;
-    const didMove = moved.current;
-    clearLongPress();
-    if (fired || didMove) return;
-
+  function handleTap(e: ReactTouchEvent) {
     if (selectionMode) {
       onToggleSelect?.(message.id);
       return;
@@ -176,13 +66,13 @@ export function MessageBubble({
     if (!touch) return;
 
     e.preventDefault();
-    openMenu(touch.clientX, touch.clientY);
+    menu.openAt(touch.clientX, touch.clientY);
   }
 
-  function cancelTouch() {
-    setPressing(false);
-    clearLongPress();
-  }
+  const longPress = useLongPress({
+    onLongPress: () => onSelectStart?.(message.id),
+    onTap: handleTap,
+  });
 
   const time = new Date(message.createdAt).toLocaleTimeString([], {
     hour: "2-digit",
@@ -226,18 +116,12 @@ export function MessageBubble({
           </span>
           <div className="relative flex flex-col max-w-[78%] md:max-w-md">
             <div
-              ref={bubbleRef}
-              onPointerDown={(e) => {
-                pointerTypeRef.current = e.pointerType;
-              }}
-              onContextMenu={handleContextMenu}
-              onTouchStart={handleTouchStart}
-              onTouchEnd={handleTouchEnd}
-              onTouchMove={handleTouchMove}
-              onTouchCancel={cancelTouch}
+              ref={menu.bubbleRef}
+              {...menu.triggerProps}
+              {...longPress.handlers}
               style={{ WebkitTouchCallout: "none" }}
               className={`rounded-bubble px-4 py-2 select-none md:select-text shadow-raised transition ${
-                menu || isEditing || pressing || selected
+                menu.open || isEditing || longPress.pressing || selected
                   ? "ring-2 ring-accent-strong"
                   : ""
               } ${
@@ -352,115 +236,20 @@ export function MessageBubble({
         </div>
       </div>
 
-      {menu && (
-        <motion.div
-          ref={menuRef}
-          initial={{ opacity: 0, scale: 0.94 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.13, ease: [0.22, 1, 0.36, 1] }}
-          className="fixed z-50 w-max max-w-[13rem] origin-top-left rounded-lg border border-line bg-surface-raised py-1 shadow-float"
-          style={{ top: menuPos.top, left: menuPos.left }}
-          onClickCapture={(e) => {
-            if (Date.now() - menuOpenedAtRef.current < 400) {
-              e.preventDefault();
-              e.stopPropagation();
-            }
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {onToggleReaction && (
-            <div className="flex gap-0.5 px-1.5 py-1.5 border-b border-line">
-              {QUICK_REACTIONS.map((emoji) => {
-                const mine = Boolean(
-                  currentUserId != null &&
-                    message.reactions?.some(
-                      (r) => r.emoji === emoji && r.userIds.includes(currentUserId)
-                    )
-                );
-                return (
-                  <button
-                    key={emoji}
-                    type="button"
-                    onClick={() => {
-                      setMenu(false);
-                      onToggleReaction(message.id, emoji, mine);
-                    }}
-                    className={`w-7 h-7 rounded-full text-base leading-none transition ${
-                      mine ? "bg-accent/30" : "hover:bg-surface-overlay"
-                    }`}
-                  >
-                    {emoji}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-          {onReply && (
-            <button
-              type="button"
-              onClick={() => {
-                setMenu(false);
-                onReply(message);
-              }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-sm text-content hover:bg-surface-overlay transition"
-            >
-              <Reply size={15} aria-hidden="true" /> Reply
-            </button>
-          )}
-          {message.content && (
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-sm text-content hover:bg-surface-overlay transition"
-            >
-              <Copy size={15} aria-hidden="true" /> Copy
-            </button>
-          )}
-          {onTogglePin && (
-            <button
-              type="button"
-              onClick={() => {
-                setMenu(false);
-                onTogglePin(message.id, Boolean(message.pinnedAt));
-              }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-sm text-content hover:bg-surface-overlay transition"
-            >
-              {message.pinnedAt ? (
-                <>
-                  <PinOff size={15} aria-hidden="true" /> Unpin
-                </>
-              ) : (
-                <>
-                  <Pin size={15} aria-hidden="true" /> Pin
-                </>
-              )}
-            </button>
-          )}
-          {onEdit && (
-            <button
-              type="button"
-              onClick={() => {
-                setMenu(false);
-                onEdit(message.id, message.content ?? "");
-              }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-sm text-content hover:bg-surface-overlay transition"
-            >
-              <Pencil size={15} aria-hidden="true" /> Edit
-            </button>
-          )}
-          {onDelete && (
-            <button
-              type="button"
-              onClick={() => {
-                setMenu(false);
-                onDelete(message.id);
-              }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-sm text-danger hover:bg-surface-overlay transition"
-            >
-              <Trash2 size={15} aria-hidden="true" /> Delete
-            </button>
-          )}
-        </motion.div>
+      {menu.open && (
+        <MessageContextMenu
+          message={message}
+          currentUserId={currentUserId}
+          menuRef={menu.menuRef}
+          position={menu.position}
+          onClickCapture={menu.guardClick}
+          onClose={menu.close}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onReply={onReply}
+          onToggleReaction={onToggleReaction}
+          onTogglePin={onTogglePin}
+        />
       )}
     </>
   );
