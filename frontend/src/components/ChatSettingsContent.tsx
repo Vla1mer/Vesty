@@ -1,14 +1,12 @@
-import { AnimatePresence } from "framer-motion";
-import { ChevronRight, Crown, Eraser, LogOut, Trash2 } from "lucide-react";
+import { ChevronRight, Crown } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
-  useClearChatForMeMutation,
-  useDeleteChatMutation,
   useGetChatMembersQuery,
-  useRemoveChatMemberMutation,
   useUpdateChatPermissionsMutation,
 } from "../store/chatApi";
+import { useChatDangerActions } from "../hooks/useChatDangerActions";
 import { useChatProfileDraft } from "../hooks/useChatProfileDraft";
+import { ChatDangerZone } from "./ChatDangerZone";
 import { ChatAvatarEditor } from "./ChatAvatarEditor";
 import { TextInput } from "./ui/TextInput";
 import {
@@ -21,7 +19,6 @@ import { getChatDisplayName } from "../utils/chats";
 import { ChatPermission, permissionAllows, UserRole } from "../types/api";
 import type { ChatDto, ChatPermissionsDto } from "../types/api";
 import { Button } from "./ui/Button";
-import { ConfirmDialog } from "./ConfirmDialog";
 import { ChatInviteSection } from "./ChatInviteSection";
 import { ChatAdminsSection } from "./ChatAdminsSection";
 import { FormError } from "./FormError";
@@ -66,9 +63,6 @@ export function ChatSettingsContent({
 }: Props) {
   const { userId: currentUserId } = useAuth();
   const [updateChatPermissions] = useUpdateChatPermissionsMutation();
-  const [removeChatMember] = useRemoveChatMemberMutation();
-  const [deleteChat] = useDeleteChatMutation();
-  const [clearChatForMe, { isLoading: clearing }] = useClearChatForMeMutation();
 
   const [saved, setSaved] = useState<
     ({ chatId: number } & ChatPermissionsDto) | null
@@ -76,11 +70,12 @@ export function ChatSettingsContent({
   const [savingPermission, setSavingPermission] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const profile = useChatProfileDraft(chat, setError);
-  const [isLeaveOpen, setIsLeaveOpen] = useState(false);
-  const [leaving, setLeaving] = useState(false);
-  const [isClearOpen, setIsClearOpen] = useState(false);
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [deleting, setDeleting] = useState(false);
+  const danger = useChatDangerActions({
+    chatId: chat.id,
+    currentUserId,
+    onError: setError,
+    onDone: onDeleted,
+  });
 
   const { data: members = [], isLoading: loading } = useGetChatMembersQuery(chat.id);
 
@@ -99,7 +94,7 @@ export function ChatSettingsContent({
   const adminCount = members.filter((m) => m.roleId === UserRole.Admin).length;
 
   const busy =
-    savingPermission !== null || leaving || deleting || clearing || profile.saving;
+    savingPermission !== null || profile.saving || danger.busy;
 
   useEffect(() => {
     onBusyChange?.(busy);
@@ -137,52 +132,6 @@ export function ChatSettingsContent({
       setError(getApiErrorMessage(err, "Failed to update permissions"));
     } finally {
       setSavingPermission(null);
-    }
-  }
-
-  async function handleLeave() {
-    if (currentUserId === null) {
-      setIsLeaveOpen(false);
-      return;
-    }
-    setLeaving(true);
-    setError(null);
-    try {
-      await removeChatMember({ chatId: chat.id, userId: currentUserId }).unwrap();
-      setIsLeaveOpen(false);
-      setLeaving(false);
-      onDeleted();
-    } catch (err) {
-      setError(getApiErrorMessage(err, "Failed to leave the chat"));
-      setIsLeaveOpen(false);
-      setLeaving(false);
-    }
-  }
-
-  async function handleClearForMe() {
-    setError(null);
-    try {
-      await clearChatForMe(chat.id).unwrap();
-      setIsClearOpen(false);
-      onDeleted();
-    } catch (err) {
-      setError(getApiErrorMessage(err, "Failed to clear the conversation"));
-      setIsClearOpen(false);
-    }
-  }
-
-  async function handleDelete() {
-    setDeleting(true);
-    setError(null);
-    try {
-      await deleteChat(chat.id).unwrap();
-      setIsDeleteOpen(false);
-      setDeleting(false);
-      onDeleted();
-    } catch (err) {
-      setError(getApiErrorMessage(err, "Failed to delete the chat"));
-      setIsDeleteOpen(false);
-      setDeleting(false);
     }
   }
 
@@ -284,105 +233,17 @@ export function ChatSettingsContent({
 
           {!loading && canInvite && <ChatInviteSection chatId={chat.id} />}
 
-          {!loading && chat.isPrivate && (
-            <section className="space-y-2 border-t border-line pt-3">
-              <Button
-                variant="neutral"
-                fullWidth
-                onClick={() => setIsClearOpen(true)}
-                disabled={busy}
-              >
-                <Eraser size={15} aria-hidden="true" />
-                Delete for me
-              </Button>
-            </section>
-          )}
-
-          {isGroup && !loading && !(isOwner && members.length === 1) && (
-            <section className="space-y-2 border-t border-line pt-3">
-              {isOwner ? (
-                <p className="text-xs text-content-subtle">
-                  To leave this chat, hand ownership to another member first.
-                </p>
-              ) : (
-                <Button
-                  variant="neutral"
-                  fullWidth
-                  onClick={() => setIsLeaveOpen(true)}
-                  disabled={busy}
-                >
-                  <LogOut size={15} aria-hidden="true" />
-                  Leave chat
-                </Button>
-              )}
-            </section>
-          )}
-
-          {!loading && canDelete && (
-            <section className="border-t border-line pt-3">
-              <Button
-                variant="danger"
-                fullWidth
-                onClick={() => setIsDeleteOpen(true)}
-                disabled={busy}
-              >
-                <Trash2 size={15} aria-hidden="true" />
-                Delete chat
-              </Button>
-            </section>
-          )}
+          <ChatDangerZone
+            chat={chat}
+            isOwner={isOwner}
+            canDelete={canDelete}
+            memberCount={members.length}
+            loading={loading}
+            busy={busy}
+            actions={danger}
+          />
         </div>
       )}
-
-      <AnimatePresence>
-        {isClearOpen && (
-          <ConfirmDialog
-            title="Delete for me?"
-            message="The conversation will disappear from your list. The other person keeps their copy, and the chat comes back if they write again."
-            confirmText="Delete"
-            variant="danger"
-            loading={clearing}
-            onConfirm={handleClearForMe}
-            onCancel={() => setIsClearOpen(false)}
-          />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {isLeaveOpen && (
-          <ConfirmDialog
-            title="Leave chat?"
-            message={`You will stop receiving messages from "${getChatDisplayName(
-              chat
-            )}". Someone will have to add you back to return.`}
-            confirmText="Leave"
-            variant="danger"
-            loading={leaving}
-            onConfirm={handleLeave}
-            onCancel={() => setIsLeaveOpen(false)}
-          />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {isDeleteOpen && (
-          <ConfirmDialog
-            title="Delete chat?"
-            message={
-              isGroup
-                ? `Are you sure you want to delete "${getChatDisplayName(
-                    chat
-                  )}"? All messages and members will be permanently lost.`
-                : `Are you sure you want to delete this conversation? All messages will be permanently lost.`
-            }
-            confirmText="Delete"
-            variant="danger"
-            loading={deleting}
-            onConfirm={handleDelete}
-            onCancel={() => setIsDeleteOpen(false)}
-          />
-        )}
-      </AnimatePresence>
     </>
   );
 }

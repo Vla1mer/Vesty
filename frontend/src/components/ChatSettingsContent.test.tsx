@@ -286,8 +286,10 @@ describe("ChatSettingsContent", () => {
       await userEvent.click(
         await screen.findByRole("button", { name: /leave chat/i })
       );
+      await screen.findByText("Leave chat?");
       await userEvent.click(screen.getByRole("button", { name: /cancel/i }));
 
+      await waitFor(() => expect(screen.queryByText("Leave chat?")).toBeNull());
       expect(sent("delete", `/api/Chat/${CHAT_ID}/users/${ME}`)).toBeUndefined();
       expect(onDeleted).not.toHaveBeenCalled();
     });
