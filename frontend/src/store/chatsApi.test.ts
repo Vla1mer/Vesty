@@ -8,6 +8,7 @@ import { chatsApi } from "./chatsApi";
 import { chatInvitesApi } from "./chatInvitesApi";
 import { chatMembersApi } from "./chatMembersApi";
 import { installServer, requests, resetServer, stub, stubJson } from "../test/server";
+import { api } from "../api/client";
 import { signIn } from "../test/renderWithProviders";
 import { setActiveChat } from "../lib/activeChat";
 import type { ChatDto, MessageDto } from "../types/api";
@@ -196,12 +197,15 @@ describe("chat api", () => {
 
   describe("marking a chat read", () => {
     it("clears the badge before the server answers", async () => {
-      stubJson("post", "/api/Chat/1/read", {});
       const { store } = await loadChats([chat(1, { unreadCount: 4 })]);
+      const request = vi
+        .spyOn(api, "request")
+        .mockReturnValue(new Promise(() => {}) as never);
 
-      await store.dispatch(chatsApi.endpoints.markChatRead.initiate(1));
+      void store.dispatch(chatsApi.endpoints.markChatRead.initiate(1));
 
-      expect(chatList(store)[0].unreadCount).toBe(0);
+      await vi.waitFor(() => expect(chatList(store)[0].unreadCount).toBe(0));
+      request.mockRestore();
     });
 
     it("clears the badge on the open chat too", async () => {
