@@ -3,7 +3,7 @@ import { useBlockUserMutation } from "../store/blockApi";
 import {
   useClearChatForMeMutation,
   useLazyFindDirectChatQuery,
-} from "../store/chatApi";
+} from "../store/chatsApi";
 import { getApiErrorMessage } from "../utils/apiError";
 
 export function useBlockWithChatPrompt() {

@@ -1,7 +1,7 @@
 import { X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { ValidationError } from "yup";
-import { useCreateChatMutation } from "../store/chatApi";
+import { useCreateChatMutation } from "../store/chatsApi";
 import { useGetAllUsersQuery } from "../store/userApi";
 import { useAuth } from "../context/useAuth";
 import { Button } from "./ui/Button";

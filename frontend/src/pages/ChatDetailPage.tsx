@@ -1,11 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  useGetChatByIdQuery,
-  useGetChatMembersQuery,
-  useMarkChatReadMutation,
-} from "../store/chatApi";
+import { useGetChatByIdQuery, useMarkChatReadMutation } from "../store/chatsApi";
+import { useGetChatMembersQuery } from "../store/chatMembersApi";
 import {
   useGetMessagesByChatQuery,
   useCreateMessageMutation,

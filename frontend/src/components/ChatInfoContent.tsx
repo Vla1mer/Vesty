@@ -6,7 +6,7 @@ import {
   useGetChatMembersQuery,
   useAddChatMemberMutation,
   useRemoveChatMemberMutation,
-} from "../store/chatApi";
+} from "../store/chatMembersApi";
 import { useGetAllUsersQuery } from "../store/userApi";
 import { useAuth } from "../context/useAuth";
 import { Avatar, ChatAvatar } from "./Avatar";

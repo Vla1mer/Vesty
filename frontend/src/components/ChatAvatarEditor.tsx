@@ -1,6 +1,6 @@
 import { ChatAvatar } from "./Avatar";
 import { AvatarUpload } from "./AvatarUpload";
-import { useUploadChatAvatarMutation } from "../store/chatApi";
+import { useUploadChatAvatarMutation } from "../store/chatsApi";
 
 interface ChatAvatarEditorProps {
   chatId: number;

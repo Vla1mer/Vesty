@@ -4,7 +4,7 @@ import { useState } from "react";
 import {
   useJoinChatByInviteMutation,
   usePreviewChatInviteQuery,
-} from "../store/chatApi";
+} from "../store/chatInvitesApi";
 import { getApiErrorMessage } from "../utils/apiError";
 import { ChatAvatar } from "../components/Avatar";
 import { Button } from "../components/ui/Button";

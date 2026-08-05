@@ -4,7 +4,7 @@ import {
   useCreateChatInviteMutation,
   useGetChatInviteQuery,
   useRevokeChatInviteMutation,
-} from "../store/chatApi";
+} from "../store/chatInvitesApi";
 import { getApiErrorMessage } from "../utils/apiError";
 import { Button } from "./ui/Button";
 import { FormError } from "./FormError";
