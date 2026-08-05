@@ -9,9 +9,9 @@ const EDGE_GAP = 8;
 export function useMessageMenu(enabled: boolean) {
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
+  const [anchor, setAnchor] = useState({ x: 0, y: 0 });
   const menuRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
-  const anchorRef = useRef({ x: 0, y: 0 });
   const pointerTypeRef = useRef<string>("mouse");
   const openedAtRef = useRef(0);
 
@@ -22,7 +22,7 @@ export function useMessageMenu(enabled: boolean) {
     const bounds = scroller
       ? scroller.getBoundingClientRect()
       : new DOMRect(0, 0, window.innerWidth, window.innerHeight);
-    const { x, y } = anchorRef.current;
+    const { x, y } = anchor;
 
     let top = y - m.height - 4;
     if (top < bounds.top + EDGE_GAP) {
@@ -39,7 +39,7 @@ export function useMessageMenu(enabled: boolean) {
     );
 
     setPosition({ top, left });
-  }, [open]);
+  }, [open, anchor]);
 
   useEffect(() => {
     if (!open) return;
@@ -65,8 +65,9 @@ export function useMessageMenu(enabled: boolean) {
   }, [open]);
 
   function openAt(x: number, y: number) {
+    if (!enabled) return;
     openedAtRef.current = Date.now();
-    anchorRef.current = { x, y };
+    setAnchor({ x, y });
     window.dispatchEvent(new Event(MENU_OPEN_EVENT));
     setOpen(true);
   }
@@ -78,7 +79,6 @@ export function useMessageMenu(enabled: boolean) {
   function handleContextMenu(e: MouseEvent) {
     e.preventDefault();
     if (pointerTypeRef.current === "touch") return;
-    if (!enabled) return;
     if (open) {
       setOpen(false);
       return;

@@ -93,7 +93,24 @@ describe("MessageBubble", () => {
 
       fireEvent.contextMenu(bubble());
 
-      expect(document.querySelector(".fixed.z-50")).toBeNull();
+      expect(openMenus()).toBe(0);
+    });
+
+    it("stays closed on a tap when there is nothing to show", () => {
+      render(
+        <MessageBubble
+          message={{ ...MESSAGE, content: null }}
+          isOwn={false}
+          currentUserId={ME}
+        />
+      );
+
+      fireEvent.touchStart(bubble());
+      fireEvent.touchEnd(bubble(), {
+        changedTouches: [{ clientX: 10, clientY: 10 }],
+      });
+
+      expect(openMenus()).toBe(0);
     });
 
     it("closes on a second right click", () => {
@@ -217,6 +234,21 @@ describe("MessageBubble", () => {
       const menu = openAt(1000, 400);
 
       expect(menu.style.left).toBe("816px");
+    });
+
+    it("follows a second tap on the same message", () => {
+      setup();
+      sizeMenu(200, 150);
+
+      openAt(100, 400);
+      fireEvent.touchStart(bubble());
+      fireEvent.touchEnd(bubble(), {
+        changedTouches: [{ clientX: 300, clientY: 600 }],
+      });
+
+      const menu = document.querySelector(".fixed.z-50") as HTMLElement;
+      expect(menu.style.top).toBe("446px");
+      expect(menu.style.left).toBe("300px");
     });
 
     it("keeps clear of the bottom edge", () => {
