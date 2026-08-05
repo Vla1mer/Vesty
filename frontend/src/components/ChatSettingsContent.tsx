@@ -1,22 +1,20 @@
 import { AnimatePresence } from "framer-motion";
 import { ChevronRight, Crown, Eraser, LogOut, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   useClearChatForMeMutation,
   useDeleteChatMutation,
   useGetChatMembersQuery,
   useRemoveChatMemberMutation,
-  useRenameChatMutation,
   useUpdateChatPermissionsMutation,
 } from "../store/chatApi";
+import { useChatProfileDraft } from "../hooks/useChatProfileDraft";
 import { ChatAvatarEditor } from "./ChatAvatarEditor";
 import { TextInput } from "./ui/TextInput";
 import {
-  chatNameSchema,
   CHAT_DESCRIPTION_LIMIT,
   CHAT_NAME_LIMIT,
 } from "../validation/chatSchemas";
-import { ValidationError } from "yup";
 import { useAuth } from "../context/useAuth";
 import { getApiErrorMessage } from "../utils/apiError";
 import { getChatDisplayName } from "../utils/chats";
@@ -71,20 +69,13 @@ export function ChatSettingsContent({
   const [removeChatMember] = useRemoveChatMemberMutation();
   const [deleteChat] = useDeleteChatMutation();
   const [clearChatForMe, { isLoading: clearing }] = useClearChatForMeMutation();
-  const [renameChat] = useRenameChatMutation();
-
-  const serverName = chat.name ?? "";
-  const serverDescription = chat.description ?? "";
-
-  const [nameDraft, setNameDraft] = useState(serverName);
-  const [descriptionDraft, setDescriptionDraft] = useState(serverDescription);
-  const [savingProfile, setSavingProfile] = useState(false);
 
   const [saved, setSaved] = useState<
     ({ chatId: number } & ChatPermissionsDto) | null
   >(null);
   const [savingPermission, setSavingPermission] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const profile = useChatProfileDraft(chat, setError);
   const [isLeaveOpen, setIsLeaveOpen] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [isClearOpen, setIsClearOpen] = useState(false);
@@ -104,13 +95,11 @@ export function ChatSettingsContent({
   const canDelete = chat.isPrivate || isOwner;
   const canEditProfile =
     isGroup && myRoleId !== undefined && permissionAllows(chat.whoCanEdit, myRoleId);
-  const profileChanged =
-    nameDraft.trim() !== serverName || descriptionDraft.trim() !== serverDescription;
 
   const adminCount = members.filter((m) => m.roleId === UserRole.Admin).length;
 
   const busy =
-    savingPermission !== null || leaving || deleting || clearing || savingProfile;
+    savingPermission !== null || leaving || deleting || clearing || profile.saving;
 
   useEffect(() => {
     onBusyChange?.(busy);
@@ -124,35 +113,6 @@ export function ChatSettingsContent({
     setSaved(null);
   }, [chat.whoCanInvite, chat.whoCanEdit, chat.whoCanPost]);
 
-  const known = useRef({
-    chatId: chat.id,
-    name: serverName,
-    description: serverDescription,
-  });
-
-  useEffect(() => {
-    const previous = known.current;
-    known.current = {
-      chatId: chat.id,
-      name: serverName,
-      description: serverDescription,
-    };
-
-    if (previous.chatId !== chat.id) {
-      setNameDraft(serverName);
-      setDescriptionDraft(serverDescription);
-      return;
-    }
-
-    if (previous.name !== serverName)
-      setNameDraft((draft) => (draft === previous.name ? serverName : draft));
-
-    if (previous.description !== serverDescription)
-      setDescriptionDraft((draft) =>
-        draft === previous.description ? serverDescription : draft
-      );
-  }, [chat.id, serverName, serverDescription]);
-
   const permissions =
     saved?.chatId === chat.id
       ? saved
@@ -162,32 +122,6 @@ export function ChatSettingsContent({
           whoCanEdit: chat.whoCanEdit,
           whoCanPost: chat.whoCanPost,
         };
-
-  async function handleSaveProfile() {
-    if (savingProfile) return;
-    const newName = nameDraft.trim();
-
-    try {
-      await chatNameSchema.validate({ name: newName });
-    } catch (validationErr) {
-      setError((validationErr as ValidationError).message);
-      return;
-    }
-
-    setSavingProfile(true);
-    setError(null);
-    try {
-      await renameChat({
-        chatId: chat.id,
-        name: newName,
-        description: descriptionDraft.trim() || null,
-      }).unwrap();
-    } catch (err) {
-      setError(getApiErrorMessage(err, "Failed to save the chat profile"));
-    } finally {
-      setSavingProfile(false);
-    }
-  }
 
   async function handlePermissionChange(
     key: (typeof permissionFields)[number]["key"],
@@ -276,32 +210,32 @@ export function ChatSettingsContent({
               <div className="space-y-1">
                 <TextInput
                   type="text"
-                  value={nameDraft}
-                  onChange={(e) => setNameDraft(e.target.value)}
+                  value={profile.name}
+                  onChange={(e) => profile.setName(e.target.value)}
                   maxLength={CHAT_NAME_LIMIT}
                   placeholder="Chat name"
                   className="font-semibold"
                 />
-                <CharCounter value={nameDraft} max={CHAT_NAME_LIMIT} />
+                <CharCounter value={profile.name} max={CHAT_NAME_LIMIT} />
               </div>
 
               <div className="space-y-1">
                 <textarea
-                  value={descriptionDraft}
-                  onChange={(e) => setDescriptionDraft(e.target.value)}
+                  value={profile.description}
+                  onChange={(e) => profile.setDescription(e.target.value)}
                   maxLength={CHAT_DESCRIPTION_LIMIT}
                   rows={3}
                   placeholder="Description (optional)"
                   className="w-full resize-none rounded-lg border border-line bg-surface-sunken px-3 py-2 text-sm text-content placeholder:text-content-subtle focus:border-accent focus:outline-none"
                 />
-                <CharCounter value={descriptionDraft} max={CHAT_DESCRIPTION_LIMIT} />
+                <CharCounter value={profile.description} max={CHAT_DESCRIPTION_LIMIT} />
               </div>
               <Button
                 size="xs"
-                onClick={handleSaveProfile}
-                disabled={busy || !profileChanged || !nameDraft.trim()}
+                onClick={profile.save}
+                disabled={busy || !profile.changed || !profile.name.trim()}
               >
-                {savingProfile ? "..." : "Save"}
+                {profile.saving ? "..." : "Save"}
               </Button>
             </section>
           )}
