@@ -40,7 +40,7 @@ function setup(
   stubJson("get", `/api/Chat/${CHAT_ID}/users`, members);
   const onDeleted = vi.fn();
   const onViewChange = vi.fn();
-  renderWithProviders(
+  const view = renderWithProviders(
     <ChatSettingsContent
       chat={{ ...GROUP, ...chat }}
       view="settings"
@@ -48,7 +48,19 @@ function setup(
       onDeleted={onDeleted}
     />
   );
-  return { onDeleted, onViewChange };
+
+  function showChat(next: Partial<ChatDto>) {
+    view.rerender(
+      <ChatSettingsContent
+        chat={{ ...GROUP, ...chat, ...next }}
+        view="settings"
+        onViewChange={onViewChange}
+        onDeleted={onDeleted}
+      />
+    );
+  }
+
+  return { onDeleted, onViewChange, showChat };
 }
 
 function sent(method: string, url: string) {
@@ -208,6 +220,38 @@ describe("ChatSettingsContent", () => {
   });
 
   describe("permissions", () => {
+    it("shows the levels the chat currently has", async () => {
+      setup();
+
+      await screen.findByText("Permissions");
+      expect(
+        screen.getByRole("combobox", { name: /who can add members/i })
+      ).toHaveValue(String(ChatPermission.Members));
+      expect(
+        screen.getByRole("combobox", { name: /who can edit name and photo/i })
+      ).toHaveValue(String(ChatPermission.Admins));
+    });
+
+    it("gives way to a change made elsewhere", async () => {
+      stubJson("put", `/api/Chat/${CHAT_ID}/permissions`, {});
+      const { showChat } = setup();
+
+      await screen.findByText("Permissions");
+      const select = screen.getByRole("combobox", { name: /who can add members/i });
+      await userEvent.selectOptions(select, String(ChatPermission.Owner));
+      await waitFor(() =>
+        expect(select).toHaveValue(String(ChatPermission.Owner))
+      );
+
+      showChat({ whoCanInvite: ChatPermission.Admins });
+
+      await waitFor(() =>
+        expect(
+          screen.getByRole("combobox", { name: /who can add members/i })
+        ).toHaveValue(String(ChatPermission.Admins))
+      );
+    });
+
     it("sends the changed level", async () => {
       stubJson("put", `/api/Chat/${CHAT_ID}/permissions`, {});
       setup();

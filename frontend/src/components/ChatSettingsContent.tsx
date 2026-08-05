@@ -1,12 +1,11 @@
 import { ChevronRight, Crown } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import {
-  useGetChatMembersQuery,
-  useUpdateChatPermissionsMutation,
-} from "../store/chatApi";
+import { useGetChatMembersQuery } from "../store/chatApi";
 import { useChatDangerActions } from "../hooks/useChatDangerActions";
+import { useChatPermissions } from "../hooks/useChatPermissions";
 import { useChatProfileDraft } from "../hooks/useChatProfileDraft";
 import { ChatDangerZone } from "./ChatDangerZone";
+import { ChatPermissionsSection } from "./ChatPermissionsSection";
 import { ChatAvatarEditor } from "./ChatAvatarEditor";
 import { TextInput } from "./ui/TextInput";
 import {
@@ -14,22 +13,15 @@ import {
   CHAT_NAME_LIMIT,
 } from "../validation/chatSchemas";
 import { useAuth } from "../context/useAuth";
-import { getApiErrorMessage } from "../utils/apiError";
 import { getChatDisplayName } from "../utils/chats";
-import { ChatPermission, permissionAllows, UserRole } from "../types/api";
-import type { ChatDto, ChatPermissionsDto } from "../types/api";
+import { permissionAllows, UserRole } from "../types/api";
+import type { ChatDto } from "../types/api";
 import { Button } from "./ui/Button";
 import { ChatInviteSection } from "./ChatInviteSection";
 import { ChatAdminsSection } from "./ChatAdminsSection";
 import { FormError } from "./FormError";
 
 export type ChatSettingsView = "settings" | "admins";
-
-const permissionFields = [
-  { key: "whoCanInvite", label: "Who can add members" },
-  { key: "whoCanEdit", label: "Who can edit name and photo" },
-  { key: "whoCanPost", label: "Who can send and edit messages" },
-] as const;
 
 function CharCounter({ value, max }: { value: string; max: number }) {
   const left = max - value.length;
@@ -62,13 +54,8 @@ export function ChatSettingsContent({
   onBusyChange,
 }: Props) {
   const { userId: currentUserId } = useAuth();
-  const [updateChatPermissions] = useUpdateChatPermissionsMutation();
-
-  const [saved, setSaved] = useState<
-    ({ chatId: number } & ChatPermissionsDto) | null
-  >(null);
-  const [savingPermission, setSavingPermission] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const permissions = useChatPermissions(chat, setError);
   const profile = useChatProfileDraft(chat, setError);
   const danger = useChatDangerActions({
     chatId: chat.id,
@@ -94,7 +81,7 @@ export function ChatSettingsContent({
   const adminCount = members.filter((m) => m.roleId === UserRole.Admin).length;
 
   const busy =
-    savingPermission !== null || profile.saving || danger.busy;
+    permissions.busy || profile.saving || danger.busy;
 
   useEffect(() => {
     onBusyChange?.(busy);
@@ -103,37 +90,6 @@ export function ChatSettingsContent({
   useEffect(() => {
     setError(null);
   }, [view]);
-
-  useEffect(() => {
-    setSaved(null);
-  }, [chat.whoCanInvite, chat.whoCanEdit, chat.whoCanPost]);
-
-  const permissions =
-    saved?.chatId === chat.id
-      ? saved
-      : {
-          chatId: chat.id,
-          whoCanInvite: chat.whoCanInvite,
-          whoCanEdit: chat.whoCanEdit,
-          whoCanPost: chat.whoCanPost,
-        };
-
-  async function handlePermissionChange(
-    key: (typeof permissionFields)[number]["key"],
-    value: number
-  ) {
-    const next = { ...permissions, [key]: value };
-    setSavingPermission(key);
-    setError(null);
-    try {
-      await updateChatPermissions(next).unwrap();
-      setSaved(next);
-    } catch (err) {
-      setError(getApiErrorMessage(err, "Failed to update permissions"));
-    } finally {
-      setSavingPermission(null);
-    }
-  }
 
   return (
     <>
@@ -190,28 +146,11 @@ export function ChatSettingsContent({
           )}
 
           {!loading && isOwner && isGroup && (
-            <section className="space-y-2 border-t border-line pt-3">
-              <h3 className="text-sm font-semibold text-content-muted">
-                Permissions
-              </h3>
-              {permissionFields.map(({ key, label }) => (
-                <label key={key} className="flex items-center justify-between gap-3">
-                  <span className="text-sm text-content">{label}</span>
-                  <select
-                    value={permissions[key]}
-                    onChange={(e) =>
-                      handlePermissionChange(key, Number(e.target.value))
-                    }
-                    disabled={busy}
-                    className="rounded-lg border border-line bg-surface-sunken px-2 py-1 text-sm text-content focus:border-accent focus:outline-none disabled:opacity-60"
-                  >
-                    <option value={ChatPermission.Owner}>Owner only</option>
-                    <option value={ChatPermission.Admins}>Admins</option>
-                    <option value={ChatPermission.Members}>All members</option>
-                  </select>
-                </label>
-              ))}
-            </section>
+            <ChatPermissionsSection
+              levels={permissions.levels}
+              disabled={busy}
+              onChange={permissions.change}
+            />
           )}
 
           {!loading && isOwner && isGroup && (
