@@ -1,6 +1,6 @@
 import { ChevronRight, Crown } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { useGetChatMembersQuery } from "../store/chatApi";
+import { useGetChatMembersQuery } from "../store/chatMembersApi";
 import { useChatDangerActions } from "../hooks/useChatDangerActions";
 import { useChatPermissions } from "../hooks/useChatPermissions";
 import { useChatProfileDraft } from "../hooks/useChatProfileDraft";

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useGetChatsQuery } from "../store/chatApi";
+import { useGetChatsQuery } from "../store/chatsApi";
 import { useGetUserByIdQuery } from "../store/userApi";
 import { useAuth } from "../context/useAuth";
 import { Avatar } from "../components/Avatar";

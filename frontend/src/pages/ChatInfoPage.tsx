@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useGetChatByIdQuery } from "../store/chatApi";
+import { useGetChatByIdQuery } from "../store/chatsApi";
 import { ChatInfoContent } from "../components/ChatInfoContent";
 import { FormError } from "../components/FormError";
 import { PageShell } from "../components/ui/PageShell";

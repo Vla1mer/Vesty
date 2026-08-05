@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ValidationError } from "yup";
-import { useRenameChatMutation } from "../store/chatApi";
+import { useRenameChatMutation } from "../store/chatsApi";
 import { chatNameSchema } from "../validation/chatSchemas";
 import { getApiErrorMessage } from "../utils/apiError";
 import type { ChatDto } from "../types/api";

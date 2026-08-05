@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useUpdateChatPermissionsMutation } from "../store/chatApi";
+import { useUpdateChatPermissionsMutation } from "../store/chatsApi";
 import { getApiErrorMessage } from "../utils/apiError";
 import type { ChatDto, ChatPermissionsDto } from "../types/api";
 

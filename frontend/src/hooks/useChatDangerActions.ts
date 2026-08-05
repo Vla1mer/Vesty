@@ -2,8 +2,8 @@ import { useState } from "react";
 import {
   useClearChatForMeMutation,
   useDeleteChatMutation,
-  useRemoveChatMemberMutation,
-} from "../store/chatApi";
+} from "../store/chatsApi";
+import { useRemoveChatMemberMutation } from "../store/chatMembersApi";
 import { getApiErrorMessage } from "../utils/apiError";
 
 interface Options {

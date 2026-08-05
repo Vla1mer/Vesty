@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import {
   useTransferChatOwnershipMutation,
   useUpdateMemberRoleMutation,
-} from "../store/chatApi";
+} from "../store/chatMembersApi";
 import { getApiErrorMessage } from "../utils/apiError";
 import { UserRole } from "../types/api";
 import type { ChatMemberWithRoleDto } from "../types/api";

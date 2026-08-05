@@ -4,7 +4,9 @@ vi.mock("../lib/signalr", async () => (await import("../test/signalrMock")).sign
 
 import { signalrMock } from "../test/signalrMock";
 import { makeStore } from "./store";
-import { chatApi } from "./chatApi";
+import { chatsApi } from "./chatsApi";
+import { chatInvitesApi } from "./chatInvitesApi";
+import { chatMembersApi } from "./chatMembersApi";
 import { installServer, requests, resetServer, stub, stubJson } from "../test/server";
 import { signIn } from "../test/renderWithProviders";
 import { setActiveChat } from "../lib/activeChat";
@@ -51,16 +53,16 @@ function message(chatId: number, userId: number): MessageDto {
 async function loadChats(chats: ChatDto[]) {
   stubJson("get", "/api/Chat", chats);
   const store = makeStore();
-  const subscription = store.dispatch(chatApi.endpoints.getChats.initiate());
+  const subscription = store.dispatch(chatsApi.endpoints.getChats.initiate());
   await subscription;
   return { store, subscription };
 }
 
 function chatList(store: ReturnType<typeof makeStore>) {
-  return chatApi.endpoints.getChats.select()(store.getState()).data ?? [];
+  return chatsApi.endpoints.getChats.select()(store.getState()).data ?? [];
 }
 
-describe("chatApi", () => {
+describe("chat api", () => {
   beforeEach(() => {
     resetServer();
     installServer();
@@ -197,9 +199,24 @@ describe("chatApi", () => {
       stubJson("post", "/api/Chat/1/read", {});
       const { store } = await loadChats([chat(1, { unreadCount: 4 })]);
 
-      await store.dispatch(chatApi.endpoints.markChatRead.initiate(1));
+      await store.dispatch(chatsApi.endpoints.markChatRead.initiate(1));
 
       expect(chatList(store)[0].unreadCount).toBe(0);
+    });
+
+    it("clears the badge on the open chat too", async () => {
+      stubJson("get", "/api/Chat/1", chat(1, { unreadCount: 4 }));
+      stubJson("post", "/api/Chat/1/read", {});
+      const store = makeStore();
+      const opened = store.dispatch(chatsApi.endpoints.getChatById.initiate(1));
+      await opened;
+
+      await store.dispatch(chatsApi.endpoints.markChatRead.initiate(1));
+
+      expect(
+        chatsApi.endpoints.getChatById.select(1)(store.getState()).data?.unreadCount
+      ).toBe(0);
+      opened.unsubscribe();
     });
 
     it("puts the badge back when the request fails", async () => {
@@ -210,7 +227,7 @@ describe("chatApi", () => {
       });
       const { store } = await loadChats([chat(1, { unreadCount: 4 })]);
 
-      await store.dispatch(chatApi.endpoints.markChatRead.initiate(1));
+      await store.dispatch(chatsApi.endpoints.markChatRead.initiate(1));
 
       expect(chatList(store)[0].unreadCount).toBe(4);
     });
@@ -229,7 +246,7 @@ describe("chatApi", () => {
       const before = callsTo("get", "/api/Chat");
 
       await store.dispatch(
-        chatApi.endpoints.createChat.initiate({
+        chatsApi.endpoints.createChat.initiate({
           name: "New",
           members: [],
         } as never)
@@ -244,7 +261,7 @@ describe("chatApi", () => {
       const before = callsTo("get", "/api/Chat");
 
       await store.dispatch(
-        chatApi.endpoints.renameChat.initiate({
+        chatsApi.endpoints.renameChat.initiate({
           chatId: 1,
           name: "Renamed",
           description: null,
@@ -259,13 +276,13 @@ describe("chatApi", () => {
       stubJson("delete", "/api/Chat/1/users/5", {});
       const store = makeStore();
       const members = store.dispatch(
-        chatApi.endpoints.getChatMembers.initiate(1)
+        chatMembersApi.endpoints.getChatMembers.initiate(1)
       );
       await members;
       const before = callsTo("get", "/api/Chat/1/users");
 
       await store.dispatch(
-        chatApi.endpoints.removeChatMember.initiate({ chatId: 1, userId: 5 })
+        chatMembersApi.endpoints.removeChatMember.initiate({ chatId: 1, userId: 5 })
       );
 
       await vi.waitFor(() =>
@@ -278,11 +295,11 @@ describe("chatApi", () => {
       stubJson("get", "/api/Chat/1/invite", { code: "abc" });
       stubJson("delete", "/api/Chat/1/invite", {});
       const store = makeStore();
-      const invite = store.dispatch(chatApi.endpoints.getChatInvite.initiate(1));
+      const invite = store.dispatch(chatInvitesApi.endpoints.getChatInvite.initiate(1));
       await invite;
       const before = callsTo("get", "/api/Chat/1/invite");
 
-      await store.dispatch(chatApi.endpoints.revokeChatInvite.initiate(1));
+      await store.dispatch(chatInvitesApi.endpoints.revokeChatInvite.initiate(1));
 
       await vi.waitFor(() =>
         expect(callsTo("get", "/api/Chat/1/invite")).toBe(before + 1)
@@ -296,10 +313,10 @@ describe("chatApi", () => {
       stubJson("get", "/api/Chat/1/invite", "");
       const store = makeStore();
 
-      await store.dispatch(chatApi.endpoints.getChatInvite.initiate(1));
+      await store.dispatch(chatInvitesApi.endpoints.getChatInvite.initiate(1));
 
       expect(
-        chatApi.endpoints.getChatInvite.select(1)(store.getState()).data
+        chatInvitesApi.endpoints.getChatInvite.select(1)(store.getState()).data
       ).toBeNull();
     });
   });
