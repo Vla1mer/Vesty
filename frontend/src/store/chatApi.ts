@@ -1,7 +1,13 @@
 import { apiSlice } from "./apiSlice";
+import {
+  chatListTag,
+  chatMessagesTag,
+  chatTag,
+  inviteTag,
+  memberTag,
+} from "./chatTags";
 import { whileCached } from "./whileCached";
 import { endpoints } from "../api/endpoints";
-import { CHAT_API_TAGS, MESSAGE_API_TAGS, TAG_ID } from "../api/constants";
 import { HTTP_METHOD } from "../utils/http";
 import { getCurrentUserId } from "../api/client";
 import { getActiveChat } from "../lib/activeChat";
@@ -35,10 +41,10 @@ export const chatApi = apiSlice.injectEndpoints({
       providesTags: (result) =>
         result
           ? [
-              ...result.map((chat) => ({ type: CHAT_API_TAGS.CHAT, id: chat.id })),
-              { type: CHAT_API_TAGS.CHAT, id: TAG_ID.LIST },
+              ...result.map((chat) => (chatTag(chat.id))),
+              chatListTag,
             ]
-          : [{ type: CHAT_API_TAGS.CHAT, id: TAG_ID.LIST }],
+          : [chatListTag],
       async onCacheEntryAdded(_arg, lifecycle) {
         const { updateCachedData, dispatch } = lifecycle;
         await whileCached(lifecycle, () => [
@@ -65,8 +71,8 @@ export const chatApi = apiSlice.injectEndpoints({
           onChatUpdated(({ chatId }) => {
             dispatch(
               apiSlice.util.invalidateTags([
-                { type: CHAT_API_TAGS.CHAT, id: chatId },
-                { type: CHAT_API_TAGS.CHAT_MEMBER, id: chatId },
+                chatTag(chatId),
+                memberTag(chatId),
               ])
             );
           }),
@@ -93,7 +99,7 @@ export const chatApi = apiSlice.injectEndpoints({
           onReconnected(() => {
             dispatch(
               apiSlice.util.invalidateTags([
-                { type: CHAT_API_TAGS.CHAT, id: TAG_ID.LIST },
+                chatListTag,
               ])
             );
           }),
@@ -103,12 +109,12 @@ export const chatApi = apiSlice.injectEndpoints({
 
     createChat: builder.mutation<ChatDto, ChatForCreationDto>({
       query: (dto) => ({ url: endpoints.chat.base, method: HTTP_METHOD.POST, data: dto }),
-      invalidatesTags: [{ type: CHAT_API_TAGS.CHAT, id: TAG_ID.LIST }],
+      invalidatesTags: [chatListTag],
     }),
 
     deleteChat: builder.mutation<void, number>({
       query: (chatId) => ({ url: endpoints.chat.byId(chatId), method: HTTP_METHOD.DELETE }),
-      invalidatesTags: [{ type: CHAT_API_TAGS.CHAT, id: TAG_ID.LIST }],
+      invalidatesTags: [chatListTag],
     }),
 
     clearChatForMe: builder.mutation<void, number>({
@@ -117,9 +123,9 @@ export const chatApi = apiSlice.injectEndpoints({
         method: HTTP_METHOD.DELETE,
       }),
       invalidatesTags: (_result, _error, chatId) => [
-        { type: CHAT_API_TAGS.CHAT, id: TAG_ID.LIST },
-        { type: CHAT_API_TAGS.CHAT, id: chatId },
-        { type: MESSAGE_API_TAGS.MESSAGE, id: chatId },
+        chatListTag,
+        chatTag(chatId),
+        chatMessagesTag(chatId),
       ],
     }),
 
@@ -136,10 +142,7 @@ export const chatApi = apiSlice.injectEndpoints({
         method: HTTP_METHOD.PUT,
         data: { name, description },
       }),
-      invalidatesTags: (_result, _error, { chatId }) => [
-        { type: CHAT_API_TAGS.CHAT, id: chatId },
-        { type: CHAT_API_TAGS.CHAT, id: TAG_ID.LIST },
-      ],
+      invalidatesTags: (_result, _error, { chatId }) => [chatTag(chatId), chatListTag],
     }),
 
     updateChatPermissions: builder.mutation<
@@ -151,17 +154,13 @@ export const chatApi = apiSlice.injectEndpoints({
         method: HTTP_METHOD.PUT,
         data: permissions,
       }),
-      invalidatesTags: (_result, _error, { chatId }) => [
-        { type: CHAT_API_TAGS.CHAT, id: chatId },
-      ],
+      invalidatesTags: (_result, _error, { chatId }) => [chatTag(chatId)],
     }),
 
     getChatInvite: builder.query<ChatInviteDto | null, number>({
       query: (chatId) => ({ url: endpoints.chat.invite(chatId) }),
       transformResponse: (response: ChatInviteDto | "" | null) => response || null,
-      providesTags: (_result, _error, chatId) => [
-        { type: CHAT_API_TAGS.CHAT_INVITE, id: chatId },
-      ],
+      providesTags: (_result, _error, chatId) => [inviteTag(chatId)],
     }),
 
     createChatInvite: builder.mutation<
@@ -173,9 +172,7 @@ export const chatApi = apiSlice.injectEndpoints({
         method: HTTP_METHOD.POST,
         data: { expiresInDays },
       }),
-      invalidatesTags: (_result, _error, { chatId }) => [
-        { type: CHAT_API_TAGS.CHAT_INVITE, id: chatId },
-      ],
+      invalidatesTags: (_result, _error, { chatId }) => [inviteTag(chatId)],
     }),
 
     revokeChatInvite: builder.mutation<void, number>({
@@ -183,9 +180,7 @@ export const chatApi = apiSlice.injectEndpoints({
         url: endpoints.chat.invite(chatId),
         method: HTTP_METHOD.DELETE,
       }),
-      invalidatesTags: (_result, _error, chatId) => [
-        { type: CHAT_API_TAGS.CHAT_INVITE, id: chatId },
-      ],
+      invalidatesTags: (_result, _error, chatId) => [inviteTag(chatId)],
     }),
 
     previewChatInvite: builder.query<ChatInvitePreviewDto, string>({
@@ -197,12 +192,12 @@ export const chatApi = apiSlice.injectEndpoints({
         url: endpoints.chat.joinByCode(code),
         method: HTTP_METHOD.POST,
       }),
-      invalidatesTags: [{ type: CHAT_API_TAGS.CHAT, id: TAG_ID.LIST }],
+      invalidatesTags: [chatListTag],
     }),
 
     getChatById: builder.query<ChatDto, number>({
       query: (chatId) => ({ url: endpoints.chat.byId(chatId) }),
-      providesTags: (_result, _error, chatId) => [{ type: CHAT_API_TAGS.CHAT, id: chatId }],
+      providesTags: (_result, _error, chatId) => [chatTag(chatId)],
       async onCacheEntryAdded(chatId, lifecycle) {
         const { updateCachedData, dispatch } = lifecycle;
         await whileCached(lifecycle, () => [
@@ -217,8 +212,8 @@ export const chatApi = apiSlice.injectEndpoints({
             if (updatedChatId !== chatId) return;
             dispatch(
               apiSlice.util.invalidateTags([
-                { type: CHAT_API_TAGS.CHAT, id: chatId },
-                { type: CHAT_API_TAGS.CHAT_MEMBER, id: chatId },
+                chatTag(chatId),
+                memberTag(chatId),
               ])
             );
           }),
@@ -226,7 +221,7 @@ export const chatApi = apiSlice.injectEndpoints({
           onReconnected(() => {
             dispatch(
               apiSlice.util.invalidateTags([
-                { type: CHAT_API_TAGS.CHAT, id: chatId },
+                chatTag(chatId),
               ])
             );
           }),
@@ -236,16 +231,14 @@ export const chatApi = apiSlice.injectEndpoints({
 
     getChatMembers: builder.query<ChatMemberWithRoleDto[], number>({
       query: (chatId) => ({ url: endpoints.chat.members(chatId) }),
-      providesTags: (_result, _error, chatId) => [
-        { type: CHAT_API_TAGS.CHAT_MEMBER, id: chatId },
-      ],
+      providesTags: (_result, _error, chatId) => [memberTag(chatId)],
       async onCacheEntryAdded(chatId, lifecycle) {
         const { dispatch } = lifecycle;
         await whileCached(lifecycle, () => [
           onReconnected(() => {
             dispatch(
               apiSlice.util.invalidateTags([
-                { type: CHAT_API_TAGS.CHAT_MEMBER, id: chatId },
+                memberTag(chatId),
               ])
             );
           }),
@@ -259,9 +252,7 @@ export const chatApi = apiSlice.injectEndpoints({
         method: HTTP_METHOD.POST,
         data: { userId },
       }),
-      invalidatesTags: (_result, _error, { chatId }) => [
-        { type: CHAT_API_TAGS.CHAT_MEMBER, id: chatId },
-      ],
+      invalidatesTags: (_result, _error, { chatId }) => [memberTag(chatId)],
     }),
 
     removeChatMember: builder.mutation<void, { chatId: number; userId: number }>({
@@ -269,9 +260,7 @@ export const chatApi = apiSlice.injectEndpoints({
         url: endpoints.chat.member(chatId, userId),
         method: HTTP_METHOD.DELETE,
       }),
-      invalidatesTags: (_result, _error, { chatId }) => [
-        { type: CHAT_API_TAGS.CHAT_MEMBER, id: chatId },
-      ],
+      invalidatesTags: (_result, _error, { chatId }) => [memberTag(chatId)],
     }),
 
     updateMemberRole: builder.mutation<
@@ -283,9 +272,7 @@ export const chatApi = apiSlice.injectEndpoints({
         method: HTTP_METHOD.PATCH,
         data: { roleId },
       }),
-      invalidatesTags: (_result, _error, { chatId }) => [
-        { type: CHAT_API_TAGS.CHAT_MEMBER, id: chatId },
-      ],
+      invalidatesTags: (_result, _error, { chatId }) => [memberTag(chatId)],
     }),
 
     transferChatOwnership: builder.mutation<
@@ -296,9 +283,7 @@ export const chatApi = apiSlice.injectEndpoints({
         url: endpoints.chat.memberOwner(chatId, userId),
         method: HTTP_METHOD.POST,
       }),
-      invalidatesTags: (_result, _error, { chatId }) => [
-        { type: CHAT_API_TAGS.CHAT_MEMBER, id: chatId },
-      ],
+      invalidatesTags: (_result, _error, { chatId }) => [memberTag(chatId)],
     }),
 
     uploadChatAvatar: builder.mutation<void, { chatId: number; file: Blob }>({
@@ -311,10 +296,7 @@ export const chatApi = apiSlice.injectEndpoints({
           data: form,
         };
       },
-      invalidatesTags: (_result, _error, { chatId }) => [
-        { type: CHAT_API_TAGS.CHAT, id: chatId },
-        { type: CHAT_API_TAGS.CHAT, id: TAG_ID.LIST },
-      ],
+      invalidatesTags: (_result, _error, { chatId }) => [chatTag(chatId), chatListTag],
     }),
 
     deleteChatAvatar: builder.mutation<void, number>({
@@ -322,10 +304,7 @@ export const chatApi = apiSlice.injectEndpoints({
         url: endpoints.chat.avatar(chatId),
         method: HTTP_METHOD.DELETE,
       }),
-      invalidatesTags: (_result, _error, chatId) => [
-        { type: CHAT_API_TAGS.CHAT, id: chatId },
-        { type: CHAT_API_TAGS.CHAT, id: TAG_ID.LIST },
-      ],
+      invalidatesTags: (_result, _error, chatId) => [chatTag(chatId), chatListTag],
     }),
 
     markChatRead: builder.mutation<void, number>({

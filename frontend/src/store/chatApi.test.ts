@@ -5,7 +5,7 @@ vi.mock("../lib/signalr", async () => (await import("../test/signalrMock")).sign
 import { signalrMock } from "../test/signalrMock";
 import { makeStore } from "./store";
 import { chatApi } from "./chatApi";
-import { installServer, resetServer, stub, stubJson } from "../test/server";
+import { installServer, requests, resetServer, stub, stubJson } from "../test/server";
 import { signIn } from "../test/renderWithProviders";
 import { setActiveChat } from "../lib/activeChat";
 import type { ChatDto, MessageDto } from "../types/api";
@@ -213,6 +213,81 @@ describe("chatApi", () => {
       await store.dispatch(chatApi.endpoints.markChatRead.initiate(1));
 
       expect(chatList(store)[0].unreadCount).toBe(4);
+    });
+  });
+
+  describe("reloading after a change", () => {
+    function callsTo(method: string, url: string) {
+      return requests.filter(
+        (r) => r.method.toUpperCase() === method.toUpperCase() && r.url === url
+      ).length;
+    }
+
+    it("reloads the list when a chat is created", async () => {
+      stubJson("post", "/api/Chat", chat(2));
+      const { store } = await loadChats([chat(1)]);
+      const before = callsTo("get", "/api/Chat");
+
+      await store.dispatch(
+        chatApi.endpoints.createChat.initiate({
+          name: "New",
+          members: [],
+        } as never)
+      );
+
+      await vi.waitFor(() => expect(callsTo("get", "/api/Chat")).toBe(before + 1));
+    });
+
+    it("reloads the list when a chat is renamed", async () => {
+      stubJson("put", "/api/Chat/1", {});
+      const { store } = await loadChats([chat(1)]);
+      const before = callsTo("get", "/api/Chat");
+
+      await store.dispatch(
+        chatApi.endpoints.renameChat.initiate({
+          chatId: 1,
+          name: "Renamed",
+          description: null,
+        })
+      );
+
+      await vi.waitFor(() => expect(callsTo("get", "/api/Chat")).toBe(before + 1));
+    });
+
+    it("reloads the members when someone is removed", async () => {
+      stubJson("get", "/api/Chat/1/users", []);
+      stubJson("delete", "/api/Chat/1/users/5", {});
+      const store = makeStore();
+      const members = store.dispatch(
+        chatApi.endpoints.getChatMembers.initiate(1)
+      );
+      await members;
+      const before = callsTo("get", "/api/Chat/1/users");
+
+      await store.dispatch(
+        chatApi.endpoints.removeChatMember.initiate({ chatId: 1, userId: 5 })
+      );
+
+      await vi.waitFor(() =>
+        expect(callsTo("get", "/api/Chat/1/users")).toBe(before + 1)
+      );
+      members.unsubscribe();
+    });
+
+    it("reloads the invite after it is revoked", async () => {
+      stubJson("get", "/api/Chat/1/invite", { code: "abc" });
+      stubJson("delete", "/api/Chat/1/invite", {});
+      const store = makeStore();
+      const invite = store.dispatch(chatApi.endpoints.getChatInvite.initiate(1));
+      await invite;
+      const before = callsTo("get", "/api/Chat/1/invite");
+
+      await store.dispatch(chatApi.endpoints.revokeChatInvite.initiate(1));
+
+      await vi.waitFor(() =>
+        expect(callsTo("get", "/api/Chat/1/invite")).toBe(before + 1)
+      );
+      invite.unsubscribe();
     });
   });
 
