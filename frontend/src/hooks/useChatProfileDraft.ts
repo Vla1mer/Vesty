@@ -48,7 +48,8 @@ export function useChatProfileDraft(
   }, [chat.id, serverName, serverDescription]);
 
   const changed =
-    name.trim() !== serverName || description.trim() !== serverDescription;
+    name.trim() !== serverName.trim() ||
+    description.trim() !== serverDescription.trim();
 
   async function save() {
     if (saving) return;

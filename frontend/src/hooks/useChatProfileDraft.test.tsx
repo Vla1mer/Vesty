@@ -98,6 +98,21 @@ describe("useChatProfileDraft", () => {
       expect(result.current.changed).toBe(false);
     });
 
+    it("ignores padding the server itself stored", () => {
+      const onError = vi.fn();
+      const store = makeStore();
+      const { result } = renderHook(
+        () => useChatProfileDraft({ ...CHAT, name: "  Team  " }, onError),
+        {
+          wrapper: ({ children }: { children: ReactNode }) => (
+            <Provider store={store}>{children}</Provider>
+          ),
+        }
+      );
+
+      expect(result.current.changed).toBe(false);
+    });
+
     it("notices a real edit", () => {
       const { result } = setup();
 

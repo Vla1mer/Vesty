@@ -17,7 +17,7 @@ export function useChatPermissions(
 
   useEffect(() => {
     setSaved(null);
-  }, [chat.whoCanInvite, chat.whoCanEdit, chat.whoCanPost]);
+  }, [chat.id, chat.whoCanInvite, chat.whoCanEdit, chat.whoCanPost]);
 
   const levels =
     saved?.chatId === chat.id
