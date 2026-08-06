@@ -103,6 +103,12 @@
   :root.theme-ready body {
     transition: background-color 0.25s ease, color 0.25s ease;
   }
+
+  :root.theme-switching *,
+  :root.theme-switching *::before,
+  :root.theme-switching *::after {
+    transition: none !important;
+  }
 }
 
 * {
