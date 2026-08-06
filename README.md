@@ -16,7 +16,7 @@ docker compose up
 
 Open `http://localhost:5173`.
 
-That starts three containers — PostgreSQL, the API and the client. Database migrations are applied automatically on the first run.
+That starts four containers — PostgreSQL, MinIO for avatars and attachments, the API and the client. Database migrations are applied automatically on the first run.
 
 To stop: `docker compose down`. Add `-v` to delete the database as well.
 
@@ -38,18 +38,18 @@ cp .env.example .env
 openssl rand -base64 32                                                            # Linux / macOS
 ```
 
-The same file also controls ports (`API_PORT`, `CLIENT_PORT`, `DB_PORT`) and database credentials.
+The same file also controls ports (`API_PORT`, `CLIENT_PORT`, `DB_PORT`, `STORAGE_PORT`) and the credentials for PostgreSQL and MinIO.
 
 Set `MESSAGE_KEY` before storing any data and keep it unchanged: messages are encrypted with it, so replacing the key makes every existing message permanently unreadable.
 
-## Development without Docker
+## Running the apps outside Docker
 
-Requires [.NET SDK 9+](https://dotnet.microsoft.com/download) and [Node.js 20+](https://nodejs.org).
+For hot reload while developing. Requires [.NET SDK 9+](https://dotnet.microsoft.com/download) and [Node.js 20+](https://nodejs.org).
 
-Start only the database, then run both apps locally:
+Only the API and the client move to your machine — PostgreSQL and MinIO still come from Docker:
 
 ```bash
-docker compose up -d db
+docker compose up -d db storage
 
 cp backend/Vesty/appsettings.Example.json backend/Vesty/appsettings.json
 # fill in JwtSettings.secretKey and MessageEncryption.Key
@@ -63,6 +63,8 @@ cd frontend && npm install && npm run dev
 ```
 
 Client on `http://localhost:5173`, API on `https://localhost:7033`, API docs on `https://localhost:7033/swagger`.
+
+To avoid Docker entirely, point `ConnectionStrings.DefaultConnection` and the `Storage` section of `appsettings.json` at your own PostgreSQL and S3-compatible storage. Skipping MinIO without a replacement leaves the app working except for avatars and attachments, which fail on upload.
 
 ## Layout
 
