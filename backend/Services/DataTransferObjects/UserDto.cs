@@ -8,5 +8,6 @@
         public string? Surname { get; init; }
         public string? Phone { get; init; }
         public DateTime? AvatarUpdatedAt { get; init; }
+        public bool IsProfileHidden { get; init; }
     }
 }

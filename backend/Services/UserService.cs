@@ -54,7 +54,26 @@ namespace Services
             var user = await _repository.User.GetUserAsync(id, trackChanges: false);
             if (user is null)
                 throw new UserNotFoundException(id);
-            return _mapper.Map<UserDto>(user);
+
+            var dto = _mapper.Map<UserDto>(user);
+            if (id == _currentUser.UserId)
+                return dto;
+
+            return await CanSeeProfileAsync(user)
+                ? dto with { Phone = null }
+                : dto with { Phone = null, Name = null, Surname = null, IsProfileHidden = true };
+        }
+
+        private async Task<bool> CanSeeProfileAsync(User user)
+        {
+            if (await _repository.UserBlock.IsBlockedEitherWayAsync(_currentUser.UserId, user.Id))
+                return false;
+
+            if (user.WhoCanSeeProfile == PrivacyLevel.Everyone)
+                return true;
+
+            return user.WhoCanSeeProfile == PrivacyLevel.FriendsOnly &&
+                   await _repository.Friendship.AreFriendsAsync(_currentUser.UserId, user.Id);
         }
 
         public async Task<IEnumerable<UserDto>> GetByIdsAsync(IEnumerable<int> ids)
