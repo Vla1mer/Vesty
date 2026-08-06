@@ -18,7 +18,7 @@ export function PageShell({
   children,
 }: Props) {
   return (
-    <div className="flex min-h-screen flex-col overflow-hidden">
+    <div className="flex min-h-dvh flex-col overflow-hidden">
       <header className="flex shrink-0 items-center gap-2 border-b border-line px-4 py-3">
         {onBack && (
           <button
