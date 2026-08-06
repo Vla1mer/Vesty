@@ -56,12 +56,12 @@ export function ChatLayout() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-viewport overflow-hidden">
       <aside
         style={isMobile ? undefined : { width: listWidth + railWidth }}
         className={`${
           hasSelection ? "hidden md:flex" : "flex"
-        } relative h-screen w-full shrink-0 md:border-r border-line flex-col overflow-hidden`}
+        } relative h-viewport w-full shrink-0 md:border-r border-line flex-col overflow-hidden`}
       >
         <ChatsPage isResizing={dragWidth !== null} />
 

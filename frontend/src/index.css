@@ -103,6 +103,12 @@
   :root.theme-ready body {
     transition: background-color 0.25s ease, color 0.25s ease;
   }
+
+  :root.theme-switching *,
+  :root.theme-switching *::before,
+  :root.theme-switching *::after {
+    transition: none !important;
+  }
 }
 
 * {
@@ -127,6 +133,24 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background-color: rgb(var(--text-subtle));
+}
+
+.h-viewport {
+  height: 100vh;
+}
+
+.min-h-viewport {
+  min-height: 100vh;
+}
+
+@supports (height: 100dvh) {
+  .h-viewport {
+    height: 100dvh;
+  }
+
+  .min-h-viewport {
+    min-height: 100dvh;
+  }
 }
 
 .scrollbar-none {

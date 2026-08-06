@@ -24,9 +24,23 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const root = document.documentElement;
+    root.classList.add("theme-switching");
     root.dataset.theme = resolved;
     root.style.colorScheme = resolved;
     root.classList.add("theme-ready");
+
+    let settled = 0;
+    const painted = requestAnimationFrame(() => {
+      settled = requestAnimationFrame(() =>
+        root.classList.remove("theme-switching")
+      );
+    });
+
+    return () => {
+      cancelAnimationFrame(painted);
+      cancelAnimationFrame(settled);
+      root.classList.remove("theme-switching");
+    };
   }, [resolved]);
 
   const setPreference = useCallback((next: ThemePreference) => {

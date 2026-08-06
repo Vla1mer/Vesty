@@ -7,6 +7,8 @@ import {
 } from "../api/attachments";
 import type { MessageAttachmentDto } from "../types/api";
 
+let lastLocalId = 0;
+
 export interface PendingUpload {
   localId: string;
   fileName: string;
@@ -62,57 +64,55 @@ export function useAttachmentUploads(chatId: number) {
 
   const add = useCallback(
     (files: File[]) => {
-      setUploads((prev) => {
-        const room = MAX_ATTACHMENTS_PER_MESSAGE - prev.length;
-        const accepted = files.slice(0, Math.max(room, 0));
+      const room = MAX_ATTACHMENTS_PER_MESSAGE - uploads.length;
+      const accepted = files.slice(0, Math.max(room, 0));
 
-        const started = accepted.map<PendingUpload>((file) => {
-          const localId = crypto.randomUUID();
-          const tooLarge = file.size > MAX_ATTACHMENT_SIZE;
+      const started = accepted.map<PendingUpload>((file) => {
+        const localId = `upload-${++lastLocalId}`;
+        const tooLarge = file.size > MAX_ATTACHMENT_SIZE;
 
-          if (!tooLarge) {
-            const controller = new AbortController();
-            controllers.current.set(localId, controller);
+        if (!tooLarge) {
+          const controller = new AbortController();
+          controllers.current.set(localId, controller);
 
-            uploadAttachment(
-              chatId,
-              file,
-              (progress) => update(localId, { progress }),
-              controller.signal
-            )
-              .then((attachment) => {
-                if (discarded.current.has(localId)) {
-                  discarded.current.delete(localId);
-                  void deleteAttachment(attachment.id).catch(() => {});
-                  return;
-                }
-                update(localId, { attachment, progress: 100 });
-              })
-              .catch((error) => {
-                if (controller.signal.aborted) return;
-                update(localId, { error: "Upload failed", progress: 0 });
-                void error;
-              })
-              .finally(() => controllers.current.delete(localId));
-          }
+          uploadAttachment(
+            chatId,
+            file,
+            (progress) => update(localId, { progress }),
+            controller.signal
+          )
+            .then((attachment) => {
+              if (discarded.current.has(localId)) {
+                discarded.current.delete(localId);
+                void deleteAttachment(attachment.id).catch(() => {});
+                return;
+              }
+              update(localId, { attachment, progress: 100 });
+            })
+            .catch((error) => {
+              if (controller.signal.aborted) return;
+              update(localId, { error: "Upload failed", progress: 0 });
+              void error;
+            })
+            .finally(() => controllers.current.delete(localId));
+        }
 
-          return {
-            localId,
-            fileName: file.name,
-            contentType: file.type,
-            sizeInBytes: file.size,
-            previewUrl: file.type.startsWith("image/")
-              ? URL.createObjectURL(file)
-              : undefined,
-            progress: 0,
-            error: tooLarge ? "File is larger than 10 MB" : undefined,
-          };
-        });
-
-        return [...prev, ...started];
+        return {
+          localId,
+          fileName: file.name,
+          contentType: file.type,
+          sizeInBytes: file.size,
+          previewUrl: file.type.startsWith("image/")
+            ? URL.createObjectURL(file)
+            : undefined,
+          progress: 0,
+          error: tooLarge ? "File is larger than 10 MB" : undefined,
+        };
       });
+
+      setUploads((prev) => [...prev, ...started]);
     },
-    [chatId, update]
+    [chatId, update, uploads.length]
   );
 
   const readyIds = uploads
