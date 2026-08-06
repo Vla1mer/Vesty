@@ -31,6 +31,8 @@ interface RowProps {
 }
 
 function FriendRow({ friend, actions }: RowProps) {
+  const navigate = useNavigate();
+
   return (
     <motion.li
       layout
@@ -40,20 +42,27 @@ function FriendRow({ friend, actions }: RowProps) {
       transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
       className="flex items-center gap-3 rounded-card px-3 py-2 transition-colors hover:bg-surface-muted"
     >
-      <Avatar
-        userId={friend.userId}
-        userName={friend.userName}
-        name={friend.name ?? undefined}
-        surname={friend.surname ?? undefined}
-        avatarUpdatedAt={friend.avatarUpdatedAt}
-        size="lg"
-      />
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-[15px] font-semibold text-content">
-          {displayName(friend)}
-        </p>
-        <p className="truncate text-xs text-content-muted">@{friend.userName}</p>
-      </div>
+      <button
+        type="button"
+        onClick={() => navigate(`/users/${friend.userId}`)}
+        aria-label={`Open the profile of ${friend.userName}`}
+        className="flex min-w-0 flex-1 items-center gap-3 rounded text-left transition hover:opacity-80"
+      >
+        <Avatar
+          userId={friend.userId}
+          userName={friend.userName}
+          name={friend.name ?? undefined}
+          surname={friend.surname ?? undefined}
+          avatarUpdatedAt={friend.avatarUpdatedAt}
+          size="lg"
+        />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[15px] font-semibold text-content">
+            {displayName(friend)}
+          </p>
+          <p className="truncate text-xs text-content-muted">@{friend.userName}</p>
+        </div>
+      </button>
       <div className="flex shrink-0 items-center gap-2">{actions}</div>
     </motion.li>
   );
@@ -144,20 +153,27 @@ export function FriendsContent() {
                   key={user.id}
                   className="flex items-center gap-3 rounded-card px-3 py-2 transition-colors hover:bg-surface-muted"
                 >
-                  <Avatar
-                    userId={user.id}
-                    userName={user.userName}
-                    name={user.name}
-                    surname={user.surname}
-                    avatarUpdatedAt={user.avatarUpdatedAt}
-                    size="lg"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[15px] font-semibold text-content">
-                      {[user.name, user.surname].filter(Boolean).join(" ") || user.userName}
-                    </p>
-                    <p className="truncate text-xs text-content-muted">@{user.userName}</p>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/users/${user.id}`)}
+                    aria-label={`Open the profile of ${user.userName}`}
+                    className="flex min-w-0 flex-1 items-center gap-3 rounded text-left transition hover:opacity-80"
+                  >
+                    <Avatar
+                      userId={user.id}
+                      userName={user.userName}
+                      name={user.name}
+                      surname={user.surname}
+                      avatarUpdatedAt={user.avatarUpdatedAt}
+                      size="lg"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[15px] font-semibold text-content">
+                        {[user.name, user.surname].filter(Boolean).join(" ") || user.userName}
+                      </p>
+                      <p className="truncate text-xs text-content-muted">@{user.userName}</p>
+                    </div>
+                  </button>
                   {friendIds.has(user.id) ? (
                     <span className="flex shrink-0 items-center gap-1 text-xs text-content-muted">
                       <Check size={13} aria-hidden="true" /> Friend

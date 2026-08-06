@@ -2,6 +2,7 @@ import { Settings, X } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   useGetChatMembersQuery,
   useAddChatMemberMutation,
@@ -32,6 +33,7 @@ interface Props {
 
 export function ChatInfoContent({ chat, onOpenSettings, onBusyChange }: Props) {
   const { userId: currentUserId } = useAuth();
+  const navigate = useNavigate();
   const [addChatMember] = useAddChatMemberMutation();
   const [removeChatMember] = useRemoveChatMemberMutation();
   const [search, setSearch] = useState("");
@@ -172,7 +174,12 @@ export function ChatInfoContent({ chat, onOpenSettings, onBusyChange }: Props) {
                     key={m.userId}
                     className="flex items-center justify-between gap-2 rounded px-3 py-2"
                   >
-                    <div className="flex min-w-0 items-center gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/users/${m.userId}`)}
+                      aria-label={`Open the profile of ${m.userName}`}
+                      className="flex min-w-0 items-center gap-2.5 rounded text-left transition hover:opacity-80"
+                    >
                       <Avatar
                         userId={m.userId}
                         userName={m.userName}
@@ -196,7 +203,7 @@ export function ChatInfoContent({ chat, onOpenSettings, onBusyChange }: Props) {
                           </p>
                         )}
                       </div>
-                    </div>
+                    </button>
 
                     <div className="flex shrink-0 items-center gap-2">
                       <span
