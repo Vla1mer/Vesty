@@ -49,6 +49,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       UseHttpsRedirection: "false"
+      Logging__LogLevel__Default: Warning
       ConnectionStrings__DefaultConnection: >-
         Host=db;Port=5432;Database=${POSTGRES_DB:-vesty};Username=${POSTGRES_USER:-vesty};Password=${POSTGRES_PASSWORD:-vesty};
       JwtSettings__validIssuer: VestyAPI
