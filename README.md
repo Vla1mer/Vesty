@@ -69,27 +69,60 @@ The bucket is created on the first upload, so there is nothing to prepare by han
 
 ### 3. API
 
-```bash
-cp backend/Vesty/appsettings.Example.json backend/Vesty/appsettings.json
+Create `backend/Vesty/appsettings.json` and paste this in. It matches the setup above and runs as is:
+
+```json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*",
+  "Cors": {
+    "AllowedOrigins": [ "http://localhost:5173", "https://localhost:5173" ]
+  },
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=localhost;Port=5432;Database=vesty;Username=vesty;Password=vesty;"
+  },
+  "JwtSettings": {
+    "validIssuer": "VestyAPI",
+    "validAudience": "https://localhost:5001",
+    "expires": 60,
+    "secretKey": "vesty-local-development-jwt-secret-not-for-production"
+  },
+  "Storage": {
+    "Endpoint": "localhost:9000",
+    "AccessKey": "vesty",
+    "SecretKey": "vestyvesty",
+    "Bucket": "vesty-attachments",
+    "UseSsl": false
+  },
+  "MessageEncryption": {
+    "Key": "dmVzdHktbG9jYWwtZGV2ZWxvcG1lbnQta2V5LTAwMDE="
+  }
+}
 ```
 
-Then edit `appsettings.json`:
+What to change:
 
-- `ConnectionStrings.DefaultConnection` — change the port to **5432**, the default for a PostgreSQL you installed yourself:
+| Setting | When to change it |
+| --- | --- |
+| `ConnectionStrings.DefaultConnection` | `Port=5432` is for a PostgreSQL you installed yourself. Use **5433** if the database runs in Docker. Adjust the database, user and password if you did not use the SQL from step 1. |
+| `Storage` | Ready for a local MinIO. For a hosted S3 set `Endpoint` as `host:port` without a scheme, put in your own keys and set `"UseSsl": true`. |
+| `JwtSettings.secretKey` | **Replace before exposing the app to anything but your own machine** — this value is public. Any random string of 32+ characters. |
+| `MessageEncryption.Key` | Same, and set it *before* storing any data: messages and files are encrypted with it, so changing it later makes everything already stored unreadable. 32 random bytes in base64. |
+| `Cors.AllowedOrigins` | Only if you move the client off `localhost:5173`. |
 
-  ```
-  Host=localhost;Port=5432;Database=vesty;Username=vesty;Password=vesty;
-  ```
+To generate your own keys:
 
-- `JwtSettings.secretKey` — any random string, 32+ characters
-- `MessageEncryption.Key` — 32 random bytes in base64:
+```powershell
+[Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 }))   # Windows
+openssl rand -base64 32                                                            # Linux / macOS
+```
 
-  ```powershell
-  [Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 }))   # Windows
-  openssl rand -base64 32                                                            # Linux / macOS
-  ```
-
-- `Storage` — leave as is for a local MinIO. For a hosted S3, set `Endpoint` as `host:port` without a scheme, fill in your keys and set `"UseSsl": true`.
+The same content is kept in `backend/Vesty/appsettings.Example.json` if you would rather copy the file than paste.
 
 Trust the development certificate, then start the API:
 
@@ -161,7 +194,7 @@ For hot reload, run the two apps on your machine and keep the infrastructure in 
 docker compose up -d db storage
 ```
 
-Then follow steps 3 and 4 of [Run without Docker](#run-without-docker) — but leave the connection string port at **5433**, since PostgreSQL is reached through the container's published port.
+Then follow steps 3 and 4 of [Run without Docker](#run-without-docker), with one change: set the connection string port to **5433**, since PostgreSQL is reached through the port the container publishes.
 
 ## Tests
 
