@@ -45,7 +45,7 @@ namespace Services
                 (await _repository.UserBlock.GetRelatedUserIdsAsync(_currentUser.UserId)).ToList();
 
             var usersWithMetaData = await _repository.User.GetAllUsersAsync(userParameters, trackChanges: false);
-            var usersDto = _mapper.Map<IEnumerable<UserDto>>(usersWithMetaData);
+            var usersDto = await MaskProfilesAsync(usersWithMetaData);
             return (users: usersDto, metaData: usersWithMetaData.MetaData);
         }
 
@@ -55,25 +55,37 @@ namespace Services
             if (user is null)
                 throw new UserNotFoundException(id);
 
-            var dto = _mapper.Map<UserDto>(user);
-            if (id == _currentUser.UserId)
-                return dto;
-
-            return await CanSeeProfileAsync(user)
-                ? dto with { Phone = null }
-                : dto with { Phone = null, Name = null, Surname = null, IsProfileHidden = true };
+            return (await MaskProfilesAsync(new[] { user })).Single();
         }
 
-        private async Task<bool> CanSeeProfileAsync(User user)
+        private async Task<List<UserDto>> MaskProfilesAsync(IReadOnlyCollection<User> users)
         {
-            if (await _repository.UserBlock.IsBlockedEitherWayAsync(_currentUser.UserId, user.Id))
-                return false;
+            var currentUserId = _currentUser.UserId;
+            var others = users.Where(u => u.Id != currentUserId).ToList();
 
-            if (user.WhoCanSeeProfile == PrivacyLevel.Everyone)
-                return true;
+            var blocked = others.Count > 0
+                ? (await _repository.UserBlock.GetRelatedUserIdsAsync(currentUserId)).ToHashSet()
+                : new HashSet<int>();
 
-            return user.WhoCanSeeProfile == PrivacyLevel.FriendsOnly &&
-                   await _repository.Friendship.AreFriendsAsync(_currentUser.UserId, user.Id);
+            var friends = others.Any(u => u.WhoCanSeeProfile == PrivacyLevel.FriendsOnly)
+                ? (await _repository.Friendship.GetFriendIdsAsync(currentUserId)).ToHashSet()
+                : new HashSet<int>();
+
+            return users.Select(user =>
+            {
+                var dto = _mapper.Map<UserDto>(user);
+                if (user.Id == currentUserId)
+                    return dto;
+
+                var visible = !blocked.Contains(user.Id) &&
+                    (user.WhoCanSeeProfile == PrivacyLevel.Everyone ||
+                     (user.WhoCanSeeProfile == PrivacyLevel.FriendsOnly &&
+                      friends.Contains(user.Id)));
+
+                return visible
+                    ? dto with { Phone = null }
+                    : dto with { Phone = null, Name = null, Surname = null, IsProfileHidden = true };
+            }).ToList();
         }
 
         public async Task<IEnumerable<UserDto>> GetByIdsAsync(IEnumerable<int> ids)
@@ -83,7 +95,7 @@ namespace Services
             var users = await _repository.User.GetByIdsAsync(ids, trackChanges: false);
             if (ids.Count() != users.Count())
                 throw new CollectionByIdsBadRequestException();
-            return _mapper.Map<IEnumerable<UserDto>>(users);
+            return await MaskProfilesAsync(users.ToList());
         }
 
         public async Task<(IEnumerable<UserDto> users, string ids)> RegisterUserCollectionAsync(IEnumerable<UserForRegistrationDto> userCollection)

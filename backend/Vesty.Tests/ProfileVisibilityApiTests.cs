@@ -169,6 +169,107 @@ namespace Vesty.Tests
             Assert.Null(profile.Name);
         }
 
+        private static async Task<UserDto> FindAsync(HttpClient client, string userName)
+        {
+            var found = await client.GetFromJsonAsync<List<UserDto>>(
+                $"/api/User?searchTerm={userName}&pageSize=20");
+            return found!.Single(u => u.UserName == userName);
+        }
+
+        [Fact]
+        public async Task Search_HidesTheNameOfAClosedProfile()
+        {
+            var ownerName = UniqueName("vis10a");
+            var owner = await AuthenticatedClientAsync(ownerName);
+            var ownerId = await UserIdAsync(owner, ownerName);
+            await DescribeAsync(owner, ownerId, ownerName);
+            await HideProfileAsync(owner, PrivacyLevel.Nobody);
+
+            var stranger = await AuthenticatedClientAsync(UniqueName("vis10b"));
+            var found = await FindAsync(stranger, ownerName);
+
+            Assert.True(found.IsProfileHidden);
+            Assert.Null(found.Name);
+            Assert.Null(found.Surname);
+        }
+
+        [Fact]
+        public async Task Search_ShowsTheNameOfAFriendWhoAllowsFriends()
+        {
+            var ownerName = UniqueName("vis11a");
+            var owner = await AuthenticatedClientAsync(ownerName);
+            var ownerId = await UserIdAsync(owner, ownerName);
+            await DescribeAsync(owner, ownerId, ownerName);
+            await HideProfileAsync(owner, PrivacyLevel.FriendsOnly);
+
+            var friendName = UniqueName("vis11b");
+            var friend = await AuthenticatedClientAsync(friendName);
+            var friendId = await UserIdAsync(friend, friendName);
+            await FriendshipSetup.BefriendAsync(friend, friendId, owner, ownerId);
+
+            var found = await FindAsync(friend, ownerName);
+
+            Assert.False(found.IsProfileHidden);
+            Assert.Equal("Vlad", found.Name);
+        }
+
+        [Fact]
+        public async Task Search_HidesTheNameFromANonFriend()
+        {
+            var ownerName = UniqueName("vis12a");
+            var owner = await AuthenticatedClientAsync(ownerName);
+            var ownerId = await UserIdAsync(owner, ownerName);
+            await DescribeAsync(owner, ownerId, ownerName);
+            await HideProfileAsync(owner, PrivacyLevel.FriendsOnly);
+
+            var stranger = await AuthenticatedClientAsync(UniqueName("vis12b"));
+            var found = await FindAsync(stranger, ownerName);
+
+            Assert.True(found.IsProfileHidden);
+            Assert.Null(found.Name);
+        }
+
+        [Fact]
+        public async Task Search_NeverCarriesThePhone()
+        {
+            var ownerName = UniqueName("vis13a");
+            var owner = await AuthenticatedClientAsync(ownerName);
+            var ownerId = await UserIdAsync(owner, ownerName);
+            await DescribeAsync(owner, ownerId, ownerName);
+
+            var stranger = await AuthenticatedClientAsync(UniqueName("vis13b"));
+            var found = await FindAsync(stranger, ownerName);
+
+            Assert.Null(found.Phone);
+            Assert.Equal("Vlad", found.Name);
+        }
+
+        [Fact]
+        public async Task Collection_HidesTheNameOfAClosedProfile()
+        {
+            var ownerName = UniqueName("vis14a");
+            var owner = await AuthenticatedClientAsync(ownerName);
+            var ownerId = await UserIdAsync(owner, ownerName);
+            await DescribeAsync(owner, ownerId, ownerName);
+            await HideProfileAsync(owner, PrivacyLevel.Nobody);
+
+            var openName = UniqueName("vis14b");
+            var open = await AuthenticatedClientAsync(openName);
+            var openId = await UserIdAsync(open, openName);
+            await DescribeAsync(open, openId, openName);
+
+            var stranger = await AuthenticatedClientAsync(UniqueName("vis14c"));
+            var users = await stranger.GetFromJsonAsync<List<UserDto>>(
+                $"/api/User/collection/({ownerId},{openId})");
+
+            var hidden = users!.Single(u => u.Id == ownerId);
+            var shown = users!.Single(u => u.Id == openId);
+            Assert.True(hidden.IsProfileHidden);
+            Assert.Null(hidden.Name);
+            Assert.False(shown.IsProfileHidden);
+            Assert.Equal("Vlad", shown.Name);
+        }
+
         [Fact]
         public async Task UnknownUser_IsStillNotFound()
         {

@@ -1,4 +1,4 @@
-using Entities.Models;
+﻿using Entities.Models;
 using Microsoft.EntityFrameworkCore;
 using Repository.Interfaces;
 
@@ -31,6 +31,15 @@ namespace Repository
                       (f.RequesterId == otherUserId && f.AddresseeId == userId)),
                 trackChanges: false)
                 .AnyAsync();
+
+        public async Task<IEnumerable<int>> GetFriendIdsAsync(int userId) =>
+            await FindByCondition(
+                f => f.Status == Friendship.Accepted &&
+                     (f.RequesterId == userId || f.AddresseeId == userId),
+                trackChanges: false)
+                .Select(f => f.RequesterId == userId ? f.AddresseeId : f.RequesterId)
+                .Distinct()
+                .ToListAsync();
 
         public void CreateFriendship(Friendship friendship) => Create(friendship);
 
