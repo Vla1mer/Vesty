@@ -229,6 +229,7 @@ export const PRIVACY_LEVEL = {
 export interface PrivacySettingsDto {
   whoCanMessage: number;
   whoCanInvite: number;
+  whoCanSeeProfile: number;
 }
 
 export interface BlockedUserDto {
