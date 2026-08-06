@@ -7,6 +7,8 @@ import {
 } from "../api/attachments";
 import type { MessageAttachmentDto } from "../types/api";
 
+let lastLocalId = 0;
+
 export interface PendingUpload {
   localId: string;
   fileName: string;
@@ -67,7 +69,7 @@ export function useAttachmentUploads(chatId: number) {
         const accepted = files.slice(0, Math.max(room, 0));
 
         const started = accepted.map<PendingUpload>((file) => {
-          const localId = crypto.randomUUID();
+          const localId = `upload-${++lastLocalId}`;
           const tooLarge = file.size > MAX_ATTACHMENT_SIZE;
 
           if (!tooLarge) {
