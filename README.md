@@ -141,13 +141,19 @@ cd frontend && npm install && npm run dev
 
 Open `http://localhost:5173`. The client talks to `https://localhost:7033` by default, which is where the API above is listening. Swagger is served on `https://localhost:7033/swagger` — it is registered only in the Development environment, so the Docker setup does not expose it.
 
-## Configuration
+To point the client somewhere else, create `frontend/.env`:
 
-### Docker
+```
+VITE_API_URL=https://localhost:7033
+```
 
-The defaults in `docker-compose.yml` are enough to run the project locally, so no setup is needed to try it out. They are development values and are public — **any deployment reachable from outside your machine must override them**, otherwise stored messages can be decrypted and tokens forged by anyone who has read this repository.
+That file is gitignored, and if it exists it wins over the default — worth checking first when the client cannot reach the API.
 
-To set your own values, copy the template:
+## Changing the Docker defaults
+
+`docker compose up` needs no setup because `docker-compose.yml` ships development values for every secret and port. Those values are public — **anything reachable from outside your own machine must override them**, otherwise stored messages can be decrypted and tokens forged by anyone who has read this repository.
+
+To set your own, copy the template and edit it:
 
 ```bash
 cp .env.example .env
@@ -162,19 +168,9 @@ cp .env.example .env
 | `DB_PORT`, `API_PORT`, `CLIENT_PORT`, `STORAGE_PORT`, `STORAGE_CONSOLE_PORT` | host ports |
 | `API_URL`, `CLIENT_URL` | addresses baked into the client build and the CORS allowlist |
 
-### Without Docker
+Set `MESSAGE_KEY` before storing any data and never change it afterwards: messages and files are encrypted with it, so a new key makes everything already stored permanently unreadable.
 
-The same settings live in `backend/Vesty/appsettings.json`, which is gitignored — copy it from `appsettings.Example.json` as shown above.
-
-To point the client at a different API, create `frontend/.env`:
-
-```
-VITE_API_URL=https://localhost:7033
-```
-
-That file is gitignored too. If it exists it wins over the default, so a stale value there is worth checking when the client cannot reach the API.
-
-> Set `MESSAGE_KEY` (or `MessageEncryption.Key`) before storing any data and keep it unchanged: messages and files are encrypted with it, so replacing the key makes everything already stored permanently unreadable.
+Running without Docker, the same settings live in `appsettings.json` instead — see [step 3](#3-api).
 
 ## Ports
 
