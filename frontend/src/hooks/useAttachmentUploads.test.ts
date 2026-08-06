@@ -1,17 +1,29 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+let lastUploadedId = 0;
+
 vi.mock("../api/attachments", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../api/attachments")>();
   return {
     ...actual,
-    uploadAttachment: vi.fn(async () => ({ id: 1, fileName: "a", contentType: "image/png", sizeInBytes: 1 })),
+    uploadAttachment: vi.fn(async (_chatId: number, file: File) => ({
+      id: ++lastUploadedId,
+      fileName: file.name,
+      contentType: file.type,
+      sizeInBytes: file.size,
+    })),
     deleteAttachment: vi.fn(async () => {}),
   };
 });
 
+import { StrictMode } from "react";
 import { act, renderHook } from "@testing-library/react";
 import { useAttachmentUploads } from "./useAttachmentUploads";
-import { MAX_ATTACHMENT_SIZE, MAX_ATTACHMENTS_PER_MESSAGE } from "../api/attachments";
+import {
+  MAX_ATTACHMENT_SIZE,
+  MAX_ATTACHMENTS_PER_MESSAGE,
+  uploadAttachment,
+} from "../api/attachments";
 
 function file(name: string, type = "text/plain", size = 10) {
   const blob = new File(["x"], name, { type });
@@ -21,6 +33,8 @@ function file(name: string, type = "text/plain", size = 10) {
 
 describe("useAttachmentUploads", () => {
   beforeEach(() => {
+    lastUploadedId = 0;
+    vi.mocked(uploadAttachment).mockClear();
     URL.createObjectURL = vi.fn(() => "blob:preview");
     URL.revokeObjectURL = vi.fn();
   });
@@ -41,6 +55,27 @@ describe("useAttachmentUploads", () => {
     expect(randomUUID).not.toHaveBeenCalled();
     expect(result.current.uploads).toHaveLength(1);
     expect(result.current.uploads[0].fileName).toBe("photo.png");
+  });
+
+  it("starts one upload per file even under StrictMode", () => {
+    const { result } = renderHook(() => useAttachmentUploads(1), {
+      wrapper: StrictMode,
+    });
+
+    act(() => result.current.add([file("photo.png", "image/png")]));
+
+    expect(uploadAttachment).toHaveBeenCalledTimes(1);
+    expect(result.current.uploads).toHaveLength(1);
+  });
+
+  it("keeps the ids of files that finished uploading", async () => {
+    const { result } = renderHook(() => useAttachmentUploads(1));
+
+    await act(async () => {
+      result.current.add([file("a.png", "image/png"), file("b.png", "image/png")]);
+    });
+
+    expect(new Set(result.current.readyIds).size).toBe(2);
   });
 
   it("gives every file its own id", () => {
