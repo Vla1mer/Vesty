@@ -271,6 +271,70 @@ namespace Vesty.Tests
         }
 
         [Fact]
+        public async Task FriendList_HidesTheNameOfSomeoneOpenToNobody()
+        {
+            var shyName = UniqueName("vis15a");
+            var shy = await AuthenticatedClientAsync(shyName);
+            var shyId = await UserIdAsync(shy, shyName);
+            await DescribeAsync(shy, shyId, shyName);
+
+            var friendName = UniqueName("vis15b");
+            var friend = await AuthenticatedClientAsync(friendName);
+            var friendId = await UserIdAsync(friend, friendName);
+            await FriendshipSetup.BefriendAsync(friend, friendId, shy, shyId);
+            await HideProfileAsync(shy, PrivacyLevel.Nobody);
+
+            var friends = await friend.GetFromJsonAsync<List<FriendDto>>("/api/Friend");
+            var listed = friends!.Single(f => f.UserId == shyId);
+
+            Assert.Null(listed.Name);
+            Assert.Null(listed.Surname);
+            Assert.Equal(shyName, listed.UserName);
+        }
+
+        [Fact]
+        public async Task FriendList_ShowsTheNameOfSomeoneOpenToFriends()
+        {
+            var ownerName = UniqueName("vis16a");
+            var owner = await AuthenticatedClientAsync(ownerName);
+            var ownerId = await UserIdAsync(owner, ownerName);
+            await DescribeAsync(owner, ownerId, ownerName);
+
+            var friendName = UniqueName("vis16b");
+            var friend = await AuthenticatedClientAsync(friendName);
+            var friendId = await UserIdAsync(friend, friendName);
+            await FriendshipSetup.BefriendAsync(friend, friendId, owner, ownerId);
+            await HideProfileAsync(owner, PrivacyLevel.FriendsOnly);
+
+            var friends = await friend.GetFromJsonAsync<List<FriendDto>>("/api/Friend");
+            var listed = friends!.Single(f => f.UserId == ownerId);
+
+            Assert.Equal("Vlad", listed.Name);
+        }
+
+        [Fact]
+        public async Task PendingRequest_HidesTheNameOfSomeoneOpenToFriendsOnly()
+        {
+            var shyName = UniqueName("vis17a");
+            var shy = await AuthenticatedClientAsync(shyName);
+            var shyId = await UserIdAsync(shy, shyName);
+            await DescribeAsync(shy, shyId, shyName);
+            await HideProfileAsync(shy, PrivacyLevel.FriendsOnly);
+
+            var strangerName = UniqueName("vis17b");
+            var stranger = await AuthenticatedClientAsync(strangerName);
+            (await shy.PostAsync($"/api/Friend/{await UserIdAsync(shy, strangerName)}", null))
+                .EnsureSuccessStatusCode();
+
+            var requests = await stranger.GetFromJsonAsync<List<FriendDto>>(
+                "/api/Friend/requests");
+            var listed = requests!.Single(f => f.UserId == shyId);
+
+            Assert.Null(listed.Name);
+            Assert.Equal(shyName, listed.UserName);
+        }
+
+        [Fact]
         public async Task UnknownUser_IsStillNotFound()
         {
             var client = await AuthenticatedClientAsync(UniqueName("vis9"));

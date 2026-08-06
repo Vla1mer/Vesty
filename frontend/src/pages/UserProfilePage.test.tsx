@@ -106,8 +106,8 @@ describe("UserProfilePage", () => {
     ).toBeInTheDocument();
   });
 
-  it("refuses a nonsense id", async () => {
-    open("abc");
+  it.each(["abc", "0", "-1"])("refuses the id %s", async (id) => {
+    open(id);
 
     expect(await screen.findByText("Invalid user id")).toBeInTheDocument();
   });

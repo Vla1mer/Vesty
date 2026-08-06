@@ -41,11 +41,12 @@ namespace Services
             if (!userParameters.ValidBirthdayRange)
                 throw new MaxBirthdayRangeBadRequestException();
 
-            userParameters.ExcludedUserIds =
+            var blockedIds =
                 (await _repository.UserBlock.GetRelatedUserIdsAsync(_currentUser.UserId)).ToList();
+            userParameters.ExcludedUserIds = blockedIds;
 
             var usersWithMetaData = await _repository.User.GetAllUsersAsync(userParameters, trackChanges: false);
-            var usersDto = await MaskProfilesAsync(usersWithMetaData);
+            var usersDto = await MaskProfilesAsync(usersWithMetaData, blockedIds);
             return (users: usersDto, metaData: usersWithMetaData.MetaData);
         }
 
@@ -58,14 +59,17 @@ namespace Services
             return (await MaskProfilesAsync(new[] { user })).Single();
         }
 
-        private async Task<List<UserDto>> MaskProfilesAsync(IReadOnlyCollection<User> users)
+        private async Task<List<UserDto>> MaskProfilesAsync(
+            IReadOnlyCollection<User> users, IEnumerable<int>? knownBlockedIds = null)
         {
             var currentUserId = _currentUser.UserId;
             var others = users.Where(u => u.Id != currentUserId).ToList();
 
-            var blocked = others.Count > 0
-                ? (await _repository.UserBlock.GetRelatedUserIdsAsync(currentUserId)).ToHashSet()
-                : new HashSet<int>();
+            var blocked = knownBlockedIds is not null
+                ? knownBlockedIds.ToHashSet()
+                : others.Count > 0
+                    ? (await _repository.UserBlock.GetRelatedUserIdsAsync(currentUserId)).ToHashSet()
+                    : new HashSet<int>();
 
             var friends = others.Any(u => u.WhoCanSeeProfile == PrivacyLevel.FriendsOnly)
                 ? (await _repository.Friendship.GetFriendIdsAsync(currentUserId)).ToHashSet()

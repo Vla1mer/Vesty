@@ -11,7 +11,7 @@ export function UserProfilePage() {
   const navigate = useNavigate();
 
   const id = Number(userId);
-  const isValidUser = Number.isFinite(id);
+  const isValidUser = Number.isInteger(id) && id > 0;
 
   const { data: user, isLoading, error } = useGetUserByIdQuery(id, {
     skip: !isValidUser,
