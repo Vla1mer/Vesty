@@ -12,6 +12,7 @@ import { CreateChatPage } from "./pages/CreateChatPage";
 import { SelectUserPage } from "./pages/SelectUserPage";
 import { NewDirectChatPage } from "./pages/NewDirectChatPage";
 import { ProfilePage } from "./pages/ProfilePage";
+import { UserProfilePage } from "./pages/UserProfilePage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { FriendsPage } from "./pages/FriendsPage";
 import { JoinChatPage } from "./pages/JoinChatPage";
@@ -44,6 +45,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/users/:userId"
+            element={
+              <ProtectedRoute>
+                <UserProfilePage />
               </ProtectedRoute>
             }
           />
