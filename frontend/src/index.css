@@ -135,6 +135,24 @@
   background-color: rgb(var(--text-subtle));
 }
 
+.h-viewport {
+  height: 100vh;
+}
+
+.min-h-viewport {
+  min-height: 100vh;
+}
+
+@supports (height: 100dvh) {
+  .h-viewport {
+    height: 100dvh;
+  }
+
+  .min-h-viewport {
+    min-height: 100dvh;
+  }
+}
+
 .scrollbar-none {
   scrollbar-width: none;
 }

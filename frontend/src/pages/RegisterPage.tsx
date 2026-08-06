@@ -15,7 +15,7 @@ export function RegisterPage() {
   const { setAuthenticated } = useAuth();
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center p-4">
+    <div className="relative min-h-viewport flex items-center justify-center p-4">
       <div className="absolute top-4 right-4 z-10">
         <ThemeToggle />
       </div>

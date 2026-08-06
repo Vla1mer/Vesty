@@ -28,7 +28,7 @@ export function JoinChatPage() {
   }
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-bg px-4">
+    <div className="flex min-h-viewport items-center justify-center bg-bg px-4">
       <div className="w-full max-w-sm rounded-card border border-line bg-surface p-6 text-center shadow-md">
         {isLoading ? (
           <p className="text-sm text-content-muted">Checking the link...</p>
