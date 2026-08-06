@@ -69,10 +69,11 @@ namespace Vesty.Tests
         }
 
         protected static async Task SetPrivacyAsync(
-            HttpClient client, int whoCanInvite, int whoCanMessage = PrivacyLevel.Everyone)
+            HttpClient client, int whoCanInvite, int whoCanMessage = PrivacyLevel.Everyone,
+            int whoCanSeeProfile = PrivacyLevel.Everyone)
         {
             var updated = await client.PutAsJsonAsync("/api/User/privacy",
-                new { whoCanMessage, whoCanInvite });
+                new { whoCanMessage, whoCanInvite, whoCanSeeProfile });
             updated.EnsureSuccessStatusCode();
         }
 

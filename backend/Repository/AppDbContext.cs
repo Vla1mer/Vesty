@@ -37,6 +37,7 @@ namespace Repository
 
             modelBuilder.Entity<User>(e => {
                 e.Property(u => u.WhoCanInvite).HasDefaultValue(PrivacyLevel.FriendsOnly);
+                e.Property(u => u.WhoCanSeeProfile).HasDefaultValue(PrivacyLevel.Everyone);
                 e.Property(u => u.Name).HasMaxLength(100);
                 e.Property(u => u.Surname).HasMaxLength(100);
                 e.Property(u => u.Phone).HasMaxLength(20);

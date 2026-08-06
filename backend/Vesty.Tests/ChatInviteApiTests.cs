@@ -141,7 +141,12 @@ namespace Vesty.Tests
             var owner = await AuthenticatedClientAsync(UniqueName("inv2a"));
             var shy = await AuthenticatedClientAsync(UniqueName("inv2b"));
             (await shy.PutAsJsonAsync("/api/User/privacy",
-                new { whoCanMessage = 1, whoCanInvite = PrivacyLevel.Nobody }))
+                new
+                {
+                    whoCanMessage = PrivacyLevel.Everyone,
+                    whoCanInvite = PrivacyLevel.Nobody,
+                    whoCanSeeProfile = PrivacyLevel.Everyone
+                }))
                 .EnsureSuccessStatusCode();
 
             var chat = await CreateChatAsync(owner, "Open");

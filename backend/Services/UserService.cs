@@ -1,4 +1,4 @@
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using AutoMapper;
@@ -107,14 +107,16 @@ namespace Services
             return new PrivacySettingsDto
             {
                 WhoCanMessage = user.WhoCanMessage,
-                WhoCanInvite = user.WhoCanInvite
+                WhoCanInvite = user.WhoCanInvite,
+                WhoCanSeeProfile = user.WhoCanSeeProfile
             };
         }
 
         public async Task<PrivacySettingsDto> UpdatePrivacyAsync(PrivacySettingsDto settings)
         {
             if (!PrivacyLevel.IsDefined(settings.WhoCanMessage) ||
-                !PrivacyLevel.IsDefined(settings.WhoCanInvite))
+                !PrivacyLevel.IsDefined(settings.WhoCanInvite) ||
+                !PrivacyLevel.IsDefined(settings.WhoCanSeeProfile))
                 throw new InvalidPrivacyLevelException();
 
             var user = await _repository.User.GetUserAsync(_currentUser.UserId, trackChanges: true)
@@ -122,6 +124,7 @@ namespace Services
 
             user.WhoCanMessage = settings.WhoCanMessage;
             user.WhoCanInvite = settings.WhoCanInvite;
+            user.WhoCanSeeProfile = settings.WhoCanSeeProfile;
             await _repository.SaveAsync();
 
             return settings;
