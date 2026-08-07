@@ -2,6 +2,8 @@ import { Lock, MessageSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { Avatar } from "./Avatar";
+import { usePresence } from "../hooks/usePresence";
+import { formatLastSeen } from "../utils/date";
 import { Button } from "./ui/Button";
 import type { UserDto } from "../types/api";
 
@@ -13,6 +15,7 @@ export function UserProfileContent({ user }: Props) {
   const { userId: currentUserId } = useAuth();
   const navigate = useNavigate();
 
+  const presence = usePresence([user.id]);
   const isMe = user.id === currentUserId;
   const fullName = [user.name, user.surname].filter(Boolean).join(" ");
 
@@ -20,6 +23,7 @@ export function UserProfileContent({ user }: Props) {
     <div className="space-y-6">
       <div className="flex flex-col items-center gap-3 text-center">
         <Avatar
+          online={presence.isOnline(user.id)}
           userId={user.id}
           userName={user.userName}
           name={user.name}
@@ -34,6 +38,13 @@ export function UserProfileContent({ user }: Props) {
           {fullName && (
             <p className="break-words text-sm text-content-muted">{fullName}</p>
           )}
+          {presence.isOnline(user.id) ? (
+            <p className="text-sm text-success">online</p>
+          ) : presence.lastSeenAt(user.id) ? (
+            <p className="text-sm text-content-muted">
+              {formatLastSeen(presence.lastSeenAt(user.id)!)}
+            </p>
+          ) : null}
         </div>
       </div>
 

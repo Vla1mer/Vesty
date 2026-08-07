@@ -11,6 +11,7 @@ import {
 import { useGetAllUsersQuery } from "../store/userApi";
 import { useAuth } from "../context/useAuth";
 import { Avatar, ChatAvatar } from "./Avatar";
+import { usePresence } from "../hooks/usePresence";
 import { Button } from "./ui/Button";
 import { TextInput } from "./ui/TextInput";
 import { UserRole } from "../types/api";
@@ -87,6 +88,8 @@ export function ChatInfoContent({ chat, onOpenSettings, onBusyChange }: Props) {
     () => new Set(members.map((m) => m.userId)),
     [members]
   );
+
+  const presence = usePresence(useMemo(() => members.map((m) => m.userId), [members]));
 
   const filteredCandidates = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -181,6 +184,7 @@ export function ChatInfoContent({ chat, onOpenSettings, onBusyChange }: Props) {
                       className="flex min-w-0 items-center gap-2.5 rounded text-left transition hover:opacity-80"
                     >
                       <Avatar
+                        online={presence.isOnline(m.userId)}
                         userId={m.userId}
                         userName={m.userName}
                         name={m.name}

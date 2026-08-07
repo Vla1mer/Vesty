@@ -34,7 +34,11 @@ function member(userId: number, userName: string, roleId: number) {
   } as ChatMemberWithRoleDto;
 }
 
-function open() {
+function open(online: number[] = []) {
+  stubJson("get", `/api/User/presence/(${[ME, 7].join(",")})`, [
+    { userId: ME, isOnline: online.includes(ME), lastSeenAt: null },
+    { userId: 7, isOnline: online.includes(7), lastSeenAt: null },
+  ]);
   stubJson("get", `/api/Chat/${CHAT_ID}/users`, [
     member(ME, "me", UserRole.Owner),
     member(7, "petya", UserRole.User),
@@ -63,6 +67,20 @@ describe("ChatInfoContent", () => {
     open();
 
     expect(await screen.findByText("petya")).toBeInTheDocument();
+  });
+
+  it("marks a member who is online", async () => {
+    open([7]);
+
+    expect(await screen.findByLabelText("petya is online")).toBeInTheDocument();
+    expect(screen.queryByLabelText("me is online")).toBeNull();
+  });
+
+  it("leaves everyone unmarked when nobody is online", async () => {
+    open();
+
+    await screen.findByText("petya");
+    expect(screen.queryByLabelText("petya is online")).toBeNull();
   });
 
   it("opens the profile of a member", async () => {
