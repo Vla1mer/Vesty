@@ -7,13 +7,13 @@ const EmojiPicker = lazy(() => import("emoji-picker-react"));
 
 interface Props {
   disabled?: boolean;
-  onBeforeOpen?: () => void;
+  onCaptureCaret?: () => void;
   onPick: (emoji: string) => void;
 }
 
 export function EmojiPickerButton({
   disabled = false,
-  onBeforeOpen,
+  onCaptureCaret,
   onPick,
 }: Props) {
   const { resolved } = useTheme();
@@ -50,7 +50,7 @@ export function EmojiPickerButton({
         disabled={disabled}
         onMouseDown={(e) => {
           e.preventDefault();
-          onBeforeOpen?.();
+          if (!open) onCaptureCaret?.();
         }}
         onClick={() => setOpen((prev) => !prev)}
         aria-label="Insert emoji"
@@ -64,6 +64,7 @@ export function EmojiPickerButton({
       {open && (
         <div
           ref={panelRef}
+          onMouseDown={() => onCaptureCaret?.()}
           className="absolute bottom-full left-0 z-40 mb-2 shadow-float"
         >
           <Suspense

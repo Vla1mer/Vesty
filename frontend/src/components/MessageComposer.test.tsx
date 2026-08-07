@@ -93,6 +93,52 @@ describe("MessageComposer emoji insertion", () => {
     await waitFor(() => expect(field().selectionStart).toBe(1 + "🔥".length));
   });
 
+  it("follows the caret when typing continues with the picker open", async () => {
+    render(<Harness initial="hello" />);
+    await userEvent.click(field());
+    field().setSelectionRange(5, 5);
+
+    await userEvent.click(screen.getByRole("button", { name: "Insert emoji" }));
+    await screen.findByRole("button", { name: "fire" });
+    await userEvent.keyboard(" world");
+    await userEvent.click(screen.getByRole("button", { name: "fire" }));
+
+    expect(field().value).toBe("hello world🔥");
+  });
+
+  it("keeps the field focused while the picker is open", async () => {
+    render(<Harness initial="hi" />);
+    await userEvent.click(field());
+
+    await userEvent.click(screen.getByRole("button", { name: "Insert emoji" }));
+    await screen.findByRole("button", { name: "fire" });
+
+    expect(field()).toHaveFocus();
+  });
+
+  it("changes nothing when the emoji would not fit", async () => {
+    const full = "x".repeat(2000);
+    render(<Harness initial={full} />);
+    field().setSelectionRange(2000, 2000);
+
+    await pickFire();
+
+    expect(field().value).toBe(full);
+  });
+
+  it("keeps the selection when the emoji would not fit", async () => {
+    const full = "x".repeat(2000);
+    render(<Harness initial={full} />);
+    field().setSelectionRange(0, 1);
+
+    await pickFire();
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+
+    expect(field().value).toBe(full);
+    expect(field().selectionStart).toBe(0);
+    expect(field().selectionEnd).toBe(1);
+  });
+
   it("gives the field the focus back", async () => {
     render(<Harness initial="ab" />);
     field().setSelectionRange(2, 2);

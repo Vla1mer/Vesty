@@ -131,7 +131,7 @@ export function MessageComposer({
         />
         <EmojiPickerButton
           disabled={busy || blocked}
-          onBeforeOpen={() => {
+          onCaptureCaret={() => {
             const field = inputRef.current;
             selectionRef.current = {
               start: field?.selectionStart ?? value.length,
@@ -142,6 +142,7 @@ export function MessageComposer({
             const input = inputRef.current;
             const { start, end } = selectionRef.current;
             const next = insertAtSelection(value, emoji, start, end, MESSAGE_LIMIT);
+            if (next.value === value) return;
 
             onChange(next.value);
             requestAnimationFrame(() => {
