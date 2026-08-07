@@ -203,20 +203,23 @@ namespace Vesty.Tests
 
 
         [Theory]
-        [InlineData(0, PrivacyLevel.Everyone, PrivacyLevel.Everyone)]
-        [InlineData(PrivacyLevel.Everyone, 4, PrivacyLevel.Everyone)]
-        [InlineData(PrivacyLevel.Everyone, PrivacyLevel.Everyone, 0)]
-        [InlineData(PrivacyLevel.Everyone, PrivacyLevel.Everyone, 4)]
-        [InlineData(-1, -1, -1)]
+        [InlineData(0, PrivacyLevel.Everyone, PrivacyLevel.Everyone, PrivacyLevel.Everyone)]
+        [InlineData(PrivacyLevel.Everyone, 4, PrivacyLevel.Everyone, PrivacyLevel.Everyone)]
+        [InlineData(PrivacyLevel.Everyone, PrivacyLevel.Everyone, 0, PrivacyLevel.Everyone)]
+        [InlineData(PrivacyLevel.Everyone, PrivacyLevel.Everyone, 4, PrivacyLevel.Everyone)]
+        [InlineData(PrivacyLevel.Everyone, PrivacyLevel.Everyone, PrivacyLevel.Everyone, 0)]
+        [InlineData(PrivacyLevel.Everyone, PrivacyLevel.Everyone, PrivacyLevel.Everyone, 4)]
+        [InlineData(-1, -1, -1, -1)]
         public async Task UpdatePrivacyAsync_WithUnknownLevel_Throws(
-            int message, int invite, int profile)
+            int message, int invite, int profile, int online)
         {
             await Assert.ThrowsAsync<InvalidPrivacyLevelException>(() =>
                 _userService.UpdatePrivacyAsync(new PrivacySettingsDto
                 {
                     WhoCanMessage = message,
                     WhoCanInvite = invite,
-                    WhoCanSeeProfile = profile
+                    WhoCanSeeProfile = profile,
+                    WhoCanSeeOnline = online
                 }));
         }
 
@@ -230,12 +233,14 @@ namespace Vesty.Tests
             {
                 WhoCanMessage = PrivacyLevel.FriendsOnly,
                 WhoCanInvite = PrivacyLevel.Nobody,
-                WhoCanSeeProfile = PrivacyLevel.FriendsOnly
+                WhoCanSeeProfile = PrivacyLevel.FriendsOnly,
+                WhoCanSeeOnline = PrivacyLevel.Nobody
             });
 
             Assert.Equal(PrivacyLevel.FriendsOnly, user.WhoCanMessage);
             Assert.Equal(PrivacyLevel.Nobody, user.WhoCanInvite);
             Assert.Equal(PrivacyLevel.FriendsOnly, user.WhoCanSeeProfile);
+            Assert.Equal(PrivacyLevel.Nobody, user.WhoCanSeeOnline);
             _repository.Verify(r => r.SaveAsync(), Times.Once);
         }
 
@@ -249,7 +254,8 @@ namespace Vesty.Tests
                     UserName = "me",
                     WhoCanMessage = PrivacyLevel.Nobody,
                     WhoCanInvite = PrivacyLevel.FriendsOnly,
-                    WhoCanSeeProfile = PrivacyLevel.Nobody
+                    WhoCanSeeProfile = PrivacyLevel.Nobody,
+                    WhoCanSeeOnline = PrivacyLevel.FriendsOnly
                 });
 
             var settings = await _userService.GetPrivacyAsync();
@@ -257,6 +263,7 @@ namespace Vesty.Tests
             Assert.Equal(PrivacyLevel.Nobody, settings.WhoCanMessage);
             Assert.Equal(PrivacyLevel.FriendsOnly, settings.WhoCanInvite);
             Assert.Equal(PrivacyLevel.Nobody, settings.WhoCanSeeProfile);
+            Assert.Equal(PrivacyLevel.FriendsOnly, settings.WhoCanSeeOnline);
         }
     }
 }

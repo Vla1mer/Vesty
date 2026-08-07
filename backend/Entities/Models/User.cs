@@ -15,6 +15,8 @@ namespace Entities.Models
         public int WhoCanMessage { get; set; } = PrivacyLevel.Everyone;
         public int WhoCanInvite { get; set; } = PrivacyLevel.FriendsOnly;
         public int WhoCanSeeProfile { get; set; } = PrivacyLevel.Everyone;
+        public int WhoCanSeeOnline { get; set; } = PrivacyLevel.Everyone;
+        public DateTime? LastSeenAt { get; set; }
 
         public UserAvatar? Avatar { get; set; }
         public ICollection<Chat> CreatedChats { get; set; } = [];
