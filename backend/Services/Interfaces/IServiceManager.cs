@@ -13,5 +13,6 @@
         IFriendService Friend { get; }
         IBlockService Block { get; }
         IChatInviteService ChatInvite { get; }
+        IPresenceService Presence { get; }
     }
 }

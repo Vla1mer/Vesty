@@ -22,10 +22,12 @@ namespace Services
         private readonly Lazy<IFriendService> _friendService;
         private readonly Lazy<IBlockService> _blockService;
         private readonly Lazy<IChatInviteService> _chatInviteService;
+        private readonly Lazy<IPresenceService> _presenceService;
 
         public ServiceManager(IRepositoryManager repositoryManager, ILoggerManager logger, IMapper mapper,
             UserManager<User> userManager, IConfiguration configuration, IMessageCipher messageCipher,
-            ICurrentUserService currentUser, IChatNotifier chatNotifier, IFileStorage fileStorage)
+            ICurrentUserService currentUser, IChatNotifier chatNotifier, IFileStorage fileStorage,
+            IPresenceTracker presenceTracker)
         {
             _userService = new Lazy<IUserService>(() => new UserService(repositoryManager, logger, mapper, userManager, configuration, currentUser));
             _avatarService = new Lazy<IAvatarService>(() => new AvatarService(repositoryManager, currentUser));
@@ -38,6 +40,7 @@ namespace Services
             _friendService = new Lazy<IFriendService>(() => new FriendService(repositoryManager, currentUser, chatNotifier));
             _blockService = new Lazy<IBlockService>(() => new BlockService(repositoryManager, currentUser));
             _chatInviteService = new Lazy<IChatInviteService>(() => new ChatInviteService(repositoryManager, currentUser, chatNotifier, mapper));
+            _presenceService = new Lazy<IPresenceService>(() => new PresenceService(repositoryManager, currentUser, presenceTracker, chatNotifier));
         }
 
         public IUserService User => _userService.Value;
@@ -51,5 +54,6 @@ namespace Services
         public IFriendService Friend => _friendService.Value;
         public IBlockService Block => _blockService.Value;
         public IChatInviteService ChatInvite => _chatInviteService.Value;
+        public IPresenceService Presence => _presenceService.Value;
     }
 }

@@ -18,6 +18,7 @@ namespace Vesty.Hubs
         public const string FriendRequestReceived = "FriendRequestReceived";
         public const string FriendshipAccepted = "FriendshipAccepted";
         public const string FriendshipRemoved = "FriendshipRemoved";
+        public const string PresenceChanged = "PresenceChanged";
 
         private readonly IHubContext<ChatHub> _hubContext;
 
@@ -34,6 +35,10 @@ namespace Vesty.Hubs
 
         public Task FriendshipRemovedAsync(IEnumerable<int> recipientUserIds, int byUserId) =>
             SendToUsersAsync(recipientUserIds, FriendshipRemoved, byUserId);
+
+        public Task PresenceChangedAsync(
+            IEnumerable<int> recipientUserIds, UserPresenceDto presence) =>
+            SendToUsersAsync(recipientUserIds, PresenceChanged, presence);
 
         public Task MessageReceivedAsync(IEnumerable<int> recipientUserIds, MessageDto message) =>
             SendToUsersAsync(recipientUserIds, MessageReceived, message);

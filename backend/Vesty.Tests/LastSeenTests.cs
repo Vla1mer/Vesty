@@ -1,5 +1,4 @@
-using AutoMapper;
-using Entities.Models;
+﻿using Entities.Models;
 using Moq;
 using Repository.Interfaces;
 using Services;
@@ -14,16 +13,16 @@ namespace Vesty.Tests
         private readonly Mock<IRepositoryManager> _repository = new();
         private readonly Mock<IUserRepository> _users = new();
         private readonly Mock<ICurrentUserService> _currentUser = new();
-        private readonly Mock<ILoggerManager> _logger = new();
-        private readonly Mock<IMapper> _mapper = new();
+        private readonly Mock<IPresenceTracker> _presence = new();
+        private readonly Mock<IChatNotifier> _notifier = new();
 
-        private readonly UserService _userService;
+        private readonly PresenceService _presenceService;
 
         public LastSeenTests()
         {
             _repository.SetupGet(r => r.User).Returns(_users.Object);
-            _userService = new UserService(_repository.Object, _logger.Object, _mapper.Object,
-                null!, null!, _currentUser.Object);
+            _presenceService = new PresenceService(_repository.Object, _currentUser.Object,
+                _presence.Object, _notifier.Object);
         }
 
         [Fact]
@@ -33,7 +32,7 @@ namespace Vesty.Tests
             _users.Setup(r => r.GetUserAsync(UserId, true)).ReturnsAsync(user);
             var before = DateTime.UtcNow;
 
-            await _userService.RecordLastSeenAsync(UserId);
+            await _presenceService.RecordLastSeenAsync(UserId);
 
             Assert.NotNull(user.LastSeenAt);
             Assert.InRange(user.LastSeenAt!.Value, before, DateTime.UtcNow);
@@ -52,7 +51,7 @@ namespace Vesty.Tests
             _users.Setup(r => r.GetUserAsync(UserId, true)).ReturnsAsync(user);
             var earlier = user.LastSeenAt!.Value;
 
-            await _userService.RecordLastSeenAsync(UserId);
+            await _presenceService.RecordLastSeenAsync(UserId);
 
             Assert.True(user.LastSeenAt > earlier);
         }
@@ -62,7 +61,7 @@ namespace Vesty.Tests
         {
             _users.Setup(r => r.GetUserAsync(UserId, true)).ReturnsAsync((User?)null);
 
-            await _userService.RecordLastSeenAsync(UserId);
+            await _presenceService.RecordLastSeenAsync(UserId);
 
             _repository.Verify(r => r.SaveAsync(), Times.Never);
         }

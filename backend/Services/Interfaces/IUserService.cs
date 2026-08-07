@@ -15,7 +15,6 @@ namespace Services.Interfaces
         Task UpdateAsync(int id, UserForUpdateDto userDto);
         Task<PrivacySettingsDto> GetPrivacyAsync();
         Task<PrivacySettingsDto> UpdatePrivacyAsync(PrivacySettingsDto settings);
-        Task RecordLastSeenAsync(int userId);
         Task<(UserForUpdateDto userToPatch, User userEntity)> GetUserForPatchAsync(int id, bool trackChanges);
         Task SaveChangesForPatchAsync(UserForUpdateDto userToPatch, User userEntity);
         Task<IdentityResult> RegisterUser(UserForRegistrationDto userForRegistration);

@@ -25,7 +25,8 @@ namespace Vesty.Hubs
         public override async Task OnConnectedAsync()
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, CurrentUserGroup());
-            _presence.Connect(CurrentUserId());
+            if (_presence.Connect(CurrentUserId()))
+                await _service.Presence.AnnouncePresenceAsync(CurrentUserId(), isOnline: true);
             await base.OnConnectedAsync();
         }
 
@@ -35,7 +36,10 @@ namespace Vesty.Hubs
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, CurrentUserGroup());
 
             if (_presence.Disconnect(userId))
-                await _service.User.RecordLastSeenAsync(userId);
+            {
+                await _service.Presence.RecordLastSeenAsync(userId);
+                await _service.Presence.AnnouncePresenceAsync(userId, isOnline: false);
+            }
 
             await base.OnDisconnectedAsync(exception);
         }

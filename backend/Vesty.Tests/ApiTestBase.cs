@@ -1,6 +1,8 @@
 ﻿using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Microsoft.AspNetCore.SignalR.Client;
+using Vesty.Constants;
 using Entities.Models;
 using Services.DataTransferObjects;
 
@@ -76,6 +78,32 @@ namespace Vesty.Tests
             var updated = await client.PutAsJsonAsync("/api/User/privacy",
                 new { whoCanMessage, whoCanInvite, whoCanSeeProfile, whoCanSeeOnline });
             updated.EnsureSuccessStatusCode();
+        }
+
+        protected static string TokenOf(HttpClient client) =>
+            client.DefaultRequestHeaders.Authorization!.Parameter!;
+
+        protected HubConnection HubFor(HttpClient client)
+        {
+            var token = TokenOf(client);
+            return new HubConnectionBuilder()
+                .WithUrl(new Uri(Factory.Server.BaseAddress, HubRoutes.ChatHub), options =>
+                {
+                    options.HttpMessageHandlerFactory = _ => Factory.Server.CreateHandler();
+                    options.AccessTokenProvider = () => Task.FromResult<string?>(token);
+                })
+                .Build();
+        }
+
+        protected static async Task WaitUntil(Func<bool> ready, string what)
+        {
+            for (var attempt = 0; attempt < 60; attempt++)
+            {
+                if (ready()) return;
+                await Task.Delay(100);
+            }
+
+            Assert.Fail($"Timed out waiting until {what}");
         }
 
         protected static MultipartFormDataContent FileForm(
