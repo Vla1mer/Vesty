@@ -1,7 +1,7 @@
 import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { Smile } from "lucide-react";
 import { useTheme } from "../context/useTheme";
-import type { Theme } from "emoji-picker-react";
+import type { EmojiStyle, Theme } from "emoji-picker-react";
 
 const EmojiPicker = lazy(() => import("emoji-picker-react"));
 
@@ -43,7 +43,7 @@ export function EmojiPickerButton({
   }, [open]);
 
   return (
-    <div className="relative shrink-0">
+    <div className="relative flex shrink-0 items-center">
       <button
         ref={buttonRef}
         type="button"
@@ -75,7 +75,7 @@ export function EmojiPickerButton({
           >
             <EmojiPicker
               theme={(resolved === "dark" ? "dark" : "light") as Theme}
-              lazyLoadEmojis
+              emojiStyle={"native" as EmojiStyle}
               width={320}
               height={400}
               onEmojiClick={(selected) => {
