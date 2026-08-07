@@ -101,5 +101,31 @@ namespace Vesty.Tests
             Assert.Equal(2, members!.Count);
             Assert.Equal(UserRole.Owner, members.Single(m => m.UserId == hostId).RoleId);
         }
+
+        [Fact]
+        public async Task CreateChat_TrimsTheNameLikeRenamingDoes()
+        {
+            var host = await AuthenticatedClientAsync(UniqueName("trim1"));
+
+            var created = await host.PostAsJsonAsync("/api/Chat", new { name = "  Team  " });
+            Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+
+            var chat = await created.Content.ReadFromJsonAsync<ChatDto>();
+            Assert.Equal("Team", chat!.Name);
+        }
+
+        [Fact]
+        public async Task RenamedChat_KeepsTheSameTrimming()
+        {
+            var host = await AuthenticatedClientAsync(UniqueName("trim2"));
+            var chat = await CreateChatAsync(host, "Before");
+
+            var renamed = await host.PutAsJsonAsync($"/api/Chat/{chat.Id}",
+                new { name = "  After  ", description = (string?)null });
+            renamed.EnsureSuccessStatusCode();
+
+            var updated = await host.GetFromJsonAsync<ChatDto>($"/api/Chat/{chat.Id}");
+            Assert.Equal("After", updated!.Name);
+        }
     }
 }

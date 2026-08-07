@@ -73,6 +73,7 @@ namespace Services
                 await EnsureCanBeInvitedAsync(userId);
 
             var chat = _mapper.Map<Chat>(chatDto);
+            chat.Name = chatDto.Name.Trim();
             chat.CreatorId = currentUserId;
             chat.IsPrivate = false;
             _repository.Chat.CreateChat(chat);
