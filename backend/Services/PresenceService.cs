@@ -54,7 +54,7 @@ namespace Services
         public async Task AnnouncePresenceAsync(int userId, bool isOnline)
         {
             var user = await _repository.User.GetUserAsync(userId, trackChanges: false);
-            if (user is null)
+            if (user is null || user.WhoCanSeeOnline == PrivacyLevel.Nobody)
                 return;
 
             var partnerIds = (await _repository.ChatMember.GetChatPartnerIdsAsync(userId)).ToList();

@@ -3,9 +3,13 @@ import { useGetPresenceQuery } from "../store/presenceApi";
 import type { UserPresenceDto } from "../types/api";
 
 export function usePresence(userIds: number[]) {
+  const key = [...new Set(userIds.filter((id) => Number.isFinite(id)))]
+    .sort((a, b) => a - b)
+    .join(",");
+
   const wanted = useMemo(
-    () => [...new Set(userIds.filter((id) => Number.isFinite(id)))].sort((a, b) => a - b),
-    [userIds]
+    () => (key ? key.split(",").map(Number) : []),
+    [key]
   );
 
   const { data = [] } = useGetPresenceQuery(wanted, { skip: wanted.length === 0 });

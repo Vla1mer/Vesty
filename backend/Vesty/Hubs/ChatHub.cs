@@ -13,11 +13,14 @@ namespace Vesty.Hubs
 
         private readonly IServiceManager _service;
         private readonly IPresenceTracker _presence;
+        private readonly ILoggerManager _logger;
 
-        public ChatHub(IServiceManager service, IPresenceTracker presence)
+        public ChatHub(IServiceManager service, IPresenceTracker presence,
+            ILoggerManager logger)
         {
             _service = service;
             _presence = presence;
+            _logger = logger;
         }
 
         public static string UserGroup(int userId) => $"user-{userId}";
@@ -37,7 +40,14 @@ namespace Vesty.Hubs
 
             if (_presence.Disconnect(userId))
             {
-                await _service.Presence.RecordLastSeenAsync(userId);
+                try
+                {
+                    await _service.Presence.RecordLastSeenAsync(userId);
+                }
+                catch (Exception failure)
+                {
+                    _logger.LogError($"Could not record last seen for {userId}: {failure}");
+                }
 
                 if (!_presence.IsOnline(userId))
                     await _service.Presence.AnnouncePresenceAsync(userId, isOnline: false);

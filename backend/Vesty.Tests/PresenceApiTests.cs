@@ -98,6 +98,10 @@ namespace Vesty.Tests
 
             await Task.Delay(300);
             Assert.True(Presence.IsOnline(userId));
+
+            await kept.StopAsync();
+            await WaitUntil(() => !Presence.IsOnline(userId),
+                "closing the kept connection finally takes the user offline");
         }
 
         [Fact]

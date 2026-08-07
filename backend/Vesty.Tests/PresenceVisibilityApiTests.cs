@@ -1,4 +1,4 @@
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
 using Entities.Models;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
@@ -135,8 +135,12 @@ namespace Vesty.Tests
             await WaitUntil(() => !Presence.IsOnline(owner.Id), "the user shows as offline");
 
             var stranger = await AuthenticatedClientAsync(UniqueName("onl7b"));
-            var presence = await PresenceOfAsync(stranger, owner.Id);
+            await WaitUntil(
+                () => PresenceOfAsync(stranger, owner.Id).GetAwaiter().GetResult().LastSeenAt
+                    is not null,
+                "the last seen time reaches the api");
 
+            var presence = await PresenceOfAsync(stranger, owner.Id);
             Assert.False(presence.IsOnline);
             Assert.NotNull(presence.LastSeenAt);
         }
