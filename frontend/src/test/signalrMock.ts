@@ -16,6 +16,7 @@ export const signalrMock = {
   onFriendRequestReceived: vi.fn(noop),
   onFriendshipAccepted: vi.fn(noop),
   onFriendshipRemoved: vi.fn(noop),
+  onPresenceChanged: vi.fn(noop),
   onReconnected: vi.fn(noop),
   startConnection: vi.fn(async () => {}),
   stopConnection: vi.fn(async () => {}),

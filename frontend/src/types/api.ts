@@ -227,6 +227,12 @@ export const PRIVACY_LEVEL = {
   NOBODY: 3,
 } as const;
 
+export interface UserPresenceDto {
+  userId: number;
+  isOnline: boolean;
+  lastSeenAt?: string | null;
+}
+
 export interface PrivacySettingsDto {
   whoCanMessage: number;
   whoCanInvite: number;

@@ -78,6 +78,13 @@ function initialsOf(userName?: string, name?: string, surname?: string): string 
   return (userName?.[0] ?? "?").toUpperCase();
 }
 
+const DOT_SIZES: Record<AvatarSize, string> = {
+  sm: "w-2 h-2",
+  md: "w-2.5 h-2.5",
+  lg: "w-3 h-3",
+  xl: "w-5 h-5",
+};
+
 interface AvatarProps {
   userId: number;
   userName?: string;
@@ -85,6 +92,7 @@ interface AvatarProps {
   surname?: string;
   avatarUpdatedAt?: string | null;
   size?: AvatarSize;
+  online?: boolean;
   className?: string;
 }
 
@@ -95,9 +103,10 @@ export function Avatar({
   surname,
   avatarUpdatedAt,
   size = "md",
+  online = false,
   className = "",
 }: AvatarProps) {
-  return (
+  const picture = (
     <AvatarView
       src={avatarUpdatedAt ? avatarUrl(userId, avatarUpdatedAt) : undefined}
       fallbackText={initialsOf(userName, name, surname)}
@@ -106,6 +115,18 @@ export function Avatar({
       size={size}
       className={className}
     />
+  );
+
+  if (!online) return picture;
+
+  return (
+    <span className="relative inline-flex shrink-0">
+      {picture}
+      <span
+        aria-label={`${userName ?? "User"} is online`}
+        className={`absolute bottom-0 right-0 rounded-full border-2 border-surface bg-success ${DOT_SIZES[size]}`}
+      />
+    </span>
   );
 }
 

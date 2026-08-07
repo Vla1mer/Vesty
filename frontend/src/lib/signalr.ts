@@ -14,6 +14,7 @@ import type {
   MessagePinnedSignalrDto,
   UserTypingSignalrDto,
   FriendDto,
+  UserPresenceDto,
 } from "../types/api";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "https://localhost:7033";
@@ -45,6 +46,7 @@ const userTyping = createEvent<UserTypingSignalrDto>("UserTyping");
 const friendRequestReceived = createEvent<FriendDto>("FriendRequestReceived");
 const friendshipAccepted = createEvent<FriendDto>("FriendshipAccepted");
 const friendshipRemoved = createEvent<number>("FriendshipRemoved");
+const presenceChanged = createEvent<UserPresenceDto>("PresenceChanged");
 const reconnected = createEvent<void>("reconnected");
 
 function subscribe<T>(event: HubEvent<T>) {
@@ -69,6 +71,7 @@ export const onUserTyping = subscribe(userTyping);
 export const onFriendRequestReceived = subscribe(friendRequestReceived);
 export const onFriendshipAccepted = subscribe(friendshipAccepted);
 export const onFriendshipRemoved = subscribe(friendshipRemoved);
+export const onPresenceChanged = subscribe(presenceChanged);
 export const onReconnected = subscribe(reconnected);
 
 let connection: HubConnection | null = null;
@@ -98,6 +101,7 @@ function buildConnection(token: string): HubConnection {
   attach(conn, chatRenamed);
   attach(conn, chatUpdated);
   attach(conn, userTyping);
+  attach(conn, presenceChanged);
   attach(conn, friendRequestReceived);
   attach(conn, friendshipAccepted);
   attach(conn, friendshipRemoved);
