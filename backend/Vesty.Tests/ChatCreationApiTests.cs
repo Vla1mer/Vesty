@@ -115,6 +115,28 @@ namespace Vesty.Tests
         }
 
         [Fact]
+        public async Task CreateChat_RefusesAnAllWhitespaceName()
+        {
+            var host = await AuthenticatedClientAsync(UniqueName("trim3"));
+
+            var created = await host.PostAsJsonAsync("/api/Chat", new { name = "   " });
+
+            Assert.Equal(HttpStatusCode.UnprocessableEntity, created.StatusCode);
+        }
+
+        [Fact]
+        public async Task RenameChat_RefusesAnAllWhitespaceName()
+        {
+            var host = await AuthenticatedClientAsync(UniqueName("trim4"));
+            var chat = await CreateChatAsync(host, "Before");
+
+            var renamed = await host.PutAsJsonAsync($"/api/Chat/{chat.Id}",
+                new { name = "   ", description = (string?)null });
+
+            Assert.Equal(HttpStatusCode.UnprocessableEntity, renamed.StatusCode);
+        }
+
+        [Fact]
         public async Task RenamedChat_KeepsTheSameTrimming()
         {
             var host = await AuthenticatedClientAsync(UniqueName("trim2"));
