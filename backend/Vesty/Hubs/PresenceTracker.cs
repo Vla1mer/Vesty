@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using Services.Interfaces;
 
 namespace Vesty.Hubs
@@ -12,15 +12,21 @@ namespace Vesty.Hubs
 
         public bool Disconnect(int userId)
         {
-            if (!_connections.ContainsKey(userId))
-                return false;
+            while (true)
+            {
+                if (!_connections.TryGetValue(userId, out var open))
+                    return false;
 
-            var open = _connections.AddOrUpdate(userId, 0, (_, current) => Math.Max(current - 1, 0));
-            if (open > 0)
-                return false;
-
-            _connections.TryRemove(new KeyValuePair<int, int>(userId, 0));
-            return true;
+                if (open <= 1)
+                {
+                    if (_connections.TryRemove(new KeyValuePair<int, int>(userId, open)))
+                        return true;
+                }
+                else if (_connections.TryUpdate(userId, open - 1, open))
+                {
+                    return false;
+                }
+            }
         }
 
         public bool IsOnline(int userId) =>

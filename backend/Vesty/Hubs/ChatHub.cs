@@ -38,7 +38,9 @@ namespace Vesty.Hubs
             if (_presence.Disconnect(userId))
             {
                 await _service.Presence.RecordLastSeenAsync(userId);
-                await _service.Presence.AnnouncePresenceAsync(userId, isOnline: false);
+
+                if (!_presence.IsOnline(userId))
+                    await _service.Presence.AnnouncePresenceAsync(userId, isOnline: false);
             }
 
             await base.OnDisconnectedAsync(exception);

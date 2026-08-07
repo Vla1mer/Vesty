@@ -39,17 +39,6 @@ namespace Vesty.Tests
                 })
                 .Build();
 
-        private static async Task WaitUntil(Func<bool> ready, string what)
-        {
-            for (var attempt = 0; attempt < 60; attempt++)
-            {
-                if (ready()) return;
-                await Task.Delay(100);
-            }
-
-            Assert.Fail($"Timed out waiting until {what}");
-        }
-
         private DateTime? LastSeenOf(int userId)
         {
             using var scope = Factory.Services

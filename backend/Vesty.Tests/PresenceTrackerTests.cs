@@ -115,6 +115,19 @@ namespace Vesty.Tests
         }
 
         [Fact]
+        public async Task MoreDisconnectsThanConnections_StillReportOfflineOnce()
+        {
+            for (var i = 0; i < 10; i++)
+                _tracker.Connect(UserId);
+
+            var lasts = await Task.WhenAll(
+                Enumerable.Range(0, 40).Select(_ => Task.Run(() => _tracker.Disconnect(UserId))));
+
+            Assert.Single(lasts, last => last);
+            Assert.False(_tracker.IsOnline(UserId));
+        }
+
+        [Fact]
         public async Task ManyDisconnectsAtOnce_TakeTheUserOfflineExactlyOnce()
         {
             for (var i = 0; i < 50; i++)

@@ -25,7 +25,6 @@ export const presenceApi = apiSlice.injectEndpoints({
           }),
 
           onReconnected(() => {
-            dispatch(presenceApi.util.invalidateTags([]));
             dispatch(
               presenceApi.endpoints.getPresence.initiate(userIds, {
                 forceRefetch: true,
