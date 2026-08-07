@@ -2,6 +2,8 @@ import { useRef } from "react";
 import type { FormEvent, RefObject } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Paperclip, Pencil, Reply, X } from "lucide-react";
+import { EmojiPickerButton } from "./EmojiPickerButton";
+import { insertAtSelection } from "../utils/text";
 import { AttachmentDrafts } from "./AttachmentDrafts";
 import { FormError } from "./FormError";
 import { Button } from "./ui/Button";
@@ -10,6 +12,8 @@ import type { MessageDto } from "../types/api";
 import type { useAttachmentUploads } from "../hooks/useAttachmentUploads";
 
 type Attachments = ReturnType<typeof useAttachmentUploads>;
+
+const MESSAGE_LIMIT = 2000;
 
 interface Props {
   value: string;
@@ -124,6 +128,21 @@ export function MessageComposer({
           }}
           className="hidden"
         />
+        <EmojiPickerButton
+          disabled={busy || blocked}
+          onPick={(emoji) => {
+            const input = inputRef.current;
+            const start = input?.selectionStart ?? value.length;
+            const end = input?.selectionEnd ?? value.length;
+            const next = insertAtSelection(value, emoji, start, end, MESSAGE_LIMIT);
+
+            onChange(next.value);
+            requestAnimationFrame(() => {
+              input?.focus();
+              input?.setSelectionRange(next.caret, next.caret);
+            });
+          }}
+        />
         <TextInput
           ref={inputRef}
           type="text"
@@ -135,7 +154,7 @@ export function MessageComposer({
           placeholder={
             blocked ? "Unblock this user to send messages" : "Type a message..."
           }
-          maxLength={2000}
+          maxLength={MESSAGE_LIMIT}
           disabled={busy || blocked}
           className="flex-1"
         />
