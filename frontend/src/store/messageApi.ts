@@ -1,4 +1,5 @@
 import { apiSlice } from "./apiSlice";
+import { whileCached } from "./whileCached";
 import { endpoints } from "../api/endpoints";
 import { getCurrentUserId } from "../api/client";
 import { CHAT_API_TAGS, MESSAGE_API_TAGS, TAG_ID } from "../api/constants";
@@ -25,75 +26,54 @@ export const messageApi = apiSlice.injectEndpoints({
       providesTags: (_result, _error, chatId) => [
         { type: MESSAGE_API_TAGS.MESSAGE, id: chatId },
       ],
-      async onCacheEntryAdded(
-        chatId,
-        { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch }
-      ) {
-        const subscriptions: Array<() => void> = [];
-        try {
-          await cacheDataLoaded;
+      async onCacheEntryAdded(chatId, lifecycle) {
+        const { updateCachedData, dispatch } = lifecycle;
+        await whileCached(lifecycle, () => [
+          onMessageReceived((message) => {
+            if (message.chatId !== chatId) return;
+            updateCachedData((draft) => {
+              if (!draft.some((m) => m.id === message.id)) draft.push(message);
+            });
+          }),
 
-          subscriptions.push(
-            onMessageReceived((message) => {
-              if (message.chatId !== chatId) return;
-              updateCachedData((draft) => {
-                if (!draft.some((m) => m.id === message.id)) draft.push(message);
-              });
-            })
-          );
+          onMessageUpdated((message) => {
+            if (message.chatId !== chatId) return;
+            updateCachedData((draft) => {
+              const index = draft.findIndex((m) => m.id === message.id);
+              if (index !== -1) draft[index] = message;
+            });
+          }),
 
-          subscriptions.push(
-            onMessageUpdated((message) => {
-              if (message.chatId !== chatId) return;
-              updateCachedData((draft) => {
-                const index = draft.findIndex((m) => m.id === message.id);
-                if (index !== -1) draft[index] = message;
-              });
-            })
-          );
+          onMessageDeleted(({ chatId: eventChatId, messageId }) => {
+            if (eventChatId !== chatId) return;
+            updateCachedData((draft) => {
+              const index = draft.findIndex((m) => m.id === messageId);
+              if (index !== -1) draft.splice(index, 1);
+            });
+          }),
 
-          subscriptions.push(
-            onMessageDeleted(({ chatId: eventChatId, messageId }) => {
-              if (eventChatId !== chatId) return;
-              updateCachedData((draft) => {
-                const index = draft.findIndex((m) => m.id === messageId);
-                if (index !== -1) draft.splice(index, 1);
-              });
-            })
-          );
+          onMessageReactionsUpdated((event) => {
+            if (event.chatId !== chatId) return;
+            updateCachedData((draft) => {
+              const message = draft.find((m) => m.id === event.messageId);
+              if (message) message.reactions = event.reactions;
+            });
+          }),
 
-          subscriptions.push(
-            onMessageReactionsUpdated((event) => {
-              if (event.chatId !== chatId) return;
-              updateCachedData((draft) => {
-                const message = draft.find((m) => m.id === event.messageId);
-                if (message) message.reactions = event.reactions;
-              });
-            })
-          );
+          onMessagePinned((event) => {
+            if (event.chatId !== chatId) return;
+            updateCachedData((draft) => {
+              const message = draft.find((m) => m.id === event.messageId);
+              if (message) message.pinnedAt = event.pinnedAt ?? null;
+            });
+          }),
 
-          subscriptions.push(
-            onMessagePinned((event) => {
-              if (event.chatId !== chatId) return;
-              updateCachedData((draft) => {
-                const message = draft.find((m) => m.id === event.messageId);
-                if (message) message.pinnedAt = event.pinnedAt ?? null;
-              });
-            })
-          );
-
-          subscriptions.push(
-            onReconnected(() => {
-              dispatch(
-                apiSlice.util.invalidateTags([{ type: MESSAGE_API_TAGS.MESSAGE, id: chatId }])
-              );
-            })
-          );
-
-          await cacheEntryRemoved;
-        } finally {
-          subscriptions.forEach((unsubscribe) => unsubscribe());
-        }
+          onReconnected(() => {
+            dispatch(
+              apiSlice.util.invalidateTags([{ type: MESSAGE_API_TAGS.MESSAGE, id: chatId }])
+            );
+          }),
+        ]);
       },
     }),
 
