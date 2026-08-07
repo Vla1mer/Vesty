@@ -7,9 +7,10 @@ import { isDirectChat, type ChatDto } from "../types/api";
 
 interface Props {
   chat: ChatDto;
+  online?: boolean;
 }
 
-export function ChatListItem({ chat }: Props) {
+export function ChatListItem({ chat, online = false }: Props) {
   const { userId } = useAuth();
   const title = getChatDisplayName(chat);
 
@@ -33,6 +34,7 @@ export function ChatListItem({ chat }: Props) {
         <div className="flex items-center gap-3">
           {isDirectChat(chat) && chat.partnerUserId ? (
             <Avatar
+              online={online}
               userId={chat.partnerUserId}
               userName={chat.partnerUserName ?? undefined}
               avatarUpdatedAt={chat.partnerAvatarUpdatedAt}

@@ -1,4 +1,4 @@
-using Entities.Models;
+﻿using Entities.Models;
 using Microsoft.EntityFrameworkCore;
 using Repository.Interfaces;
 using Shared.RequestFeatures;
@@ -21,6 +21,23 @@ namespace Repository
             await FindByCondition(cm => cm.UserId == userId, trackChanges: false)
                 .Select(cm => cm.ChatId)
                 .ToListAsync();
+
+        public async Task<IEnumerable<int>> GetChatPartnerIdsAsync(int userId)
+        {
+            var chatIds = await FindByCondition(cm => cm.UserId == userId, trackChanges: false)
+                .Select(cm => cm.ChatId)
+                .ToListAsync();
+
+            if (chatIds.Count == 0)
+                return [];
+
+            return await FindByCondition(
+                cm => chatIds.Contains(cm.ChatId) && cm.UserId != userId,
+                trackChanges: false)
+                .Select(cm => cm.UserId)
+                .Distinct()
+                .ToListAsync();
+        }
 
         public async Task<Dictionary<int, DateTime>> GetClearedAtByChatIdsAsync(
             int userId, IEnumerable<int> chatIds) =>

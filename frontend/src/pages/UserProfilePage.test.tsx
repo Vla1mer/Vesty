@@ -37,6 +37,12 @@ function show(user: Partial<UserDto> = {}, id = OTHER) {
   return open(id);
 }
 
+function withPresence(isOnline: boolean, lastSeenAt: string | null, id = OTHER) {
+  stubJson("get", `/api/User/presence/(${id})`, [
+    { userId: id, isOnline, lastSeenAt },
+  ]);
+}
+
 describe("UserProfilePage", () => {
   beforeEach(() => {
     resetServer();
@@ -80,6 +86,31 @@ describe("UserProfilePage", () => {
 
     await screen.findByText("me");
     expect(screen.queryByRole("button", { name: /message/i })).toBeNull();
+  });
+
+  it("says when the person is online", async () => {
+    withPresence(true, null);
+    show();
+
+    expect(await screen.findByText("online")).toBeInTheDocument();
+  });
+
+  it("says when the person was last seen", async () => {
+    const today = new Date();
+    today.setHours(9, 5, 0, 0);
+    withPresence(false, today.toISOString());
+    show();
+
+    expect(await screen.findByText(/^last seen at /)).toBeInTheDocument();
+  });
+
+  it("says nothing when the status is hidden", async () => {
+    withPresence(false, null);
+    show();
+
+    await screen.findByText("petya");
+    expect(screen.queryByText("online")).toBeNull();
+    expect(screen.queryByText(/^last seen/)).toBeNull();
   });
 
   it("reports a missing user", async () => {

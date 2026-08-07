@@ -143,7 +143,8 @@ namespace Services
             {
                 WhoCanMessage = user.WhoCanMessage,
                 WhoCanInvite = user.WhoCanInvite,
-                WhoCanSeeProfile = user.WhoCanSeeProfile
+                WhoCanSeeProfile = user.WhoCanSeeProfile,
+                WhoCanSeeOnline = user.WhoCanSeeOnline
             };
         }
 
@@ -151,7 +152,8 @@ namespace Services
         {
             if (!PrivacyLevel.IsDefined(settings.WhoCanMessage) ||
                 !PrivacyLevel.IsDefined(settings.WhoCanInvite) ||
-                !PrivacyLevel.IsDefined(settings.WhoCanSeeProfile))
+                !PrivacyLevel.IsDefined(settings.WhoCanSeeProfile) ||
+                !PrivacyLevel.IsDefined(settings.WhoCanSeeOnline))
                 throw new InvalidPrivacyLevelException();
 
             var user = await _repository.User.GetUserAsync(_currentUser.UserId, trackChanges: true)
@@ -160,6 +162,7 @@ namespace Services
             user.WhoCanMessage = settings.WhoCanMessage;
             user.WhoCanInvite = settings.WhoCanInvite;
             user.WhoCanSeeProfile = settings.WhoCanSeeProfile;
+            user.WhoCanSeeOnline = settings.WhoCanSeeOnline;
             await _repository.SaveAsync();
 
             return settings;

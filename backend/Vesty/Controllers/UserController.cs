@@ -1,4 +1,4 @@
-using Vesty.ModelBinders;
+﻿using Vesty.ModelBinders;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
@@ -110,6 +110,16 @@ namespace Vesty.Controllers
         {
             var users = await _service.User.GetByIdsAsync(ids);
             return Ok(users);
+        }
+
+        [HttpGet("presence/({ids})", Name = "UserPresence")]
+        [ProducesResponseType(typeof(IEnumerable<UserPresenceDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> GetPresence(
+        [ModelBinder(BinderType = typeof(ArrayModelBinder))] IEnumerable<int> ids)
+        {
+            var presence = await _service.Presence.GetPresenceAsync(ids);
+            return Ok(presence);
         }
 
         [HttpPost("register/collection")]

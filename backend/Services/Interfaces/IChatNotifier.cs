@@ -16,5 +16,6 @@ namespace Services.Interfaces
         Task FriendRequestReceivedAsync(IEnumerable<int> recipientUserIds, FriendDto request);
         Task FriendshipAcceptedAsync(IEnumerable<int> recipientUserIds, FriendDto friend);
         Task FriendshipRemovedAsync(IEnumerable<int> recipientUserIds, int byUserId);
+        Task PresenceChangedAsync(IEnumerable<int> recipientUserIds, UserPresenceDto presence);
     }
 }

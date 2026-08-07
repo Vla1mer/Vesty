@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGetChatsQuery } from "../store/chatsApi";
 import { useGetUserByIdQuery } from "../store/userApi";
 import { useAuth } from "../context/useAuth";
 import { Avatar } from "../components/Avatar";
 import { ChatListItem } from "../components/ChatListItem";
+import { usePresence } from "../hooks/usePresence";
 import { CreateChatModal } from "../components/CreateChatModal";
 import { SelectUserModal } from "../components/SelectUserModal";
 import { MessageSquarePlus, MessagesSquare, User, Users } from "lucide-react";
@@ -17,6 +18,7 @@ import { FriendsModal } from "../components/FriendsModal";
 import { SideRail } from "../components/SideRail";
 import { useIsMobile } from "../hooks/useIsMobile";
 import { useIncomingFriendRequests } from "../hooks/useIncomingFriendRequests";
+import { isDirectChat } from "../types/api";
 import { BottomNav } from "../components/BottomNav";
 import { FormError } from "../components/FormError";
 import { AnimatePresence, motion } from "framer-motion";
@@ -34,6 +36,16 @@ export function ChatsPage({ isResizing = false }: Props) {
     skip: userId === null,
   });
   const { data: chats = [], isLoading, isError } = useGetChatsQuery();
+  const presence = usePresence(
+    useMemo(
+      () =>
+        chats
+          .filter(isDirectChat)
+          .map((chat) => chat.partnerUserId)
+          .filter((id): id is number => id !== undefined),
+      [chats]
+    )
+  );
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isSelectUserOpen, setIsSelectUserOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -157,7 +169,14 @@ export function ChatsPage({ isResizing = false }: Props) {
                       exit={{ opacity: 0, height: 0 }}
                       transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
                     >
-                      <ChatListItem chat={chat} />
+                      <ChatListItem
+                        chat={chat}
+                        online={
+                          isDirectChat(chat) && chat.partnerUserId
+                            ? presence.isOnline(chat.partnerUserId)
+                            : false
+                        }
+                      />
                     </motion.div>
                   ))}
                 </AnimatePresence>

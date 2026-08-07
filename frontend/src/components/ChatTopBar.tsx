@@ -1,5 +1,7 @@
 import { ArrowLeft, ChevronRight, Copy, Pencil, Pin, Trash2, X } from "lucide-react";
 import { Avatar, ChatAvatar } from "./Avatar";
+import { usePresence } from "../hooks/usePresence";
+import { formatLastSeen } from "../utils/date";
 import { isDirectChat } from "../types/api";
 import type { ChatDto, MessageDto } from "../types/api";
 
@@ -47,6 +49,10 @@ export function ChatTopBar({
   selection,
   pinned,
 }: Props) {
+  const partnerId = chat && isDirectChat(chat) ? chat.partnerUserId : undefined;
+  const presence = usePresence(partnerId ? [partnerId] : []);
+  const partnerLastSeen = partnerId ? presence.lastSeenAt(partnerId) : null;
+
   const showPinned = pinned.message && !selection.mode;
 
   return (
@@ -73,6 +79,7 @@ export function ChatTopBar({
             {chat &&
               (isDirectChat(chat) && chat.partnerUserId ? (
                 <Avatar
+                  online={presence.isOnline(chat.partnerUserId)}
                   userId={chat.partnerUserId}
                   userName={chat.partnerUserName ?? undefined}
                   avatarUpdatedAt={chat.partnerAvatarUpdatedAt}
@@ -97,6 +104,12 @@ export function ChatTopBar({
                     {memberCount > 0
                       ? `${memberCount} ${memberCount === 1 ? "member" : "members"}`
                       : "Loading..."}
+                  </p>
+                ) : partnerId && presence.isOnline(partnerId) ? (
+                  <p className="text-xs text-success">online</p>
+                ) : partnerLastSeen ? (
+                  <p className="text-xs text-content-muted">
+                    {formatLastSeen(partnerLastSeen)}
                   </p>
                 ) : null)}
             </div>

@@ -34,7 +34,11 @@ function member(userId: number, userName: string, roleId: number) {
   } as ChatMemberWithRoleDto;
 }
 
-function open() {
+function open(online: number[] = []) {
+  stubJson("get", `/api/User/presence/(${[ME, 7].join(",")})`, [
+    { userId: ME, isOnline: online.includes(ME), lastSeenAt: null },
+    { userId: 7, isOnline: online.includes(7), lastSeenAt: null },
+  ]);
   stubJson("get", `/api/Chat/${CHAT_ID}/users`, [
     member(ME, "me", UserRole.Owner),
     member(7, "petya", UserRole.User),
@@ -46,7 +50,6 @@ function open() {
         path="/chats/:id/info"
         element={<ChatInfoContent chat={GROUP} onOpenSettings={vi.fn()} />}
       />
-      <Route path="/users/:userId" element={<p>profile screen</p>} />
     </Routes>,
     { route: `/chats/${CHAT_ID}/info` }
   );
@@ -65,13 +68,34 @@ describe("ChatInfoContent", () => {
     expect(await screen.findByText("petya")).toBeInTheDocument();
   });
 
+  it("marks a member who is online", async () => {
+    open([7]);
+
+    expect(await screen.findByLabelText("petya is online")).toBeInTheDocument();
+    expect(screen.queryByLabelText("me is online")).toBeNull();
+  });
+
+  it("leaves everyone unmarked when nobody is online", async () => {
+    open();
+
+    await screen.findByText("petya");
+    expect(screen.queryByLabelText("petya is online")).toBeNull();
+  });
+
   it("opens the profile of a member", async () => {
+    stubJson("get", "/api/User/7", {
+      id: 7,
+      userName: "petya",
+      name: "Petya",
+      surname: "Ivanov",
+      avatarUpdatedAt: null,
+    });
     open();
 
     await userEvent.click(
       await screen.findByRole("button", { name: "Open the profile of petya" })
     );
 
-    expect(await screen.findByText("profile screen")).toBeInTheDocument();
+    expect(await screen.findByText("Petya Ivanov")).toBeInTheDocument();
   });
 });

@@ -145,7 +145,8 @@ namespace Vesty.Tests
                 {
                     whoCanMessage = PrivacyLevel.Everyone,
                     whoCanInvite = PrivacyLevel.Nobody,
-                    whoCanSeeProfile = PrivacyLevel.Everyone
+                    whoCanSeeProfile = PrivacyLevel.Everyone,
+                    whoCanSeeOnline = PrivacyLevel.Everyone
                 }))
                 .EnsureSuccessStatusCode();
 

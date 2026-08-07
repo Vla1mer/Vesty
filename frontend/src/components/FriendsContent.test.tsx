@@ -26,7 +26,6 @@ function open(friends: FriendDto[] = [PETYA]) {
   return renderWithProviders(
     <Routes>
       <Route path="/friends" element={<FriendsContent />} />
-      <Route path="/users/:userId" element={<p>profile screen</p>} />
     </Routes>,
     { route: "/friends" }
   );
@@ -47,12 +46,19 @@ describe("FriendsContent", () => {
   });
 
   it("opens the profile of a friend", async () => {
+    stubJson("get", "/api/User/7", {
+      id: 7,
+      userName: "petya",
+      name: "Petya",
+      surname: "Ivanov",
+      avatarUpdatedAt: null,
+    });
     open();
 
     await userEvent.click(
       await screen.findByRole("button", { name: "Open the profile of petya" })
     );
 
-    expect(await screen.findByText("profile screen")).toBeInTheDocument();
+    expect(await screen.findAllByText("Petya Ivanov")).not.toHaveLength(0);
   });
 });

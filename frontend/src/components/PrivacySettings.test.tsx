@@ -10,6 +10,7 @@ const STORED = {
   whoCanMessage: PRIVACY_LEVEL.EVERYONE,
   whoCanInvite: PRIVACY_LEVEL.FRIENDS_ONLY,
   whoCanSeeProfile: PRIVACY_LEVEL.NOBODY,
+  whoCanSeeOnline: PRIVACY_LEVEL.FRIENDS_ONLY,
 };
 
 function sentPrivacy() {
@@ -38,6 +39,7 @@ describe("PrivacySettings", () => {
     expect(await screen.findByText("Who can message me")).toBeInTheDocument();
     expect(screen.getByText("Who can add me to groups")).toBeInTheDocument();
     expect(screen.getByText("Who can see my profile")).toBeInTheDocument();
+    expect(screen.getByText("Who can see when I am online")).toBeInTheDocument();
   });
 
   it("marks the stored level of each question", async () => {
@@ -57,6 +59,9 @@ describe("PrivacySettings", () => {
       "aria-pressed",
       "true"
     );
+    expect(
+      choice("Who can see when I am online", "Friends only")
+    ).toHaveAttribute("aria-pressed", "true");
   });
 
   it("sends every level when one of them changes", async () => {
@@ -70,6 +75,7 @@ describe("PrivacySettings", () => {
       whoCanMessage: PRIVACY_LEVEL.EVERYONE,
       whoCanInvite: PRIVACY_LEVEL.FRIENDS_ONLY,
       whoCanSeeProfile: PRIVACY_LEVEL.EVERYONE,
+      whoCanSeeOnline: PRIVACY_LEVEL.FRIENDS_ONLY,
     });
   });
 
@@ -84,6 +90,22 @@ describe("PrivacySettings", () => {
       whoCanMessage: PRIVACY_LEVEL.FRIENDS_ONLY,
       whoCanInvite: PRIVACY_LEVEL.FRIENDS_ONLY,
       whoCanSeeProfile: PRIVACY_LEVEL.NOBODY,
+      whoCanSeeOnline: PRIVACY_LEVEL.FRIENDS_ONLY,
+    });
+  });
+
+  it("saves a new online visibility", async () => {
+    renderWithProviders(<PrivacySettings />);
+
+    await screen.findByText("Who can see when I am online");
+    await userEvent.click(choice("Who can see when I am online", "Nobody"));
+
+    await waitFor(() => expect(sentPrivacy()).toBeDefined());
+    expect(sentPrivacy()).toEqual({
+      whoCanMessage: PRIVACY_LEVEL.EVERYONE,
+      whoCanInvite: PRIVACY_LEVEL.FRIENDS_ONLY,
+      whoCanSeeProfile: PRIVACY_LEVEL.NOBODY,
+      whoCanSeeOnline: PRIVACY_LEVEL.NOBODY,
     });
   });
 

@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Ban, Check, Clock, MessageSquare, Search, UserPlus, UserX, X } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useUserProfile } from "../hooks/useUserProfile";
 import { useSearchUsersQuery } from "../store/userApi";
 import { useBlockWithChatPrompt } from "../hooks/useBlockWithChatPrompt";
 import { ConfirmDialog } from "./ConfirmDialog";
@@ -28,10 +29,10 @@ function displayName(friend: FriendDto): string {
 interface RowProps {
   friend: FriendDto;
   actions: React.ReactNode;
+  onOpenProfile: (userId: number) => void;
 }
 
-function FriendRow({ friend, actions }: RowProps) {
-  const navigate = useNavigate();
+function FriendRow({ friend, actions, onOpenProfile }: RowProps) {
 
   return (
     <motion.li
@@ -44,7 +45,7 @@ function FriendRow({ friend, actions }: RowProps) {
     >
       <button
         type="button"
-        onClick={() => navigate(`/users/${friend.userId}`)}
+        onClick={() => onOpenProfile(friend.userId)}
         aria-label={`Open the profile of ${friend.userName}`}
         className="flex min-w-0 flex-1 items-center gap-3 rounded text-left transition hover:opacity-80"
       >
@@ -70,6 +71,7 @@ function FriendRow({ friend, actions }: RowProps) {
 
 export function FriendsContent() {
   const navigate = useNavigate();
+  const profile = useUserProfile();
   const { userId } = useAuth();
   const [search, setSearch] = useState("");
   const term = search.trim();
@@ -155,7 +157,7 @@ export function FriendsContent() {
                 >
                   <button
                     type="button"
-                    onClick={() => navigate(`/users/${user.id}`)}
+                    onClick={() => profile.open(user.id)}
                     aria-label={`Open the profile of ${user.userName}`}
                     className="flex min-w-0 flex-1 items-center gap-3 rounded text-left transition hover:opacity-80"
                   >
@@ -210,6 +212,7 @@ export function FriendsContent() {
             <AnimatePresence initial={false}>
               {incoming.map((request) => (
                 <FriendRow
+                  onOpenProfile={profile.open}
                   key={request.userId}
                   friend={request}
                   actions={
@@ -247,6 +250,7 @@ export function FriendsContent() {
             <AnimatePresence initial={false}>
               {outgoing.map((request) => (
                 <FriendRow
+                  onOpenProfile={profile.open}
                   key={request.userId}
                   friend={request}
                   actions={
@@ -285,6 +289,7 @@ export function FriendsContent() {
             <AnimatePresence initial={false}>
               {friends.map((friend) => (
                 <FriendRow
+                  onOpenProfile={profile.open}
                   key={friend.userId}
                   friend={friend}
                   actions={
@@ -326,6 +331,8 @@ export function FriendsContent() {
           </ul>
         )}
       </section>
+
+      <AnimatePresence>{profile.modal}</AnimatePresence>
     </div>
   );
 }
