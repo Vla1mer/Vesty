@@ -16,6 +16,7 @@
     "@reduxjs/toolkit": "^2.12.0",
     "axios": "^1.16.1",
     "date-fns": "^4.4.0",
+    "emoji-picker-react": "^4.19.1",
     "formik": "^2.4.9",
     "framer-motion": "^12.43.0",
     "lucide-react": "^1.27.0",
