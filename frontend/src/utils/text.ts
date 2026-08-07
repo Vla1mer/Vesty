@@ -13,8 +13,8 @@ export function insertAtSelection(
   const from = Math.max(0, Math.min(start, end, value.length));
   const to = Math.max(0, Math.min(Math.max(start, end), value.length));
 
-  const next = (value.slice(0, from) + insert + value.slice(to)).slice(0, maxLength);
-  const caret = Math.min(from + insert.length, next.length);
+  const next = value.slice(0, from) + insert + value.slice(to);
+  if (next.length > maxLength) return { value, caret: to };
 
-  return { value: next, caret };
+  return { value: next, caret: from + insert.length };
 }

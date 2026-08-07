@@ -49,6 +49,7 @@ export function MessageComposer({
   blocked,
 }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const selectionRef = useRef({ start: 0, end: 0 });
 
   return (
     <div className="relative border-t border-line bg-surface sticky bottom-0">
@@ -130,10 +131,16 @@ export function MessageComposer({
         />
         <EmojiPickerButton
           disabled={busy || blocked}
+          onBeforeOpen={() => {
+            const field = inputRef.current;
+            selectionRef.current = {
+              start: field?.selectionStart ?? value.length,
+              end: field?.selectionEnd ?? value.length,
+            };
+          }}
           onPick={(emoji) => {
             const input = inputRef.current;
-            const start = input?.selectionStart ?? value.length;
-            const end = input?.selectionEnd ?? value.length;
+            const { start, end } = selectionRef.current;
             const next = insertAtSelection(value, emoji, start, end, MESSAGE_LIMIT);
 
             onChange(next.value);

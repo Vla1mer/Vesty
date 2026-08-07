@@ -7,10 +7,15 @@ const EmojiPicker = lazy(() => import("emoji-picker-react"));
 
 interface Props {
   disabled?: boolean;
+  onBeforeOpen?: () => void;
   onPick: (emoji: string) => void;
 }
 
-export function EmojiPickerButton({ disabled = false, onPick }: Props) {
+export function EmojiPickerButton({
+  disabled = false,
+  onBeforeOpen,
+  onPick,
+}: Props) {
   const { resolved } = useTheme();
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -43,6 +48,10 @@ export function EmojiPickerButton({ disabled = false, onPick }: Props) {
         ref={buttonRef}
         type="button"
         disabled={disabled}
+        onMouseDown={(e) => {
+          e.preventDefault();
+          onBeforeOpen?.();
+        }}
         onClick={() => setOpen((prev) => !prev)}
         aria-label="Insert emoji"
         aria-expanded={open}
