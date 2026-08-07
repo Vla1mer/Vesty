@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Services.DataTransferObjects;
@@ -12,10 +12,12 @@ namespace Vesty.Hubs
         public const string UserTyping = "UserTyping";
 
         private readonly IServiceManager _service;
+        private readonly IPresenceTracker _presence;
 
-        public ChatHub(IServiceManager service)
+        public ChatHub(IServiceManager service, IPresenceTracker presence)
         {
             _service = service;
+            _presence = presence;
         }
 
         public static string UserGroup(int userId) => $"user-{userId}";
@@ -23,12 +25,18 @@ namespace Vesty.Hubs
         public override async Task OnConnectedAsync()
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, CurrentUserGroup());
+            _presence.Connect(CurrentUserId());
             await base.OnConnectedAsync();
         }
 
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
+            var userId = CurrentUserId();
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, CurrentUserGroup());
+
+            if (_presence.Disconnect(userId))
+                await _service.User.RecordLastSeenAsync(userId);
+
             await base.OnDisconnectedAsync(exception);
         }
 

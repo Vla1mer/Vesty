@@ -36,6 +36,7 @@ namespace Vesty.Extensions
         {
             services.AddSignalR();
             services.AddScoped<IChatNotifier, ChatNotifier>();
+            services.AddSingleton<IPresenceTracker, PresenceTracker>();
         }
 
         public static void ConfigureIISIntegration(this IServiceCollection services) =>

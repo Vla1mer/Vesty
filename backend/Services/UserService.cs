@@ -168,6 +168,16 @@ namespace Services
             return settings;
         }
 
+        public async Task RecordLastSeenAsync(int userId)
+        {
+            var user = await _repository.User.GetUserAsync(userId, trackChanges: true);
+            if (user is null)
+                return;
+
+            user.LastSeenAt = DateTime.UtcNow;
+            await _repository.SaveAsync();
+        }
+
         public async Task UpdateAsync(int id, UserForUpdateDto userDto)
         {
             if (id != _currentUser.UserId)
