@@ -98,6 +98,14 @@ export function PrivacySettings() {
         onChange={(whoCanInvite) => save({ whoCanInvite })}
       />
 
+      <Choice
+        title="Who can see my profile"
+        description="Hidden profiles still show the username, but not the name."
+        value={settings.whoCanSeeProfile}
+        disabled={saving}
+        onChange={(whoCanSeeProfile) => save({ whoCanSeeProfile })}
+      />
+
       {saveFailed && <FormError message="Could not save privacy settings" />}
     </section>
   );

@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using AutoMapper;
 using Entities.Models;
 using Moq;
 using Repository.Interfaces;
@@ -203,21 +203,25 @@ namespace Vesty.Tests
 
 
         [Theory]
-        [InlineData(0, PrivacyLevel.Everyone)]
-        [InlineData(PrivacyLevel.Everyone, 4)]
-        [InlineData(-1, -1)]
-        public async Task UpdatePrivacyAsync_WithUnknownLevel_Throws(int message, int invite)
+        [InlineData(0, PrivacyLevel.Everyone, PrivacyLevel.Everyone)]
+        [InlineData(PrivacyLevel.Everyone, 4, PrivacyLevel.Everyone)]
+        [InlineData(PrivacyLevel.Everyone, PrivacyLevel.Everyone, 0)]
+        [InlineData(PrivacyLevel.Everyone, PrivacyLevel.Everyone, 4)]
+        [InlineData(-1, -1, -1)]
+        public async Task UpdatePrivacyAsync_WithUnknownLevel_Throws(
+            int message, int invite, int profile)
         {
             await Assert.ThrowsAsync<InvalidPrivacyLevelException>(() =>
                 _userService.UpdatePrivacyAsync(new PrivacySettingsDto
                 {
                     WhoCanMessage = message,
-                    WhoCanInvite = invite
+                    WhoCanInvite = invite,
+                    WhoCanSeeProfile = profile
                 }));
         }
 
         [Fact]
-        public async Task UpdatePrivacyAsync_StoresBothLevels()
+        public async Task UpdatePrivacyAsync_StoresEveryLevel()
         {
             var user = new User { Id = CurrentUserId, UserName = "me" };
             _users.Setup(r => r.GetUserAsync(CurrentUserId, true)).ReturnsAsync(user);
@@ -225,11 +229,13 @@ namespace Vesty.Tests
             await _userService.UpdatePrivacyAsync(new PrivacySettingsDto
             {
                 WhoCanMessage = PrivacyLevel.FriendsOnly,
-                WhoCanInvite = PrivacyLevel.Nobody
+                WhoCanInvite = PrivacyLevel.Nobody,
+                WhoCanSeeProfile = PrivacyLevel.FriendsOnly
             });
 
             Assert.Equal(PrivacyLevel.FriendsOnly, user.WhoCanMessage);
             Assert.Equal(PrivacyLevel.Nobody, user.WhoCanInvite);
+            Assert.Equal(PrivacyLevel.FriendsOnly, user.WhoCanSeeProfile);
             _repository.Verify(r => r.SaveAsync(), Times.Once);
         }
 
@@ -242,13 +248,15 @@ namespace Vesty.Tests
                     Id = CurrentUserId,
                     UserName = "me",
                     WhoCanMessage = PrivacyLevel.Nobody,
-                    WhoCanInvite = PrivacyLevel.FriendsOnly
+                    WhoCanInvite = PrivacyLevel.FriendsOnly,
+                    WhoCanSeeProfile = PrivacyLevel.Nobody
                 });
 
             var settings = await _userService.GetPrivacyAsync();
 
             Assert.Equal(PrivacyLevel.Nobody, settings.WhoCanMessage);
             Assert.Equal(PrivacyLevel.FriendsOnly, settings.WhoCanInvite);
+            Assert.Equal(PrivacyLevel.Nobody, settings.WhoCanSeeProfile);
         }
     }
 }

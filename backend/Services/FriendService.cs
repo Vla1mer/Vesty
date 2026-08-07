@@ -1,4 +1,4 @@
-using Entities.Models;
+﻿using Entities.Models;
 using Repository.Interfaces;
 using Services.DataTransferObjects;
 using Services.Interfaces;
@@ -175,17 +175,27 @@ namespace Services
             var isIncoming = friendship.AddresseeId == currentUserId;
             var other = isIncoming ? friendship.Requester : friendship.Addressee;
 
+            var visible = CanSeeProfile(other, friendship.Status == Friendship.Accepted);
+
             return new FriendDto
             {
                 UserId = other.Id,
                 UserName = other.UserName!,
-                Name = other.Name,
-                Surname = other.Surname,
+                Name = visible ? other.Name : null,
+                Surname = visible ? other.Surname : null,
                 AvatarUpdatedAt = other.AvatarUpdatedAt,
                 Status = friendship.Status,
                 IsIncoming = isIncoming,
                 CreatedAt = friendship.CreatedAt
             };
+        }
+
+        private static bool CanSeeProfile(User other, bool areFriends)
+        {
+            if (other.WhoCanSeeProfile == PrivacyLevel.Everyone)
+                return true;
+
+            return other.WhoCanSeeProfile == PrivacyLevel.FriendsOnly && areFriends;
         }
 
         private async Task EnsureUserExistsAsync(int userId)

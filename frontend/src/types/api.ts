@@ -25,6 +25,7 @@ export interface UserDto {
   phone?: string;
   birthday?: string;
   avatarUpdatedAt?: string | null;
+  isProfileHidden?: boolean;
 }
 
 export interface UserForUpdateDto {
@@ -229,6 +230,7 @@ export const PRIVACY_LEVEL = {
 export interface PrivacySettingsDto {
   whoCanMessage: number;
   whoCanInvite: number;
+  whoCanSeeProfile: number;
 }
 
 export interface BlockedUserDto {

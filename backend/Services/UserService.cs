@@ -1,4 +1,4 @@
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using AutoMapper;
@@ -41,11 +41,12 @@ namespace Services
             if (!userParameters.ValidBirthdayRange)
                 throw new MaxBirthdayRangeBadRequestException();
 
-            userParameters.ExcludedUserIds =
+            var blockedIds =
                 (await _repository.UserBlock.GetRelatedUserIdsAsync(_currentUser.UserId)).ToList();
+            userParameters.ExcludedUserIds = blockedIds;
 
             var usersWithMetaData = await _repository.User.GetAllUsersAsync(userParameters, trackChanges: false);
-            var usersDto = _mapper.Map<IEnumerable<UserDto>>(usersWithMetaData);
+            var usersDto = await MaskProfilesAsync(usersWithMetaData, blockedIds);
             return (users: usersDto, metaData: usersWithMetaData.MetaData);
         }
 
@@ -54,7 +55,41 @@ namespace Services
             var user = await _repository.User.GetUserAsync(id, trackChanges: false);
             if (user is null)
                 throw new UserNotFoundException(id);
-            return _mapper.Map<UserDto>(user);
+
+            return (await MaskProfilesAsync(new[] { user })).Single();
+        }
+
+        private async Task<List<UserDto>> MaskProfilesAsync(
+            IReadOnlyCollection<User> users, IEnumerable<int>? knownBlockedIds = null)
+        {
+            var currentUserId = _currentUser.UserId;
+            var others = users.Where(u => u.Id != currentUserId).ToList();
+
+            var blocked = knownBlockedIds is not null
+                ? knownBlockedIds.ToHashSet()
+                : others.Count > 0
+                    ? (await _repository.UserBlock.GetRelatedUserIdsAsync(currentUserId)).ToHashSet()
+                    : new HashSet<int>();
+
+            var friends = others.Any(u => u.WhoCanSeeProfile == PrivacyLevel.FriendsOnly)
+                ? (await _repository.Friendship.GetFriendIdsAsync(currentUserId)).ToHashSet()
+                : new HashSet<int>();
+
+            return users.Select(user =>
+            {
+                var dto = _mapper.Map<UserDto>(user);
+                if (user.Id == currentUserId)
+                    return dto;
+
+                var visible = !blocked.Contains(user.Id) &&
+                    (user.WhoCanSeeProfile == PrivacyLevel.Everyone ||
+                     (user.WhoCanSeeProfile == PrivacyLevel.FriendsOnly &&
+                      friends.Contains(user.Id)));
+
+                return visible
+                    ? dto with { Phone = null }
+                    : dto with { Phone = null, Name = null, Surname = null, IsProfileHidden = true };
+            }).ToList();
         }
 
         public async Task<IEnumerable<UserDto>> GetByIdsAsync(IEnumerable<int> ids)
@@ -64,7 +99,7 @@ namespace Services
             var users = await _repository.User.GetByIdsAsync(ids, trackChanges: false);
             if (ids.Count() != users.Count())
                 throw new CollectionByIdsBadRequestException();
-            return _mapper.Map<IEnumerable<UserDto>>(users);
+            return await MaskProfilesAsync(users.ToList());
         }
 
         public async Task<(IEnumerable<UserDto> users, string ids)> RegisterUserCollectionAsync(IEnumerable<UserForRegistrationDto> userCollection)
@@ -107,14 +142,16 @@ namespace Services
             return new PrivacySettingsDto
             {
                 WhoCanMessage = user.WhoCanMessage,
-                WhoCanInvite = user.WhoCanInvite
+                WhoCanInvite = user.WhoCanInvite,
+                WhoCanSeeProfile = user.WhoCanSeeProfile
             };
         }
 
         public async Task<PrivacySettingsDto> UpdatePrivacyAsync(PrivacySettingsDto settings)
         {
             if (!PrivacyLevel.IsDefined(settings.WhoCanMessage) ||
-                !PrivacyLevel.IsDefined(settings.WhoCanInvite))
+                !PrivacyLevel.IsDefined(settings.WhoCanInvite) ||
+                !PrivacyLevel.IsDefined(settings.WhoCanSeeProfile))
                 throw new InvalidPrivacyLevelException();
 
             var user = await _repository.User.GetUserAsync(_currentUser.UserId, trackChanges: true)
@@ -122,6 +159,7 @@ namespace Services
 
             user.WhoCanMessage = settings.WhoCanMessage;
             user.WhoCanInvite = settings.WhoCanInvite;
+            user.WhoCanSeeProfile = settings.WhoCanSeeProfile;
             await _repository.SaveAsync();
 
             return settings;
