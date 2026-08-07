@@ -231,6 +231,7 @@ export interface PrivacySettingsDto {
   whoCanMessage: number;
   whoCanInvite: number;
   whoCanSeeProfile: number;
+  whoCanSeeOnline: number;
 }
 
 export interface BlockedUserDto {

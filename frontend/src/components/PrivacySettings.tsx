@@ -106,6 +106,14 @@ export function PrivacySettings() {
         onChange={(whoCanSeeProfile) => save({ whoCanSeeProfile })}
       />
 
+      <Choice
+        title="Who can see when I am online"
+        description="Also hides when you were last seen."
+        value={settings.whoCanSeeOnline}
+        disabled={saving}
+        onChange={(whoCanSeeOnline) => save({ whoCanSeeOnline })}
+      />
+
       {saveFailed && <FormError message="Could not save privacy settings" />}
     </section>
   );
