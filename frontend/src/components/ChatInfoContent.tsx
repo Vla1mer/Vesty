@@ -2,7 +2,6 @@ import { Settings, X } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   useGetChatMembersQuery,
   useAddChatMemberMutation,
@@ -12,6 +11,7 @@ import { useGetAllUsersQuery } from "../store/userApi";
 import { useAuth } from "../context/useAuth";
 import { Avatar, ChatAvatar } from "./Avatar";
 import { usePresence } from "../hooks/usePresence";
+import { useUserProfile } from "../hooks/useUserProfile";
 import { Button } from "./ui/Button";
 import { TextInput } from "./ui/TextInput";
 import { UserRole } from "../types/api";
@@ -34,7 +34,6 @@ interface Props {
 
 export function ChatInfoContent({ chat, onOpenSettings, onBusyChange }: Props) {
   const { userId: currentUserId } = useAuth();
-  const navigate = useNavigate();
   const [addChatMember] = useAddChatMemberMutation();
   const [removeChatMember] = useRemoveChatMemberMutation();
   const [search, setSearch] = useState("");
@@ -90,6 +89,7 @@ export function ChatInfoContent({ chat, onOpenSettings, onBusyChange }: Props) {
   );
 
   const presence = usePresence(useMemo(() => members.map((m) => m.userId), [members]));
+  const profile = useUserProfile();
 
   const filteredCandidates = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -179,7 +179,7 @@ export function ChatInfoContent({ chat, onOpenSettings, onBusyChange }: Props) {
                   >
                     <button
                       type="button"
-                      onClick={() => navigate(`/users/${m.userId}`)}
+                      onClick={() => profile.open(m.userId)}
                       aria-label={`Open the profile of ${m.userName}`}
                       className="flex min-w-0 items-center gap-2.5 rounded text-left transition hover:opacity-80"
                     >
@@ -320,6 +320,8 @@ export function ChatInfoContent({ chat, onOpenSettings, onBusyChange }: Props) {
           />
         )}
       </AnimatePresence>
+
+      <AnimatePresence>{profile.modal}</AnimatePresence>
     </>
   );
 }

@@ -20,7 +20,7 @@ export function UserProfileContent({ user }: Props) {
   const fullName = [user.name, user.surname].filter(Boolean).join(" ");
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto w-full max-w-sm space-y-6">
       <div className="flex flex-col items-center gap-3 text-center">
         <Avatar
           online={presence.isOnline(user.id)}
@@ -56,10 +56,12 @@ export function UserProfileContent({ user }: Props) {
       )}
 
       {!isMe && (
-        <Button fullWidth onClick={() => navigate(`/chats/new/${user.id}`)}>
-          <MessageSquare size={16} aria-hidden="true" />
-          Message
-        </Button>
+        <div className="flex justify-center">
+          <Button onClick={() => navigate(`/chats/new/${user.id}`)} className="px-6">
+            <MessageSquare size={16} aria-hidden="true" />
+            Message
+          </Button>
+        </div>
       )}
     </div>
   );

@@ -50,7 +50,6 @@ function open(online: number[] = []) {
         path="/chats/:id/info"
         element={<ChatInfoContent chat={GROUP} onOpenSettings={vi.fn()} />}
       />
-      <Route path="/users/:userId" element={<p>profile screen</p>} />
     </Routes>,
     { route: `/chats/${CHAT_ID}/info` }
   );
@@ -84,12 +83,19 @@ describe("ChatInfoContent", () => {
   });
 
   it("opens the profile of a member", async () => {
+    stubJson("get", "/api/User/7", {
+      id: 7,
+      userName: "petya",
+      name: "Petya",
+      surname: "Ivanov",
+      avatarUpdatedAt: null,
+    });
     open();
 
     await userEvent.click(
       await screen.findByRole("button", { name: "Open the profile of petya" })
     );
 
-    expect(await screen.findByText("profile screen")).toBeInTheDocument();
+    expect(await screen.findByText("Petya Ivanov")).toBeInTheDocument();
   });
 });
