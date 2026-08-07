@@ -5,6 +5,8 @@ import { useLongPress } from "../hooks/useLongPress";
 import { useMessageMenu } from "../hooks/useMessageMenu";
 import { Avatar } from "./Avatar";
 import { MessageAttachments } from "./MessageAttachments";
+import { isStandaloneEmoji } from "../utils/emoji";
+import { isImage } from "../api/attachments";
 import { MessageContextMenu } from "./MessageContextMenu";
 import type { MessageDto } from "../types/api";
 
@@ -82,6 +84,19 @@ export function MessageBubble({
 
   const displayName = authorName ?? `User #${message.userId}`;
 
+  const attachments = message.attachments ?? [];
+  const hasText = Boolean(message.content?.trim());
+  const onlyPictures =
+    attachments.length > 0 && attachments.every((a) => isImage(a.contentType));
+
+  const plainEmoji =
+    attachments.length === 0 && isStandaloneEmoji(message.content);
+  const plainPicture = onlyPictures && !hasText;
+
+  const bare =
+    !message.replyTo && !message.pinnedAt && (plainEmoji || plainPicture);
+  const bigEmoji = bare && plainEmoji;
+
   return (
     <>
       <div
@@ -120,14 +135,16 @@ export function MessageBubble({
               {...menu.triggerProps}
               {...longPress.handlers}
               style={{ WebkitTouchCallout: "none" }}
-              className={`rounded-bubble px-4 py-2 select-none md:select-text shadow-raised transition ${
+              className={`rounded-bubble select-none md:select-text transition ${
                 menu.open || isEditing || longPress.pressing || selected
                   ? "ring-2 ring-accent-strong"
                   : ""
               } ${
-                isOwn
-                  ? "bg-bubble-out text-on-bubble rounded-br-sm md:rounded-br-bubble md:rounded-bl-sm"
-                  : "bg-bubble-in text-content rounded-bl-sm"
+                bare
+                  ? "px-1 py-0.5 text-content"
+                  : isOwn
+                  ? "px-4 py-2 shadow-raised bg-bubble-out text-on-bubble rounded-br-sm md:rounded-br-bubble md:rounded-bl-sm"
+                  : "px-4 py-2 shadow-raised bg-bubble-in text-content rounded-bl-sm"
               }`}
             >
               {!isOwn && showAuthor && (
@@ -179,7 +196,11 @@ export function MessageBubble({
               )}
 
               <div className="relative">
-                <p className="break-words whitespace-pre-wrap">
+                <p
+                  className={`break-words whitespace-pre-wrap ${
+                    bigEmoji ? "text-5xl leading-tight" : ""
+                  }`}
+                >
                   {message.content}
                   <span
                     className="invisible select-none ml-2.5 text-xs"
@@ -190,7 +211,7 @@ export function MessageBubble({
                 </p>
                 <span
                   className={`absolute bottom-0 right-0 text-xs leading-none whitespace-nowrap ${
-                    isOwn ? "text-on-bubble-muted" : "text-content-muted"
+                    isOwn && !bare ? "text-on-bubble-muted" : "text-content-muted"
                   }`}
                 >
                   {timeLabel}

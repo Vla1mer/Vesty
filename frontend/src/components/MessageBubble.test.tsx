@@ -468,6 +468,98 @@ describe("MessageBubble", () => {
     });
   });
 
+  describe("a message of only emoji", () => {
+    function bubbleClasses(content: string | null, extra: Partial<MessageDto> = {}) {
+      setup({ message: { ...MESSAGE, content, ...extra } });
+      return bubble().className;
+    }
+
+    it("drops the bubble background", () => {
+      expect(bubbleClasses("🔥")).not.toContain("bg-bubble-in");
+    });
+
+    it("keeps the bubble for text", () => {
+      expect(bubbleClasses("hello there")).toContain("bg-bubble-in");
+    });
+
+    it("keeps the bubble when the emoji comes with words", () => {
+      expect(bubbleClasses("nice 🔥")).toContain("bg-bubble-in");
+    });
+
+    it("keeps the bubble past three emoji", () => {
+      expect(bubbleClasses("🔥🔥🔥🔥")).toContain("bg-bubble-in");
+    });
+
+    it("keeps the bubble when the emoji answers someone", () => {
+      expect(
+        bubbleClasses("🔥", { replyTo: { id: 5, userId: 3, content: "earlier" } })
+      ).toContain("bg-bubble-in");
+    });
+
+    it("keeps the bubble when the emoji is pinned", () => {
+      expect(bubbleClasses("🔥", { pinnedAt: "2026-01-01T10:05:00Z" })).toContain(
+        "bg-bubble-in"
+      );
+    });
+
+    it("shows the emoji large", () => {
+      setup({ message: { ...MESSAGE, content: "🔥" } });
+
+      expect(screen.getByText(/🔥/)).toHaveClass("text-5xl");
+    });
+  });
+
+  describe("a message of only pictures", () => {
+    function picture(id = 1, contentType = "image/png") {
+      return { id, fileName: "shot.png", contentType, sizeInBytes: 100 };
+    }
+
+    function bubbleClasses(extra: Partial<MessageDto>) {
+      setup({ message: { ...MESSAGE, content: null, ...extra } });
+      return bubble().className;
+    }
+
+    it("drops the bubble background", () => {
+      expect(bubbleClasses({ attachments: [picture()] })).not.toContain(
+        "bg-bubble-in"
+      );
+    });
+
+    it("keeps the bubble when a caption comes along", () => {
+      expect(
+        bubbleClasses({ content: "look at this", attachments: [picture()] })
+      ).toContain("bg-bubble-in");
+    });
+
+    it("keeps the bubble for a file that is not a picture", () => {
+      expect(
+        bubbleClasses({ attachments: [picture(1, "application/pdf")] })
+      ).toContain("bg-bubble-in");
+    });
+
+    it("keeps the bubble when only some of them are pictures", () => {
+      expect(
+        bubbleClasses({
+          attachments: [picture(1), picture(2, "application/pdf")],
+        })
+      ).toContain("bg-bubble-in");
+    });
+
+    it("drops the bubble for several pictures at once", () => {
+      expect(
+        bubbleClasses({ attachments: [picture(1), picture(2)] })
+      ).not.toContain("bg-bubble-in");
+    });
+
+    it("leaves the text small", () => {
+      setup({
+        message: { ...MESSAGE, content: null, attachments: [picture()] },
+      });
+
+      expect(document.querySelector("#message-1 .text-5xl")).toBeNull();
+    });
+  });
+
   describe("rendering", () => {
     it("names the author of an incoming message", () => {
       setup({ authorName: "petya" });
