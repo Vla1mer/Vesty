@@ -134,6 +134,7 @@ namespace Services
                 throw new UserSelfModificationException();
 
             IEnumerable<string> storageKeys = [];
+            IEnumerable<int> chatIds = [];
 
             await _repository.ExecuteInTransactionAsync(async () =>
             {
@@ -141,6 +142,7 @@ namespace Services
                     ?? throw new UserNotFoundException(id);
 
                 storageKeys = await _repository.Attachment.GetStorageKeysOfUserAsync(id);
+                chatIds = await _repository.ChatMember.GetChatIdsForUserAsync(id);
                 await _chatMembers.HandOverOwnedChatsAsync(id);
 
                 _repository.User.DeleteUser(user);
@@ -148,6 +150,7 @@ namespace Services
             });
 
             await _attachments.DeleteFilesAsync(storageKeys);
+            await _chatMembers.NotifyChatsUpdatedAsync(chatIds);
         }
 
         public async Task<PrivacySettingsDto> GetPrivacyAsync()

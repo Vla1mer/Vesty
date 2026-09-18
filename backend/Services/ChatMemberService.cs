@@ -158,6 +158,12 @@ namespace Services
             await _repository.SaveAsync();
         }
 
+        public async Task NotifyChatsUpdatedAsync(IEnumerable<int> chatIds)
+        {
+            foreach (var chatId in chatIds)
+                await NotifyChatUpdatedAsync(chatId);
+        }
+
         private async Task NotifyChatUpdatedAsync(int chatId)
         {
             var members = await _repository.ChatMember.GetMembersByChatIdAsync(chatId, trackChanges: false);

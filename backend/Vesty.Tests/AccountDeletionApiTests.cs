@@ -1,10 +1,13 @@
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Http.Json;
 using Entities.Models;
+using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Repository.Interfaces;
 using Services.DataTransferObjects;
 using Services.Storage;
+using Vesty.Hubs;
 
 namespace Vesty.Tests
 {
@@ -169,6 +172,32 @@ namespace Vesty.Tests
 
             Assert.True(await ChatExistsAsync(chatId));
             Assert.Equal(UserRole.User, Assert.Single(await RolesAsync(partner, chatId)).Value);
+        }
+
+        [Fact]
+        public async Task DeletingAnAccount_TellsTheRemainingMembers()
+        {
+            var owner = await AccountAsync("dnown");
+            var heir = await AccountAsync("dnher");
+            var host = await AccountAsync("dnhst");
+            var owned = await CreateChatAsync(owner.Client, "Owned");
+            var joined = await CreateChatAsync(host.Client, "Joined");
+            await AddAsync(owner, owned.Id, heir);
+            await AddAsync(host, joined.Id, owner);
+
+            var heirHears = new ConcurrentBag<int>();
+            var hostHears = new ConcurrentBag<int>();
+            await using var heirHub = HubFor(heir.Client);
+            await using var hostHub = HubFor(host.Client);
+            heirHub.On<ChatUpdatedSignalrDto>(ChatNotifier.ChatUpdated, updated => heirHears.Add(updated.ChatId));
+            hostHub.On<ChatUpdatedSignalrDto>(ChatNotifier.ChatUpdated, updated => hostHears.Add(updated.ChatId));
+            await heirHub.StartAsync();
+            await hostHub.StartAsync();
+
+            await DeleteAccountAsync(owner);
+
+            await WaitUntil(() => heirHears.Contains(owned.Id), "the heir hears about the group they inherited");
+            await WaitUntil(() => hostHears.Contains(joined.Id), "the host hears that a member is gone");
         }
 
         [Fact]
