@@ -229,12 +229,26 @@ namespace Services
         public async Task<bool> ValidateUser(UserForAuthenticationDto userForAuth)
         {
             _user = await _userManager.FindByNameAsync(userForAuth.UserName!);
+            if (_user is null)
+                return Rejected();
 
-            var result = (_user != null && await _userManager.CheckPasswordAsync(_user, userForAuth.Password!));
-            if (!result)
-                _logger.LogWarn($"{nameof(ValidateUser)}: Authentication failed. Wrong user name or password.");
+            if (await _userManager.IsLockedOutAsync(_user))
+                throw new AccountLockedException();
 
-            return result;
+            if (!await _userManager.CheckPasswordAsync(_user, userForAuth.Password!))
+            {
+                await _userManager.AccessFailedAsync(_user);
+                return Rejected();
+            }
+
+            await _userManager.ResetAccessFailedCountAsync(_user);
+            return true;
+        }
+
+        private bool Rejected()
+        {
+            _logger.LogWarn($"{nameof(ValidateUser)}: Authentication failed. Wrong user name or password.");
+            return false;
         }
 
         public async Task<TokenDto> CreateToken(bool populateExp)

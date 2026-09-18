@@ -27,6 +27,7 @@ namespace Vesty.Extensions
                             ForbiddenException => StatusCodes.Status403Forbidden,
                             ConflictException => StatusCodes.Status409Conflict,
                             ConcurrentUpdateException => StatusCodes.Status503ServiceUnavailable,
+                            AccountLockedException => StatusCodes.Status429TooManyRequests,
                             _ => StatusCodes.Status500InternalServerError
                         };
 
