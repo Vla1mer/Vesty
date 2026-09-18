@@ -29,7 +29,7 @@ namespace Services
             ICurrentUserService currentUser, IChatNotifier chatNotifier, IFileStorage fileStorage,
             IPresenceTracker presenceTracker)
         {
-            _userService = new Lazy<IUserService>(() => new UserService(repositoryManager, logger, mapper, userManager, configuration, currentUser));
+            _userService = new Lazy<IUserService>(() => new UserService(repositoryManager, logger, mapper, userManager, configuration, currentUser, _chatMemberService.Value));
             _avatarService = new Lazy<IAvatarService>(() => new AvatarService(repositoryManager, currentUser));
             _chatAvatarService = new Lazy<IChatAvatarService>(() => new ChatAvatarService(repositoryManager, currentUser));
             _chatService = new Lazy<IChatService>(() => new ChatService(repositoryManager, logger, mapper, currentUser, chatNotifier, messageCipher));

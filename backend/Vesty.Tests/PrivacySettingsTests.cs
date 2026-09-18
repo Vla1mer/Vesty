@@ -51,7 +51,7 @@ namespace Vesty.Tests
             _memberService = new ChatMemberService(_repository.Object, _logger.Object, _mapper.Object,
                 _currentUser.Object, _notifier.Object);
             _userService = new UserService(_repository.Object, _logger.Object, _mapper.Object,
-                null!, null!, _currentUser.Object);
+                null!, null!, _currentUser.Object, _memberService);
         }
 
         private void TargetWithPrivacy(int whoCanMessage, int whoCanInvite)
