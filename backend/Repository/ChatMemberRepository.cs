@@ -22,6 +22,11 @@ namespace Repository
                 .Select(cm => cm.ChatId)
                 .ToListAsync();
 
+        public async Task<IEnumerable<int>> GetOwnedChatIdsAsync(int userId) =>
+            await FindByCondition(cm => cm.UserId == userId && cm.RoleId == UserRole.Owner, trackChanges: false)
+                .Select(cm => cm.ChatId)
+                .ToListAsync();
+
         public async Task<IEnumerable<int>> GetChatPartnerIdsAsync(int userId)
         {
             var chatIds = await FindByCondition(cm => cm.UserId == userId, trackChanges: false)

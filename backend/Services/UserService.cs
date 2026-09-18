@@ -22,11 +22,14 @@ namespace Services
         private readonly UserManager<User> _userManager;
         private readonly IConfiguration _configuration;
         private readonly ICurrentUserService _currentUser;
+        private readonly IChatMemberService _chatMembers;
+        private readonly IAttachmentService _attachments;
 
         private User? _user;
 
         public UserService(IRepositoryManager repository, ILoggerManager logger, IMapper mapper,
-            UserManager<User> userManager, IConfiguration configuration, ICurrentUserService currentUser)
+            UserManager<User> userManager, IConfiguration configuration, ICurrentUserService currentUser,
+            IChatMemberService chatMembers, IAttachmentService attachments)
         {
             _repository = repository;
             _logger = logger;
@@ -34,6 +37,8 @@ namespace Services
             _userManager = userManager;
             _configuration = configuration;
             _currentUser = currentUser;
+            _chatMembers = chatMembers;
+            _attachments = attachments;
         }
 
         public async Task<(IEnumerable<UserDto> users, MetaData metaData)> GetAllAsync(UserParameters userParameters)
@@ -127,11 +132,25 @@ namespace Services
         {
             if (id != _currentUser.UserId)
                 throw new UserSelfModificationException();
-            var user = await _repository.User.GetUserAsync(id, trackChanges: false);
-            if (user is null)
-                throw new UserNotFoundException(id);
-            _repository.User.DeleteUser(user);
-            await _repository.SaveAsync();
+
+            IEnumerable<string> storageKeys = [];
+            IEnumerable<int> chatIds = [];
+
+            await _repository.ExecuteInTransactionAsync(async () =>
+            {
+                var user = await _repository.User.GetUserAsync(id, trackChanges: true)
+                    ?? throw new UserNotFoundException(id);
+
+                storageKeys = await _repository.Attachment.GetStorageKeysOfUserAsync(id);
+                chatIds = await _repository.ChatMember.GetChatIdsForUserAsync(id);
+                await _chatMembers.HandOverOwnedChatsAsync(id);
+
+                _repository.User.DeleteUser(user);
+                await _repository.SaveAsync();
+            });
+
+            await _attachments.DeleteFilesAsync(storageKeys);
+            await _chatMembers.NotifyChatsUpdatedAsync(chatIds);
         }
 
         public async Task<PrivacySettingsDto> GetPrivacyAsync()

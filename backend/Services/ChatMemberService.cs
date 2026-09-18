@@ -139,6 +139,31 @@ namespace Services
             await NotifyChatUpdatedAsync(chatId);
         }
 
+        public async Task HandOverOwnedChatsAsync(int userId)
+        {
+            foreach (var chatId in await _repository.ChatMember.GetOwnedChatIdsAsync(userId))
+            {
+                var heir = (await _repository.ChatMember.GetMembersByChatIdAsync(chatId, trackChanges: true))
+                    .Where(m => m.UserId != userId)
+                    .OrderBy(m => m.RoleId)
+                    .ThenBy(m => m.CreatedAt)
+                    .FirstOrDefault();
+
+                if (heir is not null)
+                    heir.RoleId = UserRole.Owner;
+                else
+                    _repository.Chat.DeleteChat((await _repository.Chat.GetChatAsync(chatId, trackChanges: true))!);
+            }
+
+            await _repository.SaveAsync();
+        }
+
+        public async Task NotifyChatsUpdatedAsync(IEnumerable<int> chatIds)
+        {
+            foreach (var chatId in chatIds)
+                await NotifyChatUpdatedAsync(chatId);
+        }
+
         private async Task NotifyChatUpdatedAsync(int chatId)
         {
             var members = await _repository.ChatMember.GetMembersByChatIdAsync(chatId, trackChanges: false);
