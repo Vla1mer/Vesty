@@ -10,6 +10,7 @@ namespace Services.Interfaces
         Task<(byte[] content, string contentType, string fileName)> DownloadAsync(int attachmentId);
         Task<IReadOnlyList<MessageAttachment>> ReserveAsync(IEnumerable<int> attachmentIds);
         Task DeleteForMessageAsync(int messageId);
+        Task DeleteFilesAsync(IEnumerable<string> storageKeys);
         Task DeleteUnclaimedAsync(int attachmentId);
         Task<int> RemoveAbandonedAsync(TimeSpan olderThan);
     }

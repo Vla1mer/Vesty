@@ -98,17 +98,13 @@ namespace Services
         public async Task DeleteForMessageAsync(int messageId)
         {
             var attachments = await _repository.Attachment.GetByMessageIdsAsync(new[] { messageId });
+            await DeleteFilesAsync(attachments.Select(a => a.StorageKey));
+        }
 
-            foreach (var attachment in attachments)
-            {
-                try
-                {
-                    await _storage.DeleteAsync(attachment.StorageKey);
-                }
-                catch (Exception)
-                {
-                }
-            }
+        public async Task DeleteFilesAsync(IEnumerable<string> storageKeys)
+        {
+            foreach (var storageKey in storageKeys)
+                await DeleteFileAsync(storageKey);
         }
 
         public async Task DeleteUnclaimedAsync(int attachmentId)
@@ -140,15 +136,19 @@ namespace Services
 
         private async Task RemoveAsync(MessageAttachment attachment)
         {
+            await DeleteFileAsync(attachment.StorageKey);
+            _repository.Attachment.DeleteAttachment(attachment);
+        }
+
+        private async Task DeleteFileAsync(string storageKey)
+        {
             try
             {
-                await _storage.DeleteAsync(attachment.StorageKey);
+                await _storage.DeleteAsync(storageKey);
             }
             catch (Exception)
             {
             }
-
-            _repository.Attachment.DeleteAttachment(attachment);
         }
 
         public static MessageAttachmentDto ToDto(MessageAttachment attachment) =>

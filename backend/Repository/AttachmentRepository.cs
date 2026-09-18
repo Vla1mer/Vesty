@@ -39,6 +39,11 @@ namespace Repository
                     trackChanges: true)
                 .ToListAsync();
 
+        public async Task<IEnumerable<string>> GetStorageKeysOfUserAsync(int userId) =>
+            await FindByCondition(a => a.UserId == userId, trackChanges: false)
+                .Select(a => a.StorageKey)
+                .ToListAsync();
+
         public void CreateAttachment(MessageAttachment attachment) => Create(attachment);
 
         public void DeleteAttachment(MessageAttachment attachment) => Delete(attachment);

@@ -23,12 +23,13 @@ namespace Services
         private readonly IConfiguration _configuration;
         private readonly ICurrentUserService _currentUser;
         private readonly IChatMemberService _chatMembers;
+        private readonly IAttachmentService _attachments;
 
         private User? _user;
 
         public UserService(IRepositoryManager repository, ILoggerManager logger, IMapper mapper,
             UserManager<User> userManager, IConfiguration configuration, ICurrentUserService currentUser,
-            IChatMemberService chatMembers)
+            IChatMemberService chatMembers, IAttachmentService attachments)
         {
             _repository = repository;
             _logger = logger;
@@ -37,6 +38,7 @@ namespace Services
             _configuration = configuration;
             _currentUser = currentUser;
             _chatMembers = chatMembers;
+            _attachments = attachments;
         }
 
         public async Task<(IEnumerable<UserDto> users, MetaData metaData)> GetAllAsync(UserParameters userParameters)
@@ -131,16 +133,21 @@ namespace Services
             if (id != _currentUser.UserId)
                 throw new UserSelfModificationException();
 
+            IEnumerable<string> storageKeys = [];
+
             await _repository.ExecuteInTransactionAsync(async () =>
             {
                 var user = await _repository.User.GetUserAsync(id, trackChanges: true)
                     ?? throw new UserNotFoundException(id);
 
+                storageKeys = await _repository.Attachment.GetStorageKeysOfUserAsync(id);
                 await _chatMembers.HandOverOwnedChatsAsync(id);
 
                 _repository.User.DeleteUser(user);
                 await _repository.SaveAsync();
             });
+
+            await _attachments.DeleteFilesAsync(storageKeys);
         }
 
         public async Task<PrivacySettingsDto> GetPrivacyAsync()

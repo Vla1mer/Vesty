@@ -4,6 +4,7 @@ using Entities.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Repository.Interfaces;
 using Services.DataTransferObjects;
+using Services.Storage;
 
 namespace Vesty.Tests
 {
@@ -54,6 +55,45 @@ namespace Vesty.Tests
             using var scope = Factory.Services.CreateScope();
             var repository = scope.ServiceProvider.GetRequiredService<IRepositoryManager>();
             return await repository.Chat.GetChatAsync(chatId, trackChanges: false) is not null;
+        }
+
+        private static async Task<int> UploadAsync(Account account, int chatId)
+        {
+            var upload = await account.Client.PostAsync($"/api/Message/{chatId}/attachments",
+                FileForm("note.txt", new byte[] { 1, 2, 3 }, "text/plain"));
+            upload.EnsureSuccessStatusCode();
+            return (await upload.Content.ReadFromJsonAsync<MessageAttachmentDto>())!.Id;
+        }
+
+        private static async Task<int> SendFileAsync(Account account, int chatId)
+        {
+            var attachmentId = await UploadAsync(account, chatId);
+            var sent = await account.Client.PostAsJsonAsync($"/api/Message/{chatId}/messages",
+                new { content = "file", attachmentIds = new[] { attachmentId } });
+            sent.EnsureSuccessStatusCode();
+            return attachmentId;
+        }
+
+        private async Task<string> StorageKeyOfAsync(int attachmentId)
+        {
+            using var scope = Factory.Services.CreateScope();
+            var repository = scope.ServiceProvider.GetRequiredService<IRepositoryManager>();
+            return (await repository.Attachment.GetAttachmentAsync(attachmentId, trackChanges: false))!.StorageKey;
+        }
+
+        private async Task<bool> IsStoredAsync(string storageKey)
+        {
+            using var scope = Factory.Services.CreateScope();
+            var storage = scope.ServiceProvider.GetRequiredService<IFileStorage>();
+            try
+            {
+                await storage.GetAsync(storageKey);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         [Fact]
@@ -129,6 +169,38 @@ namespace Vesty.Tests
 
             Assert.True(await ChatExistsAsync(chatId));
             Assert.Equal(UserRole.User, Assert.Single(await RolesAsync(partner, chatId)).Value);
+        }
+
+        [Fact]
+        public async Task DeletingAnAccount_RemovesItsFilesFromTheStorage()
+        {
+            var owner = await AccountAsync("dsown");
+            var leaving = await AccountAsync("dslea");
+            var chat = await CreateChatAsync(owner.Client, "Files");
+            await AddAsync(owner, chat.Id, leaving);
+            var sent = await StorageKeyOfAsync(await SendFileAsync(leaving, chat.Id));
+            var unsent = await StorageKeyOfAsync(await UploadAsync(leaving, chat.Id));
+            Assert.True(await IsStoredAsync(sent));
+
+            await DeleteAccountAsync(leaving);
+
+            Assert.False(await IsStoredAsync(sent));
+            Assert.False(await IsStoredAsync(unsent));
+        }
+
+        [Fact]
+        public async Task DeletingAnAccount_KeepsTheFilesOfOthers()
+        {
+            var owner = await AccountAsync("dkown");
+            var leaving = await AccountAsync("dklea");
+            var chat = await CreateChatAsync(owner.Client, "Kept files");
+            await AddAsync(owner, chat.Id, leaving);
+            await SendFileAsync(leaving, chat.Id);
+            var kept = await StorageKeyOfAsync(await SendFileAsync(owner, chat.Id));
+
+            await DeleteAccountAsync(leaving);
+
+            Assert.True(await IsStoredAsync(kept));
         }
 
         [Fact]
