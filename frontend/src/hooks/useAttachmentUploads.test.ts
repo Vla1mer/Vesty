@@ -92,11 +92,16 @@ describe("useAttachmentUploads", () => {
     const { result } = renderHook(() => useAttachmentUploads(1));
 
     act(() =>
-      result.current.add([file("photo.png", "image/png"), file("notes.txt")])
+      result.current.add([
+        file("photo.png", "image/png"),
+        file("notes.txt"),
+        file("logo.svg", "image/svg+xml"),
+      ])
     );
 
     expect(result.current.uploads[0].previewUrl).toBe("blob:preview");
     expect(result.current.uploads[1].previewUrl).toBeUndefined();
+    expect(result.current.uploads[2].previewUrl).toBeUndefined();
   });
 
   it("refuses a file over the size limit", () => {
