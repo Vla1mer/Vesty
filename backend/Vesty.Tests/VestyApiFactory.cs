@@ -17,7 +17,7 @@ namespace Vesty.Tests
             .WithPassword("vesty")
             .Build();
 
-        private readonly MinioContainer _storage = new MinioBuilder("minio/minio:RELEASE.2024-01-16T16-07-38Z").Build();
+        private readonly MinioContainer _storage = new MinioBuilder("quay.io/minio/minio:RELEASE.2024-01-16T16-07-38Z").Build();
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
