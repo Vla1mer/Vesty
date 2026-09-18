@@ -174,8 +174,7 @@ namespace Services
             if (user is null)
                 throw new UserNotFoundException(id);
             _mapper.Map(userDto, user);
-            user.NormalizedUserName = userDto.UserName?.ToUpperInvariant();
-            await _repository.SaveAsync();
+            await SaveProfileAsync(user);
         }
 
         public async Task<(UserForUpdateDto userToPatch, User userEntity)> GetUserForPatchAsync(int id, bool trackChanges)
@@ -192,8 +191,14 @@ namespace Services
         public async Task SaveChangesForPatchAsync(UserForUpdateDto userToPatch, User userEntity)
         {
             _mapper.Map(userToPatch, userEntity);
-            userEntity.NormalizedUserName = userToPatch.UserName?.ToUpperInvariant();
-            await _repository.SaveAsync();
+            await SaveProfileAsync(userEntity);
+        }
+
+        private async Task SaveProfileAsync(User user)
+        {
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+                throw new ProfileUpdateBadRequestException(result.Errors.First().Description);
         }
 
         public async Task<IdentityResult> RegisterUser(UserForRegistrationDto userForRegistration)

@@ -2,6 +2,7 @@
 using Repository.Interfaces;
 using Services.DataTransferObjects;
 using Services.Interfaces;
+using Shared.Exceptions;
 
 namespace Services
 {
@@ -33,6 +34,9 @@ namespace Services
 
         public async Task<IEnumerable<UserPresenceDto>> GetPresenceAsync(IEnumerable<int> userIds)
         {
+            if (userIds is null)
+                throw new IdParametersBadRequestException();
+
             var wanted = userIds.Distinct().ToList();
             if (wanted.Count == 0)
                 return [];

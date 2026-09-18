@@ -28,8 +28,12 @@ namespace Vesty.Controllers
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
         public async Task<IActionResult> RegisterUser([FromBody] UserForRegistrationDto userForRegistration)
         {
+            if (!ModelState.IsValid)
+                return UnprocessableEntity(ModelState);
+
             var result = await _service.User.RegisterUser(userForRegistration);
             if (!result.Succeeded)
             {
