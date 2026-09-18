@@ -192,6 +192,21 @@ namespace Vesty.Tests
         }
 
         [Fact]
+        public async Task ADirectChatBothSidesLeft_IsRemoved()
+        {
+            var first = await AccountAsync("ddfst");
+            var second = await AccountAsync("ddsnd");
+            var chatId = await DirectChatWithAsync(first.Client, second.Name);
+
+            await DeleteAccountAsync(first);
+            Assert.True(await ChatExistsAsync(chatId));
+
+            await DeleteAccountAsync(second);
+
+            Assert.False(await ChatExistsAsync(chatId));
+        }
+
+        [Fact]
         public async Task DeletingSomebodyElse_IsForbidden()
         {
             var owner = await AccountAsync("dfown");

@@ -17,6 +17,7 @@ namespace Services.DataTransferObjects
         [MaxLength(20, ErrorMessage = "Maximum length for Phone is 20 characters.")]
         public string? Phone { get; init; }
 
+        [NotInTheFuture(ErrorMessage = "Birthday cannot be in the future.")]
         public DateOnly? Birthday { get; init; }
     }
 } 

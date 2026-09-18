@@ -163,6 +163,7 @@ namespace Vesty.Controllers
                 return BadRequest("patchDoc object is null");
             var (userToPatch, userEntity) = await _service.User.GetUserForPatchAsync(id, trackChanges: true);
             patchDoc.ApplyTo(userToPatch, ModelState);
+            TryValidateModel(userToPatch);
             if (!ModelState.IsValid)
                 return UnprocessableEntity(ModelState);
             await _service.User.SaveChangesForPatchAsync(userToPatch, userEntity);

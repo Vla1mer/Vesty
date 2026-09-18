@@ -122,7 +122,7 @@ namespace Services
 
                 var ownFiles = await _repository.Attachment.GetStorageKeysOfUserAsync(id);
                 chatIds = await _repository.ChatMember.GetChatIdsForUserAsync(id);
-                var orphanedFiles = await _chatMembers.HandOverOwnedChatsAsync(id);
+                var orphanedFiles = await _chatMembers.HandOverChatsAsync(id);
                 storageKeys = ownFiles.Union(orphanedFiles).ToList();
 
                 _repository.User.DeleteUser(user);

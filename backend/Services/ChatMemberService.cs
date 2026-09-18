@@ -139,26 +139,24 @@ namespace Services
             await NotifyChatUpdatedAsync(chatId);
         }
 
-        public async Task<IReadOnlyList<string>> HandOverOwnedChatsAsync(int userId)
+        public async Task<IReadOnlyList<string>> HandOverChatsAsync(int userId)
         {
             var orphanedFiles = new List<string>();
 
-            foreach (var chatId in await _repository.ChatMember.GetOwnedChatIdsAsync(userId))
+            foreach (var chatId in await _repository.ChatMember.GetChatIdsForUserAsync(userId))
             {
-                var heir = (await _repository.ChatMember.GetMembersByChatIdAsync(chatId, trackChanges: true))
-                    .Where(m => m.UserId != userId)
-                    .OrderBy(m => m.RoleId)
-                    .ThenBy(m => m.CreatedAt)
-                    .FirstOrDefault();
+                var members = (await _repository.ChatMember.GetMembersByChatIdAsync(chatId, trackChanges: true)).ToList();
+                var others = members.Where(m => m.UserId != userId).ToList();
 
-                if (heir is not null)
+                if (others.Count == 0)
                 {
-                    heir.RoleId = UserRole.Owner;
-                    continue;
+                    orphanedFiles.AddRange(await _repository.Attachment.GetStorageKeysOfChatAsync(chatId));
+                    _repository.Chat.DeleteChat((await _repository.Chat.GetChatAsync(chatId, trackChanges: true))!);
                 }
-
-                orphanedFiles.AddRange(await _repository.Attachment.GetStorageKeysOfChatAsync(chatId));
-                _repository.Chat.DeleteChat((await _repository.Chat.GetChatAsync(chatId, trackChanges: true))!);
+                else if (members.Any(m => m.UserId == userId && m.RoleId == UserRole.Owner))
+                {
+                    others.OrderBy(m => m.RoleId).ThenBy(m => m.CreatedAt).First().RoleId = UserRole.Owner;
+                }
             }
 
             await _repository.SaveAsync();
