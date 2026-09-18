@@ -44,6 +44,11 @@ namespace Repository
                 .Select(a => a.StorageKey)
                 .ToListAsync();
 
+        public async Task<IEnumerable<string>> GetStorageKeysOfChatAsync(int chatId) =>
+            await FindByCondition(a => a.Message != null && a.Message.ChatId == chatId, trackChanges: false)
+                .Select(a => a.StorageKey)
+                .ToListAsync();
+
         public void CreateAttachment(MessageAttachment attachment) => Create(attachment);
 
         public void DeleteAttachment(MessageAttachment attachment) => Delete(attachment);

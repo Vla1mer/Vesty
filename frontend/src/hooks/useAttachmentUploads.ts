@@ -3,6 +3,7 @@ import {
   MAX_ATTACHMENT_SIZE,
   MAX_ATTACHMENTS_PER_MESSAGE,
   deleteAttachment,
+  isImage,
   uploadAttachment,
 } from "../api/attachments";
 import type { MessageAttachmentDto } from "../types/api";
@@ -102,7 +103,7 @@ export function useAttachmentUploads(chatId: number) {
           fileName: file.name,
           contentType: file.type,
           sizeInBytes: file.size,
-          previewUrl: file.type.startsWith("image/")
+          previewUrl: isImage(file.type)
             ? URL.createObjectURL(file)
             : undefined,
           progress: 0,

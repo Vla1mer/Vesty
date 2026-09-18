@@ -1,4 +1,6 @@
-﻿using Entities.Models;
+﻿using System.Globalization;
+using System.Text;
+using Entities.Models;
 using Repository.Interfaces;
 using Services.DataTransferObjects;
 using Services.Interfaces;
@@ -25,6 +27,8 @@ namespace Services
         public async Task AddAsync(int messageId, string emoji)
         {
             var message = await GetMessageForReactingAsync(messageId, emoji);
+            if (!LooksLikeEmoji(emoji))
+                throw new InvalidReactionException("only emoji can be used as a reaction.");
 
             var existing = await _repository.Reaction.GetReactionAsync(
                 messageId, _currentUser.UserId, emoji, trackChanges: false);
@@ -80,6 +84,13 @@ namespace Services
                 throw new ChatAccessDeniedException(message.ChatId, _currentUser.UserId);
 
             return message;
+        }
+
+        private static bool LooksLikeEmoji(string value)
+        {
+            var runes = value.EnumerateRunes().ToList();
+            return runes.Any(r => Rune.GetUnicodeCategory(r) == UnicodeCategory.OtherSymbol)
+                && runes.All(r => !Rune.IsLetterOrDigit(r) && !Rune.IsWhiteSpace(r) && !Rune.IsControl(r));
         }
 
         private async Task NotifyAsync(int chatId, int messageId)

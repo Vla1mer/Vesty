@@ -49,5 +49,20 @@ namespace Vesty.Tests
 
             Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         }
+
+        [Fact]
+        public async Task RegisteringManyAtOnce_CreatesNobody()
+        {
+            var client = Factory.CreateClient();
+            var userName = UniqueName("bulk");
+
+            var bulk = await client.PostAsJsonAsync("/api/User/register/collection",
+                new[] { new { userName, password = "Test123" } });
+            var login = await client.PostAsJsonAsync("/api/User/login",
+                new { userName, password = "Test123" });
+
+            Assert.Equal(HttpStatusCode.NotFound, bulk.StatusCode);
+            Assert.Equal(HttpStatusCode.Unauthorized, login.StatusCode);
+        }
     }
 }

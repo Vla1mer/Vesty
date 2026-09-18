@@ -27,6 +27,7 @@ namespace Vesty.Extensions
                             ForbiddenException => StatusCodes.Status403Forbidden,
                             ConflictException => StatusCodes.Status409Conflict,
                             ConcurrentUpdateException => StatusCodes.Status503ServiceUnavailable,
+                            AccountLockedException => StatusCodes.Status429TooManyRequests,
                             _ => StatusCodes.Status500InternalServerError
                         };
 
@@ -35,7 +36,9 @@ namespace Vesty.Extensions
                         await context.Response.WriteAsync(new ErrorDetails()
                         {
                             StatusCode = context.Response.StatusCode,
-                            Message = contextFeature.Error.Message
+                            Message = context.Response.StatusCode == StatusCodes.Status500InternalServerError
+                                ? "Something went wrong. Please try again later."
+                                : contextFeature.Error.Message
                         }.ToString());
                     }
                 });

@@ -551,6 +551,20 @@ describe("MessageBubble", () => {
       ).not.toContain("bg-bubble-in");
     });
 
+    it("treats a vector drawing as a file", () => {
+      setup({
+        message: {
+          ...MESSAGE,
+          content: null,
+          attachments: [{ ...picture(1, "image/svg+xml"), fileName: "logo.svg" }],
+        },
+      });
+
+      expect(bubble().className).toContain("bg-bubble-in");
+      expect(screen.getByText("logo.svg")).toBeInTheDocument();
+      expect(screen.queryByRole("img")).toBeNull();
+    });
+
     it("leaves the text small", () => {
       setup({
         message: { ...MESSAGE, content: null, attachments: [picture()] },

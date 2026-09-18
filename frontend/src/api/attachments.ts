@@ -5,8 +5,10 @@ import type { MessageAttachmentDto } from "../types/api";
 export const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024;
 export const MAX_ATTACHMENTS_PER_MESSAGE = 10;
 
+const PICTURE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
 export function isImage(contentType: string): boolean {
-  return contentType.startsWith("image/");
+  return PICTURE_TYPES.includes(contentType.toLowerCase());
 }
 
 export function isAudio(contentType: string): boolean {

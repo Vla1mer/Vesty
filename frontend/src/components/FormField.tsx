@@ -1,7 +1,7 @@
 import { Eye, EyeOff } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { TextInput } from "./ui/TextInput";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useField } from "formik";
 
 interface FormFieldProps {
@@ -23,6 +23,7 @@ export function FormField({
   maxLength,
   hint,
 }: FormFieldProps) {
+  const id = useId();
   const [field, meta] = useField(name);
   const [showPassword, setShowPassword] = useState(false);
   const showError = Boolean(meta.touched && meta.error);
@@ -31,10 +32,13 @@ export function FormField({
 
   return (
     <div>
-      <label className="block text-sm text-content-muted mb-1">{label}</label>
+      <label htmlFor={id} className="block text-sm text-content-muted mb-1">
+        {label}
+      </label>
       <div className="relative">
         <TextInput
           {...field}
+          id={id}
           type={inputType}
           autoFocus={autoFocus}
           autoComplete={autoComplete}

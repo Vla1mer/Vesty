@@ -2,9 +2,12 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.DependencyInjection;
+using Repository.Interfaces;
 using Vesty.Constants;
 using Entities.Models;
 using Services.DataTransferObjects;
+using Services.Storage;
 
 namespace Vesty.Tests
 {
@@ -15,6 +18,62 @@ namespace Vesty.Tests
         protected ApiTestBase(VestyApiFactory factory)
         {
             Factory = factory;
+        }
+
+        protected record Account(HttpClient Client, int Id, string Name);
+
+        protected async Task<Account> AccountAsync(string prefix)
+        {
+            var name = UniqueName(prefix);
+            var client = await AuthenticatedClientAsync(name);
+            await SetPrivacyAsync(client, whoCanInvite: PrivacyLevel.Everyone);
+            return new Account(client, await UserIdAsync(client, name), name);
+        }
+
+        protected static async Task AddAsync(Account owner, int chatId, Account member)
+        {
+            var added = await owner.Client.PostAsJsonAsync($"/api/Chat/{chatId}/users",
+                new { userId = member.Id });
+            added.EnsureSuccessStatusCode();
+        }
+
+        protected static async Task<int> UploadAsync(Account account, int chatId)
+        {
+            var upload = await account.Client.PostAsync($"/api/Message/{chatId}/attachments",
+                FileForm("note.txt", new byte[] { 1, 2, 3 }, "text/plain"));
+            upload.EnsureSuccessStatusCode();
+            return (await upload.Content.ReadFromJsonAsync<MessageAttachmentDto>())!.Id;
+        }
+
+        protected static async Task<int> SendFileAsync(Account account, int chatId)
+        {
+            var attachmentId = await UploadAsync(account, chatId);
+            var sent = await account.Client.PostAsJsonAsync($"/api/Message/{chatId}/messages",
+                new { content = "file", attachmentIds = new[] { attachmentId } });
+            sent.EnsureSuccessStatusCode();
+            return attachmentId;
+        }
+
+        protected async Task<string> StorageKeyOfAsync(int attachmentId)
+        {
+            using var scope = Factory.Services.CreateScope();
+            var repository = scope.ServiceProvider.GetRequiredService<IRepositoryManager>();
+            return (await repository.Attachment.GetAttachmentAsync(attachmentId, trackChanges: false))!.StorageKey;
+        }
+
+        protected async Task<bool> IsStoredAsync(string storageKey)
+        {
+            using var scope = Factory.Services.CreateScope();
+            var storage = scope.ServiceProvider.GetRequiredService<IFileStorage>();
+            try
+            {
+                await storage.GetAsync(storageKey);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         protected static string UniqueName(string prefix) =>

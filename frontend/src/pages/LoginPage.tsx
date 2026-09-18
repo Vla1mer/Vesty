@@ -32,6 +32,8 @@ export function LoginPage() {
             const axiosErr = err as AxiosError;
             if (axiosErr.response?.status === 401) {
               setStatus("Invalid username or password");
+            } else if (axiosErr.response?.status === 429) {
+              setStatus("Too many failed attempts. Try again in a few minutes.");
             } else {
               setStatus("Login failed. Please try again.");
             }

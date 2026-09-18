@@ -27,10 +27,19 @@ namespace Vesty.ModelBinders
             var genericType = bindingContext.ModelType.GetTypeInfo().GenericTypeArguments[0];
             var converter = TypeDescriptor.GetConverter(genericType);
 
-            var objectArray = providedValue
-                .Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(x => converter.ConvertFromString(x.Trim()))
-                .ToArray();
+            object?[] objectArray;
+            try
+            {
+                objectArray = providedValue
+                    .Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(x => converter.ConvertFromString(x.Trim()))
+                    .ToArray();
+            }
+            catch (ArgumentException)
+            {
+                bindingContext.Result = ModelBindingResult.Success(null);
+                return Task.CompletedTask;
+            }
 
             var guidArray = Array.CreateInstance(genericType, objectArray.Length);
             objectArray.CopyTo(guidArray, 0);

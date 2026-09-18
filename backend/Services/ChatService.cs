@@ -17,9 +17,11 @@ namespace Services
         private readonly ICurrentUserService _currentUser;
         private readonly IChatNotifier _notifier;
         private readonly ChatEnricher _enricher;
+        private readonly IAttachmentService _attachments;
 
         public ChatService(IRepositoryManager repository, ILoggerManager logger, IMapper mapper,
-            ICurrentUserService currentUser, IChatNotifier notifier, IMessageCipher cipher)
+            ICurrentUserService currentUser, IChatNotifier notifier, IMessageCipher cipher,
+            IAttachmentService attachments)
         {
             _repository = repository;
             _logger = logger;
@@ -27,6 +29,7 @@ namespace Services
             _currentUser = currentUser;
             _notifier = notifier;
             _enricher = new ChatEnricher(repository, currentUser, cipher);
+            _attachments = attachments;
         }
 
         public async Task<(IEnumerable<ChatDto> chats, MetaData metaData)> GetAllAsync(ChatParameters chatParameters)
@@ -144,11 +147,13 @@ namespace Services
                 await EnsureCallerIsChatOwner(id, "delete this chat");
 
             var memberIds = await GetMemberIdsAsync(id);
+            var storageKeys = await _repository.Attachment.GetStorageKeysOfChatAsync(id);
 
             _repository.Chat.DeleteChat(chat);
             await _repository.SaveAsync();
 
             await _notifier.ChatDeletedAsync(memberIds, new ChatDeletedSignalrDto { ChatId = id });
+            await _attachments.DeleteFilesAsync(storageKeys);
         }
 
         public async Task UpdatePermissionsAsync(int id, ChatPermissionsDto permissions)

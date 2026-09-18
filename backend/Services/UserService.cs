@@ -107,27 +107,6 @@ namespace Services
             return await MaskProfilesAsync(users.ToList());
         }
 
-        public async Task<(IEnumerable<UserDto> users, string ids)> RegisterUserCollectionAsync(IEnumerable<UserForRegistrationDto> userCollection)
-        {
-            if (userCollection is null)
-                throw new UserCollectionBadRequestException();
-
-            var createdUsers = new List<User>();
-            foreach (var userDto in userCollection)
-            {
-                var user = _mapper.Map<User>(userDto);
-                var result = await _userManager.CreateAsync(user, userDto.Password!);
-                if (result.Succeeded)
-                {
-                    createdUsers.Add(user);
-                }
-            }
-
-            var usersToReturn = _mapper.Map<IEnumerable<UserDto>>(createdUsers);
-            var ids = string.Join(",", usersToReturn.Select(u => u.Id));
-            return (users: usersToReturn, ids: ids);
-        }
-
         public async Task DeleteAsync(int id)
         {
             if (id != _currentUser.UserId)
@@ -141,9 +120,10 @@ namespace Services
                 var user = await _repository.User.GetUserAsync(id, trackChanges: true)
                     ?? throw new UserNotFoundException(id);
 
-                storageKeys = await _repository.Attachment.GetStorageKeysOfUserAsync(id);
+                var ownFiles = await _repository.Attachment.GetStorageKeysOfUserAsync(id);
                 chatIds = await _repository.ChatMember.GetChatIdsForUserAsync(id);
-                await _chatMembers.HandOverOwnedChatsAsync(id);
+                var orphanedFiles = await _chatMembers.HandOverChatsAsync(id);
+                storageKeys = ownFiles.Union(orphanedFiles).ToList();
 
                 _repository.User.DeleteUser(user);
                 await _repository.SaveAsync();
@@ -195,8 +175,7 @@ namespace Services
             if (user is null)
                 throw new UserNotFoundException(id);
             _mapper.Map(userDto, user);
-            user.NormalizedUserName = userDto.UserName?.ToUpperInvariant();
-            await _repository.SaveAsync();
+            await SaveProfileAsync(user);
         }
 
         public async Task<(UserForUpdateDto userToPatch, User userEntity)> GetUserForPatchAsync(int id, bool trackChanges)
@@ -213,8 +192,14 @@ namespace Services
         public async Task SaveChangesForPatchAsync(UserForUpdateDto userToPatch, User userEntity)
         {
             _mapper.Map(userToPatch, userEntity);
-            userEntity.NormalizedUserName = userToPatch.UserName?.ToUpperInvariant();
-            await _repository.SaveAsync();
+            await SaveProfileAsync(userEntity);
+        }
+
+        private async Task SaveProfileAsync(User user)
+        {
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+                throw new ProfileUpdateBadRequestException(result.Errors.First().Description);
         }
 
         public async Task<IdentityResult> RegisterUser(UserForRegistrationDto userForRegistration)
@@ -229,12 +214,26 @@ namespace Services
         public async Task<bool> ValidateUser(UserForAuthenticationDto userForAuth)
         {
             _user = await _userManager.FindByNameAsync(userForAuth.UserName!);
+            if (_user is null)
+                return Rejected();
 
-            var result = (_user != null && await _userManager.CheckPasswordAsync(_user, userForAuth.Password!));
-            if (!result)
-                _logger.LogWarn($"{nameof(ValidateUser)}: Authentication failed. Wrong user name or password.");
+            if (await _userManager.IsLockedOutAsync(_user))
+                throw new AccountLockedException();
 
-            return result;
+            if (!await _userManager.CheckPasswordAsync(_user, userForAuth.Password!))
+            {
+                await _userManager.AccessFailedAsync(_user);
+                return Rejected();
+            }
+
+            await _userManager.ResetAccessFailedCountAsync(_user);
+            return true;
+        }
+
+        private bool Rejected()
+        {
+            _logger.LogWarn($"{nameof(ValidateUser)}: Authentication failed. Wrong user name or password.");
+            return false;
         }
 
         public async Task<TokenDto> CreateToken(bool populateExp)

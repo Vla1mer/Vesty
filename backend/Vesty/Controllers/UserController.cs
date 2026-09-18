@@ -28,8 +28,12 @@ namespace Vesty.Controllers
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
         public async Task<IActionResult> RegisterUser([FromBody] UserForRegistrationDto userForRegistration)
         {
+            if (!ModelState.IsValid)
+                return UnprocessableEntity(ModelState);
+
             var result = await _service.User.RegisterUser(userForRegistration);
             if (!result.Succeeded)
             {
@@ -102,7 +106,7 @@ namespace Vesty.Controllers
             return Ok(user);
         }
 
-        [HttpGet("collection/({ids})", Name = "UserCollection")]
+        [HttpGet("collection/({ids})")]
         [ProducesResponseType(typeof(IEnumerable<UserDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetUserCollection(
@@ -120,16 +124,6 @@ namespace Vesty.Controllers
         {
             var presence = await _service.Presence.GetPresenceAsync(ids);
             return Ok(presence);
-        }
-
-        [HttpPost("register/collection")]
-        [AllowAnonymous]
-        [ProducesResponseType(typeof(IEnumerable<UserDto>), StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> RegisterUserCollection([FromBody] IEnumerable<UserForRegistrationDto> userCollection)
-        {
-            var result = await _service.User.RegisterUserCollectionAsync(userCollection);
-            return CreatedAtRoute("UserCollection", new { result.ids }, result.users);
         }
 
         [HttpDelete("{id:int}")]
@@ -169,6 +163,7 @@ namespace Vesty.Controllers
                 return BadRequest("patchDoc object is null");
             var (userToPatch, userEntity) = await _service.User.GetUserForPatchAsync(id, trackChanges: true);
             patchDoc.ApplyTo(userToPatch, ModelState);
+            TryValidateModel(userToPatch);
             if (!ModelState.IsValid)
                 return UnprocessableEntity(ModelState);
             await _service.User.SaveChangesForPatchAsync(userToPatch, userEntity);
