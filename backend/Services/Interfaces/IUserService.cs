@@ -10,7 +10,6 @@ namespace Services.Interfaces
         Task<(IEnumerable<UserDto> users, MetaData metaData)> GetAllAsync(UserParameters userParameters);
         Task<UserDto> GetByIdAsync(int id);
         Task<IEnumerable<UserDto>> GetByIdsAsync(IEnumerable<int> ids);
-        Task<(IEnumerable<UserDto> users, string ids)> RegisterUserCollectionAsync(IEnumerable<UserForRegistrationDto> userCollection);
         Task DeleteAsync(int id);
         Task UpdateAsync(int id, UserForUpdateDto userDto);
         Task<PrivacySettingsDto> GetPrivacyAsync();

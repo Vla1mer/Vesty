@@ -107,27 +107,6 @@ namespace Services
             return await MaskProfilesAsync(users.ToList());
         }
 
-        public async Task<(IEnumerable<UserDto> users, string ids)> RegisterUserCollectionAsync(IEnumerable<UserForRegistrationDto> userCollection)
-        {
-            if (userCollection is null)
-                throw new UserCollectionBadRequestException();
-
-            var createdUsers = new List<User>();
-            foreach (var userDto in userCollection)
-            {
-                var user = _mapper.Map<User>(userDto);
-                var result = await _userManager.CreateAsync(user, userDto.Password!);
-                if (result.Succeeded)
-                {
-                    createdUsers.Add(user);
-                }
-            }
-
-            var usersToReturn = _mapper.Map<IEnumerable<UserDto>>(createdUsers);
-            var ids = string.Join(",", usersToReturn.Select(u => u.Id));
-            return (users: usersToReturn, ids: ids);
-        }
-
         public async Task DeleteAsync(int id)
         {
             if (id != _currentUser.UserId)

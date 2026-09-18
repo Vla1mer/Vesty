@@ -102,7 +102,7 @@ namespace Vesty.Controllers
             return Ok(user);
         }
 
-        [HttpGet("collection/({ids})", Name = "UserCollection")]
+        [HttpGet("collection/({ids})")]
         [ProducesResponseType(typeof(IEnumerable<UserDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetUserCollection(
@@ -120,16 +120,6 @@ namespace Vesty.Controllers
         {
             var presence = await _service.Presence.GetPresenceAsync(ids);
             return Ok(presence);
-        }
-
-        [HttpPost("register/collection")]
-        [AllowAnonymous]
-        [ProducesResponseType(typeof(IEnumerable<UserDto>), StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> RegisterUserCollection([FromBody] IEnumerable<UserForRegistrationDto> userCollection)
-        {
-            var result = await _service.User.RegisterUserCollectionAsync(userCollection);
-            return CreatedAtRoute("UserCollection", new { result.ids }, result.users);
         }
 
         [HttpDelete("{id:int}")]
