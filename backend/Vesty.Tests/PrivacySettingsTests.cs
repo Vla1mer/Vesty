@@ -47,7 +47,7 @@ namespace Vesty.Tests
                 .ReturnsAsync((Chat?)null);
 
             _chatService = new ChatService(_repository.Object, _logger.Object, _mapper.Object,
-                _currentUser.Object, _notifier.Object, _cipher.Object);
+                _currentUser.Object, _notifier.Object, _cipher.Object, null!);
             _memberService = new ChatMemberService(_repository.Object, _logger.Object, _mapper.Object,
                 _currentUser.Object, _notifier.Object);
             _userService = new UserService(_repository.Object, _logger.Object, _mapper.Object,

@@ -120,9 +120,10 @@ namespace Services
                 var user = await _repository.User.GetUserAsync(id, trackChanges: true)
                     ?? throw new UserNotFoundException(id);
 
-                storageKeys = await _repository.Attachment.GetStorageKeysOfUserAsync(id);
+                var ownFiles = await _repository.Attachment.GetStorageKeysOfUserAsync(id);
                 chatIds = await _repository.ChatMember.GetChatIdsForUserAsync(id);
-                await _chatMembers.HandOverOwnedChatsAsync(id);
+                var orphanedFiles = await _chatMembers.HandOverOwnedChatsAsync(id);
+                storageKeys = ownFiles.Union(orphanedFiles).ToList();
 
                 _repository.User.DeleteUser(user);
                 await _repository.SaveAsync();

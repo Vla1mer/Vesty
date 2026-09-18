@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Repository.Interfaces;
 using Services.DataTransferObjects;
-using Services.Storage;
 using Vesty.Hubs;
 
 namespace Vesty.Tests
@@ -15,23 +14,6 @@ namespace Vesty.Tests
     public class AccountDeletionApiTests : ApiTestBase
     {
         public AccountDeletionApiTests(VestyApiFactory factory) : base(factory) { }
-
-        private record Account(HttpClient Client, int Id, string Name);
-
-        private async Task<Account> AccountAsync(string prefix)
-        {
-            var name = UniqueName(prefix);
-            var client = await AuthenticatedClientAsync(name);
-            await SetPrivacyAsync(client, whoCanInvite: PrivacyLevel.Everyone);
-            return new Account(client, await UserIdAsync(client, name), name);
-        }
-
-        private static async Task AddAsync(Account owner, int chatId, Account member)
-        {
-            var added = await owner.Client.PostAsJsonAsync($"/api/Chat/{chatId}/users",
-                new { userId = member.Id });
-            added.EnsureSuccessStatusCode();
-        }
 
         private static async Task PromoteAsync(Account owner, int chatId, Account member)
         {
@@ -58,45 +40,6 @@ namespace Vesty.Tests
             using var scope = Factory.Services.CreateScope();
             var repository = scope.ServiceProvider.GetRequiredService<IRepositoryManager>();
             return await repository.Chat.GetChatAsync(chatId, trackChanges: false) is not null;
-        }
-
-        private static async Task<int> UploadAsync(Account account, int chatId)
-        {
-            var upload = await account.Client.PostAsync($"/api/Message/{chatId}/attachments",
-                FileForm("note.txt", new byte[] { 1, 2, 3 }, "text/plain"));
-            upload.EnsureSuccessStatusCode();
-            return (await upload.Content.ReadFromJsonAsync<MessageAttachmentDto>())!.Id;
-        }
-
-        private static async Task<int> SendFileAsync(Account account, int chatId)
-        {
-            var attachmentId = await UploadAsync(account, chatId);
-            var sent = await account.Client.PostAsJsonAsync($"/api/Message/{chatId}/messages",
-                new { content = "file", attachmentIds = new[] { attachmentId } });
-            sent.EnsureSuccessStatusCode();
-            return attachmentId;
-        }
-
-        private async Task<string> StorageKeyOfAsync(int attachmentId)
-        {
-            using var scope = Factory.Services.CreateScope();
-            var repository = scope.ServiceProvider.GetRequiredService<IRepositoryManager>();
-            return (await repository.Attachment.GetAttachmentAsync(attachmentId, trackChanges: false))!.StorageKey;
-        }
-
-        private async Task<bool> IsStoredAsync(string storageKey)
-        {
-            using var scope = Factory.Services.CreateScope();
-            var storage = scope.ServiceProvider.GetRequiredService<IFileStorage>();
-            try
-            {
-                await storage.GetAsync(storageKey);
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
         }
 
         [Fact]
@@ -215,6 +158,22 @@ namespace Vesty.Tests
 
             Assert.False(await IsStoredAsync(sent));
             Assert.False(await IsStoredAsync(unsent));
+        }
+
+        [Fact]
+        public async Task DeletingTheLastMember_RemovesTheFilesOfThoseWhoLeft()
+        {
+            var owner = await AccountAsync("dlast");
+            var former = await AccountAsync("dlfrm");
+            var chat = await CreateChatAsync(owner.Client, "Emptying");
+            await AddAsync(owner, chat.Id, former);
+            var formersFile = await StorageKeyOfAsync(await SendFileAsync(former, chat.Id));
+            (await former.Client.DeleteAsync($"/api/Chat/{chat.Id}/users/{former.Id}")).EnsureSuccessStatusCode();
+
+            await DeleteAccountAsync(owner);
+
+            Assert.False(await ChatExistsAsync(chat.Id));
+            Assert.False(await IsStoredAsync(formersFile));
         }
 
         [Fact]

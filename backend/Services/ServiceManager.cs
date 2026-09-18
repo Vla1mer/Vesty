@@ -32,7 +32,7 @@ namespace Services
             _userService = new Lazy<IUserService>(() => new UserService(repositoryManager, logger, mapper, userManager, configuration, currentUser, _chatMemberService.Value, _attachmentService.Value));
             _avatarService = new Lazy<IAvatarService>(() => new AvatarService(repositoryManager, currentUser));
             _chatAvatarService = new Lazy<IChatAvatarService>(() => new ChatAvatarService(repositoryManager, currentUser));
-            _chatService = new Lazy<IChatService>(() => new ChatService(repositoryManager, logger, mapper, currentUser, chatNotifier, messageCipher));
+            _chatService = new Lazy<IChatService>(() => new ChatService(repositoryManager, logger, mapper, currentUser, chatNotifier, messageCipher, _attachmentService.Value));
             _chatMemberService = new Lazy<IChatMemberService>(() => new ChatMemberService(repositoryManager, logger, mapper, currentUser, chatNotifier));
             _messageService = new Lazy<IMessageService>(() => new MessageService(repositoryManager, logger, mapper, messageCipher, currentUser, _chatService.Value, chatNotifier, _attachmentService.Value));
             _reactionService = new Lazy<IReactionService>(() => new ReactionService(repositoryManager, currentUser, chatNotifier));

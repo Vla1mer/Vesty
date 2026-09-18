@@ -139,8 +139,10 @@ namespace Services
             await NotifyChatUpdatedAsync(chatId);
         }
 
-        public async Task HandOverOwnedChatsAsync(int userId)
+        public async Task<IReadOnlyList<string>> HandOverOwnedChatsAsync(int userId)
         {
+            var orphanedFiles = new List<string>();
+
             foreach (var chatId in await _repository.ChatMember.GetOwnedChatIdsAsync(userId))
             {
                 var heir = (await _repository.ChatMember.GetMembersByChatIdAsync(chatId, trackChanges: true))
@@ -150,12 +152,17 @@ namespace Services
                     .FirstOrDefault();
 
                 if (heir is not null)
+                {
                     heir.RoleId = UserRole.Owner;
-                else
-                    _repository.Chat.DeleteChat((await _repository.Chat.GetChatAsync(chatId, trackChanges: true))!);
+                    continue;
+                }
+
+                orphanedFiles.AddRange(await _repository.Attachment.GetStorageKeysOfChatAsync(chatId));
+                _repository.Chat.DeleteChat((await _repository.Chat.GetChatAsync(chatId, trackChanges: true))!);
             }
 
             await _repository.SaveAsync();
+            return orphanedFiles;
         }
 
         public async Task NotifyChatsUpdatedAsync(IEnumerable<int> chatIds)

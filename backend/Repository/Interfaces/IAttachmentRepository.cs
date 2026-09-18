@@ -9,6 +9,7 @@ namespace Repository.Interfaces
         Task<IEnumerable<MessageAttachment>> GetByMessageIdsAsync(IEnumerable<int> messageIds);
         Task<IEnumerable<MessageAttachment>> GetUnclaimedOlderThanAsync(DateTime threshold);
         Task<IEnumerable<string>> GetStorageKeysOfUserAsync(int userId);
+        Task<IEnumerable<string>> GetStorageKeysOfChatAsync(int chatId);
         void CreateAttachment(MessageAttachment attachment);
         void DeleteAttachment(MessageAttachment attachment);
     }

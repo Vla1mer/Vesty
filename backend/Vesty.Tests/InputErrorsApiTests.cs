@@ -9,15 +9,6 @@ namespace Vesty.Tests
     {
         public InputErrorsApiTests(VestyApiFactory factory) : base(factory) { }
 
-        private record Account(HttpClient Client, int Id, string Name);
-
-        private async Task<Account> AccountAsync(string prefix)
-        {
-            var name = UniqueName(prefix);
-            var client = await AuthenticatedClientAsync(name);
-            return new Account(client, await UserIdAsync(client, name), name);
-        }
-
         private static Task<HttpResponseMessage> RenameAsync(Account account, string userName) =>
             account.Client.PutAsJsonAsync($"/api/User/{account.Id}", new { userName });
 
