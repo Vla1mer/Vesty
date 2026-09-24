@@ -41,7 +41,14 @@ namespace Vesty.Tests
                     ? null
                     : new ChatMember { ChatId = GroupChatId, UserId = CurrentUserId, RoleId = roleId.Value });
 
-        private static Stream ImageOf(int size) => new MemoryStream(new byte[size]);
+        private static readonly byte[] PngHeader = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+
+        private static Stream ImageOf(int size)
+        {
+            var data = new byte[size];
+            PngHeader.AsSpan(0, Math.Min(PngHeader.Length, size)).CopyTo(data);
+            return new MemoryStream(data);
+        }
 
         [Theory]
         [InlineData(UserRole.Owner)]

@@ -30,7 +30,14 @@ namespace Vesty.Tests
             _service = new AvatarService(_repository.Object, _currentUser.Object);
         }
 
-        private static Stream ImageOf(int size) => new MemoryStream(new byte[size]);
+        private static readonly byte[] PngHeader = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+
+        private static Stream ImageOf(int size)
+        {
+            var data = new byte[size];
+            PngHeader.AsSpan(0, Math.Min(PngHeader.Length, size)).CopyTo(data);
+            return new MemoryStream(data);
+        }
 
         [Fact]
         public async Task SetAsync_ForAnotherUser_Throws()
@@ -65,6 +72,29 @@ namespace Vesty.Tests
         {
             await Assert.ThrowsAsync<InvalidAvatarException>(() =>
                 _service.SetAsync(CurrentUserId, ImageOf(0), "image/png", 0));
+        }
+
+        [Fact]
+        public async Task SetAsync_WhenFileIsNotAnImage_Throws()
+        {
+            var text = System.Text.Encoding.UTF8.GetBytes("this is not an image at all");
+
+            await Assert.ThrowsAsync<InvalidAvatarException>(() =>
+                _service.SetAsync(CurrentUserId, new MemoryStream(text), "image/png", text.Length));
+        }
+
+        [Theory]
+        [InlineData(new byte[] { 0xFF, 0xD8, 0xFF, 0xE0, 0, 0, 0, 0, 0, 0, 0, 0 })]
+        [InlineData(new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0 })]
+        [InlineData(new byte[] { 0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50 })]
+        public async Task SetAsync_WithARealPicture_Succeeds(byte[] data)
+        {
+            _avatars.Setup(r => r.GetAvatarAsync(CurrentUserId, It.IsAny<bool>()))
+                .ReturnsAsync((UserAvatar?)null);
+
+            await _service.SetAsync(CurrentUserId, new MemoryStream(data), "image/png", data.Length);
+
+            _avatars.Verify(r => r.CreateAvatar(It.IsAny<UserAvatar>()), Times.Once);
         }
 
         [Fact]
