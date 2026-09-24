@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Net;
 using System.Net.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Repository.Interfaces;
@@ -28,6 +29,17 @@ namespace Vesty.Tests
                     new { userName, password = "Test123", rememberMe });
             login.EnsureSuccessStatusCode();
             return (await login.Content.ReadFromJsonAsync<TokenDto>())!;
+        }
+
+        [Fact]
+        public async Task TheAccessToken_LastsAsLongAsConfigured()
+        {
+            var account = await AccountAsync("short");
+
+            var tokens = await LoginAsync(account.Name, rememberMe: true);
+
+            var expiry = new JwtSecurityTokenHandler().ReadJwtToken(tokens.AccessToken).ValidTo;
+            Assert.InRange(expiry, DateTime.UtcNow.AddMinutes(13), DateTime.UtcNow.AddMinutes(17));
         }
 
         [Fact]
