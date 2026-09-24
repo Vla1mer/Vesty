@@ -8,7 +8,7 @@ export const ACCESS_TOKEN_KEY = "vesty.accessToken";
 export const REFRESH_TOKEN_KEY = "vesty.refreshToken";
 
 const read = (key: string) =>
-  localStorage.getItem(key) ?? sessionStorage.getItem(key);
+  sessionStorage.getItem(key) ?? localStorage.getItem(key);
 
 export const getAccessToken = () => read(ACCESS_TOKEN_KEY);
 export const getRefreshToken = () => read(REFRESH_TOKEN_KEY);
@@ -20,20 +20,31 @@ function storeFor(remember: boolean | undefined): Storage {
   return remember ? localStorage : sessionStorage;
 }
 
-export function getCurrentUserId(): number | null {
-  const token = getAccessToken();
-  if (!token) return null;
+function readPayload(token: string): Record<string, unknown> | null {
   try {
     const base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
-    const payload = JSON.parse(atob(base64)) as Record<string, unknown>;
-    const claim =
-      payload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"] ??
-      payload["nameid"] ??
-      payload["sub"];
-    return claim ? Number(claim) : null;
+    return JSON.parse(atob(base64)) as Record<string, unknown>;
   } catch {
     return null;
   }
+}
+
+function hasExpired(token: string): boolean {
+  const expiry = readPayload(token)?.exp;
+  return typeof expiry !== "number" || expiry * 1000 <= Date.now();
+}
+
+export function getCurrentUserId(): number | null {
+  const token = getAccessToken();
+  if (!token) return null;
+  const payload = readPayload(token);
+  if (!payload) return null;
+
+  const claim =
+    payload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"] ??
+    payload["nameid"] ??
+    payload["sub"];
+  return claim ? Number(claim) : null;
 }
 
 export const saveTokens = (tokens: TokenDto, remember?: boolean) => {
@@ -80,6 +91,21 @@ async function refreshTokens(): Promise<TokenDto> {
   });
   saveTokens(response.data);
   return response.data;
+}
+
+export async function getFreshAccessToken(): Promise<string> {
+  const token = getAccessToken();
+  if (!token) return "";
+  if (!hasExpired(token)) return token;
+
+  try {
+    refreshPromise = refreshPromise ?? refreshTokens();
+    return (await refreshPromise).accessToken;
+  } catch {
+    return "";
+  } finally {
+    refreshPromise = null;
+  }
 }
 
 api.interceptors.response.use(
