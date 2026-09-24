@@ -9,6 +9,7 @@ import { FormError } from "../components/FormError";
 import { registerSchema } from "../validation/authSchemas";
 import { parseApiErrors } from "../utils/apiError";
 import { Button } from "../components/ui/Button";
+import { Checkbox } from "../components/ui/Checkbox";
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -20,7 +21,14 @@ export function RegisterPage() {
         <ThemeToggle />
       </div>
       <Formik
-        initialValues={{ userName: "", password: "", confirmPassword: "", name: "", surname: "" }}
+        initialValues={{
+          userName: "",
+          password: "",
+          confirmPassword: "",
+          name: "",
+          surname: "",
+          rememberMe: true,
+        }}
         validationSchema={registerSchema}
         onSubmit={async (values, { setStatus, setFieldError }) => {
           setStatus(null);
@@ -47,6 +55,7 @@ export function RegisterPage() {
             await login({
               userName: values.userName,
               password: values.password,
+              rememberMe: values.rememberMe,
             });
             setAuthenticated();
             navigate("/chats");
@@ -55,7 +64,7 @@ export function RegisterPage() {
           }
         }}
       >
-        {({ isSubmitting, status }) => (
+        {({ isSubmitting, status, values, setFieldValue }) => (
           <Form className="w-full max-w-sm bg-surface border border-line rounded-card shadow-float p-6 space-y-4">
             <div className="text-center">
               <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-card bg-accent text-accent-contrast shadow-raised">
@@ -90,6 +99,12 @@ export function RegisterPage() {
             />
             <FormField label="First name" name="name" maxLength={100} />
             <FormField label="Surname" name="surname" maxLength={100} />
+
+            <Checkbox
+              checked={values.rememberMe}
+              onChange={(checked) => setFieldValue("rememberMe", checked)}
+              label="Remember me"
+            />
 
             <FormError message={status} />
 

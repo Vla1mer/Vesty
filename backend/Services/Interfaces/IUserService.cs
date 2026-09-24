@@ -18,7 +18,7 @@ namespace Services.Interfaces
         Task SaveChangesForPatchAsync(UserForUpdateDto userToPatch, User userEntity);
         Task<IdentityResult> RegisterUser(UserForRegistrationDto userForRegistration);
         Task<bool> ValidateUser(UserForAuthenticationDto userForAuth);
-        Task<TokenDto> CreateToken(bool populateExp);
+        Task<TokenDto> CreateToken(bool populateExp, bool rememberMe = false);
         Task<TokenDto> RefreshToken(TokenDto tokenDto);
     }
 }

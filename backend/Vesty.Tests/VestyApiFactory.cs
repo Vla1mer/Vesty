@@ -34,7 +34,7 @@ namespace Vesty.Tests
             Environment.SetEnvironmentVariable("Cors__AllowedOrigins__0", "http://localhost:5173");
             Environment.SetEnvironmentVariable("JwtSettings__validIssuer", "VestyTests");
             Environment.SetEnvironmentVariable("JwtSettings__validAudience", "http://localhost");
-            Environment.SetEnvironmentVariable("JwtSettings__expires", "60");
+            Environment.SetEnvironmentVariable("JwtSettings__expires", "15");
             Environment.SetEnvironmentVariable("JwtSettings__secretKey", SecretKey);
             Environment.SetEnvironmentVariable("MessageEncryption__Key", EncryptionKey);
             Environment.SetEnvironmentVariable(

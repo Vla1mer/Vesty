@@ -9,5 +9,7 @@ namespace Services.DataTransferObjects
 
         [Required(ErrorMessage = "Password is a required field.")]
         public string Password { get; init; }
+
+        public bool RememberMe { get; init; }
     }
 }

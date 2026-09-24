@@ -9,6 +9,7 @@ import { FormError } from "../components/FormError";
 import { loginSchema } from "../validation/authSchemas";
 import type { AxiosError } from "axios";
 import { Button } from "../components/ui/Button";
+import { Checkbox } from "../components/ui/Checkbox";
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ export function LoginPage() {
         <ThemeToggle />
       </div>
       <Formik
-        initialValues={{ userName: "", password: "" }}
+        initialValues={{ userName: "", password: "", rememberMe: true }}
         validationSchema={loginSchema}
         onSubmit={async (values, { setStatus }) => {
           setStatus(null);
@@ -40,7 +41,7 @@ export function LoginPage() {
           }
         }}
       >
-        {({ isSubmitting, status }) => (
+        {({ isSubmitting, status, values, setFieldValue }) => (
           <Form className="w-full max-w-sm bg-surface border border-line rounded-card shadow-float p-6 space-y-4">
             <div className="text-center">
               <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-card bg-accent text-accent-contrast shadow-raised">
@@ -64,6 +65,12 @@ export function LoginPage() {
               name="password"
               type="password"
               autoComplete="current-password"
+            />
+
+            <Checkbox
+              checked={values.rememberMe}
+              onChange={(checked) => setFieldValue("rememberMe", checked)}
+              label="Remember me"
             />
 
             <FormError message={status} />

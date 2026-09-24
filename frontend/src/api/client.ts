@@ -7,8 +7,18 @@ export const API_URL = import.meta.env.VITE_API_URL ?? "https://localhost:7033";
 export const ACCESS_TOKEN_KEY = "vesty.accessToken";
 export const REFRESH_TOKEN_KEY = "vesty.refreshToken";
 
-export const getAccessToken = () => localStorage.getItem(ACCESS_TOKEN_KEY);
-export const getRefreshToken = () => localStorage.getItem(REFRESH_TOKEN_KEY);
+const read = (key: string) =>
+  localStorage.getItem(key) ?? sessionStorage.getItem(key);
+
+export const getAccessToken = () => read(ACCESS_TOKEN_KEY);
+export const getRefreshToken = () => read(REFRESH_TOKEN_KEY);
+
+function storeFor(remember: boolean | undefined): Storage {
+  if (remember === undefined) {
+    return sessionStorage.getItem(ACCESS_TOKEN_KEY) === null ? localStorage : sessionStorage;
+  }
+  return remember ? localStorage : sessionStorage;
+}
 
 export function getCurrentUserId(): number | null {
   const token = getAccessToken();
@@ -26,14 +36,18 @@ export function getCurrentUserId(): number | null {
   }
 }
 
-export const saveTokens = (tokens: TokenDto) => {
-  localStorage.setItem(ACCESS_TOKEN_KEY, tokens.accessToken);
-  localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);
+export const saveTokens = (tokens: TokenDto, remember?: boolean) => {
+  const store = storeFor(remember);
+  clearTokens();
+  store.setItem(ACCESS_TOKEN_KEY, tokens.accessToken);
+  store.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);
 };
 
 export const clearTokens = () => {
-  localStorage.removeItem(ACCESS_TOKEN_KEY);
-  localStorage.removeItem(REFRESH_TOKEN_KEY);
+  [localStorage, sessionStorage].forEach((store) => {
+    store.removeItem(ACCESS_TOKEN_KEY);
+    store.removeItem(REFRESH_TOKEN_KEY);
+  });
 };
 
 export const api = axios.create({

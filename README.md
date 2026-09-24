@@ -89,7 +89,7 @@ Create `backend/Vesty/appsettings.json` and paste this in. It matches the setup 
   "JwtSettings": {
     "validIssuer": "VestyAPI",
     "validAudience": "https://localhost:5001",
-    "expires": 60,
+    "expires": 15,
     "secretKey": "vesty-local-development-jwt-secret-not-for-production"
   },
   "Storage": {

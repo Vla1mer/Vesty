@@ -18,7 +18,7 @@ function failWith(status: number) {
   );
 }
 
-async function signIn() {
+async function signIn({ remember = true } = {}) {
   renderWithProviders(
     <Routes>
       <Route path="/login" element={<LoginPage />} />
@@ -28,12 +28,39 @@ async function signIn() {
   );
   await userEvent.type(screen.getByLabelText("Username"), "petya");
   await userEvent.type(screen.getByLabelText("Password"), "Secret1");
+  if (!remember) await userEvent.click(screen.getByLabelText("Remember me"));
   await userEvent.click(screen.getByRole("button", { name: "Sign in" }));
 }
 
 describe("LoginPage", () => {
   beforeEach(() => {
     vi.mocked(login).mockReset();
+  });
+
+  it("remembers the device unless asked otherwise", async () => {
+    vi.mocked(login).mockResolvedValue({
+      accessToken: "access",
+      refreshToken: "refresh",
+    });
+
+    await signIn();
+
+    expect(login).toHaveBeenCalledWith(
+      expect.objectContaining({ rememberMe: true })
+    );
+  });
+
+  it("forgets the device when the box is cleared", async () => {
+    vi.mocked(login).mockResolvedValue({
+      accessToken: "access",
+      refreshToken: "refresh",
+    });
+
+    await signIn({ remember: false });
+
+    expect(login).toHaveBeenCalledWith(
+      expect.objectContaining({ rememberMe: false })
+    );
   });
 
   it("lets a user with the right password in", async () => {
@@ -45,7 +72,9 @@ describe("LoginPage", () => {
     await signIn();
 
     expect(await screen.findByText("chats screen")).toBeInTheDocument();
-    expect(login).toHaveBeenCalledWith({ userName: "petya", password: "Secret1" });
+    expect(login).toHaveBeenCalledWith(
+      expect.objectContaining({ userName: "petya", password: "Secret1" })
+    );
   });
 
   it("reports a wrong password", async () => {

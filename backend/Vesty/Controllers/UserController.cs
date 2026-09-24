@@ -55,7 +55,7 @@ namespace Vesty.Controllers
             if (!await _service.User.ValidateUser(user))
                 return Unauthorized();
 
-            var tokenDto = await _service.User.CreateToken(populateExp: true);
+            var tokenDto = await _service.User.CreateToken(populateExp: true, user.RememberMe);
             return Ok(tokenDto);
         }
 

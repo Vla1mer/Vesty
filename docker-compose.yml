@@ -55,7 +55,7 @@ services:
         Host=db;Port=5432;Database=${POSTGRES_DB:-vesty};Username=${POSTGRES_USER:-vesty};Password=${POSTGRES_PASSWORD:-vesty};
       JwtSettings__validIssuer: VestyAPI
       JwtSettings__validAudience: ${API_URL:-http://localhost:8080}
-      JwtSettings__expires: "60"
+      JwtSettings__expires: "15"
       JwtSettings__secretKey: ${JWT_SECRET:-vesty-local-development-jwt-secret-not-for-production}
       MessageEncryption__Key: ${MESSAGE_KEY:-dmVzdHktbG9jYWwtZGV2ZWxvcG1lbnQta2V5LTAwMDE=}
       Cors__AllowedOrigins__0: ${CLIENT_URL:-http://localhost:5173}
