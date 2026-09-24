@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const token = getAccessToken();
-    if (token) startConnection(token).catch(console.error);
+    if (token) startConnection().catch(console.error);
   }, []);
 
   const { userId, userName } = useMemo(() => {
@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     dispatch(apiSlice.util.resetApiState());
     setIsAuthenticated(true);
     const token = getAccessToken();
-    if (token) startConnection(token).catch(console.error);
+    if (token) startConnection().catch(console.error);
   };
 
   const logout = () => {
