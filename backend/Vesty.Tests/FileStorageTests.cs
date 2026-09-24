@@ -14,14 +14,14 @@ namespace Vesty.Tests
         private const string EncryptionKey = "dmVzdHktdW5pdC10ZXN0LWtleS0wMDAwMDAwMDAwMDE=";
         private const string Bucket = "test-attachments";
 
-        private readonly MinioContainer _storage = new MinioBuilder("quay.io/minio/minio:RELEASE.2024-01-16T16-07-38Z").Build();
+        private readonly MinioContainer _storage = StorageContainer.Create();
 
         private MinioFileStorage _fileStorage = null!;
         private IMinioClient _rawClient = null!;
 
         public async Task InitializeAsync()
         {
-            await _storage.StartAsync();
+            await StorageContainer.StartAsync(_storage);
 
             var endpoint = new Uri(_storage.GetConnectionString()).Authority;
             var options = Options.Create(new StorageOptions

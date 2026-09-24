@@ -18,8 +18,9 @@ services:
       retries: 10
 
   storage:
-    image: quay.io/minio/minio
+    image: bitnamilegacy/minio:2025.7.23-debian-12-r5
     container_name: vesty-storage
+    user: root
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:

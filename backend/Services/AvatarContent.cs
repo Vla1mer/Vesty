@@ -28,7 +28,21 @@ namespace Services
             if (data.Length > MaxSizeInBytes)
                 throw new InvalidAvatarException($"maximum size is {MaxSizeInBytes / 1024} KB.");
 
+            EnsurePicture(data);
             return data;
         }
+
+        private static void EnsurePicture(byte[] data)
+        {
+            var known = StartsWith(data, [0xFF, 0xD8, 0xFF])
+                || StartsWith(data, [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])
+                || (data.Length >= 12 && StartsWith(data, "RIFF"u8) && data.AsSpan(8, 4).SequenceEqual("WEBP"u8));
+
+            if (!known)
+                throw new InvalidAvatarException("the file is not a JPEG, PNG or WebP image.");
+        }
+
+        private static bool StartsWith(byte[] data, ReadOnlySpan<byte> signature) =>
+            data.AsSpan().StartsWith(signature);
     }
 }
