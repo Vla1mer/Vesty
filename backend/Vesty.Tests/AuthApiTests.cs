@@ -50,7 +50,7 @@ namespace Vesty.Tests
             await LoginAsync(account.Name, rememberMe: true);
 
             Assert.InRange(await SessionDeadlineOfAsync(account.Id),
-                DateTime.UtcNow.AddDays(29), DateTime.UtcNow.AddDays(31));
+                DateTime.UtcNow.AddDays(30).AddMinutes(-5), DateTime.UtcNow.AddDays(30).AddMinutes(5));
         }
 
         [Fact]
@@ -61,7 +61,7 @@ namespace Vesty.Tests
             await LoginAsync(account.Name, rememberMe: false);
 
             Assert.InRange(await SessionDeadlineOfAsync(account.Id),
-                DateTime.UtcNow, DateTime.UtcNow.AddDays(2));
+                DateTime.UtcNow.AddHours(23), DateTime.UtcNow.AddHours(25));
         }
 
         [Fact]
@@ -72,7 +72,7 @@ namespace Vesty.Tests
             await LoginAsync(account.Name, rememberMe: null);
 
             Assert.InRange(await SessionDeadlineOfAsync(account.Id),
-                DateTime.UtcNow, DateTime.UtcNow.AddDays(2));
+                DateTime.UtcNow.AddHours(23), DateTime.UtcNow.AddHours(25));
         }
 
         [Fact]
