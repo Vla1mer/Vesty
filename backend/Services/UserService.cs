@@ -25,6 +25,9 @@ namespace Services
         private readonly IChatMemberService _chatMembers;
         private readonly IAttachmentService _attachments;
 
+        private static readonly TimeSpan RememberedSession = TimeSpan.FromDays(30);
+        private static readonly TimeSpan SingleDaySession = TimeSpan.FromDays(1);
+
         private User? _user;
 
         public UserService(IRepositoryManager repository, ILoggerManager logger, IMapper mapper,
@@ -236,7 +239,7 @@ namespace Services
             return false;
         }
 
-        public async Task<TokenDto> CreateToken(bool populateExp)
+        public async Task<TokenDto> CreateToken(bool populateExp, bool rememberMe = false)
         {
             var signingCredentials = GetSigningCredentials();
             var claims = await GetClaims();
@@ -247,7 +250,8 @@ namespace Services
             _user!.RefreshToken = HashRefreshToken(refreshToken);
 
             if (populateExp)
-                _user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+                _user.RefreshTokenExpiryTime = DateTime.UtcNow +
+                    (rememberMe ? RememberedSession : SingleDaySession);
 
             await _userManager.UpdateAsync(_user);
 

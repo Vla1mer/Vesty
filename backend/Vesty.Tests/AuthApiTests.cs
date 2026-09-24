@@ -1,5 +1,7 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
+using Microsoft.Extensions.DependencyInjection;
+using Repository.Interfaces;
 using Services.DataTransferObjects;
 
 namespace Vesty.Tests
@@ -8,6 +10,71 @@ namespace Vesty.Tests
     public class AuthApiTests : ApiTestBase
     {
         public AuthApiTests(VestyApiFactory factory) : base(factory) { }
+
+        private async Task<DateTime> SessionDeadlineOfAsync(int userId)
+        {
+            using var scope = Factory.Services.CreateScope();
+            var repository = scope.ServiceProvider.GetRequiredService<IRepositoryManager>();
+            var user = await repository.User.GetUserAsync(userId, trackChanges: false);
+            return user!.RefreshTokenExpiryTime;
+        }
+
+        private async Task<TokenDto> LoginAsync(string userName, bool? rememberMe)
+        {
+            var client = Factory.CreateClient();
+            var login = rememberMe is null
+                ? await client.PostAsJsonAsync("/api/User/login", new { userName, password = "Test123" })
+                : await client.PostAsJsonAsync("/api/User/login",
+                    new { userName, password = "Test123", rememberMe });
+            login.EnsureSuccessStatusCode();
+            return (await login.Content.ReadFromJsonAsync<TokenDto>())!;
+        }
+
+        [Fact]
+        public async Task ARememberedLogin_KeepsTheSessionForAMonth()
+        {
+            var account = await AccountAsync("remem");
+
+            await LoginAsync(account.Name, rememberMe: true);
+
+            Assert.InRange(await SessionDeadlineOfAsync(account.Id),
+                DateTime.UtcNow.AddDays(29), DateTime.UtcNow.AddDays(31));
+        }
+
+        [Fact]
+        public async Task APlainLogin_KeepsTheSessionForADay()
+        {
+            var account = await AccountAsync("forget");
+
+            await LoginAsync(account.Name, rememberMe: false);
+
+            Assert.InRange(await SessionDeadlineOfAsync(account.Id),
+                DateTime.UtcNow, DateTime.UtcNow.AddDays(2));
+        }
+
+        [Fact]
+        public async Task ALoginThatSaysNothing_IsNotRemembered()
+        {
+            var account = await AccountAsync("silent");
+
+            await LoginAsync(account.Name, rememberMe: null);
+
+            Assert.InRange(await SessionDeadlineOfAsync(account.Id),
+                DateTime.UtcNow, DateTime.UtcNow.AddDays(2));
+        }
+
+        [Fact]
+        public async Task Refreshing_DoesNotPushTheDeadlineFurther()
+        {
+            var account = await AccountAsync("refr");
+            var tokens = await LoginAsync(account.Name, rememberMe: true);
+            var deadline = await SessionDeadlineOfAsync(account.Id);
+
+            var refreshed = await Factory.CreateClient().PostAsJsonAsync("/api/User/refresh", tokens);
+            refreshed.EnsureSuccessStatusCode();
+
+            Assert.Equal(deadline, await SessionDeadlineOfAsync(account.Id));
+        }
 
         [Fact]
         public async Task Register_ThenLogin_ReturnsTokens()
