@@ -17,7 +17,7 @@ namespace Vesty.Tests
             .WithPassword("vesty")
             .Build();
 
-        private readonly MinioContainer _storage = new MinioBuilder("quay.io/minio/minio:RELEASE.2024-01-16T16-07-38Z").Build();
+        private readonly MinioContainer _storage = StorageContainer.Create();
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
@@ -26,7 +26,7 @@ namespace Vesty.Tests
 
         public async Task InitializeAsync()
         {
-            await Task.WhenAll(_database.StartAsync(), _storage.StartAsync());
+            await Task.WhenAll(_database.StartAsync(), StorageContainer.StartAsync(_storage));
 
             Environment.SetEnvironmentVariable(
                 "ConnectionStrings__DefaultConnection", _database.GetConnectionString());
