@@ -1,14 +1,21 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import axios from "axios";
 import {
   ACCESS_TOKEN_KEY,
   REFRESH_TOKEN_KEY,
   clearTokens,
   getAccessToken,
+  getFreshAccessToken,
   getRefreshToken,
   saveTokens,
 } from "./client";
 
 const TOKENS = { accessToken: "access", refreshToken: "refresh" };
+
+function tokenExpiringIn(seconds: number): string {
+  const payload = btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + seconds }));
+  return `header.${payload}.signature`;
+}
 
 describe("token storage", () => {
   beforeEach(() => {
@@ -62,6 +69,56 @@ describe("token storage", () => {
 
     expect(localStorage.getItem(ACCESS_TOKEN_KEY)).toBeNull();
     expect(sessionStorage.getItem(ACCESS_TOKEN_KEY)).toBe("access");
+  });
+
+  it("lets this tab keep its own session when another tab is remembered", () => {
+    sessionStorage.setItem(ACCESS_TOKEN_KEY, "mine");
+    localStorage.setItem(ACCESS_TOKEN_KEY, "somebody-else");
+
+    expect(getAccessToken()).toBe("mine");
+  });
+
+  it("falls back to the remembered session when this tab has none", () => {
+    localStorage.setItem(ACCESS_TOKEN_KEY, "remembered");
+
+    expect(getAccessToken()).toBe("remembered");
+  });
+
+  describe("getFreshAccessToken", () => {
+    afterEach(() => vi.restoreAllMocks());
+
+    it("hands out a token that is still good", async () => {
+      const token = tokenExpiringIn(600);
+      saveTokens({ accessToken: token, refreshToken: "refresh" }, true);
+      const post = vi.spyOn(axios, "post");
+
+      expect(await getFreshAccessToken()).toBe(token);
+      expect(post).not.toHaveBeenCalled();
+    });
+
+    it("renews a token that has run out", async () => {
+      saveTokens({ accessToken: tokenExpiringIn(-10), refreshToken: "refresh" }, true);
+      vi.spyOn(axios, "post").mockResolvedValue({
+        data: { accessToken: "renewed", refreshToken: "renewed-refresh" },
+      });
+
+      expect(await getFreshAccessToken()).toBe("renewed");
+      expect(getAccessToken()).toBe("renewed");
+    });
+
+    it("gives nothing away when renewal fails", async () => {
+      saveTokens({ accessToken: tokenExpiringIn(-10), refreshToken: "refresh" }, true);
+      vi.spyOn(axios, "post").mockRejectedValue(new Error("nope"));
+
+      expect(await getFreshAccessToken()).toBe("");
+    });
+
+    it("asks for nothing when nobody is signed in", async () => {
+      const post = vi.spyOn(axios, "post");
+
+      expect(await getFreshAccessToken()).toBe("");
+      expect(post).not.toHaveBeenCalled();
+    });
   });
 
   it("signs the user out of both storages", () => {

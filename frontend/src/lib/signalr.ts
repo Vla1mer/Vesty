@@ -4,7 +4,7 @@ import {
   HubConnectionState,
   LogLevel,
 } from "@microsoft/signalr";
-import { getAccessToken } from "../api/client";
+import { getFreshAccessToken } from "../api/client";
 import type {
   ChatDto,
   ChatDeletedSignalrDto,
@@ -86,7 +86,7 @@ function attach<T>(conn: HubConnection, event: HubEvent<T>): void {
 function buildConnection(): HubConnection {
   const conn = new HubConnectionBuilder()
     .withUrl(HUB_URL, {
-      accessTokenFactory: () => getAccessToken() ?? "",
+      accessTokenFactory: () => getFreshAccessToken(),
     })
     .withAutomaticReconnect()
     .configureLogging(LogLevel.Warning)
