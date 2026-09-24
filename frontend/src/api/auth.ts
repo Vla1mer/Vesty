@@ -12,7 +12,7 @@ export async function register(dto: UserForRegistrationDto): Promise<void> {
 
 export async function login(dto: UserForAuthenticationDto): Promise<TokenDto> {
   const response = await api.post<TokenDto>(endpoints.auth.login, dto);
-  saveTokens(response.data);
+  saveTokens(response.data, dto.rememberMe);
   return response.data;
 }
 

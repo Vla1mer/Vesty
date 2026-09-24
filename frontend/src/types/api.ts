@@ -15,6 +15,7 @@ export interface UserForRegistrationDto {
 export interface UserForAuthenticationDto {
   userName: string;
   password: string;
+  rememberMe?: boolean;
 }
 
 export interface UserDto {
