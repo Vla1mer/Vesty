@@ -37,7 +37,7 @@ To stop: `docker compose down`. Add `-v` to delete the database and uploaded fil
 
 Requires [.NET SDK 9+](https://dotnet.microsoft.com/download), [Node.js 20+](https://nodejs.org), PostgreSQL and an S3-compatible object storage.
 
-Object storage is not optional: avatars and attachments are stored through an S3 client, and there is no filesystem fallback. Any S3-compatible service will do — the steps below use [MinIO](https://min.io/download), which is a single binary and runs fine without Docker.
+Object storage is not optional: avatars and attachments are stored through an S3 client, and there is no filesystem fallback. Any S3-compatible service will do — the steps below use [SeaweedFS](https://github.com/seaweedfs/seaweedfs/releases), which is a single binary and runs fine without Docker.
 
 ### 1. PostgreSQL
 
@@ -50,22 +50,21 @@ CREATE DATABASE vesty OWNER vesty;
 
 ### 2. Object storage
 
+Download the `weed` binary for your system from the [SeaweedFS releases](https://github.com/seaweedfs/seaweedfs/releases) and start it with the S3 gateway on port 9000:
+
 ```powershell
 # Windows
-$env:MINIO_ROOT_USER = "vesty"
-$env:MINIO_ROOT_PASSWORD = "vestyvesty"
-.\minio.exe server C:\vesty-data --console-address ":9001"
+.\weed.exe server -s3 -s3.port=9000 -dir=C:\vesty-data
 ```
 
 ```bash
 # Linux / macOS
-MINIO_ROOT_USER=vesty MINIO_ROOT_PASSWORD=vestyvesty \
-  minio server ~/vesty-data --console-address ":9001"
+./weed server -s3 -s3.port=9000 -dir=~/vesty-data
 ```
 
-These credentials are the ones `appsettings.Example.json` already expects.
+The bucket is created on the first upload, so there is nothing to prepare by hand. SeaweedFS accepts any access key out of the box, so the keys in the configuration below are used as they are.
 
-The bucket is created on the first upload, so there is nothing to prepare by hand.
+> MinIO would work just as well, but it no longer publishes free binaries or Docker images. The Docker setup above therefore uses an archived MinIO image, and this page uses SeaweedFS.
 
 ### 3. API
 
@@ -110,7 +109,7 @@ What to change:
 | Setting | When to change it |
 | --- | --- |
 | `ConnectionStrings.DefaultConnection` | `Port=5432` is for a PostgreSQL you installed yourself. Use **5433** if the database runs in Docker. Adjust the database, user and password if you did not use the SQL from step 1. |
-| `Storage` | Ready for a local MinIO. For a hosted S3 set `Endpoint` as `host:port` without a scheme, put in your own keys and set `"UseSsl": true`. |
+| `Storage` | Ready for a local storage started as above. For a hosted S3 set `Endpoint` as `host:port` without a scheme, put in your own keys and set `"UseSsl": true`. |
 | `JwtSettings.secretKey` | **Replace before exposing the app to anything but your own machine** — this value is public. Any random string of 32+ characters. |
 | `MessageEncryption.Key` | Same, and set it *before* storing any data: messages and files are encrypted with it, so changing it later makes everything already stored unreadable. 32 random bytes in base64. |
 | `Cors.AllowedOrigins` | Only if you move the client off `localhost:5173`. |
