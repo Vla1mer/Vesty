@@ -4,59 +4,63 @@ import {
   isYesterday,
   isSameYear,
 } from "date-fns";
+import type { Language, Translate } from "../i18n/translations";
 
-const LOCALE = "en-GB";
-
-export function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString(LOCALE, { hour: "2-digit", minute: "2-digit" });
-}
-
-export function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString(LOCALE);
-}
+const LOCALES: Record<Language, string> = {
+  en: "en-GB",
+  pl: "pl-PL",
+};
 
 export function isSameDay(a: string, b: string): boolean {
   return isSameCalendarDay(new Date(a), new Date(b));
 }
 
-export function formatListTime(iso: string): string {
-  const date = new Date(iso);
-  if (isToday(date)) return formatTime(iso);
-  if (isYesterday(date)) return "Yesterday";
-
-  const sameYear = isSameYear(date, new Date());
-  return date.toLocaleDateString(LOCALE, {
-    day: "numeric",
-    month: "short",
-    ...(sameYear ? {} : { year: "2-digit" }),
+export function formatTime(iso: string, language: Language): string {
+  return new Date(iso).toLocaleTimeString(LOCALES[language], {
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
-export function formatLastSeen(iso: string): string {
-  const date = new Date(iso);
-  const time = formatTime(iso);
-
-  if (isToday(date)) return `last seen at ${time}`;
-  if (isYesterday(date)) return `last seen yesterday at ${time}`;
-
-  const sameYear = isSameYear(date, new Date());
-  const day = date.toLocaleDateString(LOCALE, {
-    day: "numeric",
-    month: "short",
-    ...(sameYear ? {} : { year: "numeric" }),
-  });
-  return `last seen on ${day}`;
+export function formatDateTime(iso: string, language: Language): string {
+  return new Date(iso).toLocaleString(LOCALES[language]);
 }
 
-export function formatDateSeparator(iso: string): string {
+export function formatListTime(iso: string, language: Language, t: Translate): string {
   const date = new Date(iso);
-  if (isToday(date)) return "Today";
-  if (isYesterday(date)) return "Yesterday";
+  if (isToday(date)) return formatTime(iso, language);
+  if (isYesterday(date)) return t("date.yesterday");
 
-  const sameYear = isSameYear(date, new Date());
-  return date.toLocaleDateString(LOCALE, {
+  return date.toLocaleDateString(LOCALES[language], {
+    day: "numeric",
+    month: "short",
+    ...(isSameYear(date, new Date()) ? {} : { year: "2-digit" }),
+  });
+}
+
+export function formatLastSeen(iso: string, language: Language, t: Translate): string {
+  const date = new Date(iso);
+  const time = formatTime(iso, language);
+
+  if (isToday(date)) return t("date.lastSeenAt", { time });
+  if (isYesterday(date)) return t("date.lastSeenYesterday", { time });
+
+  const day = date.toLocaleDateString(LOCALES[language], {
+    day: "numeric",
+    month: "short",
+    ...(isSameYear(date, new Date()) ? {} : { year: "numeric" }),
+  });
+  return t("date.lastSeenOn", { day });
+}
+
+export function formatDateSeparator(iso: string, language: Language, t: Translate): string {
+  const date = new Date(iso);
+  if (isToday(date)) return t("date.today");
+  if (isYesterday(date)) return t("date.yesterday");
+
+  return date.toLocaleDateString(LOCALES[language], {
     day: "numeric",
     month: "long",
-    ...(sameYear ? {} : { year: "numeric" }),
+    ...(isSameYear(date, new Date()) ? {} : { year: "numeric" }),
   });
 }

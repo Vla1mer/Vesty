@@ -1,3 +1,4 @@
+import { useLanguage } from "../context/useLanguage";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useGetChatByIdQuery } from "../store/chatsApi";
@@ -6,6 +7,7 @@ import { FormError } from "../components/FormError";
 import { PageShell } from "../components/ui/PageShell";
 
 export function ChatInfoPage() {
+  const { t } = useLanguage();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const chatId = Number(id);
@@ -23,15 +25,15 @@ export function ChatInfoPage() {
   }
 
   return (
-    <PageShell title="Chat info" onBack={goBack} backDisabled={busy}>
+    <PageShell title={t("chats.info")} onBack={goBack} backDisabled={busy}>
       {!isValidChat ? (
-        <FormError message="Invalid chat id" />
+        <FormError message={t("common.invalidChat")} />
       ) : isLoading ? (
         <p className="py-6 text-center text-sm text-content-subtle">
           Loading...
         </p>
       ) : !chat ? (
-        <FormError message="Chat not found" />
+        <FormError message={t("common.chatNotFound")} />
       ) : (
         <ChatInfoContent
           chat={chat}

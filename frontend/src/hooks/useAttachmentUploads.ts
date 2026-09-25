@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import { useLanguage } from "../context/useLanguage";
 import {
   MAX_ATTACHMENT_SIZE,
   MAX_ATTACHMENTS_PER_MESSAGE,
@@ -22,6 +23,7 @@ export interface PendingUpload {
 }
 
 export function useAttachmentUploads(chatId: number) {
+  const { t } = useLanguage();
   const [uploads, setUploads] = useState<PendingUpload[]>([]);
   const controllers = useRef(new Map<string, AbortController>());
   const discarded = useRef(new Set<string>());
@@ -92,7 +94,7 @@ export function useAttachmentUploads(chatId: number) {
             })
             .catch((error) => {
               if (controller.signal.aborted) return;
-              update(localId, { error: "Upload failed", progress: 0 });
+              update(localId, { error: t("attachment.uploadFailed"), progress: 0 });
               void error;
             })
             .finally(() => controllers.current.delete(localId));
@@ -107,13 +109,13 @@ export function useAttachmentUploads(chatId: number) {
             ? URL.createObjectURL(file)
             : undefined,
           progress: 0,
-          error: tooLarge ? "File is larger than 10 MB" : undefined,
+          error: tooLarge ? t("attachment.tooLarge") : undefined,
         };
       });
 
       setUploads((prev) => [...prev, ...started]);
     },
-    [chatId, update, uploads.length]
+    [chatId, update, uploads.length, t]
   );
 
   const readyIds = uploads

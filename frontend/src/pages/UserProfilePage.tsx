@@ -1,3 +1,4 @@
+import { useLanguage } from "../context/useLanguage";
 import { useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useGetUserByIdQuery } from "../store/userApi";
@@ -7,6 +8,7 @@ import { PageShell } from "../components/ui/PageShell";
 import type { AxiosBaseQueryError } from "../api/axiosBaseQuery";
 
 export function UserProfilePage() {
+  const { t } = useLanguage();
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
 
@@ -18,11 +20,11 @@ export function UserProfilePage() {
   });
 
   const loadError = useMemo(() => {
-    if (!isValidUser) return "Invalid user id";
+    if (!isValidUser) return t("direct.invalidUser");
     if (!error) return null;
     const status = (error as AxiosBaseQueryError).status;
-    return status === 404 ? "User not found" : "Failed to load the profile";
-  }, [isValidUser, error]);
+    return status === 404 ? t("direct.userNotFound") : t("direct.profileFailed");
+  }, [isValidUser, error, t]);
 
   return (
     <PageShell title="Profile" onBack={() => navigate(-1)}>

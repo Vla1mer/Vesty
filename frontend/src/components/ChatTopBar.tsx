@@ -1,7 +1,7 @@
 import { ArrowLeft, ChevronRight, Copy, Pencil, Pin, Trash2, X } from "lucide-react";
 import { Avatar, ChatAvatar } from "./Avatar";
 import { usePresence } from "../hooks/usePresence";
-import { formatLastSeen } from "../utils/date";
+import { useDates } from "../hooks/useDates";
 import { useLanguage } from "../context/useLanguage";
 import type { TranslationKey } from "../i18n/translations";
 import { isDirectChat } from "../types/api";
@@ -53,6 +53,7 @@ export function ChatTopBar({
   pinned,
 }: Props) {
   const { t } = useLanguage();
+  const dates = useDates();
   const partnerId = chat && isDirectChat(chat) ? chat.partnerUserId : undefined;
   const presence = usePresence(partnerId ? [partnerId] : []);
   const partnerLastSeen = partnerId ? presence.lastSeenAt(partnerId) : null;
@@ -116,7 +117,7 @@ export function ChatTopBar({
                   <p className="text-xs text-success">online</p>
                 ) : partnerLastSeen ? (
                   <p className="text-xs text-content-muted">
-                    {formatLastSeen(partnerLastSeen)}
+                    {dates.lastSeen(partnerLastSeen)}
                   </p>
                 ) : null)}
             </div>

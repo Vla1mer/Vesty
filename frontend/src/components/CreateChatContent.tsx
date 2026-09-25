@@ -77,7 +77,7 @@ export function CreateChatContent({
       onCreated(chat.id);
     } catch (err) {
       setError(
-        getApiErrorMessage(err, "Failed to create chat. Please try again.")
+        getApiErrorMessage(err, t("chats.createFailed"))
       );
     }
   }
@@ -154,7 +154,7 @@ export function CreateChatContent({
         type="text"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder="Search by username..."
+        placeholder={t("info.searchUsers")}
         autoFocus
         className="text-sm"
       />
@@ -205,7 +205,7 @@ export function CreateChatContent({
           Back
         </Button>
         <Button onClick={handleCreate} disabled={creating}>
-          {creating ? "Creating..." : "Create"}
+          {creating ? t("chats.creating") : t("chats.create")}
         </Button>
       </div>
     </div>

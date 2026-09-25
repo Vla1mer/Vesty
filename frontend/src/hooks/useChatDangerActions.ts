@@ -1,3 +1,4 @@
+import { useLanguage } from "../context/useLanguage";
 import { useState } from "react";
 import {
   useClearChatForMeMutation,
@@ -19,6 +20,7 @@ export function useChatDangerActions({
   onError,
   onDone,
 }: Options) {
+  const { t } = useLanguage();
   const [removeChatMember] = useRemoveChatMemberMutation();
   const [deleteChat] = useDeleteChatMutation();
   const [clearChatForMe, { isLoading: clearing }] = useClearChatForMeMutation();
@@ -42,7 +44,7 @@ export function useChatDangerActions({
       setLeaving(false);
       onDone();
     } catch (err) {
-      onError(getApiErrorMessage(err, "Failed to leave the chat"));
+      onError(getApiErrorMessage(err, t("danger.leaveFailed")));
       setLeaveOpen(false);
       setLeaving(false);
     }
@@ -55,7 +57,7 @@ export function useChatDangerActions({
       setClearOpen(false);
       onDone();
     } catch (err) {
-      onError(getApiErrorMessage(err, "Failed to clear the conversation"));
+      onError(getApiErrorMessage(err, t("danger.clearFailed")));
       setClearOpen(false);
     }
   }
@@ -69,7 +71,7 @@ export function useChatDangerActions({
       setDeleting(false);
       onDone();
     } catch (err) {
-      onError(getApiErrorMessage(err, "Failed to delete the chat"));
+      onError(getApiErrorMessage(err, t("danger.deleteFailed")));
       setDeleteOpen(false);
       setDeleting(false);
     }

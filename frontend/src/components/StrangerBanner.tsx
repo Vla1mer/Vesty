@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
+import { useLanguage } from "../context/useLanguage";
 import { Ban, Clock, ShieldOff, UserPlus } from "lucide-react";
 import type { ReactNode } from "react";
 import {
@@ -36,6 +37,7 @@ function Banner({ text, actions }: { text: ReactNode; actions: ReactNode }) {
 }
 
 export function StrangerBanner({ partnerUserId, partnerName }: Props) {
+  const { t } = useLanguage();
   const { data: friends = [] } = useGetFriendsQuery();
   const { data: requests = [] } = useGetFriendRequestsQuery();
   const { data: blocked = [] } = useGetBlockedUsersQuery();
@@ -49,16 +51,14 @@ export function StrangerBanner({ partnerUserId, partnerName }: Props) {
   const busy =
     sendState.isLoading || blocking.isBlocking || unblockState.isLoading;
 
-  const name = <span className="font-medium text-content">{partnerName}</span>;
-
   return (
     <>
     <AnimatePresence>
       {blocking.askedForChatId !== null && (
         <ConfirmDialog
-          title="Delete this chat?"
-          message="You blocked this user. The conversation can be removed from your list — they keep their copy."
-          confirmText="Delete for me"
+          title={t("friends.blockedChatTitle")}
+          message={t("friends.blockedChatWarning")}
+          confirmText={t("friends.blockedChatConfirm")}
           cancelText="Keep"
           variant="danger"
           loading={blocking.isClearing}
@@ -75,7 +75,7 @@ export function StrangerBanner({ partnerUserId, partnerName }: Props) {
       {isBlocked ? (
         <Banner
           key="blocked"
-          text={<>You blocked {name}. They cannot message you.</>}
+          text={<>{t("stranger.blocked", { name: partnerName })}</>}
           actions={
             <Button
               size="xs"
@@ -83,19 +83,19 @@ export function StrangerBanner({ partnerUserId, partnerName }: Props) {
               disabled={busy}
               onClick={() => unblockUser(partnerUserId)}
             >
-              <ShieldOff size={13} /> Unblock
+              <ShieldOff size={13} /> {t("stranger.unblock")}
             </Button>
           }
         />
       ) : !isFriend ? (
         <Banner
           key="stranger"
-          text={<>{name} is not in your friends.</>}
+          text={<>{t("stranger.notFriend", { name: partnerName })}</>}
           actions={
             <>
               {requested ? (
                 <span className="flex items-center gap-1 text-xs text-content-muted">
-                  <Clock size={13} aria-hidden="true" /> Request sent
+                  <Clock size={13} aria-hidden="true" /> {t("stranger.requestSent")}
                 </span>
               ) : (
                 <Button
@@ -103,7 +103,7 @@ export function StrangerBanner({ partnerUserId, partnerName }: Props) {
                   disabled={busy}
                   onClick={() => sendRequest(partnerUserId)}
                 >
-                  <UserPlus size={13} /> Add friend
+                  <UserPlus size={13} /> {t("stranger.addFriend")}
                 </Button>
               )}
 
@@ -113,7 +113,7 @@ export function StrangerBanner({ partnerUserId, partnerName }: Props) {
                 disabled={busy}
                 onClick={() => blocking.block(partnerUserId)}
               >
-                <Ban size={13} /> Block
+                <Ban size={13} /> {t("stranger.block")}
               </Button>
             </>
           }

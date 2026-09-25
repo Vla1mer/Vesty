@@ -1,3 +1,4 @@
+import { useLanguage } from "../context/useLanguage";
 import { useState } from "react";
 import type { ChatDto } from "../types/api";
 import { Modal } from "./ui/Modal";
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function ChatSettingsModal({ chat, onBack, onDeleted }: Props) {
+  const { t } = useLanguage();
   const [view, setView] = useState<ChatSettingsView>("settings");
   const [busy, setBusy] = useState(false);
 
@@ -25,10 +27,10 @@ export function ChatSettingsModal({ chat, onBack, onDeleted }: Props) {
       closeIcon="back"
       closeSide="left"
       closeDisabled={busy}
-      ariaLabel="Chat settings"
+      ariaLabel={t("info.settings")}
       title={
         <h2 className="min-w-0 flex-1 text-xl font-bold text-content">
-          {view === "admins" ? "Administrators" : "Settings"}
+          {view === "admins" ? t("admins.title") : t("nav.settings")}
         </h2>
       }
     >

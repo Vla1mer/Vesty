@@ -1,4 +1,5 @@
 import { FileText, X } from "lucide-react";
+import { useLanguage } from "../context/useLanguage";
 import { formatSize } from "../api/attachments";
 import type { PendingUpload } from "../hooks/useAttachmentUploads";
 
@@ -8,6 +9,7 @@ interface AttachmentDraftsProps {
 }
 
 export function AttachmentDrafts({ uploads, onRemove }: AttachmentDraftsProps) {
+  const { t } = useLanguage();
   if (uploads.length === 0) return null;
 
   return (
@@ -24,7 +26,7 @@ export function AttachmentDrafts({ uploads, onRemove }: AttachmentDraftsProps) {
           <button
             type="button"
             onClick={() => onRemove(upload.localId)}
-            aria-label="Remove attachment"
+            aria-label={t("attachment.remove")}
             className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-surface-overlay hover:bg-line-strong text-content flex items-center justify-center"
           >
             <X size={12} />

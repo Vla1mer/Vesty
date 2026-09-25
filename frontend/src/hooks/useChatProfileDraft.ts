@@ -73,7 +73,7 @@ export function useChatProfileDraft(
         description: description.trim() || null,
       }).unwrap();
     } catch (err) {
-      onError(getApiErrorMessage(err, "Failed to save the chat profile"));
+      onError(getApiErrorMessage(err, t("chatSettings.profileFailed")));
     } finally {
       setSaving(false);
     }

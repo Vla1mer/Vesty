@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import type { ReactNode } from "react";
 import { ArrowLeft, X } from "lucide-react";
 import { motion } from "framer-motion";
+import { useLanguage } from "../../context/useLanguage";
 
 const WIDTHS = {
   sm: "max-w-sm",
@@ -41,6 +42,7 @@ export function Modal({
   layer = "top",
   children,
 }: Props) {
+  const { t } = useLanguage();
   const pressStartedOnBackdrop = useRef(false);
 
   useEffect(() => {
@@ -56,7 +58,7 @@ export function Modal({
       type="button"
       onClick={onClose}
       disabled={closeDisabled}
-      aria-label={closeIcon === "back" ? "Back" : "Close"}
+      aria-label={closeIcon === "back" ? t("common.back") : t("common.close")}
       className="shrink-0 text-content-muted transition hover:text-content disabled:opacity-50"
     >
       {closeIcon === "back" ? <ArrowLeft size={22} /> : <X size={22} />}

@@ -7,7 +7,7 @@ import {
   useRevokeChatInviteMutation,
 } from "../store/chatInvitesApi";
 import { getApiErrorMessage } from "../utils/apiError";
-import { formatDateTime } from "../utils/date";
+import { useDates } from "../hooks/useDates";
 import { Button } from "./ui/Button";
 import { FormError } from "./FormError";
 
@@ -23,6 +23,7 @@ const lifetimes = [
 
 export function ChatInviteSection({ chatId }: Props) {
   const { t } = useLanguage();
+  const dates = useDates();
   const { data: invite, isLoading } = useGetChatInviteQuery(chatId);
   const [createInvite, { isLoading: creating }] = useCreateChatInviteMutation();
   const [revokeInvite, { isLoading: revoking }] = useRevokeChatInviteMutation();
@@ -87,7 +88,7 @@ export function ChatInviteSection({ chatId }: Props) {
 
           {invite?.expiresAt && (
             <p className="text-xs text-content-subtle">
-              {t("invite.expires", { when: formatDateTime(invite.expiresAt) })}
+              {t("invite.expires", { when: dates.dateTime(invite.expiresAt) })}
             </p>
           )}
 

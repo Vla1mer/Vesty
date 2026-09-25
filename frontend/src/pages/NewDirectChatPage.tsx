@@ -1,3 +1,4 @@
+import { useLanguage } from "../context/useLanguage";
 import { ArrowLeft } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
@@ -11,6 +12,7 @@ import { FormError } from "../components/FormError";
 import { getApiErrorMessage } from "../utils/apiError";
 
 export function NewDirectChatPage() {
+  const { t } = useLanguage();
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const otherUserId = Number(userId);
@@ -25,11 +27,11 @@ export function NewDirectChatPage() {
     useCreateDirectChatAndSendMessageMutation();
 
   const loadError = useMemo(() => {
-    if (!isValidUser) return "Invalid user id";
+    if (!isValidUser) return t("direct.invalidUser");
     if (!partnerError) return null;
     const status = (partnerError as AxiosBaseQueryError).status;
-    return status === 404 ? "User not found" : "Failed to load user";
-  }, [isValidUser, partnerError]);
+    return status === 404 ? t("direct.userNotFound") : t("direct.loadFailed");
+  }, [isValidUser, partnerError, t]);
 
   async function handleSend(e: FormEvent) {
     e.preventDefault();
@@ -43,11 +45,11 @@ export function NewDirectChatPage() {
       }).unwrap();
       navigate(`/chats/${message.chatId}`, { replace: true });
     } catch (error) {
-      setSendError(getApiErrorMessage(error, "Failed to send message"));
+      setSendError(getApiErrorMessage(error, t("chat.sendFailed")));
     }
   }
 
-  const title = partner?.userName ?? "Loading...";
+  const title = partner?.userName ?? t("chat.loading");
 
   return (
     <div className="h-full flex flex-col">
@@ -87,7 +89,7 @@ export function NewDirectChatPage() {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type a message..."
+            placeholder={t("composer.placeholder")}
             maxLength={2000}
             disabled={sending}
             className="flex-1"

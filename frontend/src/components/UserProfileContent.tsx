@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { Avatar } from "./Avatar";
 import { usePresence } from "../hooks/usePresence";
-import { formatLastSeen } from "../utils/date";
+import { useDates } from "../hooks/useDates";
 import { Button } from "./ui/Button";
 import type { UserDto } from "../types/api";
 
@@ -13,6 +13,7 @@ interface Props {
 
 export function UserProfileContent({ user }: Props) {
   const { userId: currentUserId } = useAuth();
+  const dates = useDates();
   const navigate = useNavigate();
 
   const presence = usePresence([user.id]);
@@ -42,7 +43,7 @@ export function UserProfileContent({ user }: Props) {
             <p className="text-sm text-success">online</p>
           ) : presence.lastSeenAt(user.id) ? (
             <p className="text-sm text-content-muted">
-              {formatLastSeen(presence.lastSeenAt(user.id)!)}
+              {dates.lastSeen(presence.lastSeenAt(user.id)!)}
             </p>
           ) : null}
         </div>

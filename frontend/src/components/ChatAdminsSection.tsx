@@ -1,4 +1,5 @@
 import { AnimatePresence } from "framer-motion";
+import { useLanguage } from "../context/useLanguage";
 import { Crown, Plus, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
@@ -54,6 +55,7 @@ function Row({
 }
 
 export function ChatAdminsSection({ chatId, members }: Props) {
+  const { t } = useLanguage();
   const [updateMemberRole] = useUpdateMemberRoleMutation();
   const [transferChatOwnership] = useTransferChatOwnershipMutation();
 
@@ -103,7 +105,7 @@ export function ChatAdminsSection({ chatId, members }: Props) {
           userId: target.userId,
           roleId: UserRole.Admin,
         }).unwrap(),
-      "Failed to grant admin rights"
+      t("admins.grantFailed")
     );
   }
 
@@ -118,7 +120,7 @@ export function ChatAdminsSection({ chatId, members }: Props) {
           userId: target.userId,
           roleId: UserRole.User,
         }).unwrap(),
-      "Failed to remove admin rights"
+      t("admins.revokeFailed")
     );
   }
 
@@ -128,7 +130,7 @@ export function ChatAdminsSection({ chatId, members }: Props) {
     setHandingOver(null);
     await run(
       () => transferChatOwnership({ chatId, userId: target.userId }).unwrap(),
-      "Failed to transfer ownership"
+      t("admins.transferFailed")
     );
   }
 
@@ -137,13 +139,13 @@ export function ChatAdminsSection({ chatId, members }: Props) {
       <FormError message={error} />
 
       <ul>
-        {owner && <Row member={owner} label="Owner" />}
+        {owner && <Row member={owner} label={t("admins.owner")} />}
 
         {admins.map((admin) => (
           <Row
             key={admin.userId}
             member={admin}
-            label="Admin"
+            label={t("admins.admin")}
             action={
               <div className="flex shrink-0 items-center gap-1">
                 <Button
@@ -151,8 +153,8 @@ export function ChatAdminsSection({ chatId, members }: Props) {
                   variant="neutral"
                   disabled={busy}
                   onClick={() => setHandingOver(admin)}
-                  aria-label="Make owner"
-                  title="Make owner"
+                  aria-label={t("admins.makeOwner")}
+                  title={t("admins.makeOwner")}
                 >
                   <Crown size={12} />
                 </Button>
@@ -161,8 +163,8 @@ export function ChatAdminsSection({ chatId, members }: Props) {
                   variant="danger"
                   disabled={busy}
                   onClick={() => setDemoting(admin)}
-                  aria-label="Remove admin"
-                  title="Remove admin"
+                  aria-label={t("admins.removeAdmin")}
+                  title={t("admins.removeAdmin")}
                 >
                   <X size={12} />
                 </Button>
@@ -248,11 +250,11 @@ export function ChatAdminsSection({ chatId, members }: Props) {
       <AnimatePresence>
         {promoting && (
           <ConfirmDialog
-            title="Grant admin rights?"
+            title={t("admins.grantTitle")}
             message={`${displayName(
               promoting
             )} will be able to add and remove members, and edit the chat name and photo.`}
-            confirmText="Make admin"
+            confirmText={t("admins.grantConfirm")}
             variant="primary"
             loading={busy}
             onConfirm={confirmPromote}
@@ -264,11 +266,11 @@ export function ChatAdminsSection({ chatId, members }: Props) {
       <AnimatePresence>
         {demoting && (
           <ConfirmDialog
-            title="Remove admin rights?"
+            title={t("admins.revokeTitle")}
             message={`${displayName(
               demoting
             )} will stay in the chat as a regular member and lose the ability to manage it.`}
-            confirmText="Remove rights"
+            confirmText={t("admins.revokeConfirm")}
             variant="danger"
             loading={busy}
             onConfirm={confirmDemote}
@@ -280,11 +282,11 @@ export function ChatAdminsSection({ chatId, members }: Props) {
       <AnimatePresence>
         {handingOver && (
           <ConfirmDialog
-            title="Make owner?"
+            title={t("admins.transferTitle")}
             message={`${displayName(
               handingOver
             )} will own this chat and you become an admin. Only they will be able to hand it back.`}
-            confirmText="Make owner"
+            confirmText={t("admins.makeOwner")}
             variant="primary"
             loading={busy}
             onConfirm={confirmHandOver}

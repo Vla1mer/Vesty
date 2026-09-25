@@ -2,7 +2,7 @@ import { NavLink } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { Avatar, ChatAvatar } from "./Avatar";
 import { getChatDisplayName } from "../utils/chats";
-import { formatListTime } from "../utils/date";
+import { useDates } from "../hooks/useDates";
 import { isDirectChat, type ChatDto } from "../types/api";
 
 interface Props {
@@ -12,6 +12,7 @@ interface Props {
 
 export function ChatListItem({ chat, online = false }: Props) {
   const { userId } = useAuth();
+  const dates = useDates();
   const title = getChatDisplayName(chat);
 
   const sender =
@@ -64,7 +65,7 @@ export function ChatListItem({ chat, online = false }: Props) {
                     isActive ? "text-accent-contrast/70" : "text-content-subtle"
                   }`}
                 >
-                  {formatListTime(chat.lastMessageAt)}
+                  {dates.listTime(chat.lastMessageAt)}
                 </span>
               )}
             </div>

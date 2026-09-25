@@ -1,3 +1,4 @@
+import { useLanguage } from "../context/useLanguage";
 import { Button } from "./ui/Button";
 import { FormError } from "./FormError";
 import { Modal } from "./ui/Modal";
@@ -17,14 +18,16 @@ interface Props {
 export function ConfirmDialog({
   title,
   message,
-  confirmText = "Confirm",
-  cancelText = "Cancel",
+  confirmText,
+  cancelText,
   variant = "danger",
   loading = false,
   error = null,
   onConfirm,
   onCancel,
 }: Props) {
+  const { t } = useLanguage();
+
   return (
     <Modal
       title={title}
@@ -36,14 +39,14 @@ export function ConfirmDialog({
 
       <div className="flex justify-end gap-2 pt-6">
         <Button variant="neutral" onClick={onCancel} disabled={loading}>
-          {cancelText}
+          {cancelText ?? t("common.cancel")}
         </Button>
         <Button
           variant={variant === "danger" ? "dangerSolid" : "primary"}
           onClick={onConfirm}
           disabled={loading}
         >
-          {loading ? "..." : confirmText}
+          {loading ? "..." : confirmText ?? t("common.confirm")}
         </Button>
       </div>
     </Modal>

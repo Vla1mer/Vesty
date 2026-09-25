@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { LanguageProvider } from "../context/LanguageContext";
 
 let lastUploadedId = 0;
 
@@ -16,7 +17,7 @@ vi.mock("../api/attachments", async (importOriginal) => {
   };
 });
 
-import { StrictMode } from "react";
+import { StrictMode, createElement } from "react";
 import { act, renderHook } from "@testing-library/react";
 import { useAttachmentUploads } from "./useAttachmentUploads";
 import {
@@ -48,7 +49,7 @@ describe("useAttachmentUploads", () => {
       throw new TypeError("crypto.randomUUID is not a function");
     });
 
-    const { result } = renderHook(() => useAttachmentUploads(1));
+    const { result } = renderHook(() => useAttachmentUploads(1), { wrapper: LanguageProvider });
 
     act(() => result.current.add([file("photo.png", "image/png")]));
 
@@ -59,7 +60,8 @@ describe("useAttachmentUploads", () => {
 
   it("starts one upload per file even under StrictMode", () => {
     const { result } = renderHook(() => useAttachmentUploads(1), {
-      wrapper: StrictMode,
+      wrapper: ({ children }) =>
+        createElement(StrictMode, null, createElement(LanguageProvider, null, children)),
     });
 
     act(() => result.current.add([file("photo.png", "image/png")]));
@@ -69,7 +71,7 @@ describe("useAttachmentUploads", () => {
   });
 
   it("keeps the ids of files that finished uploading", async () => {
-    const { result } = renderHook(() => useAttachmentUploads(1));
+    const { result } = renderHook(() => useAttachmentUploads(1), { wrapper: LanguageProvider });
 
     await act(async () => {
       result.current.add([file("a.png", "image/png"), file("b.png", "image/png")]);
@@ -79,7 +81,7 @@ describe("useAttachmentUploads", () => {
   });
 
   it("gives every file its own id", () => {
-    const { result } = renderHook(() => useAttachmentUploads(1));
+    const { result } = renderHook(() => useAttachmentUploads(1), { wrapper: LanguageProvider });
 
     act(() => result.current.add([file("a.txt"), file("b.txt")]));
     act(() => result.current.add([file("c.txt")]));
@@ -89,7 +91,7 @@ describe("useAttachmentUploads", () => {
   });
 
   it("previews images and nothing else", () => {
-    const { result } = renderHook(() => useAttachmentUploads(1));
+    const { result } = renderHook(() => useAttachmentUploads(1), { wrapper: LanguageProvider });
 
     act(() =>
       result.current.add([
@@ -105,7 +107,7 @@ describe("useAttachmentUploads", () => {
   });
 
   it("refuses a file over the size limit", () => {
-    const { result } = renderHook(() => useAttachmentUploads(1));
+    const { result } = renderHook(() => useAttachmentUploads(1), { wrapper: LanguageProvider });
 
     act(() =>
       result.current.add([file("big.bin", "text/plain", MAX_ATTACHMENT_SIZE + 1)])
@@ -115,7 +117,7 @@ describe("useAttachmentUploads", () => {
   });
 
   it("stops at the per-message limit", () => {
-    const { result } = renderHook(() => useAttachmentUploads(1));
+    const { result } = renderHook(() => useAttachmentUploads(1), { wrapper: LanguageProvider });
 
     act(() =>
       result.current.add(
@@ -129,7 +131,7 @@ describe("useAttachmentUploads", () => {
   });
 
   it("drops a file and releases its preview", () => {
-    const { result } = renderHook(() => useAttachmentUploads(1));
+    const { result } = renderHook(() => useAttachmentUploads(1), { wrapper: LanguageProvider });
 
     act(() => result.current.add([file("photo.png", "image/png")]));
     const { localId } = result.current.uploads[0];

@@ -27,7 +27,7 @@ export function SearchBar({ value, onChange }: Props) {
         <button
           type="button"
           onClick={() => onChange("")}
-          aria-label="Clear search"
+          aria-label={t("chats.clearSearch")}
           className="absolute right-3 top-1/2 -translate-y-1/2 text-content-muted hover:text-content"
         >
           <X size={16} />
