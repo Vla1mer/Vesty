@@ -123,7 +123,7 @@ export function MessageList({
                   <div className="my-3 flex items-center gap-3">
                     <span className="h-px flex-1 bg-accent-strong/40" />
                     <span className="text-xs font-medium text-accent-strong">
-                      Unread messages
+                      {t("chat.unread")}
                     </span>
                     <span className="h-px flex-1 bg-accent-strong/40" />
                   </div>

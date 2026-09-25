@@ -59,7 +59,7 @@ export function StrangerBanner({ partnerUserId, partnerName }: Props) {
           title={t("friends.blockedChatTitle")}
           message={t("friends.blockedChatWarning")}
           confirmText={t("friends.blockedChatConfirm")}
-          cancelText="Keep"
+          cancelText={t("friends.blockedChatCancel")}
           variant="danger"
           loading={blocking.isClearing}
           error={blocking.clearError}

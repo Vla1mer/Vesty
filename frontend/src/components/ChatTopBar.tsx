@@ -114,7 +114,7 @@ export function ChatTopBar({
                       : t("chat.loading")}
                   </p>
                 ) : partnerId && presence.isOnline(partnerId) ? (
-                  <p className="text-xs text-success">online</p>
+                  <p className="text-xs text-success">{t("chat.online")}</p>
                 ) : partnerLastSeen ? (
                   <p className="text-xs text-content-muted">
                     {dates.lastSeen(partnerLastSeen)}
@@ -144,7 +144,7 @@ export function ChatTopBar({
             <X size={22} />
           </button>
           <span className="flex-1 font-semibold text-content">
-            {selection.count} selected
+            {t("chat.selected", { count: selection.count })}
           </span>
           <div className="flex items-center gap-4 text-content-muted">
             <button onClick={selection.onCopy} aria-label={t("chat.copy")} title={t("chat.copy")}>
@@ -179,7 +179,7 @@ export function ChatTopBar({
           <div className="min-w-0 flex-1 border-l-2 border-accent-strong pl-3">
             <p className="text-xs font-medium text-accent-strong">
               {pinned.total > 1
-                ? `Pinned message ${pinned.index + 1} of ${pinned.total}`
+                ? t("chat.pinnedOf", { index: pinned.index + 1, total: pinned.total })
                 : t("chat.pinnedMessage")}
             </p>
             <p className="text-sm text-content-muted truncate">

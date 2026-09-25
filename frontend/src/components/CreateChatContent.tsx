@@ -96,7 +96,7 @@ export function CreateChatContent({
       <div className="space-y-4">
         <div>
           <label className="block text-sm text-content-muted mb-1">
-            Chat name
+            {t("createChat.name")}
           </label>
           <TextInput
             type="text"
@@ -114,7 +114,7 @@ export function CreateChatContent({
 
         <div className="flex gap-2 justify-end">
           <Button variant="neutral" onClick={onCancel}>
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button onClick={handleNext}>Next</Button>
         </div>
@@ -163,11 +163,11 @@ export function CreateChatContent({
         <div className="max-h-40 overflow-y-auto">
           {isFetching ? (
             <p className="text-sm text-content-subtle py-2 text-center">
-              Searching...
+              {t("info.searching")}
             </p>
           ) : candidates.length === 0 ? (
             <p className="text-sm text-content-subtle py-2 text-center">
-              No users match your search
+              {t("info.noUsers")}
             </p>
           ) : (
             <ul className="space-y-1">
@@ -202,7 +202,7 @@ export function CreateChatContent({
           onClick={() => onStepChange(1)}
           disabled={creating}
         >
-          Back
+          {t("createChat.back")}
         </Button>
         <Button onClick={handleCreate} disabled={creating}>
           {creating ? t("chats.creating") : t("chats.create")}

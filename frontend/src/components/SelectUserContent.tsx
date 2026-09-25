@@ -52,13 +52,13 @@ export function SelectUserContent({ onSelected }: Props) {
 
       {term.length === 0 ? (
         <p className="text-sm text-content-subtle text-center py-6">
-          Start typing to find someone
+          {t("users.startTyping")}
         </p>
       ) : isFetching ? (
         <p className="text-content-muted text-center py-8">Searching...</p>
       ) : filtered.length === 0 ? (
         <p className="text-sm text-content-subtle text-center py-6">
-          No users match your search
+          {t("info.noUsers")}
         </p>
       ) : (
         <ul className="space-y-1">
@@ -89,14 +89,14 @@ export function SelectUserContent({ onSelected }: Props) {
                   title={t("users.alreadyFriends")}
                   className="flex items-center gap-1 text-xs text-content-muted"
                 >
-                  <Check size={13} aria-hidden="true" /> Friend
+                  <Check size={13} aria-hidden="true" /> {t("friends.alreadyFriend")}
                 </span>
               ) : requestedIds.has(u.id) ? (
                 <span
                   title={t("users.requestPending")}
                   className="flex items-center gap-1 text-xs text-content-muted"
                 >
-                  <Clock size={13} aria-hidden="true" /> Pending
+                  <Clock size={13} aria-hidden="true" /> {t("friends.pending")}
                 </span>
               ) : (
                 <Button

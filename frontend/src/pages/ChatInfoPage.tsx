@@ -30,7 +30,7 @@ export function ChatInfoPage() {
         <FormError message={t("common.invalidChat")} />
       ) : isLoading ? (
         <p className="py-6 text-center text-sm text-content-subtle">
-          Loading...
+          {t("common.loading")}
         </p>
       ) : !chat ? (
         <FormError message={t("common.chatNotFound")} />

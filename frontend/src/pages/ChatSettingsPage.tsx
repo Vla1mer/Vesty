@@ -43,7 +43,7 @@ export function ChatSettingsPage() {
         <FormError message={t("common.invalidChat")} />
       ) : isLoading ? (
         <p className="py-6 text-center text-sm text-content-subtle">
-          Loading settings...
+          {t("chatSettings.loading")}
         </p>
       ) : !chat ? (
         <FormError message={t("common.chatNotFound")} />

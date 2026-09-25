@@ -169,7 +169,7 @@ export function ChatInfoContent({ chat, onOpenSettings, onBusyChange }: Props) {
         <div className="space-y-4">
           <section>
             <h3 className="text-sm font-semibold text-content-muted mb-2">
-              In this chat
+              {t("info.inThisChat")}
             </h3>
             {members.length === 0 ? (
               <p className="text-sm text-content-subtle">No members yet</p>
@@ -247,7 +247,7 @@ export function ChatInfoContent({ chat, onOpenSettings, onBusyChange }: Props) {
           {isGroup && (
             <section>
               <h3 className="text-sm font-semibold text-content-muted mb-2">
-                Add a user
+                {t("info.addUser")}
               </h3>
               <TextInput
                 type="text"
@@ -258,7 +258,7 @@ export function ChatInfoContent({ chat, onOpenSettings, onBusyChange }: Props) {
               />
               {search.trim().length === 0 ? (
                 <p className="text-sm text-content-subtle py-2 text-center">
-                  Start typing to find users
+                  {t("info.startTyping")}
                 </p>
               ) : filteredCandidates.length === 0 ? (
                 <p className="text-sm text-content-subtle py-2 text-center">
@@ -311,10 +311,11 @@ export function ChatInfoContent({ chat, onOpenSettings, onBusyChange }: Props) {
         {removing && (
           <ConfirmDialog
             title={t("info.removeTitle")}
-            message={`${
-              [removing.name, removing.surname].filter(Boolean).join(" ") ||
-              removing.userName
-            } will lose access to this chat and its history. They can be added back later.`}
+            message={t("info.removeWarning", {
+              name:
+                [removing.name, removing.surname].filter(Boolean).join(" ") ||
+                removing.userName,
+            })}
             confirmText={t("info.remove")}
             variant="danger"
             loading={busyUserId === removing.userId}

@@ -103,7 +103,7 @@ export function ChatSettingsContent({
 
           {loading && (
             <p className="py-6 text-center text-sm text-content-subtle">
-              Loading settings...
+              {t("chatSettings.loading")}
             </p>
           )}
 
@@ -163,7 +163,7 @@ export function ChatSettingsContent({
             >
               <span className="flex items-center gap-2">
                 <Crown size={15} aria-hidden="true" />
-                Administrators
+                {t("admins.title")}
               </span>
               <span className="flex items-center gap-1 text-content-muted">
                 {adminCount}

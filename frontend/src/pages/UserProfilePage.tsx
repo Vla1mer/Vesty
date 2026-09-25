@@ -27,7 +27,7 @@ export function UserProfilePage() {
   }, [isValidUser, error, t]);
 
   return (
-    <PageShell title="Profile" onBack={() => navigate(-1)}>
+    <PageShell title={t("nav.profile")} onBack={() => navigate(-1)}>
       {loadError ? (
         <FormError message={loadError} />
       ) : isLoading || !user ? (

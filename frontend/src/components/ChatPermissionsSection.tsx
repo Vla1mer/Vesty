@@ -22,7 +22,7 @@ export function ChatPermissionsSection({ levels, disabled, onChange }: Props) {
 
   return (
     <section className="space-y-2 border-t border-line pt-3">
-      <h3 className="text-sm font-semibold text-content-muted">Permissions</h3>
+      <h3 className="text-sm font-semibold text-content-muted">{t("chatSettings.permissions")}</h3>
       {fields.map(({ key, label }) => (
         <label key={key} className="flex items-center justify-between gap-3">
           <span className="text-sm text-content">{t(label)}</span>

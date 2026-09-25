@@ -17,8 +17,8 @@ interface Props {
 
 const lifetimes = [
   { label: "invite.never", days: null },
-  { label: "1 day", days: 1 },
-  { label: "7 days", days: 7 },
+  { label: "invite.day", days: 1 },
+  { label: "invite.week", days: 7 },
 ] as const;
 
 export function ChatInviteSection({ chatId }: Props) {
@@ -97,14 +97,14 @@ export function ChatInviteSection({ chatId }: Props) {
               <RefreshCw size={13} aria-hidden="true" /> Replace
             </Button>
             <Button size="xs" variant="danger" onClick={handleRevoke} disabled={busy}>
-              <Trash2 size={13} aria-hidden="true" /> Revoke
+              <Trash2 size={13} aria-hidden="true" /> {t("invite.revoke")}
             </Button>
           </div>
         </>
       ) : (
         <>
           <p className="text-sm text-content-subtle">
-            Anyone with the link can join this chat.
+            {t("invite.hint")}
           </p>
           <div className="flex items-center gap-2">
             <select
@@ -116,7 +116,7 @@ export function ChatInviteSection({ chatId }: Props) {
             >
               {lifetimes.map(({ label, days: value }) => (
                 <option key={label} value={value ?? ""}>
-                  {label}
+                  {t(label)}
                 </option>
               ))}
             </select>

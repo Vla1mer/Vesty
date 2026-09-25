@@ -145,11 +145,11 @@ export function FriendsContent() {
           <ul className="mt-2">
             {searching ? (
               <li className="px-3 py-4 text-center text-sm text-content-subtle">
-                Searching...
+                {t("info.searching")}
               </li>
             ) : candidates.length === 0 ? (
               <li className="px-3 py-4 text-center text-sm text-content-subtle">
-                No users match your search
+                {t("info.noUsers")}
               </li>
             ) : (
               candidates.map((user) => (
@@ -205,7 +205,7 @@ export function FriendsContent() {
       {incoming.length > 0 && (
         <section>
           <h2 className="mb-2 px-3 text-sm font-semibold text-content">
-            Requests
+            {t("friends.requests")}
             <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-xs text-accent-contrast">
               {incoming.length}
             </span>
@@ -225,7 +225,7 @@ export function FriendsContent() {
                         onClick={() => acceptRequest(request.userId)}
                         aria-label={t("friends.accept")}
                       >
-                        <Check size={14} /> Accept
+                        <Check size={14} /> {t("friends.accepted")}
                       </Button>
                       <Button
                         size="xs"
@@ -262,7 +262,7 @@ export function FriendsContent() {
                       disabled={isBusy(request.userId)}
                       onClick={() => removeFriend(request.userId)}
                     >
-                      Cancel
+                      {t("common.cancel")}
                     </Button>
                   }
                 />
@@ -274,7 +274,7 @@ export function FriendsContent() {
 
       <section>
         <h2 className="mb-2 px-3 text-sm font-semibold text-content">
-          Friends
+          {t("friends.title")}
           {friends.length > 0 && (
             <span className="ml-2 text-content-muted">{friends.length}</span>
           )}

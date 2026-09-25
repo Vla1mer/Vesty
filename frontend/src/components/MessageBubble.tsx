@@ -161,7 +161,7 @@ export function MessageBubble({
                   }`}
                 >
                   <Pin size={11} aria-hidden="true" className="inline -mt-0.5 mr-1" />
-                  Pinned
+                  {t("chat.pinned")}
                 </p>
               )}
 

@@ -300,6 +300,64 @@ const en = {
   "date.lastSeenAt": "last seen at {time}",
   "date.lastSeenYesterday": "last seen yesterday at {time}",
   "date.lastSeenOn": "last seen on {day}",
+
+  "common.loading": "Loading...",
+
+  "chat.online": "online",
+  "chat.selected": "{count} selected",
+  "chat.pinnedOf": "Pinned message {index} of {total}",
+  "chat.pinned": "Pinned",
+  "chat.unread": "Unread messages",
+  "chat.deleteOneTitle": "Delete message?",
+  "chat.deleteCountTitle": "Delete {count} messages?",
+
+  "invite.day": "1 day",
+  "invite.week": "7 days",
+  "invite.revoke": "Revoke",
+  "invite.hint": "Anyone with the link can join this chat.",
+
+  "danger.clear": "Delete for me",
+  "danger.leave": "Leave chat",
+  "danger.delete": "Delete chat",
+  "danger.ownerFirst": "To leave this chat, hand ownership to another member first.",
+
+  "admins.empty": "No administrators yet.",
+  "admins.ownerHint": "Ownership can only be handed to an administrator.",
+  "admins.choose": "Choose a member",
+  "admins.allAdmins": "Everyone here is already an administrator.",
+  "admins.add": "Add administrator",
+  "admins.grantWarning": "{name} will be able to add and remove members, and edit the chat name and photo.",
+  "admins.revokeWarning": "{name} will stay in the chat as a regular member and lose the ability to manage it.",
+  "admins.transferWarning": "{name} will own this chat and you become an admin. Only they will be able to hand it back.",
+
+  "info.inThisChat": "In this chat",
+  "info.addUser": "Add a user",
+  "info.startTyping": "Start typing to find users",
+  "info.removeWarning": "{name} will lose access to this chat and its history. They can be added back later.",
+
+  "chatSettings.loading": "Loading settings...",
+  "chatSettings.permissions": "Permissions",
+
+  "createChat.name": "Chat name",
+  "createChat.back": "Back",
+
+  "friends.requests": "Requests",
+  "friends.title": "Friends",
+  "friends.accepted": "Accept",
+  "friends.declined": "Decline",
+  "friends.pending": "Pending",
+  "friends.alreadyFriend": "Friend",
+
+  "users.startTyping": "Start typing to find someone",
+
+  "search.chats": "Chats",
+  "search.users": "Users",
+
+  "profile.hidden": "This user has hidden their profile",
+
+  "join.invalid": "This link is no longer valid",
+  "join.invalidHint": "It may have been revoked or has expired.",
+  "join.backToChats": "Back to chats",
 } as const;
 
 const pl: Record<keyof typeof en, string> = {
@@ -595,6 +653,64 @@ const pl: Record<keyof typeof en, string> = {
   "date.lastSeenAt": "ostatnio widziany o {time}",
   "date.lastSeenYesterday": "ostatnio widziany wczoraj o {time}",
   "date.lastSeenOn": "ostatnio widziany {day}",
+
+  "common.loading": "Wczytywanie...",
+
+  "chat.online": "online",
+  "chat.selected": "Zaznaczono: {count}",
+  "chat.pinnedOf": "Przypięta wiadomość {index} z {total}",
+  "chat.pinned": "Przypięta",
+  "chat.unread": "Nieprzeczytane wiadomości",
+  "chat.deleteOneTitle": "Usunąć wiadomość?",
+  "chat.deleteCountTitle": "Usunąć wiadomości: {count}?",
+
+  "invite.day": "1 dzień",
+  "invite.week": "7 dni",
+  "invite.revoke": "Unieważnij",
+  "invite.hint": "Każdy, kto ma link, może dołączyć do tego czatu.",
+
+  "danger.clear": "Usuń u mnie",
+  "danger.leave": "Opuść czat",
+  "danger.delete": "Usuń czat",
+  "danger.ownerFirst": "Aby opuścić ten czat, najpierw przekaż własność innemu uczestnikowi.",
+
+  "admins.empty": "Nie ma jeszcze administratorów.",
+  "admins.ownerHint": "Własność można przekazać tylko administratorowi.",
+  "admins.choose": "Wybierz uczestnika",
+  "admins.allAdmins": "Wszyscy tutaj są już administratorami.",
+  "admins.add": "Dodaj administratora",
+  "admins.grantWarning": "{name} będzie mógł dodawać i usuwać uczestników oraz zmieniać nazwę i zdjęcie czatu.",
+  "admins.revokeWarning": "{name} pozostanie w czacie jako zwykły uczestnik i straci możliwość zarządzania nim.",
+  "admins.transferWarning": "{name} zostanie właścicielem tego czatu, a Ty administratorem. Tylko ta osoba będzie mogła oddać własność.",
+
+  "info.inThisChat": "W tym czacie",
+  "info.addUser": "Dodaj osobę",
+  "info.startTyping": "Zacznij pisać, aby znaleźć osoby",
+  "info.removeWarning": "{name} straci dostęp do tego czatu i jego historii. Można dodać tę osobę ponownie.",
+
+  "chatSettings.loading": "Wczytywanie ustawień...",
+  "chatSettings.permissions": "Uprawnienia",
+
+  "createChat.name": "Nazwa czatu",
+  "createChat.back": "Wstecz",
+
+  "friends.requests": "Zaproszenia",
+  "friends.title": "Znajomi",
+  "friends.accepted": "Akceptuj",
+  "friends.declined": "Odrzuć",
+  "friends.pending": "Oczekuje",
+  "friends.alreadyFriend": "Znajomy",
+
+  "users.startTyping": "Zacznij pisać, aby znaleźć osobę",
+
+  "search.chats": "Czaty",
+  "search.users": "Osoby",
+
+  "profile.hidden": "Ta osoba ukryła swój profil",
+
+  "join.invalid": "Ten link nie jest już aktywny",
+  "join.invalidHint": "Mógł zostać unieważniony lub wygasnąć.",
+  "join.backToChats": "Wróć do czatów",
 };
 
 export const translations = { en, pl };

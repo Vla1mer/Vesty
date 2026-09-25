@@ -72,7 +72,7 @@ export function EmojiPickerButton({
           <Suspense
             fallback={
               <p className="rounded-card border border-line bg-surface p-4 text-sm text-content-muted">
-                Loading...
+                {t("common.loading")}
               </p>
             }
           >

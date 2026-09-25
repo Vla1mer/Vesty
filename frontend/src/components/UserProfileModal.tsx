@@ -18,7 +18,7 @@ export function UserProfileModal({ userId, onClose }: Props) {
       {isError ? (
         <FormError message={t("direct.profileFailed")} />
       ) : isLoading || !user ? (
-        <p className="py-6 text-center text-sm text-content-subtle">Loading...</p>
+        <p className="py-6 text-center text-sm text-content-subtle">{t("common.loading")}</p>
       ) : (
         <UserProfileContent user={user} />
       )}

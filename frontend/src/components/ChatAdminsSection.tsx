@@ -176,22 +176,22 @@ export function ChatAdminsSection({ chatId, members }: Props) {
 
       {admins.length === 0 ? (
         <p className="px-3 text-sm text-content-subtle">
-          No administrators yet.
+          {t("admins.empty")}
         </p>
       ) : (
         <p className="px-3 text-xs text-content-subtle">
-          Ownership can only be handed to an administrator.
+          {t("admins.ownerHint")}
         </p>
       )}
 
       {isPicking ? (
         <section className="space-y-1 border-t border-line pt-3">
           <h4 className="px-3 text-sm font-semibold text-content-muted">
-            Choose a member
+            {t("admins.choose")}
           </h4>
           {plainMembers.length === 0 ? (
             <p className="px-3 py-2 text-sm text-content-subtle">
-              Everyone here is already an administrator.
+              {t("admins.allAdmins")}
             </p>
           ) : (
             <ul>
@@ -231,7 +231,7 @@ export function ChatAdminsSection({ chatId, members }: Props) {
               onClick={() => setIsPicking(false)}
               disabled={busy}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
           </div>
         </section>
@@ -243,7 +243,7 @@ export function ChatAdminsSection({ chatId, members }: Props) {
           onClick={() => setIsPicking(true)}
         >
           <Plus size={15} aria-hidden="true" />
-          Add administrator
+          {t("admins.add")}
         </Button>
       )}
 
@@ -251,9 +251,7 @@ export function ChatAdminsSection({ chatId, members }: Props) {
         {promoting && (
           <ConfirmDialog
             title={t("admins.grantTitle")}
-            message={`${displayName(
-              promoting
-            )} will be able to add and remove members, and edit the chat name and photo.`}
+            message={t("admins.grantWarning", { name: displayName(promoting) })}
             confirmText={t("admins.grantConfirm")}
             variant="primary"
             loading={busy}
@@ -267,9 +265,7 @@ export function ChatAdminsSection({ chatId, members }: Props) {
         {demoting && (
           <ConfirmDialog
             title={t("admins.revokeTitle")}
-            message={`${displayName(
-              demoting
-            )} will stay in the chat as a regular member and lose the ability to manage it.`}
+            message={t("admins.revokeWarning", { name: displayName(demoting) })}
             confirmText={t("admins.revokeConfirm")}
             variant="danger"
             loading={busy}
@@ -283,9 +279,7 @@ export function ChatAdminsSection({ chatId, members }: Props) {
         {handingOver && (
           <ConfirmDialog
             title={t("admins.transferTitle")}
-            message={`${displayName(
-              handingOver
-            )} will own this chat and you become an admin. Only they will be able to hand it back.`}
+            message={t("admins.transferWarning", { name: displayName(handingOver) })}
             confirmText={t("admins.makeOwner")}
             variant="primary"
             loading={busy}

@@ -1,3 +1,4 @@
+import { useLanguage } from "../context/useLanguage";
 import { MessageSquare } from "lucide-react";
 import { useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function SearchResults({ query, chats }: Props) {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { userId: currentUserId } = useAuth();
   const { data: allUsers = [], isLoading: loadingUsers } = useGetAllUsersQuery();
@@ -60,7 +62,7 @@ export function SearchResults({ query, chats }: Props) {
       {matchedChats.length > 0 && (
         <section>
           <h2 className="text-xs uppercase tracking-wide text-content-subtle font-semibold mb-2 px-1">
-            Chats
+            {t("search.chats")}
           </h2>
           <div className="space-y-2">
             {matchedChats.map((chat) => (
@@ -81,7 +83,7 @@ export function SearchResults({ query, chats }: Props) {
       {matchedUsers.length > 0 && (
         <section>
           <h2 className="text-xs uppercase tracking-wide text-content-subtle font-semibold mb-2 px-1">
-            Users
+            {t("search.users")}
           </h2>
           <div className="space-y-2">
             {matchedUsers.map((u) => (

@@ -1,6 +1,7 @@
 import { Lock, MessageSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import { useLanguage } from "../context/useLanguage";
 import { Avatar } from "./Avatar";
 import { usePresence } from "../hooks/usePresence";
 import { useDates } from "../hooks/useDates";
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export function UserProfileContent({ user }: Props) {
+  const { t } = useLanguage();
   const { userId: currentUserId } = useAuth();
   const dates = useDates();
   const navigate = useNavigate();
@@ -52,7 +54,7 @@ export function UserProfileContent({ user }: Props) {
       {user.isProfileHidden && (
         <p className="flex items-center justify-center gap-2 rounded-card border border-line bg-surface-muted p-3 text-sm text-content-muted">
           <Lock size={15} aria-hidden="true" className="shrink-0" />
-          This user has hidden their profile
+          {t("profile.hidden")}
         </p>
       )}
 
@@ -60,7 +62,7 @@ export function UserProfileContent({ user }: Props) {
         <div className="flex justify-center">
           <Button onClick={() => navigate(`/chats/new/${user.id}`)} className="px-6">
             <MessageSquare size={16} aria-hidden="true" />
-            Message
+            {t("friends.message")}
           </Button>
         </div>
       )}

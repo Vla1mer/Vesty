@@ -26,7 +26,7 @@ export function ChatInfoModal({ chat, onClose, onOpenSettings }: Props) {
       layer="base"
       title={
         <h2 className="min-w-0 flex-1 text-xl font-bold text-content">
-          Chat info
+          {t("chats.info")}
         </h2>
       }
     >

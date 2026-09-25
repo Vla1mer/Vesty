@@ -37,13 +37,13 @@ export function JoinChatPage() {
         ) : isError || !preview ? (
           <>
             <h1 className="text-lg font-semibold text-content">
-              This link is no longer valid
+              {t("join.invalid")}
             </h1>
             <p className="mt-2 text-sm text-content-muted">
-              It may have been revoked or has expired.
+              {t("join.invalidHint")}
             </p>
             <Button className="mt-5" fullWidth onClick={() => navigate("/chats")}>
-              Back to chats
+              {t("join.backToChats")}
             </Button>
           </>
         ) : (

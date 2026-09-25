@@ -40,7 +40,7 @@ export function ChatDangerZone({
             disabled={busy}
           >
             <Eraser size={15} aria-hidden="true" />
-            Delete for me
+            {t("danger.clear")}
           </Button>
         </section>
       )}
@@ -49,7 +49,7 @@ export function ChatDangerZone({
         <section className="space-y-2 border-t border-line pt-3">
           {isOwner ? (
             <p className="text-xs text-content-subtle">
-              To leave this chat, hand ownership to another member first.
+              {t("danger.ownerFirst")}
             </p>
           ) : (
             <Button
@@ -59,7 +59,7 @@ export function ChatDangerZone({
               disabled={busy}
             >
               <LogOut size={15} aria-hidden="true" />
-              Leave chat
+              {t("danger.leave")}
             </Button>
           )}
         </section>
@@ -74,7 +74,7 @@ export function ChatDangerZone({
             disabled={busy}
           >
             <Trash2 size={15} aria-hidden="true" />
-            Delete chat
+            {t("danger.delete")}
           </Button>
         </section>
       )}

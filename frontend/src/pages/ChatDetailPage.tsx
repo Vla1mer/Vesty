@@ -387,7 +387,11 @@ export function ChatDetailPage() {
       <AnimatePresence>
         {bulkDeleteOpen && (
           <ConfirmDialog
-            title={t("chat.deleteManyTitle")}
+            title={
+              selection.ownIds.length === 1
+                ? t("chat.deleteOneTitle")
+                : t("chat.deleteCountTitle", { count: selection.ownIds.length })
+            }
             message={t("chat.deleteManyWarning")}
             confirmText={t("chat.delete")}
             variant="danger"
