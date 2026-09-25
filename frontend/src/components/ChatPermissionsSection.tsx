@@ -1,5 +1,6 @@
 import { ChatPermission } from "../types/api";
 import { useLanguage } from "../context/useLanguage";
+import { SectionHeading } from "./ui/SectionHeading";
 import type { TranslationKey } from "../i18n/translations";
 import type { ChatPermissionsDto } from "../types/api";
 
@@ -21,8 +22,8 @@ export function ChatPermissionsSection({ levels, disabled, onChange }: Props) {
   const { t } = useLanguage();
 
   return (
-    <section className="space-y-2 border-t border-line pt-3">
-      <h3 className="text-sm font-semibold text-content-muted">{t("chatSettings.permissions")}</h3>
+    <section className="space-y-2 pt-3">
+      <SectionHeading>{t("chatSettings.permissions")}</SectionHeading>
       {fields.map(({ key, label }) => (
         <label key={key} className="flex items-center justify-between gap-3">
           <span className="text-sm text-content">{t(label)}</span>

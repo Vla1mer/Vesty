@@ -41,6 +41,7 @@ const en = {
   "nav.friends": "Friends",
   "nav.settings": "Settings",
 
+  "settings.appearance": "Appearance",
   "settings.darkTheme": "Dark theme",
   "settings.darkThemeHint": "Switch between light and dark appearance",
   "settings.railLabels": "Sidebar labels",
@@ -394,6 +395,7 @@ const pl: Record<keyof typeof en, string> = {
   "nav.friends": "Znajomi",
   "nav.settings": "Ustawienia",
 
+  "settings.appearance": "Wygląd",
   "settings.darkTheme": "Ciemny motyw",
   "settings.darkThemeHint": "Przełącz między jasnym a ciemnym wyglądem",
   "settings.railLabels": "Podpisy w panelu bocznym",

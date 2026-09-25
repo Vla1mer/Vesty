@@ -8,6 +8,7 @@ import { FormError } from "./FormError";
 import { Skeleton } from "./ui/Skeleton";
 import { PRIVACY_LEVEL } from "../types/api";
 import { useLanguage } from "../context/useLanguage";
+import { SectionHeading } from "./ui/SectionHeading";
 import type { TranslationKey } from "../i18n/translations";
 import type { PrivacySettingsDto } from "../types/api";
 
@@ -85,7 +86,7 @@ export function PrivacySettings() {
 
   return (
     <section className="space-y-6">
-      <h3 className="text-sm font-semibold text-content">{t("privacy.title")}</h3>
+      <SectionHeading>{t("privacy.title")}</SectionHeading>
 
       <Choice
         title="privacy.message"

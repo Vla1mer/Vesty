@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { ShieldOff } from "lucide-react";
 import { useLanguage } from "../context/useLanguage";
+import { SectionHeading } from "./ui/SectionHeading";
 import {
   useGetBlockedUsersQuery,
   useUnblockUserMutation,
@@ -28,7 +29,7 @@ export function BlockedUsers() {
 
   return (
     <section>
-      <h3 className="text-sm font-semibold text-content">{t("blocked.title")}</h3>
+      <SectionHeading>{t("blocked.title")}</SectionHeading>
       <p className="mb-3 text-xs text-content-subtle">{t("blocked.hint")}</p>
 
       {blocked.length === 0 ? (
