@@ -4,6 +4,7 @@ import { ThemeToggle } from "../components/ThemeToggle";
 import { Formik, Form } from "formik";
 import { register, login } from "../api/auth";
 import { useAuth } from "../context/useAuth";
+import { useLanguage } from "../context/useLanguage";
 import { FormField } from "../components/FormField";
 import { FormError } from "../components/FormError";
 import { registerSchema } from "../validation/authSchemas";
@@ -14,6 +15,7 @@ import { Checkbox } from "../components/ui/Checkbox";
 export function RegisterPage() {
   const navigate = useNavigate();
   const { setAuthenticated } = useAuth();
+  const { t } = useLanguage();
 
   return (
     <div className="relative min-h-viewport flex items-center justify-center p-4">
@@ -42,7 +44,7 @@ export function RegisterPage() {
           } catch (err) {
             const { fieldErrors, generalError } = parseApiErrors(
               err,
-              "Registration failed. Please try again."
+              t("register.failed")
             );
             Object.entries(fieldErrors).forEach(([field, msg]) =>
               setFieldError(field, msg)
@@ -74,49 +76,49 @@ export function RegisterPage() {
                 <span className="text-brand">Vesty</span>{" "}
                 <span className="text-content">Messenger</span>
               </h1>
-              <p className="text-sm text-content-muted mt-1">Create your account</p>
+              <p className="text-sm text-content-muted mt-1">{t("register.subtitle")}</p>
             </div>
 
             <FormField
-              label="Username *"
+              label={t("register.userName")}
               name="userName"
               autoFocus
               autoComplete="username"
               maxLength={50}
             />
             <FormField
-              label="Password *"
+              label={t("register.password")}
               name="password"
               type="password"
               autoComplete="new-password"
-              hint="Min 6 characters, at least 1 digit"
+              hint={t("register.passwordHint")}
             />
             <FormField
-              label="Confirm password *"
+              label={t("register.confirmPassword")}
               name="confirmPassword"
               type="password"
               autoComplete="new-password"
             />
-            <FormField label="First name" name="name" maxLength={100} />
-            <FormField label="Surname" name="surname" maxLength={100} />
+            <FormField label={t("register.firstName")} name="name" maxLength={100} />
+            <FormField label={t("register.surname")} name="surname" maxLength={100} />
 
             <Checkbox
               checked={values.rememberMe}
               onChange={(checked) => setFieldValue("rememberMe", checked)}
-              label="Remember me"
+              label={t("login.rememberMe")}
             />
 
             <FormError message={status} />
 
 
             <Button type="submit" fullWidth glow disabled={isSubmitting}>
-              {isSubmitting ? "Registering..." : "Register"}
+              {isSubmitting ? t("register.submitting") : t("register.submit")}
             </Button>
 
             <p className="text-sm text-center text-content-muted">
-              Already have an account?{" "}
+              {t("register.haveAccount")}{" "}
               <Link to="/login" className="text-accent-strong hover:underline">
-                Sign in
+                {t("register.signIn")}
               </Link>
             </p>
           </Form>

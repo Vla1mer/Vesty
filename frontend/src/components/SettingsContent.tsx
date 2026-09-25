@@ -1,4 +1,5 @@
 import { BlockedUsers } from "./BlockedUsers";
+import { LanguagePicker } from "./LanguagePicker";
 import { PrivacySettings } from "./PrivacySettings";
 import { ThemeToggle } from "./ThemeToggle";
 import { Switch } from "./ui/Switch";
@@ -34,6 +35,8 @@ export function SettingsContent() {
           ariaLabel="Show captions under the sidebar icons"
         />
       </section>
+
+      <LanguagePicker />
 
       <PrivacySettings />
 

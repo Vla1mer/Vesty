@@ -4,6 +4,7 @@ import { ThemeToggle } from "../components/ThemeToggle";
 import { Formik, Form } from "formik";
 import { login } from "../api/auth";
 import { useAuth } from "../context/useAuth";
+import { useLanguage } from "../context/useLanguage";
 import { FormField } from "../components/FormField";
 import { FormError } from "../components/FormError";
 import { loginSchema } from "../validation/authSchemas";
@@ -14,6 +15,7 @@ import { Checkbox } from "../components/ui/Checkbox";
 export function LoginPage() {
   const navigate = useNavigate();
   const { setAuthenticated } = useAuth();
+  const { t } = useLanguage();
 
   return (
     <div className="relative min-h-viewport flex items-center justify-center p-4">
@@ -32,11 +34,11 @@ export function LoginPage() {
           } catch (err) {
             const axiosErr = err as AxiosError;
             if (axiosErr.response?.status === 401) {
-              setStatus("Invalid username or password");
+              setStatus(t("login.wrongPassword"));
             } else if (axiosErr.response?.status === 429) {
-              setStatus("Too many failed attempts. Try again in a few minutes.");
+              setStatus(t("login.lockedOut"));
             } else {
-              setStatus("Login failed. Please try again.");
+              setStatus(t("login.failed"));
             }
           }
         }}
@@ -51,17 +53,17 @@ export function LoginPage() {
                 <span className="text-brand">Vesty</span>{" "}
                 <span className="text-content">Messenger</span>
               </h1>
-              <p className="text-sm text-content-muted mt-1">Sign in to your account</p>
+              <p className="text-sm text-content-muted mt-1">{t("login.subtitle")}</p>
             </div>
 
             <FormField
-              label="Username"
+              label={t("login.userName")}
               name="userName"
               autoFocus
               autoComplete="username"
             />
             <FormField
-              label="Password"
+              label={t("login.password")}
               name="password"
               type="password"
               autoComplete="current-password"
@@ -70,20 +72,20 @@ export function LoginPage() {
             <Checkbox
               checked={values.rememberMe}
               onChange={(checked) => setFieldValue("rememberMe", checked)}
-              label="Remember me"
+              label={t("login.rememberMe")}
             />
 
             <FormError message={status} />
 
 
             <Button type="submit" fullWidth glow disabled={isSubmitting}>
-              {isSubmitting ? "Signing in..." : "Sign in"}
+              {isSubmitting ? t("login.submitting") : t("login.submit")}
             </Button>
 
             <p className="text-sm text-center text-content-muted">
-              Don't have an account?{" "}
+              {t("login.noAccount")}{" "}
               <Link to="/register" className="text-accent-strong hover:underline">
-                Register
+                {t("login.register")}
               </Link>
             </p>
           </Form>
