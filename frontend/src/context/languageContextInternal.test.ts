@@ -1,10 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { LANGUAGE_STORAGE_KEY, readStoredLanguage } from "./languageContextInternal";
 
-function speaking(...languages: string[]) {
-  vi.spyOn(navigator, "languages", "get").mockReturnValue(languages);
-}
-
 describe("readStoredLanguage", () => {
   afterEach(() => {
     localStorage.clear();
@@ -13,29 +9,27 @@ describe("readStoredLanguage", () => {
 
   it("uses the language chosen last time", () => {
     localStorage.setItem(LANGUAGE_STORAGE_KEY, "pl");
-    speaking("en-US");
 
-    expect(readStoredLanguage()).toBe("pl");
+    expect(readStoredLanguage(["en-US"])).toBe("pl");
   });
 
   it("falls back to the language of the browser", () => {
-    speaking("pl-PL", "en-US");
-
-    expect(readStoredLanguage()).toBe("pl");
+    expect(readStoredLanguage(["pl-PL", "en-US"])).toBe("pl");
   });
 
   it("still asks the browser when storage is blocked", () => {
     vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
       throw new Error("storage is blocked");
     });
-    speaking("pl-PL");
 
-    expect(readStoredLanguage()).toBe("pl");
+    expect(readStoredLanguage(["pl-PL"])).toBe("pl");
   });
 
   it("settles on English for a language we do not speak", () => {
-    speaking("de-DE", "fr-FR");
+    expect(readStoredLanguage(["de-DE", "fr-FR"])).toBe("en");
+  });
 
-    expect(readStoredLanguage()).toBe("en");
+  it("settles on English when the browser names nothing", () => {
+    expect(readStoredLanguage([])).toBe("en");
   });
 });

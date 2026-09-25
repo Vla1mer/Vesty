@@ -18,15 +18,18 @@ export function isLanguage(value: unknown): value is Language {
   return LANGUAGES.includes(value as Language);
 }
 
-export function readStoredLanguage(): Language {
+export function browserLanguages(): readonly string[] {
+  return navigator.languages ?? [navigator.language];
+}
+
+export function readStoredLanguage(preferred = browserLanguages()): Language {
   try {
     const stored = localStorage.getItem(LANGUAGE_STORAGE_KEY);
     if (isLanguage(stored)) return stored;
-  } catch {
-    return "en";
+  } catch (error) {
+    void error;
   }
 
-  const preferred = navigator.languages ?? [navigator.language];
   const spoken = preferred.map((tag) => tag.split("-")[0]).find(isLanguage);
   return spoken ?? "en";
 }
