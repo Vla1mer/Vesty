@@ -1,16 +1,19 @@
 import { NavLink } from "react-router-dom";
 import { useIncomingFriendRequests } from "../hooks/useIncomingFriendRequests";
 import { MessageSquare, Settings, User, Users } from "lucide-react";
+import { useLanguage } from "../context/useLanguage";
+import type { TranslationKey } from "../i18n/translations";
 
-const tabs = [
-  { to: "/profile", Icon: User, label: "Profile" },
-  { to: "/chats", Icon: MessageSquare, label: "Chats" },
-  { to: "/friends", Icon: Users, label: "Friends" },
-  { to: "/settings", Icon: Settings, label: "Settings" },
+const tabs: Array<{ to: string; Icon: typeof User; label: TranslationKey }> = [
+  { to: "/profile", Icon: User, label: "nav.profile" },
+  { to: "/chats", Icon: MessageSquare, label: "nav.chats" },
+  { to: "/friends", Icon: Users, label: "nav.friends" },
+  { to: "/settings", Icon: Settings, label: "nav.settings" },
 ];
 
 export function BottomNav() {
   const incomingRequests = useIncomingFriendRequests();
+  const { t } = useLanguage();
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-20 bg-surface border-t border-line">
@@ -35,7 +38,7 @@ export function BottomNav() {
                 </span>
               )}
             </span>
-            <span className="text-xs mt-1">{label}</span>
+            <span className="text-xs mt-1">{t(label)}</span>
           </NavLink>
         ))}
       </div>

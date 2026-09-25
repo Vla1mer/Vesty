@@ -14,6 +14,7 @@ import { FormField } from "./FormField";
 import { FormError } from "./FormError";
 import { profileSchema } from "../validation/profileSchema";
 import { parseApiErrors } from "../utils/apiError";
+import { useLanguage } from "../context/useLanguage";
 import { Button } from "./ui/Button";
 import { AnimatePresence } from "framer-motion";
 
@@ -32,6 +33,7 @@ export function ProfileContent() {
   } = useGetUserByIdQuery(userId as number, { skip: userId === null });
   const [updateUser] = useUpdateUserMutation();
   const [deleteUser, { isLoading: deleting }] = useDeleteUserMutation();
+  const { t } = useLanguage();
 
   async function handleDeleteAccount() {
     if (userId === null) return;
@@ -40,7 +42,7 @@ export function ProfileContent() {
       logout();
       navigate("/login", { replace: true });
     } catch {
-      setError("Failed to delete account");
+      setError(t("profile.deleteFailed"));
       setIsDeleteOpen(false);
     }
   }
@@ -52,10 +54,10 @@ export function ProfileContent() {
 
   return (
     <>
-      {loading && <p className="text-content-muted">Loading...</p>}
+      {loading && <p className="text-content-muted">{t("profile.loading")}</p>}
 
       {(error || isError) && (
-        <FormError className="mb-4" message={error ?? "Failed to load profile"} />
+        <FormError className="mb-4" message={error ?? t("profile.loadFailed")} />
       )}
 
       {!loading && user && (
@@ -88,7 +90,7 @@ export function ProfileContent() {
                 } catch (err) {
                   const { fieldErrors, generalError } = parseApiErrors(
                     err,
-                    "Failed to save profile"
+                    t("profile.saveFailed")
                   );
                   Object.entries(fieldErrors).forEach(([field, msg]) =>
                     setFieldError(field, msg)
@@ -99,20 +101,20 @@ export function ProfileContent() {
             >
               {({ isSubmitting, status }) => (
                 <Form className="space-y-4">
-                  <FormField label="Username *" name="userName" maxLength={50} />
-                  <FormField label="First name" name="name" maxLength={100} />
-                  <FormField label="Surname" name="surname" maxLength={100} />
-                  <FormField label="Phone" name="phone" type="tel" maxLength={20} />
-                  <FormField label="Birthday" name="birthday" type="date" />
+                  <FormField label={t("profile.userNameRequired")} name="userName" maxLength={50} />
+                  <FormField label={t("profile.firstName")} name="name" maxLength={100} />
+                  <FormField label={t("profile.surname")} name="surname" maxLength={100} />
+                  <FormField label={t("profile.phone")} name="phone" type="tel" maxLength={20} />
+                  <FormField label={t("profile.birthday")} name="birthday" type="date" />
 
                   <FormError message={status} />
 
                   <div className="flex gap-2 pt-2">
                     <Button type="submit" disabled={isSubmitting}>
-                      {isSubmitting ? "Saving..." : "Save"}
+                      {isSubmitting ? t("profile.saving") : t("profile.save")}
                     </Button>
                     <Button variant="neutral" onClick={() => setIsEditing(false)} disabled={isSubmitting}>
-                      Cancel
+                      {t("profile.cancel")}
                     </Button>
                   </div>
                 </Form>
@@ -121,11 +123,11 @@ export function ProfileContent() {
           ) : (
             <div className="space-y-5">
               <div className="divide-y divide-line overflow-hidden rounded-card border border-line">
-                <Row label="Username" value={user.userName} />
-                <Row label="First name" value={user.name} />
-                <Row label="Surname" value={user.surname} />
-                <Row label="Phone" value={user.phone} />
-                <Row label="Birthday" value={user.birthday} />
+                <Row label={t("profile.userName")} value={user.userName} />
+                <Row label={t("profile.firstName")} value={user.name} />
+                <Row label={t("profile.surname")} value={user.surname} />
+                <Row label={t("profile.phone")} value={user.phone} />
+                <Row label={t("profile.birthday")} value={user.birthday} />
               </div>
 
               <div className="flex flex-col gap-2">
@@ -137,10 +139,10 @@ export function ProfileContent() {
                   fullWidth
                 >
                   <Pencil size={15} aria-hidden="true" />
-                  Edit profile
+                  {t("profile.edit")}
                 </Button>
                 <Button variant="neutral" fullWidth onClick={handleLogout}>
-                  Logout
+                  {t("profile.logout")}
                 </Button>
               </div>
 
@@ -151,7 +153,7 @@ export function ProfileContent() {
                   className="text-danger hover:text-danger"
                   onClick={() => setIsDeleteOpen(true)}
                 >
-                  Delete account
+                  {t("profile.delete")}
                 </Button>
               </div>
             </div>
@@ -162,9 +164,9 @@ export function ProfileContent() {
       <AnimatePresence>
         {isDeleteOpen && (
           <ConfirmDialog
-            title="Delete account?"
-            message="Your account will be permanently deleted. This action cannot be undone."
-            confirmText="Delete"
+            title={t("profile.deleteTitle")}
+            message={t("profile.deleteWarning")}
+            confirmText={t("profile.deleteConfirm")}
             variant="danger"
             loading={deleting}
             onConfirm={handleDeleteAccount}

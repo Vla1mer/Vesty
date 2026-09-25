@@ -5,6 +5,7 @@ import { PrivacySettings } from "./PrivacySettings";
 import { renderWithProviders, signIn } from "../test/renderWithProviders";
 import { installServer, requests, resetServer, stub, stubJson } from "../test/server";
 import { PRIVACY_LEVEL } from "../types/api";
+import { LANGUAGE_STORAGE_KEY } from "../context/languageContextInternal";
 
 const STORED = {
   whoCanMessage: PRIVACY_LEVEL.EVERYONE,
@@ -123,6 +124,15 @@ describe("PrivacySettings", () => {
     expect(
       await screen.findByText("Could not save privacy settings")
     ).toBeInTheDocument();
+  });
+
+  it("asks the privacy questions in Polish", async () => {
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, "pl");
+    renderWithProviders(<PrivacySettings />);
+
+    expect(await screen.findByText("Kto może do mnie pisać")).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Wszyscy" })).not.toHaveLength(0);
+    localStorage.removeItem(LANGUAGE_STORAGE_KEY);
   });
 
   it("reports a failed load", async () => {
