@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { MessagesSquare } from "lucide-react";
 import { ThemeToggle } from "../components/ThemeToggle";
+import { LanguageMenu } from "../components/LanguageMenu";
 import { Formik, Form } from "formik";
 import { register, login } from "../api/auth";
 import { useAuth } from "../context/useAuth";
@@ -19,7 +20,8 @@ export function RegisterPage() {
 
   return (
     <div className="relative min-h-viewport flex items-center justify-center p-4">
-      <div className="absolute top-4 right-4 z-10">
+      <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+        <LanguageMenu />
         <ThemeToggle />
       </div>
       <Formik

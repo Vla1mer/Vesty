@@ -96,6 +96,25 @@ describe("LoginPage", () => {
     localStorage.removeItem(LANGUAGE_STORAGE_KEY);
   });
 
+  it("lets you switch the language before signing in", async () => {
+    renderWithProviders(
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+      </Routes>,
+      { route: "/login" }
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: (_name, element) => element.getAttribute("aria-haspopup") === "listbox",
+      })
+    );
+    await userEvent.click(screen.getByRole("option", { name: /Polski/ }));
+
+    expect(screen.getByText("Zaloguj się na swoje konto")).toBeInTheDocument();
+    localStorage.removeItem(LANGUAGE_STORAGE_KEY);
+  });
+
   it("reports a wrong password", async () => {
     failWith(401);
 

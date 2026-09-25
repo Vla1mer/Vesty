@@ -7,13 +7,13 @@ import { renderWithProviders } from "../test/renderWithProviders";
 import { LANGUAGE_STORAGE_KEY } from "../context/languageContextInternal";
 
 function trigger() {
-  return screen.getByRole("button", {
+  return screen.getAllByRole("button", {
     name: (_name, element) => element.getAttribute("aria-haspopup") === "listbox",
-  });
+  })[0];
 }
 
 function option(name: string) {
-  return screen.getByRole("option", { name: new RegExp(name) });
+  return screen.getAllByRole("option", { name: new RegExp(name) })[0];
 }
 
 describe("LanguagePicker", () => {
