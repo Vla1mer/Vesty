@@ -1,4 +1,5 @@
 import { ChevronRight, Crown } from "lucide-react";
+import { useLanguage } from "../context/useLanguage";
 import { useEffect, useMemo, useState } from "react";
 import { useGetChatMembersQuery } from "../store/chatMembersApi";
 import { useChatDangerActions } from "../hooks/useChatDangerActions";
@@ -54,6 +55,7 @@ export function ChatSettingsContent({
   onBusyChange,
 }: Props) {
   const { userId: currentUserId } = useAuth();
+  const { t } = useLanguage();
   const [error, setError] = useState<string | null>(null);
   const permissions = useChatPermissions(chat, setError);
   const profile = useChatProfileDraft(chat, setError);
@@ -118,7 +120,7 @@ export function ChatSettingsContent({
                   value={profile.name}
                   onChange={(e) => profile.setName(e.target.value)}
                   maxLength={CHAT_NAME_LIMIT}
-                  placeholder="Chat name"
+                  placeholder={t("chatSettings.name")}
                   className="font-semibold"
                 />
                 <CharCounter value={profile.name} max={CHAT_NAME_LIMIT} />
@@ -130,7 +132,7 @@ export function ChatSettingsContent({
                   onChange={(e) => profile.setDescription(e.target.value)}
                   maxLength={CHAT_DESCRIPTION_LIMIT}
                   rows={3}
-                  placeholder="Description (optional)"
+                  placeholder={t("chatSettings.description")}
                   className="w-full resize-none rounded-lg border border-line bg-surface-sunken px-3 py-2 text-sm text-content placeholder:text-content-subtle focus:border-accent focus:outline-none"
                 />
                 <CharCounter value={profile.description} max={CHAT_DESCRIPTION_LIMIT} />
@@ -140,7 +142,7 @@ export function ChatSettingsContent({
                 onClick={profile.save}
                 disabled={busy || !profile.changed || !profile.name.trim()}
               >
-                {profile.saving ? "..." : "Save"}
+                {profile.saving ? "..." : t("chatSettings.save")}
               </Button>
             </section>
           )}

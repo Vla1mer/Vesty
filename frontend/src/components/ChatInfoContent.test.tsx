@@ -4,6 +4,7 @@ import { Route, Routes } from "react-router-dom";
 import userEvent from "@testing-library/user-event";
 import { ChatInfoContent } from "./ChatInfoContent";
 import { renderWithProviders, signIn } from "../test/renderWithProviders";
+import { LANGUAGE_STORAGE_KEY } from "../context/languageContextInternal";
 import { installServer, resetServer, stubJson } from "../test/server";
 import { ChatPermission, UserRole } from "../types/api";
 import type { ChatDto, ChatMemberWithRoleDto } from "../types/api";
@@ -60,6 +61,15 @@ describe("ChatInfoContent", () => {
     resetServer();
     installServer();
     signIn(ME, "me");
+  });
+
+  it("names the roles in Polish", async () => {
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, "pl");
+    open();
+
+    expect(await screen.findByText("Właściciel")).toBeInTheDocument();
+    expect(screen.getByText("Uczestnik")).toBeInTheDocument();
+    localStorage.removeItem(LANGUAGE_STORAGE_KEY);
   });
 
   it("lists the members", async () => {

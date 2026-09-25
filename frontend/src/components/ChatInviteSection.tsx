@@ -1,4 +1,5 @@
 import { Check, Copy, Link2, RefreshCw, Trash2 } from "lucide-react";
+import { useLanguage } from "../context/useLanguage";
 import { useState } from "react";
 import {
   useCreateChatInviteMutation,
@@ -15,12 +16,13 @@ interface Props {
 }
 
 const lifetimes = [
-  { label: "Never expires", days: null },
+  { label: "invite.never", days: null },
   { label: "1 day", days: 1 },
   { label: "7 days", days: 7 },
 ] as const;
 
 export function ChatInviteSection({ chatId }: Props) {
+  const { t } = useLanguage();
   const { data: invite, isLoading } = useGetChatInviteQuery(chatId);
   const [createInvite, { isLoading: creating }] = useCreateChatInviteMutation();
   const [revokeInvite, { isLoading: revoking }] = useRevokeChatInviteMutation();
@@ -37,7 +39,7 @@ export function ChatInviteSection({ chatId }: Props) {
     try {
       await createInvite({ chatId, expiresInDays: days }).unwrap();
     } catch (err) {
-      setError(getApiErrorMessage(err, "Failed to create an invite link"));
+      setError(getApiErrorMessage(err, t("invite.createFailed")));
     }
   }
 
@@ -46,7 +48,7 @@ export function ChatInviteSection({ chatId }: Props) {
     try {
       await revokeInvite(chatId).unwrap();
     } catch (err) {
-      setError(getApiErrorMessage(err, "Failed to revoke the invite link"));
+      setError(getApiErrorMessage(err, t("invite.revokeFailed")));
     }
   }
 
@@ -57,7 +59,7 @@ export function ChatInviteSection({ chatId }: Props) {
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
     } catch {
-      setError("Could not copy the link. Select and copy it manually.");
+      setError(t("invite.copyFailed"));
     }
   }
 
@@ -78,14 +80,14 @@ export function ChatInviteSection({ chatId }: Props) {
               onFocus={(e) => e.currentTarget.select()}
               className="min-w-0 flex-1 rounded-lg border border-line bg-surface-sunken px-3 py-2 text-sm text-content"
             />
-            <Button size="xs" variant="neutral" onClick={handleCopy} title="Copy link">
+            <Button size="xs" variant="neutral" onClick={handleCopy} title={t("invite.copy")}>
               {copied ? <Check size={14} /> : <Copy size={14} />}
             </Button>
           </div>
 
           {invite?.expiresAt && (
             <p className="text-xs text-content-subtle">
-              Expires {formatDateTime(invite.expiresAt)}
+              {t("invite.expires", { when: formatDateTime(invite.expiresAt) })}
             </p>
           )}
 
@@ -119,7 +121,7 @@ export function ChatInviteSection({ chatId }: Props) {
             </select>
             <Button size="xs" onClick={handleCreate} disabled={busy}>
               <Link2 size={13} aria-hidden="true" />
-              {creating ? "..." : "Create link"}
+              {creating ? "..." : t("invite.create")}
             </Button>
           </div>
         </>
