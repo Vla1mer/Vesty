@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { Smile } from "lucide-react";
 import { useTheme } from "../context/useTheme";
+import { useLanguage } from "../context/useLanguage";
 import type { EmojiStyle, Theme } from "emoji-picker-react";
 
 const EmojiPicker = lazy(() => import("emoji-picker-react"));
@@ -17,6 +18,7 @@ export function EmojiPickerButton({
   onPick,
 }: Props) {
   const { resolved } = useTheme();
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -53,9 +55,9 @@ export function EmojiPickerButton({
           if (!open) onCaptureCaret?.();
         }}
         onClick={() => setOpen((prev) => !prev)}
-        aria-label="Insert emoji"
+        aria-label={t("composer.emoji")}
         aria-expanded={open}
-        title="Insert emoji"
+        title={t("composer.emoji")}
         className="px-2 text-content-muted transition hover:text-accent-strong disabled:opacity-50"
       >
         <Smile size={20} />

@@ -1,5 +1,6 @@
 import type { MouseEvent, ReactNode, RefObject } from "react";
 import { Copy, Pencil, Pin, PinOff, Reply, Trash2 } from "lucide-react";
+import { useLanguage } from "../context/useLanguage";
 import { motion } from "framer-motion";
 import type { MessageDto } from "../types/api";
 
@@ -52,6 +53,8 @@ export function MessageContextMenu({
   onToggleReaction,
   onTogglePin,
 }: Props) {
+  const { t } = useLanguage();
+
   function run(action: () => void) {
     onClose();
     action();
@@ -100,7 +103,7 @@ export function MessageContextMenu({
       )}
       {onReply && (
         <MenuItem onClick={() => run(() => onReply(message))}>
-          <Reply size={15} aria-hidden="true" /> Reply
+          <Reply size={15} aria-hidden="true" /> {t("chat.reply")}
         </MenuItem>
       )}
       {message.content && (
@@ -109,7 +112,7 @@ export function MessageContextMenu({
             run(() => navigator.clipboard?.writeText(message.content!))
           }
         >
-          <Copy size={15} aria-hidden="true" /> Copy
+          <Copy size={15} aria-hidden="true" /> {t("chat.copy")}
         </MenuItem>
       )}
       {onTogglePin && (
@@ -120,11 +123,11 @@ export function MessageContextMenu({
         >
           {message.pinnedAt ? (
             <>
-              <PinOff size={15} aria-hidden="true" /> Unpin
+              <PinOff size={15} aria-hidden="true" /> {t("chat.unpin")}
             </>
           ) : (
             <>
-              <Pin size={15} aria-hidden="true" /> Pin
+              <Pin size={15} aria-hidden="true" /> {t("chat.pin")}
             </>
           )}
         </MenuItem>
@@ -133,12 +136,12 @@ export function MessageContextMenu({
         <MenuItem
           onClick={() => run(() => onEdit(message.id, message.content ?? ""))}
         >
-          <Pencil size={15} aria-hidden="true" /> Edit
+          <Pencil size={15} aria-hidden="true" /> {t("chat.edit")}
         </MenuItem>
       )}
       {onDelete && (
         <MenuItem danger onClick={() => run(() => onDelete(message.id))}>
-          <Trash2 size={15} aria-hidden="true" /> Delete
+          <Trash2 size={15} aria-hidden="true" /> {t("chat.delete")}
         </MenuItem>
       )}
     </motion.div>

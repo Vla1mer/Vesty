@@ -1,5 +1,6 @@
 import { Search, X } from "lucide-react";
 import { TextInput } from "./ui/TextInput";
+import { useLanguage } from "../context/useLanguage";
 
 interface Props {
   value: string;
@@ -7,6 +8,7 @@ interface Props {
 }
 
 export function SearchBar({ value, onChange }: Props) {
+  const { t } = useLanguage();
   return (
     <div className="relative mb-4">
       <Search
@@ -18,7 +20,7 @@ export function SearchBar({ value, onChange }: Props) {
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Search chats and users..."
+        placeholder={t("chats.search")}
         className="rounded-lg pl-10 pr-10"
       />
       {value && (

@@ -12,7 +12,9 @@ vi.mock("emoji-picker-react", () => ({
 }));
 
 import { MessageComposer } from "./MessageComposer";
+import { LanguageProvider } from "../context/LanguageContext";
 import { ThemeProvider } from "../context/ThemeContext";
+import { LANGUAGE_STORAGE_KEY } from "../context/languageContextInternal";
 
 const attachments = {
   uploads: [],
@@ -56,9 +58,21 @@ async function pickFire() {
   await userEvent.click(await screen.findByRole("button", { name: "fire" }));
 }
 
+describe("MessageComposer in Polish", () => {
+  it("invites you to write in Polish", () => {
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, "pl");
+
+    render(<Harness initial="" />, { wrapper: LanguageProvider });
+
+    expect(screen.getByPlaceholderText("Napisz wiadomość...")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Wyślij" })).toBeInTheDocument();
+    localStorage.removeItem(LANGUAGE_STORAGE_KEY);
+  });
+});
+
 describe("MessageComposer emoji insertion", () => {
   it("appends when the caret sits at the end", async () => {
-    render(<Harness initial="hi" />);
+    render(<Harness initial="hi" />, { wrapper: LanguageProvider });
     field().setSelectionRange(2, 2);
 
     await pickFire();
@@ -67,7 +81,7 @@ describe("MessageComposer emoji insertion", () => {
   });
 
   it("inserts where the caret is", async () => {
-    render(<Harness initial="ab" />);
+    render(<Harness initial="ab" />, { wrapper: LanguageProvider });
     field().setSelectionRange(1, 1);
 
     await pickFire();
@@ -76,7 +90,7 @@ describe("MessageComposer emoji insertion", () => {
   });
 
   it("replaces the selected text", async () => {
-    render(<Harness initial="abcd" />);
+    render(<Harness initial="abcd" />, { wrapper: LanguageProvider });
     field().setSelectionRange(1, 3);
 
     await pickFire();
@@ -85,7 +99,7 @@ describe("MessageComposer emoji insertion", () => {
   });
 
   it("leaves the caret after the emoji", async () => {
-    render(<Harness initial="ab" />);
+    render(<Harness initial="ab" />, { wrapper: LanguageProvider });
     field().setSelectionRange(1, 1);
 
     await pickFire();
@@ -94,7 +108,7 @@ describe("MessageComposer emoji insertion", () => {
   });
 
   it("follows the caret when typing continues with the picker open", async () => {
-    render(<Harness initial="hello" />);
+    render(<Harness initial="hello" />, { wrapper: LanguageProvider });
     await userEvent.click(field());
     field().setSelectionRange(5, 5);
 
@@ -107,7 +121,7 @@ describe("MessageComposer emoji insertion", () => {
   });
 
   it("keeps the field focused while the picker is open", async () => {
-    render(<Harness initial="hi" />);
+    render(<Harness initial="hi" />, { wrapper: LanguageProvider });
     await userEvent.click(field());
 
     await userEvent.click(screen.getByRole("button", { name: "Insert emoji" }));
@@ -118,7 +132,7 @@ describe("MessageComposer emoji insertion", () => {
 
   it("changes nothing when the emoji would not fit", async () => {
     const full = "x".repeat(2000);
-    render(<Harness initial={full} />);
+    render(<Harness initial={full} />, { wrapper: LanguageProvider });
     field().setSelectionRange(2000, 2000);
 
     await pickFire();
@@ -128,7 +142,7 @@ describe("MessageComposer emoji insertion", () => {
 
   it("keeps the selection when the emoji would not fit", async () => {
     const full = "x".repeat(2000);
-    render(<Harness initial={full} />);
+    render(<Harness initial={full} />, { wrapper: LanguageProvider });
     field().setSelectionRange(0, 1);
 
     await pickFire();
@@ -140,7 +154,7 @@ describe("MessageComposer emoji insertion", () => {
   });
 
   it("gives the field the focus back", async () => {
-    render(<Harness initial="ab" />);
+    render(<Harness initial="ab" />, { wrapper: LanguageProvider });
     field().setSelectionRange(2, 2);
 
     await pickFire();

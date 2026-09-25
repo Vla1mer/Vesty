@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MessageBubble } from "./MessageBubble";
+import { LanguageProvider } from "../context/LanguageContext";
+import { LANGUAGE_STORAGE_KEY } from "../context/languageContextInternal";
 import type { MessageDto } from "../types/api";
 
 const ME = 9;
@@ -32,7 +34,8 @@ function setup(overrides: Partial<Parameters<typeof MessageBubble>[0]> = {}) {
       currentUserId={ME}
       {...handlers}
       {...overrides}
-    />
+    />,
+    { wrapper: LanguageProvider }
   );
   return handlers;
 }
@@ -88,7 +91,8 @@ describe("MessageBubble", () => {
           message={{ ...MESSAGE, content: null }}
           isOwn={false}
           currentUserId={ME}
-        />
+        />,
+        { wrapper: LanguageProvider }
       );
 
       fireEvent.contextMenu(bubble());
@@ -102,7 +106,8 @@ describe("MessageBubble", () => {
           message={{ ...MESSAGE, content: null }}
           isOwn={false}
           currentUserId={ME}
-        />
+        />,
+        { wrapper: LanguageProvider }
       );
 
       fireEvent.touchStart(bubble());
@@ -160,7 +165,8 @@ describe("MessageBubble", () => {
           isOwn={false}
           currentUserId={ME}
           onReply={vi.fn()}
-        />
+        />,
+        { wrapper: LanguageProvider }
       );
 
       fireEvent.contextMenu(bubble());
@@ -575,6 +581,21 @@ describe("MessageBubble", () => {
   });
 
   describe("rendering", () => {
+    it("marks an edited message", () => {
+      setup({ message: { ...MESSAGE, isEdited: true } });
+
+      expect(screen.getAllByText(/^edited /)).not.toHaveLength(0);
+    });
+
+    it("marks an edited message in Polish", () => {
+      localStorage.setItem(LANGUAGE_STORAGE_KEY, "pl");
+
+      setup({ message: { ...MESSAGE, isEdited: true } });
+
+      expect(screen.getAllByText(/^edytowano /)).not.toHaveLength(0);
+      localStorage.removeItem(LANGUAGE_STORAGE_KEY);
+    });
+
     it("names the author of an incoming message", () => {
       setup({ authorName: "petya" });
 

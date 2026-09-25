@@ -7,6 +7,7 @@ import { Avatar } from "./Avatar";
 import { MessageAttachments } from "./MessageAttachments";
 import { isStandaloneEmoji } from "../utils/emoji";
 import { formatTime } from "../utils/date";
+import { useLanguage } from "../context/useLanguage";
 import { isImage } from "../api/attachments";
 import { MessageContextMenu } from "./MessageContextMenu";
 import type { MessageDto } from "../types/api";
@@ -57,6 +58,7 @@ export function MessageBubble({
   const hasActions = Boolean(
     onEdit || onDelete || onReply || onTogglePin || onToggleReaction
   );
+  const { t } = useLanguage();
   const menu = useMessageMenu(Boolean(message.content) || hasActions);
 
   function handleTap(e: ReactTouchEvent) {
@@ -78,9 +80,9 @@ export function MessageBubble({
   });
 
   const time = formatTime(message.createdAt);
-  const timeLabel = message.isEdited ? `edited ${time}` : time;
+  const timeLabel = message.isEdited ? t("chat.edited", { time }) : time;
 
-  const displayName = authorName ?? `User #${message.userId}`;
+  const displayName = authorName ?? t("chat.unknownAuthor", { id: message.userId });
 
   const attachments = message.attachments ?? [];
   const hasText = Boolean(message.content?.trim());

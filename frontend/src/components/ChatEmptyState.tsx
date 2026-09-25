@@ -1,13 +1,16 @@
 import { MessagesSquare } from "lucide-react";
 import { EmptyState } from "./ui/EmptyState";
+import { useLanguage } from "../context/useLanguage";
 
 export function ChatEmptyState() {
+  const { t } = useLanguage();
+
   return (
     <EmptyState
       className="h-full"
       Icon={MessagesSquare}
-      title="Select a chat"
-      description="Pick a conversation from the list, or start a new one."
+      title={t("chats.pick")}
+      description={t("chats.pickHint")}
     />
   );
 }
