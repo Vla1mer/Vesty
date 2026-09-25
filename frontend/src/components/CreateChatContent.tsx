@@ -8,6 +8,7 @@ import { Button } from "./ui/Button";
 import { TextInput } from "./ui/TextInput";
 import { FormError } from "./FormError";
 import { chatNameSchema, CHAT_NAME_LIMIT } from "../validation/chatSchemas";
+import { useLanguage } from "../context/useLanguage";
 import { getApiErrorMessage } from "../utils/apiError";
 import type { UserDto } from "../types/api";
 
@@ -29,6 +30,7 @@ export function CreateChatContent({
   onBusyChange,
 }: Props) {
   const { userId: currentUserId } = useAuth();
+  const { t } = useLanguage();
   const [createChat, { isLoading: creating }] = useCreateChatMutation();
   const [name, setName] = useState("");
   const [nameError, setNameError] = useState<string | null>(null);
@@ -56,7 +58,7 @@ export function CreateChatContent({
   async function handleNext() {
     const trimmed = name.trim();
     try {
-      await chatNameSchema.validate({ name: trimmed });
+      await chatNameSchema(t).validate({ name: trimmed });
     } catch (err) {
       setNameError((err as ValidationError).message);
       return;

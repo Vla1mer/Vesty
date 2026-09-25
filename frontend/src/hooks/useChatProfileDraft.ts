@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ValidationError } from "yup";
 import { useRenameChatMutation } from "../store/chatsApi";
 import { chatNameSchema } from "../validation/chatSchemas";
+import { useLanguage } from "../context/useLanguage";
 import { getApiErrorMessage } from "../utils/apiError";
 import type { ChatDto } from "../types/api";
 
@@ -9,6 +10,7 @@ export function useChatProfileDraft(
   chat: ChatDto,
   onError: (message: string | null) => void
 ) {
+  const { t } = useLanguage();
   const [renameChat] = useRenameChatMutation();
 
   const serverName = chat.name ?? "";
@@ -56,7 +58,7 @@ export function useChatProfileDraft(
     const newName = name.trim();
 
     try {
-      await chatNameSchema.validate({ name: newName });
+      await chatNameSchema(t).validate({ name: newName });
     } catch (validationErr) {
       onError((validationErr as ValidationError).message);
       return;

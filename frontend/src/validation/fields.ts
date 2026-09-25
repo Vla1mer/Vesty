@@ -1,24 +1,37 @@
 import * as Yup from "yup";
+import type { Translate } from "../context/languageContextInternal";
 
-export const userNameField = Yup.string()
-  .required("Username is required")
-  .max(50, "Maximum length is 50 characters");
+export function userNameField(t: Translate) {
+  return Yup.string()
+    .required(t("check.userNameRequired"))
+    .max(50, t("check.maxLength", { max: 50 }));
+}
 
-export const passwordField = Yup.string()
-  .required("Password is required")
-  .min(6, "Minimum length is 6 characters")
-  .matches(/[0-9]/, "Password must contain at least one digit");
+export function passwordField(t: Translate) {
+  return Yup.string()
+    .required(t("check.passwordRequired"))
+    .min(6, t("check.passwordShort"))
+    .matches(/[0-9]/, t("check.passwordDigit"));
+}
 
-export const nameField = Yup.string().max(100, "Maximum length is 100 characters");
+export function nameField(t: Translate) {
+  return Yup.string().max(100, t("check.maxLength", { max: 100 }));
+}
 
-export const surnameField = Yup.string().max(100, "Maximum length is 100 characters");
+export function surnameField(t: Translate) {
+  return Yup.string().max(100, t("check.maxLength", { max: 100 }));
+}
 
-export const phoneField = Yup.string()
-  .max(20, "Maximum length is 20 characters")
-  .matches(/^[+\d\s()-]*$/, "Phone may contain only digits, spaces and + ( ) -");
+export function phoneField(t: Translate) {
+  return Yup.string()
+    .max(20, t("check.maxLength", { max: 20 }))
+    .matches(/^[+\d\s()-]*$/, t("check.phoneCharacters"));
+}
 
-export const birthdayField = Yup.string().test(
-  "not-in-future",
-  "Birthday cannot be in the future",
-  (value) => !value || new Date(value) <= new Date()
-);
+export function birthdayField(t: Translate) {
+  return Yup.string().test(
+    "not-in-future",
+    t("check.birthdayFuture"),
+    (value) => !value || new Date(value) <= new Date()
+  );
+}

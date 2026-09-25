@@ -209,6 +209,17 @@ const en = {
 
   "createChat.title": "New group chat",
   "createChat.addMembers": "Add members",
+
+  "check.userNameRequired": "Username is required",
+  "check.passwordRequired": "Password is required",
+  "check.confirmRequired": "Please confirm your password",
+  "check.passwordsMatch": "Passwords must match",
+  "check.passwordShort": "Minimum length is 6 characters",
+  "check.passwordDigit": "Password must contain at least one digit",
+  "check.maxLength": "Maximum length is {max} characters",
+  "check.phoneCharacters": "Phone may contain only digits, spaces and + ( ) -",
+  "check.birthdayFuture": "Birthday cannot be in the future",
+  "check.chatNameRequired": "Chat name is required",
 } as const;
 
 const pl: Record<keyof typeof en, string> = {
@@ -413,8 +424,35 @@ const pl: Record<keyof typeof en, string> = {
 
   "createChat.title": "Nowy czat grupowy",
   "createChat.addMembers": "Dodaj uczestników",
+
+  "check.userNameRequired": "Nazwa użytkownika jest wymagana",
+  "check.passwordRequired": "Hasło jest wymagane",
+  "check.confirmRequired": "Potwierdź hasło",
+  "check.passwordsMatch": "Hasła muszą być takie same",
+  "check.passwordShort": "Minimalna długość to 6 znaków",
+  "check.passwordDigit": "Hasło musi zawierać co najmniej jedną cyfrę",
+  "check.maxLength": "Maksymalna długość to {max} znaków",
+  "check.phoneCharacters": "Telefon może zawierać tylko cyfry, spacje oraz + ( ) -",
+  "check.birthdayFuture": "Data urodzenia nie może być w przyszłości",
+  "check.chatNameRequired": "Nazwa czatu jest wymagana",
 };
 
 export const translations = { en, pl };
 
 export type TranslationKey = keyof typeof en;
+
+export type Translate = (
+  key: TranslationKey,
+  values?: Record<string, string | number>
+) => string;
+
+function fill(text: string, values?: Record<string, string | number>): string {
+  if (!values) return text;
+  return text.replace(/\{(\w+)\}/g, (whole, name: string) =>
+    name in values ? String(values[name]) : whole
+  );
+}
+
+export function createTranslate(language: Language): Translate {
+  return (key, values) => fill(translations[language][key] ?? translations.en[key], values);
+}

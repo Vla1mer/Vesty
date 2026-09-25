@@ -73,7 +73,7 @@ export function ProfileContent() {
                 phone: user.phone ?? "",
                 birthday: user.birthday ?? "",
               }}
-              validationSchema={profileSchema}
+              validationSchema={profileSchema(t)}
               onSubmit={async (values, { setStatus, setFieldError }) => {
                 if (userId === null) return;
                 setStatus(null);

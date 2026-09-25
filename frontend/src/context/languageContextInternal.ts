@@ -1,13 +1,15 @@
 import { createContext } from "react";
 import { LANGUAGES } from "../i18n/translations";
-import type { Language, TranslationKey } from "../i18n/translations";
+import type { Language, Translate } from "../i18n/translations";
 
 export const LANGUAGE_STORAGE_KEY = "vesty.language";
+
+export type { Translate };
 
 export interface LanguageContextValue {
   language: Language;
   setLanguage: (language: Language) => void;
-  t: (key: TranslationKey, values?: Record<string, string | number>) => string;
+  t: Translate;
 }
 
 export const LanguageContext = createContext<LanguageContextValue | undefined>(undefined);
@@ -35,11 +37,4 @@ export function storeLanguage(language: Language): void {
   } catch (error) {
     void error;
   }
-}
-
-export function fill(text: string, values?: Record<string, string | number>): string {
-  if (!values) return text;
-  return text.replace(/\{(\w+)\}/g, (whole, name: string) =>
-    name in values ? String(values[name]) : whole
-  );
 }

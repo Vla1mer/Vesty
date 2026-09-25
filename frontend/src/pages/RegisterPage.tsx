@@ -31,7 +31,7 @@ export function RegisterPage() {
           surname: "",
           rememberMe: true,
         }}
-        validationSchema={registerSchema}
+        validationSchema={registerSchema(t)}
         onSubmit={async (values, { setStatus, setFieldError }) => {
           setStatus(null);
           try {

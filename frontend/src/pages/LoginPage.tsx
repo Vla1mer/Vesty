@@ -24,7 +24,7 @@ export function LoginPage() {
       </div>
       <Formik
         initialValues={{ userName: "", password: "", rememberMe: true }}
-        validationSchema={loginSchema}
+        validationSchema={loginSchema(t)}
         onSubmit={async (values, { setStatus }) => {
           setStatus(null);
           try {
