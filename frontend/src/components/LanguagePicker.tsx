@@ -1,11 +1,35 @@
+import { useEffect, useRef, useState } from "react";
+import { Check, ChevronDown } from "lucide-react";
 import { useLanguage } from "../context/useLanguage";
 import { LANGUAGES, LANGUAGE_NAMES } from "../i18n/translations";
+import { FlagIcon } from "./ui/FlagIcon";
 
 export function LanguagePicker() {
   const { language, setLanguage, t } = useLanguage();
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const closeOutside = (e: MouseEvent) => {
+      if (rootRef.current?.contains(e.target as Node)) return;
+      setOpen(false);
+    };
+    const closeOnEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+
+    window.addEventListener("mousedown", closeOutside);
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      window.removeEventListener("mousedown", closeOutside);
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [open]);
 
   return (
-    <section className="space-y-2">
+    <section className="flex items-center justify-between gap-4">
       <span className="min-w-0">
         <span className="block text-sm font-medium text-content">
           {t("language.title")}
@@ -14,26 +38,60 @@ export function LanguagePicker() {
           {t("language.description")}
         </span>
       </span>
-      <div className="grid gap-2 sm:grid-cols-3">
-        {LANGUAGES.map((option) => {
-          const selected = option === language;
 
-          return (
-            <button
-              key={option}
-              type="button"
-              aria-pressed={selected}
-              onClick={() => setLanguage(option)}
-              className={`rounded-card border p-3 text-left text-sm transition ${
-                selected
-                  ? "border-accent-strong bg-accent-soft text-content"
-                  : "border-line bg-surface-muted text-content-muted hover:border-line-strong"
-              }`}
-            >
-              {LANGUAGE_NAMES[option]}
-            </button>
-          );
-        })}
+      <div ref={rootRef} className="relative shrink-0">
+        <button
+          type="button"
+          onClick={() => setOpen((shown) => !shown)}
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          aria-label={t("language.title")}
+          className="flex items-center gap-2 rounded-card border border-line-strong bg-surface-sunken px-3 py-2 text-sm text-content transition hover:border-accent-strong"
+        >
+          <FlagIcon language={language} />
+          {LANGUAGE_NAMES[language]}
+          <ChevronDown
+            size={14}
+            aria-hidden="true"
+            className={`text-content-muted transition-transform ${open ? "rotate-180" : ""}`}
+          />
+        </button>
+
+        {open && (
+          <ul
+            role="listbox"
+            className="absolute right-0 z-20 mt-1 min-w-full overflow-hidden rounded-card border border-line bg-surface shadow-float"
+          >
+            {LANGUAGES.map((option) => {
+              const selected = option === language;
+
+              return (
+                <li key={option}>
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={selected}
+                    onClick={() => {
+                      setLanguage(option);
+                      setOpen(false);
+                    }}
+                    className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition ${
+                      selected
+                        ? "bg-accent-soft text-content"
+                        : "text-content-muted hover:bg-surface-muted"
+                    }`}
+                  >
+                    <FlagIcon language={option} />
+                    {LANGUAGE_NAMES[option]}
+                    {selected && (
+                      <Check size={14} aria-hidden="true" className="ml-auto text-accent-strong" />
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
     </section>
   );
