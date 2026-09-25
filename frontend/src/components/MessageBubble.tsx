@@ -6,6 +6,7 @@ import { useMessageMenu } from "../hooks/useMessageMenu";
 import { Avatar } from "./Avatar";
 import { MessageAttachments } from "./MessageAttachments";
 import { isStandaloneEmoji } from "../utils/emoji";
+import { formatTime } from "../utils/date";
 import { isImage } from "../api/attachments";
 import { MessageContextMenu } from "./MessageContextMenu";
 import type { MessageDto } from "../types/api";
@@ -76,10 +77,7 @@ export function MessageBubble({
     onTap: handleTap,
   });
 
-  const time = new Date(message.createdAt).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const time = formatTime(message.createdAt);
   const timeLabel = message.isEdited ? `edited ${time}` : time;
 
   const displayName = authorName ?? `User #${message.userId}`;

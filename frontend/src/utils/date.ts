@@ -5,19 +5,27 @@ import {
   isSameYear,
 } from "date-fns";
 
+const LOCALE = "en-GB";
+
+export function formatTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString(LOCALE, { hour: "2-digit", minute: "2-digit" });
+}
+
+export function formatDateTime(iso: string): string {
+  return new Date(iso).toLocaleString(LOCALE);
+}
+
 export function isSameDay(a: string, b: string): boolean {
   return isSameCalendarDay(new Date(a), new Date(b));
 }
 
 export function formatListTime(iso: string): string {
   const date = new Date(iso);
-  if (isToday(date)) {
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  }
+  if (isToday(date)) return formatTime(iso);
   if (isYesterday(date)) return "Yesterday";
 
   const sameYear = isSameYear(date, new Date());
-  return date.toLocaleDateString(undefined, {
+  return date.toLocaleDateString(LOCALE, {
     day: "numeric",
     month: "short",
     ...(sameYear ? {} : { year: "2-digit" }),
@@ -26,13 +34,13 @@ export function formatListTime(iso: string): string {
 
 export function formatLastSeen(iso: string): string {
   const date = new Date(iso);
-  const time = date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const time = formatTime(iso);
 
   if (isToday(date)) return `last seen at ${time}`;
   if (isYesterday(date)) return `last seen yesterday at ${time}`;
 
   const sameYear = isSameYear(date, new Date());
-  const day = date.toLocaleDateString(undefined, {
+  const day = date.toLocaleDateString(LOCALE, {
     day: "numeric",
     month: "short",
     ...(sameYear ? {} : { year: "numeric" }),
@@ -46,7 +54,7 @@ export function formatDateSeparator(iso: string): string {
   if (isYesterday(date)) return "Yesterday";
 
   const sameYear = isSameYear(date, new Date());
-  return date.toLocaleDateString(undefined, {
+  return date.toLocaleDateString(LOCALE, {
     day: "numeric",
     month: "long",
     ...(sameYear ? {} : { year: "numeric" }),

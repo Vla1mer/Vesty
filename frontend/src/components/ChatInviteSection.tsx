@@ -6,6 +6,7 @@ import {
   useRevokeChatInviteMutation,
 } from "../store/chatInvitesApi";
 import { getApiErrorMessage } from "../utils/apiError";
+import { formatDateTime } from "../utils/date";
 import { Button } from "./ui/Button";
 import { FormError } from "./FormError";
 
@@ -84,7 +85,7 @@ export function ChatInviteSection({ chatId }: Props) {
 
           {invite?.expiresAt && (
             <p className="text-xs text-content-subtle">
-              Expires {new Date(invite.expiresAt).toLocaleString()}
+              Expires {formatDateTime(invite.expiresAt)}
             </p>
           )}
 
