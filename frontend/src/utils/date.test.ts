@@ -10,9 +10,17 @@ import { createTranslate } from "../i18n/translations";
 const inEnglish = createTranslate("en");
 const inPolish = createTranslate("pl");
 
-function hoursAgo(hours: number): string {
+function yesterdayAtNoon(): string {
   const date = new Date();
-  date.setHours(date.getHours() - hours);
+  date.setDate(date.getDate() - 1);
+  date.setHours(12, 0, 0, 0);
+  return date.toISOString();
+}
+
+function daysAgo(days: number): string {
+  const date = new Date();
+  date.setDate(date.getDate() - days);
+  date.setHours(12, 0, 0, 0);
   return date.toISOString();
 }
 
@@ -31,11 +39,11 @@ describe("formatLastSeen", () => {
   });
 
   it("says yesterday", () => {
-    expect(formatLastSeen(hoursAgo(26), "en", inEnglish)).toMatch(/^last seen yesterday at /);
+    expect(formatLastSeen(yesterdayAtNoon(), "en", inEnglish)).toMatch(/^last seen yesterday at /);
   });
 
   it("gives the day for anything older", () => {
-    expect(formatLastSeen(hoursAgo(24 * 10), "en", inEnglish)).toMatch(/^last seen on /);
+    expect(formatLastSeen(daysAgo(10), "en", inEnglish)).toMatch(/^last seen on /);
   });
 
   it("speaks Polish when asked", () => {
@@ -62,8 +70,8 @@ describe("dates follow the chosen language", () => {
   });
 
   it("separates the days in the chosen language", () => {
-    expect(formatDateSeparator(hoursAgo(26), "en", inEnglish)).toBe("Yesterday");
-    expect(formatDateSeparator(hoursAgo(26), "pl", inPolish)).toBe("Wczoraj");
+    expect(formatDateSeparator(yesterdayAtNoon(), "en", inEnglish)).toBe("Yesterday");
+    expect(formatDateSeparator(yesterdayAtNoon(), "pl", inPolish)).toBe("Wczoraj");
   });
 
   it("keeps the clock on twenty-four hours", () => {
