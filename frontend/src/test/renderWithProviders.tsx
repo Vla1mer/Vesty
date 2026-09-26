@@ -5,6 +5,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { makeStore } from "../store/store";
 import { AuthProvider } from "../context/AuthContext";
 import { ThemeProvider } from "../context/ThemeContext";
+import { LanguageProvider } from "../context/LanguageContext";
 import { ACCESS_TOKEN_KEY } from "../api/client";
 
 function fakeToken(userId: number, userName: string): string {
@@ -35,17 +36,19 @@ export function renderWithProviders(
     return (
       <Provider store={store}>
         <ThemeProvider>
-          <MemoryRouter initialEntries={[route]}>
-            <AuthProvider>
-              {path ? (
-                <Routes>
-                  <Route path={path} element={children} />
-                </Routes>
-              ) : (
-                children
-              )}
-            </AuthProvider>
-          </MemoryRouter>
+          <LanguageProvider>
+            <MemoryRouter initialEntries={[route]}>
+              <AuthProvider>
+                {path ? (
+                  <Routes>
+                    <Route path={path} element={children} />
+                  </Routes>
+                ) : (
+                  children
+                )}
+              </AuthProvider>
+            </MemoryRouter>
+          </LanguageProvider>
         </ThemeProvider>
       </Provider>
     );

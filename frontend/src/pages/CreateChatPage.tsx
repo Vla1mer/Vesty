@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLanguage } from "../context/useLanguage";
 import { useNavigate } from "react-router-dom";
 import {
   CreateChatContent,
@@ -7,6 +8,7 @@ import {
 import { PageShell } from "../components/ui/PageShell";
 
 export function CreateChatPage() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [step, setStep] = useState<CreateChatStep>(1);
   const [busy, setBusy] = useState(false);
@@ -22,7 +24,7 @@ export function CreateChatPage() {
 
   return (
     <PageShell
-      title={step === 1 ? "New group chat" : "Add members"}
+      title={step === 1 ? t("createChat.title") : t("createChat.addMembers")}
       onBack={goBack}
       backDisabled={busy}
     >

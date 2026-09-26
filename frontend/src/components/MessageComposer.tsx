@@ -8,6 +8,7 @@ import { AttachmentDrafts } from "./AttachmentDrafts";
 import { FormError } from "./FormError";
 import { Button } from "./ui/Button";
 import { TextInput } from "./ui/TextInput";
+import { useLanguage } from "../context/useLanguage";
 import type { MessageDto } from "../types/api";
 import type { useAttachmentUploads } from "../hooks/useAttachmentUploads";
 
@@ -48,6 +49,7 @@ export function MessageComposer({
   busy,
   blocked,
 }: Props) {
+  const { t } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const selectionRef = useRef({ start: 0, end: 0 });
 
@@ -71,7 +73,7 @@ export function MessageComposer({
         <div className="flex items-center gap-3 px-4 pt-3 -mb-1">
           <Pencil size={18} aria-hidden="true" className="shrink-0 text-accent-strong" />
           <div className="flex-1 min-w-0 border-l-2 border-accent-strong pl-3">
-            <p className="text-xs font-medium text-accent-strong">Editing</p>
+            <p className="text-xs font-medium text-accent-strong">{t("composer.editing")}</p>
             <p className="text-sm text-content-muted truncate">
               {editingMessage.content}
             </p>
@@ -79,7 +81,7 @@ export function MessageComposer({
           <button
             type="button"
             onClick={onCancelEdit}
-            aria-label="Cancel editing"
+            aria-label={t("composer.cancelEditing")}
             className="text-content-muted hover:text-content"
           >
             <X size={20} />
@@ -99,7 +101,7 @@ export function MessageComposer({
           <button
             type="button"
             onClick={onCancelReply}
-            aria-label="Cancel reply"
+            aria-label={t("composer.cancelReply")}
             className="text-content-muted hover:text-content"
           >
             <X size={20} />
@@ -113,8 +115,8 @@ export function MessageComposer({
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          aria-label="Attach file"
-          title="Attach file"
+          aria-label={t("composer.attach")}
+          title={t("composer.attach")}
           className="shrink-0 px-2 text-content-muted hover:text-accent-strong transition"
         >
           <Paperclip size={20} />
@@ -160,7 +162,7 @@ export function MessageComposer({
             if (e.key === "Escape" && isEditing) onCancelEdit();
           }}
           placeholder={
-            blocked ? "Unblock this user to send messages" : "Type a message..."
+            blocked ? t("composer.blocked") : t("composer.placeholder")
           }
           maxLength={MESSAGE_LIMIT}
           disabled={busy || blocked}
@@ -176,7 +178,7 @@ export function MessageComposer({
           }
           className="px-5"
         >
-          {busy ? "..." : isEditing ? "Save" : "Send"}
+          {busy ? "..." : isEditing ? t("composer.save") : t("composer.send")}
         </Button>
       </form>
     </div>

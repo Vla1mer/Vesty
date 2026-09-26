@@ -12,12 +12,15 @@ vi.mock("emoji-picker-react", () => ({
 
 import { EmojiPickerButton } from "./EmojiPickerButton";
 import { ThemeProvider } from "../context/ThemeContext";
+import { LanguageProvider } from "../context/LanguageContext";
 
 function setup(disabled = false) {
   const onPick = vi.fn();
   render(
     <ThemeProvider>
-      <EmojiPickerButton disabled={disabled} onPick={onPick} />
+      <LanguageProvider>
+        <EmojiPickerButton disabled={disabled} onPick={onPick} />
+      </LanguageProvider>
     </ThemeProvider>
   );
   return { onPick };

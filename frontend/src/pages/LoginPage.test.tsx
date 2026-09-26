@@ -11,6 +11,7 @@ import userEvent from "@testing-library/user-event";
 import { LoginPage } from "./LoginPage";
 import { login } from "../api/auth";
 import { renderWithProviders } from "../test/renderWithProviders";
+import { LANGUAGE_STORAGE_KEY } from "../context/languageContextInternal";
 
 function failWith(status: number) {
   vi.mocked(login).mockRejectedValue(
@@ -75,6 +76,43 @@ describe("LoginPage", () => {
     expect(login).toHaveBeenCalledWith(
       expect.objectContaining({ userName: "petya", password: "Secret1" })
     );
+  });
+
+  it("asks for the missing fields in Polish", async () => {
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, "pl");
+    renderWithProviders(
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+      </Routes>,
+      { route: "/login" }
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Zaloguj się" }));
+
+    expect(
+      await screen.findByText("Nazwa użytkownika jest wymagana")
+    ).toBeInTheDocument();
+    expect(screen.getByText("Hasło jest wymagane")).toBeInTheDocument();
+    localStorage.removeItem(LANGUAGE_STORAGE_KEY);
+  });
+
+  it("lets you switch the language before signing in", async () => {
+    renderWithProviders(
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+      </Routes>,
+      { route: "/login" }
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: (_name, element) => element.getAttribute("aria-haspopup") === "listbox",
+      })
+    );
+    await userEvent.click(screen.getByRole("option", { name: /Polski/ }));
+
+    expect(screen.getByText("Zaloguj się na swoje konto")).toBeInTheDocument();
+    localStorage.removeItem(LANGUAGE_STORAGE_KEY);
   });
 
   it("reports a wrong password", async () => {

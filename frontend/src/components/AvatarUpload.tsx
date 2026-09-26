@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { useLanguage } from "../context/useLanguage";
 import type { ReactNode } from "react";
 import { Pencil } from "lucide-react";
 import { ACCEPTED_IMAGE_TYPES, cropToSquare } from "../utils/image";
@@ -18,6 +19,7 @@ export function AvatarUpload({
   uploading,
   onUpload,
 }: AvatarUploadProps) {
+  const { t } = useLanguage();
   const inputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,14 +30,14 @@ export function AvatarUpload({
 
     setError(null);
     if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-      setError("Choose a JPEG, PNG or WebP image.");
+      setError(t("avatar.wrongFormat"));
       return;
     }
 
     try {
       await onUpload(await cropToSquare(file));
     } catch {
-      setError("Could not upload the photo. Try another image.");
+      setError(t("avatar.uploadFailed"));
     }
   }
 
@@ -44,8 +46,8 @@ export function AvatarUpload({
       type="button"
       onClick={() => inputRef.current?.click()}
       disabled={uploading}
-      aria-label={hasAvatar ? "Change photo" : "Upload photo"}
-      title={hasAvatar ? "Change photo" : "Upload photo"}
+      aria-label={hasAvatar ? t("avatar.change") : t("avatar.upload")}
+      title={hasAvatar ? t("avatar.change") : t("avatar.upload")}
       className="group relative shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong disabled:cursor-not-allowed"
     >
       {preview}

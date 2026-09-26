@@ -1,5 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { ShieldOff } from "lucide-react";
+import { useLanguage } from "../context/useLanguage";
+import { SectionHeading } from "./ui/SectionHeading";
 import {
   useGetBlockedUsersQuery,
   useUnblockUserMutation,
@@ -10,6 +12,7 @@ import { FormError } from "./FormError";
 import { Skeleton } from "./ui/Skeleton";
 
 export function BlockedUsers() {
+  const { t } = useLanguage();
   const { data: blocked = [], isLoading, isError } = useGetBlockedUsersQuery();
   const [unblockUser, unblockState] = useUnblockUserMutation();
 
@@ -22,19 +25,16 @@ export function BlockedUsers() {
     );
   }
 
-  if (isError) return <FormError message="Failed to load blocked users" />;
+  if (isError) return <FormError message={t("blocked.loadFailed")} />;
 
   return (
     <section>
-      <h3 className="text-sm font-semibold text-content">Blocked users</h3>
-      <p className="mb-3 text-xs text-content-subtle">
-        Blocked people cannot message you or invite you to groups, and they do not
-        appear in search.
-      </p>
+      <SectionHeading>{t("blocked.title")}</SectionHeading>
+      <p className="mb-3 text-xs text-content-subtle">{t("blocked.hint")}</p>
 
       {blocked.length === 0 ? (
         <p className="rounded-card border border-line bg-surface-muted px-4 py-3 text-sm text-content-muted">
-          You have not blocked anyone.
+          {t("blocked.empty")}
         </p>
       ) : (
         <ul className="space-y-1">
@@ -72,7 +72,7 @@ export function BlockedUsers() {
                   }
                   onClick={() => unblockUser(user.userId)}
                 >
-                  <ShieldOff size={13} /> Unblock
+                  <ShieldOff size={13} /> {t("blocked.unblock")}
                 </Button>
               </motion.li>
             ))}

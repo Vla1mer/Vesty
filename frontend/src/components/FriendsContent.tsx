@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
+import { useLanguage } from "../context/useLanguage";
 import { Ban, Check, Clock, MessageSquare, Search, UserPlus, UserX, X } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -70,6 +71,7 @@ function FriendRow({ friend, actions, onOpenProfile }: RowProps) {
 }
 
 export function FriendsContent() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const profile = useUserProfile();
   const { userId } = useAuth();
@@ -97,7 +99,7 @@ export function FriendsContent() {
   const outgoing = requests.filter((r) => !r.isIncoming);
 
   if (isLoading) return <ChatListSkeleton rows={4} />;
-  if (isError) return <FormError message="Failed to load friends" />;
+  if (isError) return <FormError message={t("friends.loadFailed")} />;
 
   const friendIds = new Set(friends.map((f) => f.userId));
   const requestedIds = new Set(requests.map((r) => r.userId));
@@ -108,10 +110,10 @@ export function FriendsContent() {
       <AnimatePresence>
         {blocking.askedForChatId !== null && (
           <ConfirmDialog
-            title="Delete this chat?"
-            message="You blocked this user. The conversation can be removed from your list — they keep their copy."
-            confirmText="Delete for me"
-            cancelText="Keep"
+            title={t("friends.blockedChatTitle")}
+            message={t("friends.blockedChatWarning")}
+            confirmText={t("friends.blockedChatConfirm")}
+            cancelText={t("friends.blockedChatCancel")}
             variant="danger"
             loading={blocking.isClearing}
             error={blocking.clearError}
@@ -134,7 +136,7 @@ export function FriendsContent() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Find people by username..."
+            placeholder={t("friends.search")}
             className="rounded-lg pl-10"
           />
         </div>
@@ -143,11 +145,11 @@ export function FriendsContent() {
           <ul className="mt-2">
             {searching ? (
               <li className="px-3 py-4 text-center text-sm text-content-subtle">
-                Searching...
+                {t("info.searching")}
               </li>
             ) : candidates.length === 0 ? (
               <li className="px-3 py-4 text-center text-sm text-content-subtle">
-                No users match your search
+                {t("info.noUsers")}
               </li>
             ) : (
               candidates.map((user) => (
@@ -203,7 +205,7 @@ export function FriendsContent() {
       {incoming.length > 0 && (
         <section>
           <h2 className="mb-2 px-3 text-sm font-semibold text-content">
-            Requests
+            {t("friends.requests")}
             <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-xs text-accent-contrast">
               {incoming.length}
             </span>
@@ -221,16 +223,16 @@ export function FriendsContent() {
                         size="xs"
                         disabled={isBusy(request.userId)}
                         onClick={() => acceptRequest(request.userId)}
-                        aria-label="Accept request"
+                        aria-label={t("friends.accept")}
                       >
-                        <Check size={14} /> Accept
+                        <Check size={14} /> {t("friends.accepted")}
                       </Button>
                       <Button
                         size="xs"
                         variant="neutral"
                         disabled={isBusy(request.userId)}
                         onClick={() => removeFriend(request.userId)}
-                        aria-label="Decline request"
+                        aria-label={t("friends.decline")}
                       >
                         <X size={14} />
                       </Button>
@@ -260,7 +262,7 @@ export function FriendsContent() {
                       disabled={isBusy(request.userId)}
                       onClick={() => removeFriend(request.userId)}
                     >
-                      Cancel
+                      {t("common.cancel")}
                     </Button>
                   }
                 />
@@ -272,7 +274,7 @@ export function FriendsContent() {
 
       <section>
         <h2 className="mb-2 px-3 text-sm font-semibold text-content">
-          Friends
+          {t("friends.title")}
           {friends.length > 0 && (
             <span className="ml-2 text-content-muted">{friends.length}</span>
           )}
@@ -281,8 +283,8 @@ export function FriendsContent() {
         {friends.length === 0 ? (
           <EmptyState
             Icon={UserPlus}
-            title="No friends yet"
-            description="Find people through search and send them a request."
+            title={t("friends.empty")}
+            description={t("friends.emptyHint")}
           />
         ) : (
           <ul>
@@ -298,8 +300,8 @@ export function FriendsContent() {
                         size="xs"
                         variant="neutral"
                         onClick={() => navigate(`/chats/new/${friend.userId}`)}
-                        aria-label="Message"
-                        title="Message"
+                        aria-label={t("friends.message")}
+                        title={t("friends.message")}
                       >
                         <MessageSquare size={14} />
                       </Button>
@@ -308,8 +310,8 @@ export function FriendsContent() {
                         variant="neutral"
                         disabled={isBusy(friend.userId)}
                         onClick={() => removeFriend(friend.userId)}
-                        aria-label="Remove friend"
-                        title="Remove friend"
+                        aria-label={t("friends.remove")}
+                        title={t("friends.remove")}
                       >
                         <UserX size={14} />
                       </Button>
@@ -318,8 +320,8 @@ export function FriendsContent() {
                         variant="danger"
                         disabled={isBusy(friend.userId)}
                         onClick={() => blocking.block(friend.userId)}
-                        aria-label="Block user"
-                        title="Block user"
+                        aria-label={t("friends.block")}
+                        title={t("friends.block")}
                       >
                         <Ban size={14} />
                       </Button>

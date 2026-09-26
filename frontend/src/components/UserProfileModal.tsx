@@ -2,6 +2,7 @@ import { useGetUserByIdQuery } from "../store/userApi";
 import { UserProfileContent } from "./UserProfileContent";
 import { FormError } from "./FormError";
 import { Modal } from "./ui/Modal";
+import { useLanguage } from "../context/useLanguage";
 
 interface Props {
   userId: number;
@@ -9,14 +10,15 @@ interface Props {
 }
 
 export function UserProfileModal({ userId, onClose }: Props) {
+  const { t } = useLanguage();
   const { data: user, isLoading, isError } = useGetUserByIdQuery(userId);
 
   return (
-    <Modal title="Profile" onClose={onClose} size="sm" layout="scroll">
+    <Modal title={t("nav.profile")} onClose={onClose} size="sm" layout="scroll">
       {isError ? (
-        <FormError message="Failed to load the profile" />
+        <FormError message={t("direct.profileFailed")} />
       ) : isLoading || !user ? (
-        <p className="py-6 text-center text-sm text-content-subtle">Loading...</p>
+        <p className="py-6 text-center text-sm text-content-subtle">{t("common.loading")}</p>
       ) : (
         <UserProfileContent user={user} />
       )}

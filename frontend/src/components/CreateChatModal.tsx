@@ -1,3 +1,4 @@
+import { useLanguage } from "../context/useLanguage";
 import { useState } from "react";
 import { Modal } from "./ui/Modal";
 import {
@@ -10,12 +11,13 @@ interface Props {
 }
 
 export function CreateChatModal({ onClose }: Props) {
+  const { t } = useLanguage();
   const [step, setStep] = useState<CreateChatStep>(1);
   const [busy, setBusy] = useState(false);
 
   return (
     <Modal
-      title={step === 1 ? "New group chat" : "Add members"}
+      title={step === 1 ? t("createChat.title") : t("createChat.addMembers")}
       onClose={onClose}
       closeDisabled={busy}
       layout="column"

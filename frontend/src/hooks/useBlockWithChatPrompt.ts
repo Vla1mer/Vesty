@@ -1,3 +1,4 @@
+import { useLanguage } from "../context/useLanguage";
 import { useState } from "react";
 import { useBlockUserMutation } from "../store/blockApi";
 import {
@@ -7,6 +8,7 @@ import {
 import { getApiErrorMessage } from "../utils/apiError";
 
 export function useBlockWithChatPrompt() {
+  const { t } = useLanguage();
   const [blockUser, blockState] = useBlockUserMutation();
   const [clearChatForMe, clearState] = useClearChatForMeMutation();
   const [findDirectChat] = useLazyFindDirectChatQuery();
@@ -20,7 +22,7 @@ export function useBlockWithChatPrompt() {
     try {
       await blockUser(userId).unwrap();
     } catch (err) {
-      setBlockError(getApiErrorMessage(err, "Failed to block the user"));
+      setBlockError(getApiErrorMessage(err, t("stranger.blockFailed")));
       return;
     }
 
@@ -35,7 +37,7 @@ export function useBlockWithChatPrompt() {
       await clearChatForMe(pendingChatId).unwrap();
       setPendingChatId(null);
     } catch (err) {
-      setClearError(getApiErrorMessage(err, "Failed to delete the chat"));
+      setClearError(getApiErrorMessage(err, t("stranger.clearFailed")));
     }
   }
 

@@ -1,4 +1,5 @@
 import { AnimatePresence } from "framer-motion";
+import { useLanguage } from "../context/useLanguage";
 import { Eraser, LogOut, Trash2 } from "lucide-react";
 import { getChatDisplayName } from "../utils/chats";
 import type { useChatDangerActions } from "../hooks/useChatDangerActions";
@@ -25,6 +26,7 @@ export function ChatDangerZone({
   busy,
   actions,
 }: Props) {
+  const { t } = useLanguage();
   const isGroup = !chat.isPrivate;
 
   return (
@@ -38,7 +40,7 @@ export function ChatDangerZone({
             disabled={busy}
           >
             <Eraser size={15} aria-hidden="true" />
-            Delete for me
+            {t("danger.clear")}
           </Button>
         </section>
       )}
@@ -47,7 +49,7 @@ export function ChatDangerZone({
         <section className="space-y-2 border-t border-line pt-3">
           {isOwner ? (
             <p className="text-xs text-content-subtle">
-              To leave this chat, hand ownership to another member first.
+              {t("danger.ownerFirst")}
             </p>
           ) : (
             <Button
@@ -57,7 +59,7 @@ export function ChatDangerZone({
               disabled={busy}
             >
               <LogOut size={15} aria-hidden="true" />
-              Leave chat
+              {t("danger.leave")}
             </Button>
           )}
         </section>
@@ -72,7 +74,7 @@ export function ChatDangerZone({
             disabled={busy}
           >
             <Trash2 size={15} aria-hidden="true" />
-            Delete chat
+            {t("danger.delete")}
           </Button>
         </section>
       )}
@@ -80,9 +82,9 @@ export function ChatDangerZone({
       <AnimatePresence>
         {actions.clear.open && (
           <ConfirmDialog
-            title="Delete for me?"
-            message="The conversation will disappear from your list. The other person keeps their copy, and the chat comes back if they write again."
-            confirmText="Delete"
+            title={t("danger.clearTitle")}
+            message={t("danger.clearWarning")}
+            confirmText={t("danger.clearConfirm")}
             variant="danger"
             loading={actions.clear.loading}
             onConfirm={actions.clear.confirm}
@@ -94,11 +96,9 @@ export function ChatDangerZone({
       <AnimatePresence>
         {actions.leave.open && (
           <ConfirmDialog
-            title="Leave chat?"
-            message={`You will stop receiving messages from "${getChatDisplayName(
-              chat
-            )}". Someone will have to add you back to return.`}
-            confirmText="Leave"
+            title={t("danger.leaveTitle")}
+            message={t("danger.leaveWarning", { chat: getChatDisplayName(chat) })}
+            confirmText={t("danger.leaveConfirm")}
             variant="danger"
             loading={actions.leave.loading}
             onConfirm={actions.leave.confirm}
@@ -110,15 +110,13 @@ export function ChatDangerZone({
       <AnimatePresence>
         {actions.remove.open && (
           <ConfirmDialog
-            title="Delete chat?"
+            title={t("danger.deleteTitle")}
             message={
               isGroup
-                ? `Are you sure you want to delete "${getChatDisplayName(
-                    chat
-                  )}"? All messages and members will be permanently lost.`
-                : `Are you sure you want to delete this conversation? All messages will be permanently lost.`
+                ? t("danger.deleteGroupWarning", { chat: getChatDisplayName(chat) })
+                : t("danger.deleteDirectWarning")
             }
-            confirmText="Delete"
+            confirmText={t("danger.deleteConfirm")}
             variant="danger"
             loading={actions.remove.loading}
             onConfirm={actions.remove.confirm}

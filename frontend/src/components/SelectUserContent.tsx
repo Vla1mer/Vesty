@@ -1,4 +1,5 @@
 import { Check, Clock, MessageSquare, UserPlus } from "lucide-react";
+import { useLanguage } from "../context/useLanguage";
 import { useMemo, useState } from "react";
 import { useSearchUsersQuery } from "../store/userApi";
 import { useAuth } from "../context/useAuth";
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export function SelectUserContent({ onSelected }: Props) {
+  const { t } = useLanguage();
   const { userId: currentUserId } = useAuth();
   const [search, setSearch] = useState("");
   const term = search.trim();
@@ -42,21 +44,21 @@ export function SelectUserContent({ onSelected }: Props) {
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by username..."
+          placeholder={t("info.searchUsers")}
           autoFocus
         />
-        {isError && <FormError message="Failed to load users" />}
+        {isError && <FormError message={t("users.loadFailed")} />}
       </div>
 
       {term.length === 0 ? (
         <p className="text-sm text-content-subtle text-center py-6">
-          Start typing to find someone
+          {t("users.startTyping")}
         </p>
       ) : isFetching ? (
-        <p className="text-content-muted text-center py-8">Searching...</p>
+        <p className="text-content-muted text-center py-8">{t("info.searching")}</p>
       ) : filtered.length === 0 ? (
         <p className="text-sm text-content-subtle text-center py-6">
-          No users match your search
+          {t("info.noUsers")}
         </p>
       ) : (
         <ul className="space-y-1">
@@ -84,17 +86,17 @@ export function SelectUserContent({ onSelected }: Props) {
 
               {friendIds.has(u.id) ? (
                 <span
-                  title="Already friends"
+                  title={t("users.alreadyFriends")}
                   className="flex items-center gap-1 text-xs text-content-muted"
                 >
-                  <Check size={13} aria-hidden="true" /> Friend
+                  <Check size={13} aria-hidden="true" /> {t("friends.alreadyFriend")}
                 </span>
               ) : requestedIds.has(u.id) ? (
                 <span
-                  title="Request pending"
+                  title={t("users.requestPending")}
                   className="flex items-center gap-1 text-xs text-content-muted"
                 >
-                  <Clock size={13} aria-hidden="true" /> Pending
+                  <Clock size={13} aria-hidden="true" /> {t("friends.pending")}
                 </span>
               ) : (
                 <Button
@@ -103,7 +105,7 @@ export function SelectUserContent({ onSelected }: Props) {
                   disabled={sendState.isLoading && sendState.originalArgs === u.id}
                   onClick={() => sendRequest(u.id)}
                   aria-label={`Add ${u.userName} to friends`}
-                  title="Add to friends"
+                  title={t("users.addFriend")}
                 >
                   <UserPlus size={13} />
                 </Button>
@@ -113,7 +115,7 @@ export function SelectUserContent({ onSelected }: Props) {
                 type="button"
                 onClick={() => onSelected(u.id)}
                 aria-label={`Message ${u.userName}`}
-                title="Message"
+                title={t("friends.message")}
                 className="shrink-0 rounded p-1.5 text-accent-strong transition-colors hover:bg-surface-overlay"
               >
                 <MessageSquare size={14} aria-hidden="true" />

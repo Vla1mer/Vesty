@@ -1,3 +1,4 @@
+import { useLanguage } from "../context/useLanguage";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useGetChatByIdQuery } from "../store/chatsApi";
@@ -9,6 +10,7 @@ import { FormError } from "../components/FormError";
 import { PageShell } from "../components/ui/PageShell";
 
 export function ChatSettingsPage() {
+  const { t } = useLanguage();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const chatId = Number(id);
@@ -33,18 +35,18 @@ export function ChatSettingsPage() {
 
   return (
     <PageShell
-      title={view === "admins" ? "Administrators" : "Settings"}
+      title={view === "admins" ? t("admins.title") : t("nav.settings")}
       onBack={goBack}
       backDisabled={busy}
     >
       {!isValidChat ? (
-        <FormError message="Invalid chat id" />
+        <FormError message={t("common.invalidChat")} />
       ) : isLoading ? (
         <p className="py-6 text-center text-sm text-content-subtle">
-          Loading settings...
+          {t("chatSettings.loading")}
         </p>
       ) : !chat ? (
-        <FormError message="Chat not found" />
+        <FormError message={t("common.chatNotFound")} />
       ) : (
         <ChatSettingsContent
           chat={chat}

@@ -1,3 +1,4 @@
+import { useLanguage } from "../context/useLanguage";
 import { useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { Outlet, useLocation } from "react-router-dom";
@@ -13,6 +14,7 @@ import {
 } from "../hooks/useChatListWidth";
 
 export function ChatLayout() {
+  const { t } = useLanguage();
   const location = useLocation();
   const hasSelection = /^\/chats\/.+/.test(location.pathname);
   const showRailLabels = useRailLabels();
@@ -68,7 +70,7 @@ export function ChatLayout() {
         <div
           role="separator"
           aria-orientation="vertical"
-          aria-label="Resize the chat list"
+          aria-label={t("chats.resize")}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}

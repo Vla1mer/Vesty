@@ -24,12 +24,14 @@ import { FormError } from "../components/FormError";
 import { AnimatePresence, motion } from "framer-motion";
 import { EmptyState } from "../components/ui/EmptyState";
 import { ChatListSkeleton } from "../components/ui/Skeleton";
+import { useLanguage } from "../context/useLanguage";
 
 interface Props {
   isResizing?: boolean;
 }
 
 export function ChatsPage({ isResizing = false }: Props) {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { userName, userId, logout } = useAuth();
   const { data: currentUser } = useGetUserByIdQuery(userId as number, {
@@ -120,14 +122,14 @@ export function ChatsPage({ isResizing = false }: Props) {
           actions={[
             {
               Icon: MessageSquarePlus,
-              label: "New direct message",
-              description: "Start a private conversation with someone",
+              label: t("chats.newDirect"),
+              description: t("chats.newDirectHint"),
               onClick: openSelectUser,
             },
             {
               Icon: Users,
-              label: "New group chat",
-              description: "Create a chat for multiple people",
+              label: t("chats.newGroup"),
+              description: t("chats.newGroupHint"),
               onClick: openCreateChat,
             },
           ]}
@@ -142,7 +144,7 @@ export function ChatsPage({ isResizing = false }: Props) {
         {isLoading && <ChatListSkeleton />}
 
         {isError && (
-          <FormError className="mx-4 mb-4" message="Failed to load chats" />
+          <FormError className="mx-4 mb-4" message={t("chats.loadFailed")} />
         )}
 
         {!isLoading && !isError && (
@@ -154,8 +156,8 @@ export function ChatsPage({ isResizing = false }: Props) {
             ) : chats.length === 0 ? (
               <EmptyState
                 Icon={MessagesSquare}
-                title="No chats yet"
-                description="Use the compose button to start a conversation."
+                title={t("chats.empty")}
+                description={t("chats.emptyHint")}
               />
             ) : (
               <div>

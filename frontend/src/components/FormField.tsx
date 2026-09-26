@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { TextInput } from "./ui/TextInput";
 import { useId, useState } from "react";
 import { useField } from "formik";
+import { useLanguage } from "../context/useLanguage";
 
 interface FormFieldProps {
   label: string;
@@ -23,6 +24,7 @@ export function FormField({
   maxLength,
   hint,
 }: FormFieldProps) {
+  const { t } = useLanguage();
   const id = useId();
   const [field, meta] = useField(name);
   const [showPassword, setShowPassword] = useState(false);
@@ -51,7 +53,7 @@ export function FormField({
             type="button"
             onClick={() => setShowPassword((visible) => !visible)}
             tabIndex={-1}
-            aria-label={showPassword ? "Hide password" : "Show password"}
+            aria-label={showPassword ? t("password.hide") : t("password.show")}
             className="absolute inset-y-0 right-0 px-3 flex items-center text-content-muted hover:text-content transition"
           >
             {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}

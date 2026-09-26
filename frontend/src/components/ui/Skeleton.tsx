@@ -1,3 +1,4 @@
+import { useLanguage } from "../../context/useLanguage";
 export function Skeleton({ className = "" }: { className?: string }) {
   return (
     <span
@@ -8,8 +9,10 @@ export function Skeleton({ className = "" }: { className?: string }) {
 }
 
 export function ChatListSkeleton({ rows = 6 }: { rows?: number }) {
+  const { t } = useLanguage();
+
   return (
-    <div role="status" aria-label="Loading chats">
+    <div role="status" aria-label={t("common.loadingChats")}>
       {Array.from({ length: rows }, (_, i) => (
         <div key={i} className="mx-2 flex items-center gap-3 px-3 py-1.5">
           <Skeleton className="h-12 w-12 shrink-0 rounded-full" />

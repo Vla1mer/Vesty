@@ -1,3 +1,4 @@
+import { useLanguage } from "../../context/useLanguage";
 import { ArrowLeft } from "lucide-react";
 import type { ReactNode } from "react";
 import { BottomNav } from "../BottomNav";
@@ -17,6 +18,8 @@ export function PageShell({
   showNav = false,
   children,
 }: Props) {
+  const { t } = useLanguage();
+
   return (
     <div className="flex min-h-viewport flex-col overflow-hidden">
       <header className="flex shrink-0 items-center gap-2 border-b border-line px-4 py-3">
@@ -25,7 +28,7 @@ export function PageShell({
             type="button"
             onClick={onBack}
             disabled={backDisabled}
-            aria-label="Back"
+            aria-label={t("common.back")}
             className="text-content-muted transition hover:text-content disabled:opacity-50"
           >
             <ArrowLeft size={22} />

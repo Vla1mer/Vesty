@@ -25,6 +25,7 @@ import { useAttachmentUploads } from "../hooks/useAttachmentUploads";
 import { useMessageSelection } from "../hooks/useMessageSelection";
 import { useChatScroll } from "../hooks/useChatScroll";
 import { useIsMobile } from "../hooks/useIsMobile";
+import { useLanguage } from "../context/useLanguage";
 import { ArrowDown } from "lucide-react";
 import { MessageComposer } from "../components/MessageComposer";
 import type { AxiosBaseQueryError } from "../api/axiosBaseQuery";
@@ -77,6 +78,7 @@ export function ChatDetailPage() {
   const [isDraggingFile, setIsDraggingFile] = useState(false);
   const { typingNames, notifyTyping } = useTypingIndicator(chatId, isValidChat);
   const isMobile = useIsMobile();
+  const { t } = useLanguage();
 
   const [replyTo, setReplyTo] = useState<MessageDto | null>(null);
   const [pinnedIndex, setPinnedIndex] = useState(0);
@@ -128,13 +130,13 @@ export function ChatDetailPage() {
   }
 
   const loadError = useMemo(() => {
-    if (!isValidChat) return "Invalid chat id";
+    if (!isValidChat) return t("chat.invalidId");
     if (!chatError) return null;
     const status = (chatError as AxiosBaseQueryError).status;
-    if (status === 403) return "You don't have access to this chat";
-    if (status === 404) return "Chat not found";
-    return "Failed to load chat";
-  }, [isValidChat, chatError]);
+    if (status === 403) return t("chat.noAccess");
+    if (status === 404) return t("chat.notFound");
+    return t("chat.loadFailed");
+  }, [isValidChat, chatError, t]);
 
   const blockedPartner =
     chat && isDirectChat(chat) && chat.partnerUserId
@@ -196,7 +198,7 @@ export function ChatDetailPage() {
         await updateMessage({ chatId, id: editingId, content }).unwrap();
         cancelEdit();
       } catch (error) {
-        setActionError(getApiErrorMessage(error, "Failed to edit message"));
+        setActionError(getApiErrorMessage(error, t("chat.editFailed")));
       }
       return;
     }
@@ -212,7 +214,7 @@ export function ChatDetailPage() {
       setReplyTo(null);
       attachments.clear();
     } catch (error) {
-      setActionError(getApiErrorMessage(error, "Failed to send message"));
+      setActionError(getApiErrorMessage(error, t("chat.sendFailed")));
     }
   }
 
@@ -222,7 +224,7 @@ export function ChatDetailPage() {
       await deleteMessage({ chatId, id: deleteTargetId }).unwrap();
       setDeleteTargetId(null);
     } catch {
-      setActionError("Failed to delete message");
+      setActionError(t("chat.deleteFailed"));
     }
   }
 
@@ -243,7 +245,7 @@ export function ChatDetailPage() {
       setBulkDeleteOpen(false);
       selection.clear();
     } catch {
-      setActionError("Failed to delete messages");
+      setActionError(t("chat.deleteManyFailed"));
       setBulkDeleteOpen(false);
     }
   }
@@ -275,7 +277,7 @@ export function ChatDetailPage() {
     >
       {isDraggingFile && (
         <div className="absolute inset-0 z-30 flex items-center justify-center border-2 border-dashed border-accent-strong bg-surface/80 pointer-events-none">
-          <p className="text-lg font-medium text-accent-strong">Drop files to attach</p>
+          <p className="text-lg font-medium text-accent-strong">{t("composer.dropFiles")}</p>
         </div>
       )}
       <ChatTopBar
@@ -313,7 +315,7 @@ export function ChatDetailPage() {
         currentUserId={userId}
         loading={chatLoading || messagesLoading}
         error={
-          loadError ?? (messagesError ? "Failed to load messages" : null)
+          loadError ?? (messagesError ? t("chat.messagesFailed") : null)
         }
         firstUnreadId={scroll.firstUnreadId}
         highlightedId={scroll.highlightedId}
@@ -371,9 +373,9 @@ export function ChatDetailPage() {
       <AnimatePresence>
         {deleteTargetId !== null && (
           <ConfirmDialog
-            title="Delete message?"
-            message="This message will be permanently deleted."
-            confirmText="Delete"
+            title={t("chat.deleteTitle")}
+            message={t("chat.deleteWarning")}
+            confirmText={t("chat.delete")}
             variant="danger"
             loading={deletingMessage}
             onConfirm={confirmDeleteMessage}
@@ -385,11 +387,13 @@ export function ChatDetailPage() {
       <AnimatePresence>
         {bulkDeleteOpen && (
           <ConfirmDialog
-            title={`Delete ${selection.ownIds.length} ${
-              selection.ownIds.length === 1 ? "message" : "messages"
-            }?`}
-            message="The selected messages will be permanently deleted."
-            confirmText="Delete"
+            title={
+              selection.ownIds.length === 1
+                ? t("chat.deleteOneTitle")
+                : t("chat.deleteCountTitle", { count: selection.ownIds.length })
+            }
+            message={t("chat.deleteManyWarning")}
+            confirmText={t("chat.delete")}
             variant="danger"
             loading={deletingMessage}
             onConfirm={confirmBulkDelete}
@@ -403,8 +407,8 @@ export function ChatDetailPage() {
           <motion.button
             type="button"
             onClick={scroll.jumpToBottom}
-            aria-label="Jump to latest message"
-            title="Jump to latest message"
+            aria-label={t("chat.jumpToLatest")}
+            title={t("chat.jumpToLatest")}
             initial={{ opacity: 0, scale: 0.8, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 8 }}

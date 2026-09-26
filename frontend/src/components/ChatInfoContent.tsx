@@ -19,11 +19,13 @@ import { getChatDisplayName } from "../utils/chats";
 import type { ChatDto, UserDto, ChatMemberWithRoleDto } from "../types/api";
 import { FormError } from "./FormError";
 import { getApiErrorMessage } from "../utils/apiError";
+import { useLanguage } from "../context/useLanguage";
+import type { TranslationKey } from "../i18n/translations";
 
-const roleLabel: Record<number, string> = {
-  [UserRole.Owner]: "Owner",
-  [UserRole.Admin]: "Admin",
-  [UserRole.User]: "Member",
+const roleLabel: Record<number, TranslationKey> = {
+  [UserRole.Owner]: "role.owner",
+  [UserRole.Admin]: "role.admin",
+  [UserRole.User]: "role.member",
 };
 
 interface Props {
@@ -33,6 +35,7 @@ interface Props {
 }
 
 export function ChatInfoContent({ chat, onOpenSettings, onBusyChange }: Props) {
+  const { t } = useLanguage();
   const { userId: currentUserId } = useAuth();
   const [addChatMember] = useAddChatMemberMutation();
   const [removeChatMember] = useRemoveChatMemberMutation();
@@ -76,7 +79,7 @@ export function ChatInfoContent({ chat, onOpenSettings, onBusyChange }: Props) {
     try {
       await removeChatMember({ chatId: chat.id, userId: member.userId }).unwrap();
     } catch (err) {
-      setError(getApiErrorMessage(err, "Failed to remove member"));
+      setError(getApiErrorMessage(err, t("info.removeFailed")));
     } finally {
       setRemoving(null);
       setBusyUserId(null);
@@ -105,7 +108,7 @@ export function ChatInfoContent({ chat, onOpenSettings, onBusyChange }: Props) {
     try {
       await addChatMember({ chatId: chat.id, userId: user.id }).unwrap();
     } catch (err) {
-      setError(getApiErrorMessage(err, "Failed to add member"));
+      setError(getApiErrorMessage(err, t("info.addFailed")));
     } finally {
       setBusyUserId(null);
     }
@@ -120,8 +123,8 @@ export function ChatInfoContent({ chat, onOpenSettings, onBusyChange }: Props) {
           type="button"
           onClick={onOpenSettings}
           className="absolute right-0 top-0 text-content-muted transition hover:text-accent-strong"
-          aria-label="Chat settings"
-          title="Chat settings"
+          aria-label={t("info.settings")}
+          title={t("info.settings")}
         >
           <Settings size={20} />
         </button>
@@ -148,7 +151,7 @@ export function ChatInfoContent({ chat, onOpenSettings, onBusyChange }: Props) {
           )}
 
           <p className="mt-1 text-sm text-content-muted">
-            {loading ? "Loading..." : `Members (${members.length})`}
+            {loading ? t("chat.loading") : t("info.members", { count: members.length })}
           </p>
         </div>
       </div>
@@ -156,7 +159,7 @@ export function ChatInfoContent({ chat, onOpenSettings, onBusyChange }: Props) {
       {(error || membersError) && (
         <FormError
           className="mb-3"
-          message={error ?? "Failed to load chat info"}
+          message={error ?? t("info.loadFailed")}
         />
       )}
 
@@ -166,10 +169,10 @@ export function ChatInfoContent({ chat, onOpenSettings, onBusyChange }: Props) {
         <div className="space-y-4">
           <section>
             <h3 className="text-sm font-semibold text-content-muted mb-2">
-              In this chat
+              {t("info.inThisChat")}
             </h3>
             {members.length === 0 ? (
-              <p className="text-sm text-content-subtle">No members yet</p>
+              <p className="text-sm text-content-subtle">{t("info.noMembers")}</p>
             ) : (
               <ul className="space-y-1">
                 {members.map((m) => (
@@ -219,7 +222,7 @@ export function ChatInfoContent({ chat, onOpenSettings, onBusyChange }: Props) {
                             : "bg-surface-overlay text-content-muted"
                         }`}
                       >
-                        {roleLabel[m.roleId]}
+                        {t(roleLabel[m.roleId])}
                       </span>
 
                       {canRemove(m) && (
@@ -228,8 +231,8 @@ export function ChatInfoContent({ chat, onOpenSettings, onBusyChange }: Props) {
                           variant="danger"
                           disabled={busyUserId !== null}
                           onClick={() => setRemoving(m)}
-                          aria-label="Remove member"
-                          title="Remove from chat"
+                          aria-label={t("info.removeMember")}
+                          title={t("info.removeFromChat")}
                         >
                           {busyUserId === m.userId ? "..." : <X size={12} />}
                         </Button>
@@ -244,22 +247,22 @@ export function ChatInfoContent({ chat, onOpenSettings, onBusyChange }: Props) {
           {isGroup && (
             <section>
               <h3 className="text-sm font-semibold text-content-muted mb-2">
-                Add a user
+                {t("info.addUser")}
               </h3>
               <TextInput
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by username..."
+                placeholder={t("info.searchUsers")}
                 className="mb-2 text-sm"
               />
               {search.trim().length === 0 ? (
                 <p className="text-sm text-content-subtle py-2 text-center">
-                  Start typing to find users
+                  {t("info.startTyping")}
                 </p>
               ) : filteredCandidates.length === 0 ? (
                 <p className="text-sm text-content-subtle py-2 text-center">
-                  {usersFetching ? "Searching..." : "No users match your search"}
+                  {usersFetching ? t("info.searching") : t("info.noUsers")}
                 </p>
               ) : (
                 <ul className="space-y-1">
@@ -307,12 +310,13 @@ export function ChatInfoContent({ chat, onOpenSettings, onBusyChange }: Props) {
       <AnimatePresence>
         {removing && (
           <ConfirmDialog
-            title="Remove from chat?"
-            message={`${
-              [removing.name, removing.surname].filter(Boolean).join(" ") ||
-              removing.userName
-            } will lose access to this chat and its history. They can be added back later.`}
-            confirmText="Remove"
+            title={t("info.removeTitle")}
+            message={t("info.removeWarning", {
+              name:
+                [removing.name, removing.surname].filter(Boolean).join(" ") ||
+                removing.userName,
+            })}
+            confirmText={t("info.remove")}
             variant="danger"
             loading={busyUserId === removing.userId}
             onConfirm={handleRemove}

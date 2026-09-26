@@ -1,4 +1,5 @@
 import { Download, FileText } from "lucide-react";
+import { useLanguage } from "../context/useLanguage";
 import { useState } from "react";
 import {
   fetchAttachmentBlob,
@@ -80,6 +81,7 @@ interface MessageAttachmentsProps {
 }
 
 export function MessageAttachments({ attachments }: MessageAttachmentsProps) {
+  const { t } = useLanguage();
   const [lightbox, setLightbox] = useState<string | null>(null);
 
   if (attachments.length === 0) return null;
@@ -109,7 +111,7 @@ export function MessageAttachments({ attachments }: MessageAttachmentsProps) {
         >
           <img
             src={lightbox}
-            alt="Attachment"
+            alt={t("attachment.alt")}
             className="max-w-full max-h-full rounded"
           />
         </div>

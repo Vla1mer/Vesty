@@ -1,4 +1,5 @@
 import type { RefObject } from "react";
+import { useLanguage } from "../context/useLanguage";
 import { AnimatePresence, motion } from "framer-motion";
 import { MessageCircle } from "lucide-react";
 import { MessageBubble } from "./MessageBubble";
@@ -6,7 +7,8 @@ import { StrangerBanner } from "./StrangerBanner";
 import { FormError } from "./FormError";
 import { EmptyState } from "./ui/EmptyState";
 import { MessageListSkeleton } from "./ui/Skeleton";
-import { formatDateSeparator, isSameDay } from "../utils/date";
+import { isSameDay } from "../utils/date";
+import { useDates } from "../hooks/useDates";
 import { isDirectChat } from "../types/api";
 import type { ChatDto, ChatMemberWithRoleDto, MessageDto } from "../types/api";
 
@@ -61,6 +63,9 @@ export function MessageList({
   onScroll,
   compact,
 }: Props) {
+  const { t } = useLanguage();
+  const dates = useDates();
+
   return (
     <div
       ref={containerRef}
@@ -72,7 +77,7 @@ export function MessageList({
       {chat && isDirectChat(chat) && chat.partnerUserId && (
         <StrangerBanner
           partnerUserId={chat.partnerUserId}
-          partnerName={chat.partnerUserName ?? "This user"}
+          partnerName={chat.partnerUserName ?? t("messages.someone")}
         />
       )}
 
@@ -84,8 +89,8 @@ export function MessageList({
         <EmptyState
           className="m-auto"
           Icon={MessageCircle}
-          title="No messages yet"
-          description="Say hello — your first message will appear here."
+          title={t("messages.empty")}
+          description={t("messages.emptyHint")}
         />
       )}
 
@@ -109,7 +114,7 @@ export function MessageList({
                 {showDate && (
                   <div className="flex justify-center my-2">
                     <span className="text-xs text-content-muted bg-surface-raised px-3 py-1 rounded-full">
-                      {formatDateSeparator(message.createdAt)}
+                      {dates.separator(message.createdAt)}
                     </span>
                   </div>
                 )}
@@ -118,7 +123,7 @@ export function MessageList({
                   <div className="my-3 flex items-center gap-3">
                     <span className="h-px flex-1 bg-accent-strong/40" />
                     <span className="text-xs font-medium text-accent-strong">
-                      Unread messages
+                      {t("chat.unread")}
                     </span>
                     <span className="h-px flex-1 bg-accent-strong/40" />
                   </div>

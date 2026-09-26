@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { LanguageProvider } from "../context/LanguageContext";
 import type { ReactNode } from "react";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { Provider } from "react-redux";
@@ -28,7 +29,11 @@ function setup() {
   const store = makeStore();
 
   function Wrapper({ children }: { children: ReactNode }) {
-    return <Provider store={store}>{children}</Provider>;
+    return (
+      <Provider store={store}>
+        <LanguageProvider>{children}</LanguageProvider>
+      </Provider>
+    );
   }
 
   const view = renderHook(({ chat }: { chat: ChatDto }) => useChatProfileDraft(chat, onError), {
@@ -105,7 +110,9 @@ describe("useChatProfileDraft", () => {
         () => useChatProfileDraft({ ...CHAT, name: "  Team  " }, onError),
         {
           wrapper: ({ children }: { children: ReactNode }) => (
-            <Provider store={store}>{children}</Provider>
+            <Provider store={store}>
+              <LanguageProvider>{children}</LanguageProvider>
+            </Provider>
           ),
         }
       );

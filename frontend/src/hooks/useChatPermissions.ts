@@ -1,3 +1,4 @@
+import { useLanguage } from "../context/useLanguage";
 import { useEffect, useState } from "react";
 import { useUpdateChatPermissionsMutation } from "../store/chatsApi";
 import { getApiErrorMessage } from "../utils/apiError";
@@ -9,6 +10,7 @@ export function useChatPermissions(
   chat: ChatDto,
   onError: (message: string | null) => void
 ) {
+  const { t } = useLanguage();
   const [updateChatPermissions] = useUpdateChatPermissionsMutation();
   const [saved, setSaved] = useState<
     ({ chatId: number } & ChatPermissionsDto) | null
@@ -37,7 +39,7 @@ export function useChatPermissions(
       await updateChatPermissions(next).unwrap();
       setSaved(next);
     } catch (err) {
-      onError(getApiErrorMessage(err, "Failed to update permissions"));
+      onError(getApiErrorMessage(err, t("chatSettings.permissionsFailed")));
     } finally {
       setSaving(null);
     }

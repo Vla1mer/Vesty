@@ -1,4 +1,5 @@
 import { Check, Copy, Link2, RefreshCw, Trash2 } from "lucide-react";
+import { useLanguage } from "../context/useLanguage";
 import { useState } from "react";
 import {
   useCreateChatInviteMutation,
@@ -6,7 +7,7 @@ import {
   useRevokeChatInviteMutation,
 } from "../store/chatInvitesApi";
 import { getApiErrorMessage } from "../utils/apiError";
-import { formatDateTime } from "../utils/date";
+import { useDates } from "../hooks/useDates";
 import { Button } from "./ui/Button";
 import { FormError } from "./FormError";
 
@@ -15,12 +16,14 @@ interface Props {
 }
 
 const lifetimes = [
-  { label: "Never expires", days: null },
-  { label: "1 day", days: 1 },
-  { label: "7 days", days: 7 },
+  { label: "invite.never", days: null },
+  { label: "invite.day", days: 1 },
+  { label: "invite.week", days: 7 },
 ] as const;
 
 export function ChatInviteSection({ chatId }: Props) {
+  const { t } = useLanguage();
+  const dates = useDates();
   const { data: invite, isLoading } = useGetChatInviteQuery(chatId);
   const [createInvite, { isLoading: creating }] = useCreateChatInviteMutation();
   const [revokeInvite, { isLoading: revoking }] = useRevokeChatInviteMutation();
@@ -37,7 +40,7 @@ export function ChatInviteSection({ chatId }: Props) {
     try {
       await createInvite({ chatId, expiresInDays: days }).unwrap();
     } catch (err) {
-      setError(getApiErrorMessage(err, "Failed to create an invite link"));
+      setError(getApiErrorMessage(err, t("invite.createFailed")));
     }
   }
 
@@ -46,7 +49,7 @@ export function ChatInviteSection({ chatId }: Props) {
     try {
       await revokeInvite(chatId).unwrap();
     } catch (err) {
-      setError(getApiErrorMessage(err, "Failed to revoke the invite link"));
+      setError(getApiErrorMessage(err, t("invite.revokeFailed")));
     }
   }
 
@@ -57,7 +60,7 @@ export function ChatInviteSection({ chatId }: Props) {
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
     } catch {
-      setError("Could not copy the link. Select and copy it manually.");
+      setError(t("invite.copyFailed"));
     }
   }
 
@@ -78,30 +81,30 @@ export function ChatInviteSection({ chatId }: Props) {
               onFocus={(e) => e.currentTarget.select()}
               className="min-w-0 flex-1 rounded-lg border border-line bg-surface-sunken px-3 py-2 text-sm text-content"
             />
-            <Button size="xs" variant="neutral" onClick={handleCopy} title="Copy link">
+            <Button size="xs" variant="neutral" onClick={handleCopy} title={t("invite.copy")}>
               {copied ? <Check size={14} /> : <Copy size={14} />}
             </Button>
           </div>
 
           {invite?.expiresAt && (
             <p className="text-xs text-content-subtle">
-              Expires {formatDateTime(invite.expiresAt)}
+              {t("invite.expires", { when: dates.dateTime(invite.expiresAt) })}
             </p>
           )}
 
           <div className="flex gap-2">
             <Button size="xs" variant="neutral" onClick={handleCreate} disabled={busy}>
-              <RefreshCw size={13} aria-hidden="true" /> Replace
+              <RefreshCw size={13} aria-hidden="true" /> {t("invite.replace")}
             </Button>
             <Button size="xs" variant="danger" onClick={handleRevoke} disabled={busy}>
-              <Trash2 size={13} aria-hidden="true" /> Revoke
+              <Trash2 size={13} aria-hidden="true" /> {t("invite.revoke")}
             </Button>
           </div>
         </>
       ) : (
         <>
           <p className="text-sm text-content-subtle">
-            Anyone with the link can join this chat.
+            {t("invite.hint")}
           </p>
           <div className="flex items-center gap-2">
             <select
@@ -113,13 +116,13 @@ export function ChatInviteSection({ chatId }: Props) {
             >
               {lifetimes.map(({ label, days: value }) => (
                 <option key={label} value={value ?? ""}>
-                  {label}
+                  {t(label)}
                 </option>
               ))}
             </select>
             <Button size="xs" onClick={handleCreate} disabled={busy}>
               <Link2 size={13} aria-hidden="true" />
-              {creating ? "..." : "Create link"}
+              {creating ? "..." : t("invite.create")}
             </Button>
           </div>
         </>

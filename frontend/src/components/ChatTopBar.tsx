@@ -1,14 +1,17 @@
 import { ArrowLeft, ChevronRight, Copy, Pencil, Pin, Trash2, X } from "lucide-react";
 import { Avatar, ChatAvatar } from "./Avatar";
 import { usePresence } from "../hooks/usePresence";
-import { formatLastSeen } from "../utils/date";
+import { useDates } from "../hooks/useDates";
+import { useLanguage } from "../context/useLanguage";
+import type { TranslationKey } from "../i18n/translations";
 import { isDirectChat } from "../types/api";
 import type { ChatDto, MessageDto } from "../types/api";
 
-function typingText(names: string[]): string {
-  if (names.length === 1) return `${names[0]} is typing`;
-  if (names.length === 2) return `${names[0]} and ${names[1]} are typing`;
-  return "Several people are typing";
+function typingText(names: string[]): { key: TranslationKey; values: Record<string, string> } {
+  if (names.length === 1) return { key: "chat.typingOne", values: { name: names[0] } };
+  if (names.length === 2)
+    return { key: "chat.typingTwo", values: { first: names[0], second: names[1] } };
+  return { key: "chat.typingMany", values: {} };
 }
 
 export interface TopBarSelection {
@@ -49,10 +52,13 @@ export function ChatTopBar({
   selection,
   pinned,
 }: Props) {
+  const { t } = useLanguage();
+  const dates = useDates();
   const partnerId = chat && isDirectChat(chat) ? chat.partnerUserId : undefined;
   const presence = usePresence(partnerId ? [partnerId] : []);
   const partnerLastSeen = partnerId ? presence.lastSeenAt(partnerId) : null;
 
+  const typing = typingNames.length > 0 ? typingText(typingNames) : null;
   const showPinned = pinned.message && !selection.mode;
 
   return (
@@ -66,7 +72,7 @@ export function ChatTopBar({
           <button
             onClick={onBack}
             className="md:hidden text-content-muted hover:text-content"
-            aria-label="Back"
+            aria-label={t("chat.back")}
           >
             <ArrowLeft size={22} />
           </button>
@@ -94,22 +100,24 @@ export function ChatTopBar({
             <div className="flex-1 min-w-0">
               <h1 className="text-xl font-bold text-content truncate">{title}</h1>
               {chat &&
-                (typingNames.length > 0 ? (
+                (typing ? (
                   <p className="text-xs text-accent-strong italic">
-                    {typingText(typingNames)}
+                    {t(typing.key, typing.values)}
                     <span className="typing-dots" />
                   </p>
                 ) : !chat.isPrivate ? (
                   <p className="text-xs text-content-muted">
                     {memberCount > 0
-                      ? `${memberCount} ${memberCount === 1 ? "member" : "members"}`
-                      : "Loading..."}
+                      ? t(memberCount === 1 ? "chat.oneMember" : "chat.members", {
+                          count: memberCount,
+                        })
+                      : t("chat.loading")}
                   </p>
                 ) : partnerId && presence.isOnline(partnerId) ? (
-                  <p className="text-xs text-success">online</p>
+                  <p className="text-xs text-success">{t("chat.online")}</p>
                 ) : partnerLastSeen ? (
                   <p className="text-xs text-content-muted">
-                    {formatLastSeen(partnerLastSeen)}
+                    {dates.lastSeen(partnerLastSeen)}
                   </p>
                 ) : null)}
             </div>
@@ -131,27 +139,27 @@ export function ChatTopBar({
           <button
             onClick={selection.onClear}
             className="text-content-muted hover:text-content"
-            aria-label="Cancel selection"
+            aria-label={t("chat.cancelSelection")}
           >
             <X size={22} />
           </button>
           <span className="flex-1 font-semibold text-content">
-            {selection.count} selected
+            {t("chat.selected", { count: selection.count })}
           </span>
           <div className="flex items-center gap-4 text-content-muted">
-            <button onClick={selection.onCopy} aria-label="Copy" title="Copy">
+            <button onClick={selection.onCopy} aria-label={t("chat.copy")} title={t("chat.copy")}>
               <Copy size={20} />
             </button>
             {selection.count === 1 && selection.ownCount === 1 && (
-              <button onClick={selection.onEdit} aria-label="Edit" title="Edit">
+              <button onClick={selection.onEdit} aria-label={t("chat.edit")} title={t("chat.edit")}>
                 <Pencil size={20} />
               </button>
             )}
             {selection.ownCount > 0 && (
               <button
                 onClick={selection.onDelete}
-                aria-label="Delete"
-                title="Delete"
+                aria-label={t("chat.delete")}
+                title={t("chat.delete")}
                 className="text-danger"
               >
                 <Trash2 size={20} />
@@ -171,8 +179,8 @@ export function ChatTopBar({
           <div className="min-w-0 flex-1 border-l-2 border-accent-strong pl-3">
             <p className="text-xs font-medium text-accent-strong">
               {pinned.total > 1
-                ? `Pinned message ${pinned.index + 1} of ${pinned.total}`
-                : "Pinned message"}
+                ? t("chat.pinnedOf", { index: pinned.index + 1, total: pinned.total })
+                : t("chat.pinnedMessage")}
             </p>
             <p className="text-sm text-content-muted truncate">
               {pinned.message.content}

@@ -8,6 +8,7 @@ import { Button } from "./ui/Button";
 import { TextInput } from "./ui/TextInput";
 import { FormError } from "./FormError";
 import { chatNameSchema, CHAT_NAME_LIMIT } from "../validation/chatSchemas";
+import { useLanguage } from "../context/useLanguage";
 import { getApiErrorMessage } from "../utils/apiError";
 import type { UserDto } from "../types/api";
 
@@ -29,6 +30,7 @@ export function CreateChatContent({
   onBusyChange,
 }: Props) {
   const { userId: currentUserId } = useAuth();
+  const { t } = useLanguage();
   const [createChat, { isLoading: creating }] = useCreateChatMutation();
   const [name, setName] = useState("");
   const [nameError, setNameError] = useState<string | null>(null);
@@ -56,7 +58,7 @@ export function CreateChatContent({
   async function handleNext() {
     const trimmed = name.trim();
     try {
-      await chatNameSchema.validate({ name: trimmed });
+      await chatNameSchema(t).validate({ name: trimmed });
     } catch (err) {
       setNameError((err as ValidationError).message);
       return;
@@ -75,7 +77,7 @@ export function CreateChatContent({
       onCreated(chat.id);
     } catch (err) {
       setError(
-        getApiErrorMessage(err, "Failed to create chat. Please try again.")
+        getApiErrorMessage(err, t("chats.createFailed"))
       );
     }
   }
@@ -94,7 +96,7 @@ export function CreateChatContent({
       <div className="space-y-4">
         <div>
           <label className="block text-sm text-content-muted mb-1">
-            Chat name
+            {t("createChat.name")}
           </label>
           <TextInput
             type="text"
@@ -112,9 +114,9 @@ export function CreateChatContent({
 
         <div className="flex gap-2 justify-end">
           <Button variant="neutral" onClick={onCancel}>
-            Cancel
+            {t("common.cancel")}
           </Button>
-          <Button onClick={handleNext}>Next</Button>
+          <Button onClick={handleNext}>{t("createChat.next")}</Button>
         </div>
       </div>
     );
@@ -152,7 +154,7 @@ export function CreateChatContent({
         type="text"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder="Search by username..."
+        placeholder={t("info.searchUsers")}
         autoFocus
         className="text-sm"
       />
@@ -161,11 +163,11 @@ export function CreateChatContent({
         <div className="max-h-40 overflow-y-auto">
           {isFetching ? (
             <p className="text-sm text-content-subtle py-2 text-center">
-              Searching...
+              {t("info.searching")}
             </p>
           ) : candidates.length === 0 ? (
             <p className="text-sm text-content-subtle py-2 text-center">
-              No users match your search
+              {t("info.noUsers")}
             </p>
           ) : (
             <ul className="space-y-1">
@@ -200,10 +202,10 @@ export function CreateChatContent({
           onClick={() => onStepChange(1)}
           disabled={creating}
         >
-          Back
+          {t("createChat.back")}
         </Button>
         <Button onClick={handleCreate} disabled={creating}>
-          {creating ? "Creating..." : "Create"}
+          {creating ? t("chats.creating") : t("chats.create")}
         </Button>
       </div>
     </div>

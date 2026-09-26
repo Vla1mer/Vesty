@@ -1,3 +1,4 @@
+import { useLanguage } from "../context/useLanguage";
 import { Users } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useState } from "react";
@@ -11,6 +12,7 @@ import { Button } from "../components/ui/Button";
 import { FormError } from "../components/FormError";
 
 export function JoinChatPage() {
+  const { t } = useLanguage();
   const { code = "" } = useParams();
   const navigate = useNavigate();
   const { data: preview, isLoading, isError } = usePreviewChatInviteQuery(code);
@@ -23,7 +25,7 @@ export function JoinChatPage() {
       const chat = await joinChat(code).unwrap();
       navigate(`/chats/${chat.id}`, { replace: true });
     } catch (err) {
-      setError(getApiErrorMessage(err, "Failed to join the chat"));
+      setError(getApiErrorMessage(err, t("join.failed")));
     }
   }
 
@@ -35,13 +37,13 @@ export function JoinChatPage() {
         ) : isError || !preview ? (
           <>
             <h1 className="text-lg font-semibold text-content">
-              This link is no longer valid
+              {t("join.invalid")}
             </h1>
             <p className="mt-2 text-sm text-content-muted">
-              It may have been revoked or has expired.
+              {t("join.invalidHint")}
             </p>
             <Button className="mt-5" fullWidth onClick={() => navigate("/chats")}>
-              Back to chats
+              {t("join.backToChats")}
             </Button>
           </>
         ) : (
@@ -49,14 +51,14 @@ export function JoinChatPage() {
             <div className="flex justify-center">
               <ChatAvatar
                 chatId={preview.chatId}
-                name={preview.name ?? "Group"}
+                name={preview.name ?? t("join.group")}
                 avatarUpdatedAt={preview.avatarUpdatedAt}
                 size="xl"
               />
             </div>
 
             <h1 className="mt-4 text-lg font-semibold text-content">
-              {preview.name ?? "Group chat"}
+              {preview.name ?? t("join.group")}
             </h1>
 
             <p className="mt-1 flex items-center justify-center gap-1 text-sm text-content-muted">
@@ -82,8 +84,8 @@ export function JoinChatPage() {
               {joining
                 ? "..."
                 : preview.alreadyMember
-                ? "Open chat"
-                : "Join chat"}
+                ? t("join.open")
+                : t("join.join")}
             </Button>
           </>
         )}

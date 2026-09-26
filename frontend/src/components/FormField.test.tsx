@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Formik } from "formik";
 import { FormField } from "./FormField";
+import { LanguageProvider } from "../context/LanguageContext";
 
 function renderFields() {
   render(
@@ -11,7 +12,8 @@ function renderFields() {
         <FormField label="Username" name="userName" />
         <FormField label="Password" name="password" type="password" />
       </>
-    </Formik>
+    </Formik>,
+    { wrapper: LanguageProvider }
   );
 }
 

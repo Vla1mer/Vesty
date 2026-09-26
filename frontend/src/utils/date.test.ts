@@ -5,9 +5,29 @@ import {
   formatListTime,
   formatTime,
 } from "./date";
+import { createTranslate } from "../i18n/translations";
 
-function at(hoursAgo: number): string {
-  return new Date(Date.now() - hoursAgo * 3600_000).toISOString();
+const inEnglish = createTranslate("en");
+const inPolish = createTranslate("pl");
+
+function yesterdayAtNoon(): string {
+  const date = new Date();
+  date.setDate(date.getDate() - 1);
+  date.setHours(12, 0, 0, 0);
+  return date.toISOString();
+}
+
+function daysAgo(days: number): string {
+  const date = new Date();
+  date.setDate(date.getDate() - days);
+  date.setHours(12, 0, 0, 0);
+  return date.toISOString();
+}
+
+function monthsAgo(months: number): string {
+  const date = new Date();
+  date.setMonth(date.getMonth() - months);
+  return date.toISOString();
 }
 
 describe("formatLastSeen", () => {
@@ -15,64 +35,50 @@ describe("formatLastSeen", () => {
     const today = new Date();
     today.setHours(9, 5, 0, 0);
 
-    expect(formatLastSeen(today.toISOString())).toMatch(/^last seen at /);
+    expect(formatLastSeen(today.toISOString(), "en", inEnglish)).toBe("last seen at 09:05");
   });
 
   it("says yesterday", () => {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    yesterday.setHours(12, 0, 0, 0);
-
-    expect(formatLastSeen(yesterday.toISOString())).toMatch(/^last seen yesterday at /);
+    expect(formatLastSeen(yesterdayAtNoon(), "en", inEnglish)).toMatch(/^last seen yesterday at /);
   });
 
-  it("gives a date for anything older", () => {
-    expect(formatLastSeen(at(24 * 10))).toMatch(/^last seen on /);
+  it("gives the day for anything older", () => {
+    expect(formatLastSeen(daysAgo(10), "en", inEnglish)).toMatch(/^last seen on /);
   });
 
-  it("keeps the year off a recent date", () => {
-    const thisYear = new Date();
-    thisYear.setMonth(0, 15);
-    thisYear.setHours(12, 0, 0, 0);
-    const shown = formatLastSeen(thisYear.toISOString());
+  it("speaks Polish when asked", () => {
+    const today = new Date();
+    today.setHours(9, 5, 0, 0);
 
-    if (!shown.startsWith("last seen on ")) return;
-    expect(shown).not.toMatch(/\d{4}/);
+    expect(formatLastSeen(today.toISOString(), "pl", inPolish)).toBe(
+      "ostatnio widziany o 09:05"
+    );
   });
 });
 
-describe("English dates whatever the browser speaks", () => {
-  it("names the month in English in the last seen line", () => {
-    const longAgo = new Date();
-    longAgo.setMonth(longAgo.getMonth() - 3);
-
-    expect(formatLastSeen(longAgo.toISOString())).toMatch(
-      /^last seen on \d{1,2} (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/
-    );
-  });
-
-  it("names the month in English in the date separator", () => {
-    const longAgo = new Date();
-    longAgo.setMonth(longAgo.getMonth() - 3);
-
-    expect(formatDateSeparator(longAgo.toISOString())).toMatch(
-      /^\d{1,2} (January|February|March|April|May|June|July|August|September|October|November|December)/
-    );
-  });
-
-  it("names the month in English in the chat list", () => {
-    const longAgo = new Date();
-    longAgo.setMonth(longAgo.getMonth() - 3);
-
-    expect(formatListTime(longAgo.toISOString())).toMatch(
+describe("dates follow the chosen language", () => {
+  it("names the month in English", () => {
+    expect(formatListTime(monthsAgo(3), "en", inEnglish)).toMatch(
       /^\d{1,2} (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/
     );
   });
 
-  it("keeps the clock on twenty-four hours", () => {
-    const morning = new Date();
-    morning.setHours(19, 5, 0, 0);
+  it("names the month in Polish", () => {
+    expect(formatListTime(monthsAgo(3), "pl", inPolish)).toMatch(
+      /^\d{1,2} [a-ząćęłńóśźż]{3,}/
+    );
+  });
 
-    expect(formatTime(morning.toISOString())).toBe("19:05");
+  it("separates the days in the chosen language", () => {
+    expect(formatDateSeparator(yesterdayAtNoon(), "en", inEnglish)).toBe("Yesterday");
+    expect(formatDateSeparator(yesterdayAtNoon(), "pl", inPolish)).toBe("Wczoraj");
+  });
+
+  it("keeps the clock on twenty-four hours", () => {
+    const evening = new Date();
+    evening.setHours(19, 5, 0, 0);
+
+    expect(formatTime(evening.toISOString(), "en")).toBe("19:05");
+    expect(formatTime(evening.toISOString(), "pl")).toBe("19:05");
   });
 });

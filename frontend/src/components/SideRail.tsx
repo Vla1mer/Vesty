@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { LogOut, Settings, Users } from "lucide-react";
 import { useRailLabels } from "../hooks/useRailLabels";
+import { useLanguage } from "../context/useLanguage";
 
 export const RAIL_WIDTH_WITH_LABELS = 72;
 export const RAIL_WIDTH_COMPACT = 64;
@@ -62,6 +63,7 @@ export function SideRail({
   onLogout,
 }: Props) {
   const showLabels = useRailLabels();
+  const { t } = useLanguage();
 
   return (
     <nav
@@ -72,20 +74,20 @@ export function SideRail({
     >
       <RailButton
         icon={avatar}
-        label="Profile"
+        label={t("nav.profile")}
         showLabel={showLabels}
         onClick={onProfile}
       />
       <RailButton
         icon={<Users size={22} aria-hidden="true" />}
-        label="Friends"
+        label={t("nav.friends")}
         showLabel={showLabels}
         onClick={onFriends}
         badge={incomingRequests}
       />
       <RailButton
         icon={<Settings size={22} aria-hidden="true" />}
-        label="Settings"
+        label={t("nav.settings")}
         showLabel={showLabels}
         onClick={onSettings}
       />
@@ -94,7 +96,7 @@ export function SideRail({
 
       <RailButton
         icon={<LogOut size={22} aria-hidden="true" />}
-        label="Logout"
+        label={t("profile.logout")}
         showLabel={showLabels}
         onClick={onLogout}
         danger

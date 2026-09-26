@@ -3,6 +3,7 @@ import { Pencil } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { Modal } from "./ui/Modal";
 import type { LucideIcon } from "lucide-react";
+import { useLanguage } from "../context/useLanguage";
 
 interface Action {
   Icon: LucideIcon;
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export function FloatingActionButton({ actions }: Props) {
+  const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
 
   function handleActionClick(action: Action) {
@@ -28,7 +30,7 @@ export function FloatingActionButton({ actions }: Props) {
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        aria-label="New chat"
+        aria-label={t("chats.newChat")}
         className="absolute right-4 bottom-20 z-30 w-14 h-14 shadow-float rounded-full bg-accent hover:bg-accent-hover text-accent-contrast flex items-center justify-center transition md:static md:shrink-0 md:w-9 md:h-9 md:shadow-none"
       >
         <Pencil size={20} className="md:hidden" />
@@ -37,7 +39,7 @@ export function FloatingActionButton({ actions }: Props) {
 
       <AnimatePresence>
         {isOpen && (
-          <Modal title="Create new" onClose={() => setIsOpen(false)}>
+          <Modal title={t("chats.createNew")} onClose={() => setIsOpen(false)}>
           <div className="space-y-2">
               {actions.map((action, idx) => (
                 <button
