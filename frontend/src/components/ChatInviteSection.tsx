@@ -94,7 +94,7 @@ export function ChatInviteSection({ chatId }: Props) {
 
           <div className="flex gap-2">
             <Button size="xs" variant="neutral" onClick={handleCreate} disabled={busy}>
-              <RefreshCw size={13} aria-hidden="true" /> Replace
+              <RefreshCw size={13} aria-hidden="true" /> {t("invite.replace")}
             </Button>
             <Button size="xs" variant="danger" onClick={handleRevoke} disabled={busy}>
               <Trash2 size={13} aria-hidden="true" /> {t("invite.revoke")}

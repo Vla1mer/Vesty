@@ -172,7 +172,7 @@ export function ChatInfoContent({ chat, onOpenSettings, onBusyChange }: Props) {
               {t("info.inThisChat")}
             </h3>
             {members.length === 0 ? (
-              <p className="text-sm text-content-subtle">No members yet</p>
+              <p className="text-sm text-content-subtle">{t("info.noMembers")}</p>
             ) : (
               <ul className="space-y-1">
                 {members.map((m) => (

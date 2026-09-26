@@ -55,7 +55,7 @@ export function SelectUserContent({ onSelected }: Props) {
           {t("users.startTyping")}
         </p>
       ) : isFetching ? (
-        <p className="text-content-muted text-center py-8">Searching...</p>
+        <p className="text-content-muted text-center py-8">{t("info.searching")}</p>
       ) : filtered.length === 0 ? (
         <p className="text-sm text-content-subtle text-center py-6">
           {t("info.noUsers")}

@@ -1,15 +1,14 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { LanguagePicker } from "./LanguagePicker";
 import { LoginPage } from "../pages/LoginPage";
 import { renderWithProviders } from "../test/renderWithProviders";
+import { Modal } from "./ui/Modal";
 import { LANGUAGE_STORAGE_KEY } from "../context/languageContextInternal";
 
 function trigger() {
-  return screen.getAllByRole("button", {
-    name: (_name, element) => element.getAttribute("aria-haspopup") === "listbox",
-  })[0];
+  return screen.getAllByRole("button", { name: /English|Polski/ })[0];
 }
 
 function option(name: string) {
@@ -59,6 +58,21 @@ describe("LanguagePicker", () => {
     await userEvent.click(option("Polski"));
 
     expect(screen.queryByRole("listbox")).toBeNull();
+  });
+
+  it("keeps the surrounding modal open on Escape", async () => {
+    const close = vi.fn();
+    renderWithProviders(
+      <Modal title="Settings" onClose={close}>
+        <LanguagePicker />
+      </Modal>
+    );
+
+    await userEvent.click(trigger());
+    await userEvent.keyboard("{Escape}");
+
+    expect(screen.queryByRole("listbox")).toBeNull();
+    expect(close).not.toHaveBeenCalled();
   });
 
   it("closes the list on Escape", async () => {

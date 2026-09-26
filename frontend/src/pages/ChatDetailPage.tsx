@@ -407,8 +407,8 @@ export function ChatDetailPage() {
           <motion.button
             type="button"
             onClick={scroll.jumpToBottom}
-            aria-label="Jump to latest message"
-            title="Jump to latest message"
+            aria-label={t("chat.jumpToLatest")}
+            title={t("chat.jumpToLatest")}
             initial={{ opacity: 0, scale: 0.8, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 8 }}

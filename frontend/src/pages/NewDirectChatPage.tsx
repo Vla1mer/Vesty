@@ -75,7 +75,7 @@ export function NewDirectChatPage() {
 
         {!loading && !loadError && !sendError && (
           <div className="text-center py-12 text-content-muted">
-            <p>No messages yet. Write something to start the conversation!</p>
+            <p>{t("direct.empty")}</p>
           </div>
         )}
       </div>
@@ -95,7 +95,7 @@ export function NewDirectChatPage() {
             className="flex-1"
           />
           <Button type="submit" disabled={sending || !input.trim()} className="px-5">
-            {sending ? "..." : "Send"}
+            {sending ? "..." : t("composer.send")}
           </Button>
         </form>
       )}

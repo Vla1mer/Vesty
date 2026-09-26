@@ -116,7 +116,7 @@ export function CreateChatContent({
           <Button variant="neutral" onClick={onCancel}>
             {t("common.cancel")}
           </Button>
-          <Button onClick={handleNext}>Next</Button>
+          <Button onClick={handleNext}>{t("createChat.next")}</Button>
         </div>
       </div>
     );

@@ -42,7 +42,7 @@ export function UserProfileContent({ user }: Props) {
             <p className="break-words text-sm text-content-muted">{fullName}</p>
           )}
           {presence.isOnline(user.id) ? (
-            <p className="text-sm text-success">online</p>
+            <p className="text-sm text-success">{t("chat.online")}</p>
           ) : presence.lastSeenAt(user.id) ? (
             <p className="text-sm text-content-muted">
               {dates.lastSeen(presence.lastSeenAt(user.id)!)}

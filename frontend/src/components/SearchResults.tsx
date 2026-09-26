@@ -111,7 +111,7 @@ export function SearchResults({ query, chats }: Props) {
       )}
 
       {loadingUsers && matchedChats.length === 0 && (
-        <p className="text-content-muted text-center py-4">Searching...</p>
+        <p className="text-content-muted text-center py-4">{t("info.searching")}</p>
       )}
     </div>
   );

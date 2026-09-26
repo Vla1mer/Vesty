@@ -359,6 +359,14 @@ const en = {
   "join.invalid": "This link is no longer valid",
   "join.invalidHint": "It may have been revoked or has expired.",
   "join.backToChats": "Back to chats",
+
+  "createChat.next": "Next",
+  "info.noMembers": "No members yet",
+  "invite.replace": "Replace",
+  "direct.empty": "No messages yet. Write something to start the conversation!",
+  "chat.jumpToLatest": "Jump to latest message",
+  "settings.toLight": "Switch to light theme",
+  "settings.toDark": "Switch to dark theme",
 } as const;
 
 const pl: Record<keyof typeof en, string> = {
@@ -457,7 +465,7 @@ const pl: Record<keyof typeof en, string> = {
   "chat.back": "Wstecz",
   "chat.loading": "Wczytywanie...",
   "chat.members": "Uczestnicy: {count}",
-  "chat.oneMember": "Uczestnicy: {count}",
+  "chat.oneMember": "Uczestnik: {count}",
   "chat.pinnedMessage": "Przypięta wiadomość",
   "chat.typingOne": "{name} pisze",
   "chat.typingTwo": "{first} i {second} piszą",
@@ -713,6 +721,14 @@ const pl: Record<keyof typeof en, string> = {
   "join.invalid": "Ten link nie jest już aktywny",
   "join.invalidHint": "Mógł zostać unieważniony lub wygasnąć.",
   "join.backToChats": "Wróć do czatów",
+
+  "createChat.next": "Dalej",
+  "info.noMembers": "Nie ma jeszcze uczestników",
+  "invite.replace": "Zastąp",
+  "direct.empty": "Nie ma jeszcze wiadomości. Napisz coś, aby rozpocząć rozmowę!",
+  "chat.jumpToLatest": "Przejdź do najnowszej wiadomości",
+  "settings.toLight": "Przełącz na jasny motyw",
+  "settings.toDark": "Przełącz na ciemny motyw",
 };
 
 export const translations = { en, pl };
