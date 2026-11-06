@@ -50,8 +50,12 @@ namespace Vesty.Controllers
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
         public async Task<IActionResult> Authenticate([FromBody] UserForAuthenticationDto user)
         {
+            if (!ModelState.IsValid)
+                return UnprocessableEntity(ModelState);
+
             if (!await _service.User.ValidateUser(user))
                 return Unauthorized();
 
@@ -63,8 +67,12 @@ namespace Vesty.Controllers
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
         public async Task<IActionResult> Refresh([FromBody] TokenDto tokenDto)
         {
+            if (!ModelState.IsValid)
+                return UnprocessableEntity(ModelState);
+
             var tokenDtoToReturn = await _service.User.RefreshToken(tokenDto);
             return Ok(tokenDtoToReturn);
         }

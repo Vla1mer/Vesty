@@ -120,6 +120,26 @@ namespace Vesty.Tests
         }
 
         [Fact]
+        public async Task Login_WithoutCredentials_IsUnprocessable()
+        {
+            var client = Factory.CreateClient();
+
+            var login = await client.PostAsJsonAsync("/api/User/login", new { });
+
+            Assert.Equal(HttpStatusCode.UnprocessableEntity, login.StatusCode);
+        }
+
+        [Fact]
+        public async Task Refresh_WithoutTokens_IsUnprocessable()
+        {
+            var client = Factory.CreateClient();
+
+            var refresh = await client.PostAsJsonAsync("/api/User/refresh", new { });
+
+            Assert.Equal(HttpStatusCode.UnprocessableEntity, refresh.StatusCode);
+        }
+
+        [Fact]
         public async Task Chat_WithoutToken_IsUnauthorized()
         {
             var client = Factory.CreateClient();
