@@ -33,18 +33,6 @@ namespace Repository.Extensions
             return messages.Where(m => m.UserId == userId);
         }
 
-        public static IQueryable<Message> Search(
-            this IQueryable<Message> messages,
-            string? searchTerm)
-        {
-            if (string.IsNullOrWhiteSpace(searchTerm))
-                return messages;
-
-            var lowerCaseTerm = searchTerm.Trim().ToLower();
-
-            return messages.Where(m => m.Content.ToLower().Contains(lowerCaseTerm));
-        }
-
         public static IQueryable<Message> Sort(this IQueryable<Message> messages, string? orderByQueryString)
         {
             if (string.IsNullOrWhiteSpace(orderByQueryString))

@@ -13,6 +13,8 @@ import {
 } from "../store/messageApi";
 import { useAuth } from "../context/useAuth";
 import { ChatTopBar } from "../components/ChatTopBar";
+import { ChatSearchBar } from "../components/ChatSearchBar";
+import { useMessageSearch } from "../hooks/useMessageSearch";
 import { MessageList } from "../components/MessageList";
 import { ChatInfoModal } from "../components/ChatInfoModal";
 import { ChatSettingsModal } from "../components/ChatSettingsModal";
@@ -120,6 +122,9 @@ export function ChatDetailPage() {
     pinnedMessages.length > 0
       ? pinnedMessages[pinnedIndex % pinnedMessages.length]
       : undefined;
+
+  const search = useMessageSearch(chatId, messages, scroll.jumpToMessage);
+  const searching = search.open && !selection.mode;
 
   function showNextPinned() {
     if (!activePinned) return;
@@ -291,6 +296,7 @@ export function ChatDetailPage() {
           if (isMobile) navigate(`/chats/${chatId}/info`);
           else setIsInfoOpen(true);
         }}
+        onSearch={search.start}
         selection={{
           mode: selection.mode,
           count: selection.ids.size,
@@ -301,7 +307,7 @@ export function ChatDetailPage() {
           onDelete: () => setBulkDeleteOpen(true),
         }}
         pinned={{
-          message: activePinned,
+          message: searching ? undefined : activePinned,
           index: pinnedMessages.length > 0 ? pinnedIndex % pinnedMessages.length : 0,
           total: pinnedMessages.length,
           onNext: showNextPinned,
@@ -340,8 +346,10 @@ export function ChatDetailPage() {
         containerRef={scroll.containerRef}
         bottomRef={scroll.bottomRef}
         onScroll={scroll.handleScroll}
-        compact={!activePinned || selection.mode}
+        compact={selection.mode || (!activePinned && !searching)}
       />
+
+      {searching && <ChatSearchBar search={search} />}
 
       <AnimatePresence>
         {isInfoOpen && chat && (
