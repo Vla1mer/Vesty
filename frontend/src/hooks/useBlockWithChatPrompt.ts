@@ -53,6 +53,7 @@ export function useBlockWithChatPrompt() {
       : null,
     isBlocking: blockState.isLoading,
     error: blockError,
+    resetError: () => setBlockError(null),
     askedForChatId: pendingChatId,
     confirmClear,
     dismissClear,

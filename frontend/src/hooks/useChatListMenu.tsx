@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AnimatePresence } from "framer-motion";
-import { useLocation, useNavigate } from "react-router-dom";
+import { matchPath, useLocation, useNavigate } from "react-router-dom";
 import { Ban, CheckCheck, Eraser, LogOut, Trash2, UserRound, UserRoundCheck } from "lucide-react";
 import { useAuth } from "../context/useAuth";
 import { useLanguage } from "../context/useLanguage";
@@ -33,17 +33,20 @@ export function useChatListMenu() {
   const { data: blocked = [] } = useGetBlockedUsersQuery();
 
   const isGroup = target !== null && !target.isPrivate;
-  const { data: members = [] } = useGetChatMembersQuery(target?.id ?? 0, {
+  const { currentData: members } = useGetChatMembersQuery(target?.id ?? 0, {
     skip: !isGroup,
   });
-  const isOwner = members.some((m) => m.userId === userId && m.roleId === UserRole.Owner);
+  const rolesKnown = isGroup && members !== undefined;
+  const isOwner =
+    members?.some((m) => m.userId === userId && m.roleId === UserRole.Owner) ?? false;
 
   const danger = useChatDangerActions({
     chatId: target?.id ?? 0,
     currentUserId: userId,
     onError: setError,
     onDone: () => {
-      if (target && location.pathname.startsWith(`/chats/${target.id}`)) navigate("/chats");
+      const open = matchPath({ path: "/chats/:chatId", end: false }, location.pathname);
+      if (target && open?.params.chatId === String(target.id)) navigate("/chats");
     },
   });
 
@@ -52,6 +55,7 @@ export function useChatListMenu() {
 
   function openFor(chat: ChatDto, x: number, y: number) {
     setError(null);
+    blocking.resetError();
     setTarget(chat);
     menu.openAt(x, y);
   }
@@ -115,12 +119,12 @@ export function useChatListMenu() {
                 <Eraser size={15} aria-hidden="true" /> {t("danger.clear")}
               </ContextMenuItem>
             )}
-            {isGroup && !isOwner && (
+            {rolesKnown && !isOwner && (
               <ContextMenuItem danger onClick={() => run(danger.leave.ask)}>
                 <LogOut size={15} aria-hidden="true" /> {t("danger.leave")}
               </ContextMenuItem>
             )}
-            {isGroup && isOwner && (
+            {rolesKnown && isOwner && (
               <ContextMenuItem danger onClick={() => run(danger.remove.ask)}>
                 <Trash2 size={15} aria-hidden="true" /> {t("danger.delete")}
               </ContextMenuItem>
