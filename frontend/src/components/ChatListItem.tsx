@@ -1,4 +1,7 @@
+import { useRef } from "react";
+import type { MouseEvent, PointerEvent, TouchEvent } from "react";
 import { NavLink } from "react-router-dom";
+import { useLongPress } from "../hooks/useLongPress";
 import { useAuth } from "../context/useAuth";
 import { useLanguage } from "../context/useLanguage";
 import { Avatar, ChatAvatar } from "./Avatar";
@@ -10,9 +13,27 @@ interface Props {
   chat: ChatDto;
   online?: boolean;
   onClick?: () => void;
+  onOpenMenu?: (x: number, y: number) => void;
+  menuOpen?: boolean;
 }
 
-export function ChatListItem({ chat, online = false, onClick }: Props) {
+export function ChatListItem({
+  chat,
+  online = false,
+  onClick,
+  onOpenMenu,
+  menuOpen = false,
+}: Props) {
+  const pointerType = useRef("mouse");
+  const touchPoint = useRef({ x: 0, y: 0 });
+  const openedByPress = useRef(false);
+  const longPress = useLongPress({
+    onLongPress: () => {
+      openedByPress.current = true;
+      onOpenMenu?.(touchPoint.current.x, touchPoint.current.y);
+    },
+    onTap: () => {},
+  });
   const { t } = useLanguage();
   const { userId } = useAuth();
   const dates = useDates();
@@ -28,10 +49,34 @@ export function ChatListItem({ chat, online = false, onClick }: Props) {
   return (
     <NavLink
       to={`/chats/${chat.id}`}
-      onClick={onClick}
+      onClick={(e: MouseEvent) => {
+        if (openedByPress.current) {
+          openedByPress.current = false;
+          e.preventDefault();
+          return;
+        }
+        onClick?.();
+      }}
+      onPointerDown={(e: PointerEvent) => {
+        pointerType.current = e.pointerType;
+      }}
+      onContextMenu={(e: MouseEvent) => {
+        if (!onOpenMenu) return;
+        e.preventDefault();
+        if (pointerType.current !== "touch") onOpenMenu(e.clientX, e.clientY);
+      }}
+      {...(onOpenMenu && {
+        ...longPress.handlers,
+        onTouchStart: (e: TouchEvent) => {
+          const touch = e.touches[0];
+          if (touch) touchPoint.current = { x: touch.clientX, y: touch.clientY };
+          openedByPress.current = false;
+          longPress.handlers.onTouchStart();
+        },
+      })}
       className={({ isActive }) =>
-        `block mx-2 rounded-card px-3 py-1.5 transition cursor-pointer ${
-          isActive ? "bg-accent" : "hover:bg-surface-muted"
+        `block mx-2 rounded-card px-3 py-1.5 transition cursor-pointer select-none [-webkit-touch-callout:none] ${
+          isActive ? "bg-accent" : menuOpen ? "bg-surface-muted" : "hover:bg-surface-muted"
         }`
       }
     >

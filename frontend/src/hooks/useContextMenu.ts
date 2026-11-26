@@ -1,24 +1,24 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { MouseEvent, PointerEvent } from "react";
 
-const MENU_OPEN_EVENT = "message-menu-open";
+const MENU_OPEN_EVENT = "context-menu-open";
 const DISMISS_GRACE_MS = 250;
 const CLICK_GRACE_MS = 400;
 const EDGE_GAP = 8;
 
-export function useMessageMenu(enabled: boolean) {
+export function useContextMenu(enabled: boolean) {
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const [anchor, setAnchor] = useState({ x: 0, y: 0 });
   const menuRef = useRef<HTMLDivElement>(null);
-  const bubbleRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLDivElement>(null);
   const pointerTypeRef = useRef<string>("mouse");
   const openedAtRef = useRef(0);
 
   useLayoutEffect(() => {
-    if (!open || !menuRef.current || !bubbleRef.current) return;
+    if (!open || !menuRef.current || !triggerRef.current) return;
     const m = menuRef.current.getBoundingClientRect();
-    const scroller = bubbleRef.current.closest(".overflow-y-auto");
+    const scroller = triggerRef.current.closest(".overflow-y-auto");
     const bounds = scroller
       ? scroller.getBoundingClientRect()
       : new DOMRect(0, 0, window.innerWidth, window.innerHeight);
@@ -97,7 +97,7 @@ export function useMessageMenu(enabled: boolean) {
     open,
     position,
     menuRef,
-    bubbleRef,
+    triggerRef,
     openAt,
     close,
     guardClick,
