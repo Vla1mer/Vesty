@@ -1,19 +1,22 @@
 import { useLanguage } from "../context/useLanguage";
 import { MessageSquare } from "lucide-react";
 import { useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useGetAllUsersQuery } from "../store/userApi";
 import { useAuth } from "../context/useAuth";
 import { getChatDisplayName } from "../utils/chats";
 import { isDirectChat } from "../types/api";
 import type { ChatDto } from "../types/api";
+import { ChatListItem } from "./ChatListItem";
+import { Avatar } from "./Avatar";
 
 interface Props {
   query: string;
   chats: ChatDto[];
+  isChatOnline: (chat: ChatDto) => boolean;
 }
 
-export function SearchResults({ query, chats }: Props) {
+export function SearchResults({ query, chats, isChatOnline }: Props) {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { userId: currentUserId } = useAuth();
@@ -61,27 +64,19 @@ export function SearchResults({ query, chats }: Props) {
     <div className="space-y-6">
       {matchedChats.length > 0 && (
         <section>
-          <h2 className="text-xs uppercase tracking-wide text-content-subtle font-semibold mb-2 px-1">
+          <h2 className="text-xs uppercase tracking-wide text-content-subtle font-semibold mb-2 px-5">
             {t("search.chats")}
           </h2>
-          <div className="space-y-2">
+          <div>
             {matchedChats.map((chat) => (
-              <Link
-                key={chat.id}
-                to={`/chats/${chat.id}`}
-                className="block rounded-lg border border-line bg-surface-raised p-3 hover:bg-surface-overlay hover:border-accent-strong transition"
-              >
-                <h3 className="text-content font-medium">
-                  {getChatDisplayName(chat)}
-                </h3>
-              </Link>
+              <ChatListItem key={chat.id} chat={chat} online={isChatOnline(chat)} />
             ))}
           </div>
         </section>
       )}
 
       {matchedUsers.length > 0 && (
-        <section>
+        <section className="px-4">
           <h2 className="text-xs uppercase tracking-wide text-content-subtle font-semibold mb-2 px-1">
             {t("search.users")}
           </h2>
@@ -91,17 +86,26 @@ export function SearchResults({ query, chats }: Props) {
                 key={u.id}
                 type="button"
                 onClick={() => navigate(`/chats/new/${u.id}`)}
-                className="w-full flex items-center justify-between p-3 rounded-lg border border-line bg-surface-raised hover:bg-surface-overlay hover:border-accent-strong transition text-left"
+                className="w-full flex items-center justify-between gap-3 p-3 rounded-lg border border-line bg-surface-raised hover:bg-surface-overlay hover:border-accent-strong transition text-left"
               >
-                <div>
-                  <p className="text-content font-medium">{u.userName}</p>
-                  {(u.name || u.surname) && (
-                    <p className="text-xs text-content-muted">
-                      {[u.name, u.surname].filter(Boolean).join(" ")}
-                    </p>
-                  )}
+                <div className="flex min-w-0 items-center gap-3">
+                  <Avatar
+                    userId={u.id}
+                    userName={u.userName}
+                    name={u.name}
+                    surname={u.surname}
+                    avatarUpdatedAt={u.avatarUpdatedAt}
+                  />
+                  <div className="min-w-0">
+                    <p className="text-content font-medium truncate">{u.userName}</p>
+                    {(u.name || u.surname) && (
+                      <p className="text-xs text-content-muted truncate">
+                        {[u.name, u.surname].filter(Boolean).join(" ")}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <span className="flex items-center gap-1 text-xs text-accent-strong">
+                <span className="flex shrink-0 items-center gap-1 text-xs text-accent-strong">
                   <MessageSquare size={13} aria-hidden="true" /> Message
                 </span>
               </button>

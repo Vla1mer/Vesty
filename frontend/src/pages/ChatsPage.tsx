@@ -18,7 +18,7 @@ import { FriendsModal } from "../components/FriendsModal";
 import { SideRail } from "../components/SideRail";
 import { useIsMobile } from "../hooks/useIsMobile";
 import { useIncomingFriendRequests } from "../hooks/useIncomingFriendRequests";
-import { isDirectChat } from "../types/api";
+import { isDirectChat, type ChatDto } from "../types/api";
 import { BottomNav } from "../components/BottomNav";
 import { FormError } from "../components/FormError";
 import { AnimatePresence, motion } from "framer-motion";
@@ -80,6 +80,9 @@ export function ChatsPage({ isResizing = false }: Props) {
   }
 
   const isSearching = searchQuery.trim().length > 0;
+
+  const isChatOnline = (chat: ChatDto) =>
+    isDirectChat(chat) && !!chat.partnerUserId && presence.isOnline(chat.partnerUserId);
 
   return (
     <div className="relative flex-1 min-h-0 flex bg-surface">
@@ -150,9 +153,11 @@ export function ChatsPage({ isResizing = false }: Props) {
         {!isLoading && !isError && (
           <>
             {isSearching ? (
-              <div className="px-4">
-                <SearchResults query={searchQuery} chats={chats} />
-              </div>
+              <SearchResults
+                query={searchQuery}
+                chats={chats}
+                isChatOnline={isChatOnline}
+              />
             ) : chats.length === 0 ? (
               <EmptyState
                 Icon={MessagesSquare}
@@ -171,14 +176,7 @@ export function ChatsPage({ isResizing = false }: Props) {
                       exit={{ opacity: 0, height: 0 }}
                       transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
                     >
-                      <ChatListItem
-                        chat={chat}
-                        online={
-                          isDirectChat(chat) && chat.partnerUserId
-                            ? presence.isOnline(chat.partnerUserId)
-                            : false
-                        }
-                      />
+                      <ChatListItem chat={chat} online={isChatOnline(chat)} />
                     </motion.div>
                   ))}
                 </AnimatePresence>
