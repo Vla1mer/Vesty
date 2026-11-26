@@ -1,4 +1,4 @@
-import { ArrowLeft, ChevronRight, Copy, Pencil, Pin, Trash2, X } from "lucide-react";
+import { ArrowLeft, ChevronRight, Copy, Pencil, Pin, Search, Trash2, X } from "lucide-react";
 import { Avatar, ChatAvatar } from "./Avatar";
 import { usePresence } from "../hooks/usePresence";
 import { useLanguage } from "../context/useLanguage";
@@ -37,6 +37,7 @@ interface Props {
   typingNames: string[];
   onBack: () => void;
   onOpenInfo: () => void;
+  onSearch?: () => void;
   selection: TopBarSelection;
   pinned: TopBarPinned;
 }
@@ -48,6 +49,7 @@ export function ChatTopBar({
   typingNames,
   onBack,
   onOpenInfo,
+  onSearch,
   selection,
   pinned,
 }: Props) {
@@ -125,6 +127,17 @@ export function ChatTopBar({
               />
             )}
           </button>
+          {chat && onSearch && (
+            <button
+              type="button"
+              onClick={onSearch}
+              aria-label={t("chat.search")}
+              title={t("chat.search")}
+              className="shrink-0 rounded p-1.5 text-content-muted hover:bg-surface-muted hover:text-content transition"
+            >
+              <Search size={20} />
+            </button>
+          )}
         </header>
 
         <header
