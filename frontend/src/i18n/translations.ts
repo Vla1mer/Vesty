@@ -355,6 +355,7 @@ const en = {
   "search.friends": "Friends",
 
   "profile.hidden": "This user has hidden their profile",
+  "profile.messagesClosed": "This user is not accepting messages from you",
 
   "join.invalid": "This link is no longer valid",
   "join.invalidHint": "It may have been revoked or has expired.",
@@ -717,6 +718,7 @@ const pl: Record<keyof typeof en, string> = {
   "search.friends": "Znajomi",
 
   "profile.hidden": "Ta osoba ukryła swój profil",
+  "profile.messagesClosed": "Ta osoba nie przyjmuje od Ciebie wiadomości",
 
   "join.invalid": "Ten link nie jest już aktywny",
   "join.invalidHint": "Mógł zostać unieważniony lub wygasnąć.",
