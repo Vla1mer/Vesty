@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { API_URL } from "../api/client";
 import { endpoints } from "../api/endpoints";
+import { useLanguage } from "../context/useLanguage";
 
 const PALETTE = [
   "bg-amber-400",
@@ -106,6 +107,7 @@ export function Avatar({
   online = false,
   className = "",
 }: AvatarProps) {
+  const { t } = useLanguage();
   const picture = (
     <AvatarView
       src={avatarUpdatedAt ? avatarUrl(userId, avatarUpdatedAt) : undefined}
@@ -123,7 +125,7 @@ export function Avatar({
     <span className="relative inline-flex shrink-0">
       {picture}
       <span
-        aria-label={`${userName ?? "User"} is online`}
+        aria-label={t("a11y.isOnline", { name: userName ?? t("a11y.user") })}
         className={`absolute bottom-0 right-0 rounded-full border-2 border-surface bg-success ${DOT_SIZES[size]}`}
       />
     </span>

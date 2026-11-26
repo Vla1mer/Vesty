@@ -39,6 +39,11 @@ export const userApi = apiSlice.injectEndpoints({
       invalidatesTags: [{ type: USER_API_TAGS.USER, id: "PRIVACY" }],
     }),
 
+    getUsersByIds: builder.query<UserDto[], number[]>({
+      query: (ids) => ({ url: endpoints.user.collection(ids) }),
+      providesTags: (result = []) =>
+        result.map((user) => ({ type: USER_API_TAGS.USER, id: user.id })),
+    }),
     getUserById: builder.query<UserDto, number>({
       query: (id) => ({ url: endpoints.user.byId(id) }),
       providesTags: (_result, _error, id) => [{ type: USER_API_TAGS.USER, id }],
@@ -93,6 +98,7 @@ export const {
   useSearchUsersQuery,
   useGetPrivacySettingsQuery,
   useUpdatePrivacySettingsMutation,
+  useGetUsersByIdsQuery,
   useGetUserByIdQuery,
   useUpdateUserMutation,
   useDeleteUserMutation,

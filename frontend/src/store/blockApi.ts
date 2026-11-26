@@ -30,7 +30,12 @@ export const blockApi = apiSlice.injectEndpoints({
         url: endpoints.block.byUser(userId),
         method: HTTP_METHOD.POST,
       }),
-      invalidatesTags: [BLOCK_LIST, USER_LIST, ...FRIEND_LISTS],
+      invalidatesTags: (_result, _error, userId) => [
+        BLOCK_LIST,
+        USER_LIST,
+        ...FRIEND_LISTS,
+        { type: USER_API_TAGS.USER, id: userId },
+      ],
     }),
 
     unblockUser: builder.mutation<void, number>({
@@ -38,7 +43,11 @@ export const blockApi = apiSlice.injectEndpoints({
         url: endpoints.block.byUser(userId),
         method: HTTP_METHOD.DELETE,
       }),
-      invalidatesTags: [BLOCK_LIST, USER_LIST],
+      invalidatesTags: (_result, _error, userId) => [
+        BLOCK_LIST,
+        USER_LIST,
+        { type: USER_API_TAGS.USER, id: userId },
+      ],
     }),
   }),
 });

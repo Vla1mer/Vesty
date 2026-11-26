@@ -27,8 +27,10 @@ export function ChatListSkeleton({ rows = 6 }: { rows?: number }) {
 }
 
 export function MessageListSkeleton({ rows = 5 }: { rows?: number }) {
+  const { t } = useLanguage();
+
   return (
-    <div role="status" aria-label="Loading messages" className="space-y-3 py-2">
+    <div role="status" aria-label={t("common.loadingMessages")} className="space-y-3 py-2">
       {Array.from({ length: rows }, (_, i) => (
         <div
           key={i}

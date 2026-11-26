@@ -96,6 +96,7 @@ const en = {
   "chats.newGroupHint": "Create a chat for multiple people",
   "chats.loadFailed": "Failed to load chats",
   "chats.empty": "No chats yet",
+  "chats.you": "You",
   "chats.emptyHint": "Use the compose button to start a conversation.",
   "chats.pick": "Select a chat",
   "chats.pickHint": "Pick a conversation from the list, or start a new one.",
@@ -181,6 +182,7 @@ const en = {
   "danger.deleteDirectWarning": "Are you sure you want to delete this conversation? All messages will be permanently lost.",
   "danger.deleteConfirm": "Delete",
 
+  "invite.title": "Invite link",
   "invite.never": "Never expires",
   "invite.createFailed": "Failed to create an invite link",
   "invite.revokeFailed": "Failed to revoke the invite link",
@@ -204,9 +206,10 @@ const en = {
   "friends.blockedChatCancel": "Keep",
 
   "users.loadFailed": "Failed to load users",
-  "users.alreadyFriends": "Already friends",
   "users.requestPending": "Request pending",
   "users.addFriend": "Add to friends",
+  "users.messagesClosed": "Not accepting messages from you",
+  "friends.actionFailed": "Could not update the friendship",
 
   "createChat.title": "New group chat",
   "createChat.addMembers": "Add members",
@@ -229,6 +232,13 @@ const en = {
   "common.invalidChat": "Invalid chat id",
   "common.chatNotFound": "Chat not found",
   "common.loadingChats": "Loading chats",
+  "common.loadingMessages": "Loading messages",
+  "a11y.user": "User",
+  "a11y.isOnline": "{name} is online",
+  "a11y.openProfile": "Open the profile of {name}",
+  "a11y.messageUser": "Message {name}",
+  "a11y.messagesClosed": "{name} is not accepting messages from you",
+  "a11y.removeSelected": "Remove {name}",
 
   "admins.title": "Administrators",
   "admins.owner": "Owner",
@@ -343,18 +353,20 @@ const en = {
   "createChat.back": "Back",
 
   "friends.requests": "Requests",
+  "friends.sent": "Sent",
   "friends.title": "Friends",
   "friends.accepted": "Accept",
   "friends.declined": "Decline",
-  "friends.pending": "Pending",
   "friends.alreadyFriend": "Friend",
 
   "users.startTyping": "Start typing to find someone",
 
   "search.chats": "Chats",
-  "search.users": "Users",
+  "search.friends": "Friends",
+  "search.noMatches": "No matches for \"{query}\"",
 
   "profile.hidden": "This user has hidden their profile",
+  "profile.messagesClosed": "This user is not accepting messages from you",
 
   "join.invalid": "This link is no longer valid",
   "join.invalidHint": "It may have been revoked or has expired.",
@@ -458,6 +470,7 @@ const pl: Record<keyof typeof en, string> = {
   "chats.newGroupHint": "Utwórz czat dla wielu osób",
   "chats.loadFailed": "Nie udało się wczytać czatów",
   "chats.empty": "Nie masz jeszcze czatów",
+  "chats.you": "Ty",
   "chats.emptyHint": "Użyj przycisku tworzenia, aby rozpocząć rozmowę.",
   "chats.pick": "Wybierz czat",
   "chats.pickHint": "Wybierz rozmowę z listy albo rozpocznij nową.",
@@ -543,6 +556,7 @@ const pl: Record<keyof typeof en, string> = {
   "danger.deleteDirectWarning": "Czy na pewno chcesz usunąć tę rozmowę? Wszystkie wiadomości zostaną trwale utracone.",
   "danger.deleteConfirm": "Usuń",
 
+  "invite.title": "Link z zaproszeniem",
   "invite.never": "Bez terminu ważności",
   "invite.createFailed": "Nie udało się utworzyć linku z zaproszeniem",
   "invite.revokeFailed": "Nie udało się unieważnić linku",
@@ -566,9 +580,10 @@ const pl: Record<keyof typeof en, string> = {
   "friends.blockedChatCancel": "Zachowaj",
 
   "users.loadFailed": "Nie udało się wczytać użytkowników",
-  "users.alreadyFriends": "Już jesteście znajomymi",
   "users.requestPending": "Zaproszenie oczekuje",
   "users.addFriend": "Dodaj do znajomych",
+  "users.messagesClosed": "Nie przyjmuje od Ciebie wiadomości",
+  "friends.actionFailed": "Nie udało się zmienić znajomości",
 
   "createChat.title": "Nowy czat grupowy",
   "createChat.addMembers": "Dodaj uczestników",
@@ -591,6 +606,13 @@ const pl: Record<keyof typeof en, string> = {
   "common.invalidChat": "Nieprawidłowy identyfikator czatu",
   "common.chatNotFound": "Nie znaleziono czatu",
   "common.loadingChats": "Wczytywanie czatów",
+  "common.loadingMessages": "Wczytywanie wiadomości",
+  "a11y.user": "Użytkownik",
+  "a11y.isOnline": "{name} jest w sieci",
+  "a11y.openProfile": "Otwórz profil: {name}",
+  "a11y.messageUser": "Napisz do: {name}",
+  "a11y.messagesClosed": "{name} nie przyjmuje od Ciebie wiadomości",
+  "a11y.removeSelected": "Usuń: {name}",
 
   "admins.title": "Administratorzy",
   "admins.owner": "Właściciel",
@@ -705,18 +727,20 @@ const pl: Record<keyof typeof en, string> = {
   "createChat.back": "Wstecz",
 
   "friends.requests": "Zaproszenia",
+  "friends.sent": "Wysłane",
   "friends.title": "Znajomi",
   "friends.accepted": "Akceptuj",
   "friends.declined": "Odrzuć",
-  "friends.pending": "Oczekuje",
   "friends.alreadyFriend": "Znajomy",
 
   "users.startTyping": "Zacznij pisać, aby znaleźć osobę",
 
   "search.chats": "Czaty",
-  "search.users": "Osoby",
+  "search.friends": "Znajomi",
+  "search.noMatches": "Brak wyników dla „{query}”",
 
   "profile.hidden": "Ta osoba ukryła swój profil",
+  "profile.messagesClosed": "Ta osoba nie przyjmuje od Ciebie wiadomości",
 
   "join.invalid": "Ten link nie jest już aktywny",
   "join.invalidHint": "Mógł zostać unieważniony lub wygasnąć.",

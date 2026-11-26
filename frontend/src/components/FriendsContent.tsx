@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useLanguage } from "../context/useLanguage";
-import { Ban, Check, Clock, MessageSquare, Search, UserPlus, UserX, X } from "lucide-react";
+import { Ban, Check, MessageSquare, Search, UserPlus, UserX, X } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUserProfile } from "../hooks/useUserProfile";
@@ -14,8 +14,8 @@ import {
   useGetFriendRequestsQuery,
   useGetFriendsQuery,
   useRemoveFriendMutation,
-  useSendFriendRequestMutation,
 } from "../store/friendApi";
+import { FriendButton } from "./FriendButton";
 import { Avatar } from "./Avatar";
 import { Button } from "./ui/Button";
 import { EmptyState } from "./ui/EmptyState";
@@ -34,6 +34,7 @@ interface RowProps {
 }
 
 function FriendRow({ friend, actions, onOpenProfile }: RowProps) {
+  const { t } = useLanguage();
 
   return (
     <motion.li
@@ -47,7 +48,7 @@ function FriendRow({ friend, actions, onOpenProfile }: RowProps) {
       <button
         type="button"
         onClick={() => onOpenProfile(friend.userId)}
-        aria-label={`Open the profile of ${friend.userName}`}
+        aria-label={t("a11y.openProfile", { name: friend.userName })}
         className="flex min-w-0 flex-1 items-center gap-3 rounded text-left transition hover:opacity-80"
       >
         <Avatar
@@ -81,7 +82,6 @@ export function FriendsContent() {
   const { data: requests = [] } = useGetFriendRequestsQuery();
   const [acceptRequest, acceptState] = useAcceptFriendRequestMutation();
   const [removeFriend, removeState] = useRemoveFriendMutation();
-  const [sendRequest, sendState] = useSendFriendRequestMutation();
   const blocking = useBlockWithChatPrompt();
   const { data: found = [], isFetching: searching } = useSearchUsersQuery(term, {
     skip: term.length === 0,
@@ -90,7 +90,7 @@ export function FriendsContent() {
   function isBusy(userId: number): boolean {
     return (
       blocking.blockingUserId === userId ||
-      [acceptState, removeState, sendState].some(
+      [acceptState, removeState].some(
         (state) => state.isLoading && state.originalArgs === userId
       )
     );
@@ -101,8 +101,6 @@ export function FriendsContent() {
   if (isLoading) return <ChatListSkeleton rows={4} />;
   if (isError) return <FormError message={t("friends.loadFailed")} />;
 
-  const friendIds = new Set(friends.map((f) => f.userId));
-  const requestedIds = new Set(requests.map((r) => r.userId));
   const candidates = found.filter((u) => u.id !== userId);
 
   return (
@@ -160,7 +158,7 @@ export function FriendsContent() {
                   <button
                     type="button"
                     onClick={() => profile.open(user.id)}
-                    aria-label={`Open the profile of ${user.userName}`}
+                    aria-label={t("a11y.openProfile", { name: user.userName })}
                     className="flex min-w-0 flex-1 items-center gap-3 rounded text-left transition hover:opacity-80"
                   >
                     <Avatar
@@ -178,23 +176,7 @@ export function FriendsContent() {
                       <p className="truncate text-xs text-content-muted">@{user.userName}</p>
                     </div>
                   </button>
-                  {friendIds.has(user.id) ? (
-                    <span className="flex shrink-0 items-center gap-1 text-xs text-content-muted">
-                      <Check size={13} aria-hidden="true" /> Friend
-                    </span>
-                  ) : requestedIds.has(user.id) ? (
-                    <span className="flex shrink-0 items-center gap-1 text-xs text-content-muted">
-                      <Clock size={13} aria-hidden="true" /> Pending
-                    </span>
-                  ) : (
-                    <Button
-                      size="xs"
-                      disabled={isBusy(user.id)}
-                      onClick={() => sendRequest(user.id)}
-                    >
-                      <UserPlus size={13} /> Add
-                    </Button>
-                  )}
+                  <FriendButton userId={user.id} compact />
                 </li>
               ))
             )}
@@ -247,7 +229,7 @@ export function FriendsContent() {
 
       {outgoing.length > 0 && (
         <section>
-          <h2 className="mb-2 px-3 text-sm font-semibold text-content">Sent</h2>
+          <h2 className="mb-2 px-3 text-sm font-semibold text-content">{t("friends.sent")}</h2>
           <ul>
             <AnimatePresence initial={false}>
               {outgoing.map((request) => (

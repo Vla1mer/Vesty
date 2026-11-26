@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import { useLanguage } from "../context/useLanguage";
 import { Avatar, ChatAvatar } from "./Avatar";
 import { getChatDisplayName } from "../utils/chats";
 import { useDates } from "../hooks/useDates";
@@ -8,9 +9,11 @@ import { isDirectChat, type ChatDto } from "../types/api";
 interface Props {
   chat: ChatDto;
   online?: boolean;
+  onClick?: () => void;
 }
 
-export function ChatListItem({ chat, online = false }: Props) {
+export function ChatListItem({ chat, online = false, onClick }: Props) {
+  const { t } = useLanguage();
   const { userId } = useAuth();
   const dates = useDates();
   const title = getChatDisplayName(chat);
@@ -18,13 +21,14 @@ export function ChatListItem({ chat, online = false }: Props) {
   const sender =
     !chat.isPrivate && chat.lastMessageContent
       ? chat.lastMessageSenderId === userId
-        ? "You"
+        ? t("chats.you")
         : chat.lastMessageSenderName
       : null;
 
   return (
     <NavLink
       to={`/chats/${chat.id}`}
+      onClick={onClick}
       className={({ isActive }) =>
         `block mx-2 rounded-card px-3 py-1.5 transition cursor-pointer ${
           isActive ? "bg-accent" : "hover:bg-surface-muted"

@@ -6,6 +6,7 @@ import { Avatar } from "./Avatar";
 import { usePresence } from "../hooks/usePresence";
 import { useDates } from "../hooks/useDates";
 import { Button } from "./ui/Button";
+import { FriendButton } from "./FriendButton";
 import type { UserDto } from "../types/api";
 
 interface Props {
@@ -20,6 +21,7 @@ export function UserProfileContent({ user }: Props) {
 
   const presence = usePresence([user.id]);
   const isMe = user.id === currentUserId;
+  const canMessage = user.canMessage !== false;
   const fullName = [user.name, user.surname].filter(Boolean).join(" ");
 
   return (
@@ -59,11 +61,23 @@ export function UserProfileContent({ user }: Props) {
       )}
 
       {!isMe && (
-        <div className="flex justify-center">
-          <Button onClick={() => navigate(`/chats/new/${user.id}`)} className="px-6">
-            <MessageSquare size={16} aria-hidden="true" />
-            {t("friends.message")}
-          </Button>
+        <div className="space-y-2">
+          <div className="flex flex-wrap justify-center gap-2">
+            <Button
+              onClick={() => navigate(`/chats/new/${user.id}`)}
+              disabled={!canMessage}
+              className="px-6"
+            >
+              <MessageSquare size={16} aria-hidden="true" />
+              {t("friends.message")}
+            </Button>
+            <FriendButton userId={user.id} />
+          </div>
+          {!canMessage && (
+            <p className="text-center text-sm text-content-muted">
+              {t("profile.messagesClosed")}
+            </p>
+          )}
         </div>
       )}
     </div>

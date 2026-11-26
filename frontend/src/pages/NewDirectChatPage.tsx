@@ -57,7 +57,7 @@ export function NewDirectChatPage() {
         <button
           onClick={() => navigate("/chats")}
           className="md:hidden text-content-muted hover:text-content"
-          aria-label="Back"
+          aria-label={t("common.back")}
         >
           <ArrowLeft size={22} />
         </button>
@@ -67,7 +67,7 @@ export function NewDirectChatPage() {
       </header>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {loading && <p className="text-content-muted text-center">Loading...</p>}
+        {loading && <p className="text-content-muted text-center">{t("common.loading")}</p>}
 
         {(loadError || sendError) && (
           <FormError message={loadError ?? sendError} />
