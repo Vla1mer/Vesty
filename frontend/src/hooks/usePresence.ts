@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useGetPresenceQuery } from "../store/presenceApi";
+import { useDates } from "./useDates";
 import type { UserPresenceDto } from "../types/api";
 
 export function usePresence(userIds: number[]) {
@@ -13,6 +14,7 @@ export function usePresence(userIds: number[]) {
   );
 
   const { data = [] } = useGetPresenceQuery(wanted, { skip: wanted.length === 0 });
+  const dates = useDates();
 
   return useMemo(() => {
     const byUser = new Map<number, UserPresenceDto>(
@@ -20,7 +22,12 @@ export function usePresence(userIds: number[]) {
     );
     return {
       isOnline: (userId: number) => byUser.get(userId)?.isOnline ?? false,
-      lastSeenAt: (userId: number) => byUser.get(userId)?.lastSeenAt ?? null,
+      lastSeen: (userId: number): string | null => {
+        const entry = byUser.get(userId);
+        if (entry?.lastSeenAt) return dates.lastSeen(entry.lastSeenAt);
+        if (entry?.lastSeenApprox) return dates.lastSeenApprox(entry.lastSeenApprox);
+        return null;
+      },
     };
-  }, [data]);
+  }, [data, dates]);
 }

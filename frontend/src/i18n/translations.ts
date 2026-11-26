@@ -309,6 +309,10 @@ const en = {
   "date.today": "Today",
   "date.yesterday": "Yesterday",
   "date.lastSeenAt": "last seen at {time}",
+  "date.lastSeenRecently": "last seen recently",
+  "date.lastSeenWithinWeek": "last seen within a week",
+  "date.lastSeenWithinMonth": "last seen within a month",
+  "date.lastSeenLongAgo": "last seen a long time ago",
   "date.lastSeenYesterday": "last seen yesterday at {time}",
   "date.lastSeenOn": "last seen on {day}",
 
@@ -683,6 +687,10 @@ const pl: Record<keyof typeof en, string> = {
   "date.today": "Dzisiaj",
   "date.yesterday": "Wczoraj",
   "date.lastSeenAt": "ostatnio widziany o {time}",
+  "date.lastSeenRecently": "ostatnio widziany niedawno",
+  "date.lastSeenWithinWeek": "ostatnio widziany w tym tygodniu",
+  "date.lastSeenWithinMonth": "ostatnio widziany w tym miesiącu",
+  "date.lastSeenLongAgo": "ostatnio widziany dawno temu",
   "date.lastSeenYesterday": "ostatnio widziany wczoraj o {time}",
   "date.lastSeenOn": "ostatnio widziany {day}",
 
