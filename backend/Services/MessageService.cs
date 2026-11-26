@@ -39,11 +39,25 @@ namespace Services
             if (!messageParameters.ValidCreatedAtRange)
                 throw new MaxCreatedAtRangeBadRequestException();
 
-            var messagesWithMetaData = await _repository.Message.GetAllMessagesAsync(
+            var messages = await _repository.Message.GetAllMessagesAsync(
                 messageParameters, _currentUser.UserId, trackChanges: false);
-            DecryptInPlace(messagesWithMetaData);
-            var messagesDto = _mapper.Map<IEnumerable<MessageDto>>(messagesWithMetaData);
-            return (messages: messagesDto, metaData: messagesWithMetaData.MetaData);
+
+            var term = messageParameters.SearchTerm?.Trim();
+            if (!string.IsNullOrEmpty(term))
+            {
+                DecryptInPlace(messages);
+                messages = messages
+                    .Where(m => m.Content.Contains(term, StringComparison.CurrentCultureIgnoreCase))
+                    .ToList();
+            }
+
+            var page = PagedList<Message>.ToPagedList(
+                messages, messageParameters.PageNumber, messageParameters.PageSize);
+            if (string.IsNullOrEmpty(term))
+                DecryptInPlace(page);
+
+            var messagesDto = _mapper.Map<IEnumerable<MessageDto>>(page);
+            return (messages: messagesDto, metaData: page.MetaData);
         }
 
         public async Task<MessageDto> GetByIdAsync(int id)

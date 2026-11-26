@@ -10,21 +10,16 @@ namespace Repository
     {
         public MessageRepository(AppDbContext context) : base(context) { }
 
-        public async Task<PagedList<Message>> GetAllMessagesAsync(MessageParameters messageParameters, int viewerUserId, bool trackChanges)
-        {
-            var messages = await FindAll(trackChanges)
+        public async Task<List<Message>> GetAllMessagesAsync(MessageParameters messageParameters, int viewerUserId, bool trackChanges) =>
+            await FindAll(trackChanges)
                 .Where(m => RepositoryContext.Set<ChatMember>().Any(cm =>
                     cm.ChatId == m.ChatId && cm.UserId == viewerUserId &&
                     (cm.ClearedAt == null || m.CreatedAt > cm.ClearedAt)))
                 .FilterByCreatedAt(messageParameters.MinCreatedAt, messageParameters.MaxCreatedAt)
                 .FilterByChatId(messageParameters.ChatId)
                 .FilterByUserId(messageParameters.UserId)
-                .Search(messageParameters.SearchTerm)
                 .Sort(messageParameters.OrderBy)
                 .ToListAsync();
-
-            return PagedList<Message>.ToPagedList(messages, messageParameters.PageNumber, messageParameters.PageSize);
-        }
 
         public async Task<IEnumerable<Message>> GetLastMessagesByChatIdsAsync(
             IEnumerable<int> chatIds, int viewerUserId) =>
