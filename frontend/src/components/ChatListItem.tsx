@@ -53,12 +53,14 @@ export function ChatListItem({
         if (openedByPress.current) {
           openedByPress.current = false;
           e.preventDefault();
+          e.stopPropagation();
           return;
         }
         onClick?.();
       }}
       onPointerDown={(e: PointerEvent) => {
         pointerType.current = e.pointerType;
+        openedByPress.current = false;
       }}
       onContextMenu={(e: MouseEvent) => {
         if (!onOpenMenu) return;
