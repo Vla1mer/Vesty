@@ -182,6 +182,7 @@ const en = {
   "danger.deleteDirectWarning": "Are you sure you want to delete this conversation? All messages will be permanently lost.",
   "danger.deleteConfirm": "Delete",
 
+  "invite.title": "Invite link",
   "invite.never": "Never expires",
   "invite.createFailed": "Failed to create an invite link",
   "invite.revokeFailed": "Failed to revoke the invite link",
@@ -230,6 +231,12 @@ const en = {
   "common.invalidChat": "Invalid chat id",
   "common.chatNotFound": "Chat not found",
   "common.loadingChats": "Loading chats",
+  "common.loadingMessages": "Loading messages",
+  "a11y.user": "User",
+  "a11y.isOnline": "{name} is online",
+  "a11y.openProfile": "Open the profile of {name}",
+  "a11y.messageUser": "Message {name}",
+  "a11y.removeSelected": "Remove {name}",
 
   "admins.title": "Administrators",
   "admins.owner": "Owner",
@@ -547,6 +554,7 @@ const pl: Record<keyof typeof en, string> = {
   "danger.deleteDirectWarning": "Czy na pewno chcesz usunąć tę rozmowę? Wszystkie wiadomości zostaną trwale utracone.",
   "danger.deleteConfirm": "Usuń",
 
+  "invite.title": "Link z zaproszeniem",
   "invite.never": "Bez terminu ważności",
   "invite.createFailed": "Nie udało się utworzyć linku z zaproszeniem",
   "invite.revokeFailed": "Nie udało się unieważnić linku",
@@ -595,6 +603,12 @@ const pl: Record<keyof typeof en, string> = {
   "common.invalidChat": "Nieprawidłowy identyfikator czatu",
   "common.chatNotFound": "Nie znaleziono czatu",
   "common.loadingChats": "Wczytywanie czatów",
+  "common.loadingMessages": "Wczytywanie wiadomości",
+  "a11y.user": "Użytkownik",
+  "a11y.isOnline": "{name} jest w sieci",
+  "a11y.openProfile": "Otwórz profil: {name}",
+  "a11y.messageUser": "Napisz do: {name}",
+  "a11y.removeSelected": "Usuń: {name}",
 
   "admins.title": "Administratorzy",
   "admins.owner": "Właściciel",

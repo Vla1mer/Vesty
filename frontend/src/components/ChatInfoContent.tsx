@@ -183,7 +183,7 @@ export function ChatInfoContent({ chat, onOpenSettings, onBusyChange }: Props) {
                     <button
                       type="button"
                       onClick={() => profile.open(m.userId)}
-                      aria-label={`Open the profile of ${m.userName}`}
+                      aria-label={t("a11y.openProfile", { name: m.userName })}
                       className="flex min-w-0 items-center gap-2.5 rounded text-left transition hover:opacity-80"
                     >
                       <Avatar

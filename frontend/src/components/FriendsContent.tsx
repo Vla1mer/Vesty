@@ -34,6 +34,7 @@ interface RowProps {
 }
 
 function FriendRow({ friend, actions, onOpenProfile }: RowProps) {
+  const { t } = useLanguage();
 
   return (
     <motion.li
@@ -47,7 +48,7 @@ function FriendRow({ friend, actions, onOpenProfile }: RowProps) {
       <button
         type="button"
         onClick={() => onOpenProfile(friend.userId)}
-        aria-label={`Open the profile of ${friend.userName}`}
+        aria-label={t("a11y.openProfile", { name: friend.userName })}
         className="flex min-w-0 flex-1 items-center gap-3 rounded text-left transition hover:opacity-80"
       >
         <Avatar
@@ -157,7 +158,7 @@ export function FriendsContent() {
                   <button
                     type="button"
                     onClick={() => profile.open(user.id)}
-                    aria-label={`Open the profile of ${user.userName}`}
+                    aria-label={t("a11y.openProfile", { name: user.userName })}
                     className="flex min-w-0 flex-1 items-center gap-3 rounded text-left transition hover:opacity-80"
                   >
                     <Avatar

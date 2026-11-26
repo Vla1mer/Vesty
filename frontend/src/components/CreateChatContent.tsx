@@ -141,7 +141,7 @@ export function CreateChatContent({
                 type="button"
                 onClick={() => removeUser(u.id)}
                 className="text-content-muted transition hover:text-content"
-                aria-label={`Remove ${u.userName}`}
+                aria-label={t("a11y.removeSelected", { name: u.userName })}
               >
                 <X size={14} />
               </button>

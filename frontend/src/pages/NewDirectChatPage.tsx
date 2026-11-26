@@ -57,7 +57,7 @@ export function NewDirectChatPage() {
         <button
           onClick={() => navigate("/chats")}
           className="md:hidden text-content-muted hover:text-content"
-          aria-label="Back"
+          aria-label={t("common.back")}
         >
           <ArrowLeft size={22} />
         </button>

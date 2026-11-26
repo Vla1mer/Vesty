@@ -66,7 +66,7 @@ export function ChatInviteSection({ chatId }: Props) {
 
   return (
     <section className="space-y-2 border-t border-line pt-3">
-      <h3 className="text-sm font-semibold text-content-muted">Invite link</h3>
+      <h3 className="text-sm font-semibold text-content-muted">{t("invite.title")}</h3>
 
       <FormError message={error} />
 

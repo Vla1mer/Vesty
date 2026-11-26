@@ -59,7 +59,7 @@ export function SelectUserContent({ onSelected }: Props) {
                   type="button"
                   onClick={() => onSelected(u.id)}
                   disabled={!canMessage}
-                  aria-label={`Message ${u.userName}`}
+                  aria-label={t("a11y.messageUser", { name: u.userName })}
                   className="flex w-full items-center gap-3 rounded px-3 py-2 text-left transition-colors hover:bg-surface-muted disabled:cursor-not-allowed disabled:hover:bg-transparent"
                 >
                   <Avatar
