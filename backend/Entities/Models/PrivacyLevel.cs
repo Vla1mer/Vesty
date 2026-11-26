@@ -8,5 +8,8 @@ namespace Entities.Models
 
         public static bool IsDefined(int value) =>
             value is Everyone or FriendsOnly or Nobody;
+
+        public static bool IsAllowedForChatStart(int value) =>
+            value is Everyone or FriendsOnly;
     }
 }

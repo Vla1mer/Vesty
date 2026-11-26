@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Json;
 using Entities.Models;
 using Services.DataTransferObjects;
@@ -48,14 +49,19 @@ namespace Vesty.Tests
         }
 
         [Fact]
-        public async Task MessagesForNobody_AreClosedEvenToAFriend()
+        public async Task MessagesForNobody_AreRejected()
         {
             var owner = await AccountAsync("cm4a");
-            var friend = await AccountAsync("cm4b");
-            await FriendshipSetup.BefriendAsync(friend.Client, friend.Id, owner.Client, owner.Id);
-            await AcceptMessagesFromAsync(owner, PrivacyLevel.Nobody);
 
-            Assert.False((await ProfileAsync(friend, owner)).CanMessage);
+            var updated = await owner.Client.PutAsJsonAsync("/api/User/privacy", new
+            {
+                whoCanMessage = PrivacyLevel.Nobody,
+                whoCanInvite = PrivacyLevel.Everyone,
+                whoCanSeeProfile = PrivacyLevel.Everyone,
+                whoCanSeeOnline = PrivacyLevel.Everyone
+            });
+
+            Assert.Equal(HttpStatusCode.BadRequest, updated.StatusCode);
         }
 
         [Fact]
@@ -64,7 +70,7 @@ namespace Vesty.Tests
             var owner = await AccountAsync("cm5a");
             var partner = await AccountAsync("cm5b");
             await DirectChatWithAsync(partner.Client, owner.Name);
-            await AcceptMessagesFromAsync(owner, PrivacyLevel.Nobody);
+            await AcceptMessagesFromAsync(owner, PrivacyLevel.FriendsOnly);
 
             Assert.True((await ProfileAsync(partner, owner)).CanMessage);
         }
