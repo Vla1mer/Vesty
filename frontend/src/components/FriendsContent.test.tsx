@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import { Route, Routes } from "react-router-dom";
 import userEvent from "@testing-library/user-event";
 import { FriendsContent } from "./FriendsContent";
 import { renderWithProviders, signIn } from "../test/renderWithProviders";
-import { installServer, resetServer, stubJson } from "../test/server";
+import { installServer, requests, resetServer, stubJson } from "../test/server";
 import type { FriendDto } from "../types/api";
 
 const ME = 1;
@@ -60,5 +60,34 @@ describe("FriendsContent", () => {
     );
 
     expect(await screen.findAllByText("Petya Ivanov")).not.toHaveLength(0);
+  });
+
+  it("offers to add a stranger found by the search", async () => {
+    stubJson("get", "/api/User", [{ id: 9, userName: "vasya", avatarUpdatedAt: null }]);
+    stubJson("post", "/api/Friend/9", {});
+    open([]);
+
+    await userEvent.type(
+      await screen.findByPlaceholderText("Find people by username..."),
+      "vas"
+    );
+    await userEvent.click(await screen.findByRole("button", { name: /Add to friends/ }));
+
+    await waitFor(() =>
+      expect(requests.some((r) => r.url === "/api/Friend/9")).toBe(true)
+    );
+  });
+
+  it("shows a found friend as a friend", async () => {
+    stubJson("get", "/api/User", [{ id: 7, userName: "petya", avatarUpdatedAt: null }]);
+    open();
+
+    await userEvent.type(
+      await screen.findByPlaceholderText("Find people by username..."),
+      "pet"
+    );
+
+    expect(await screen.findByText("Friend")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Add to friends/ })).not.toBeInTheDocument();
   });
 });

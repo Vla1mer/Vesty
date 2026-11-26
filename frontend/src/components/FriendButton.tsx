@@ -10,19 +10,26 @@ import { Button } from "./ui/Button";
 
 interface Props {
   userId: number;
+  compact?: boolean;
 }
 
-export function FriendButton({ userId }: Props) {
+export function FriendButton({ userId, compact = false }: Props) {
   const { t } = useLanguage();
   const { data: friends = [] } = useGetFriendsQuery();
   const { data: requests = [] } = useGetFriendRequestsQuery();
   const [sendRequest, sendState] = useSendFriendRequestMutation();
   const [acceptRequest, acceptState] = useAcceptFriendRequestMutation();
 
+  const iconSize = compact ? 13 : 16;
+  const buttonSize = compact ? "xs" : "md";
+  const labelClass = `flex shrink-0 items-center gap-1.5 text-content-muted ${
+    compact ? "text-xs" : "px-4 py-2 text-sm"
+  }`;
+
   if (friends.some((f) => f.userId === userId)) {
     return (
-      <span className="flex items-center gap-1.5 px-4 py-2 text-sm text-content-muted">
-        <Check size={16} aria-hidden="true" /> {t("friends.alreadyFriend")}
+      <span className={labelClass}>
+        <Check size={iconSize} aria-hidden="true" /> {t("friends.alreadyFriend")}
       </span>
     );
   }
@@ -33,18 +40,19 @@ export function FriendButton({ userId }: Props) {
     return (
       <Button
         variant="neutral"
+        size={buttonSize}
         disabled={acceptState.isLoading}
         onClick={() => acceptRequest(userId)}
       >
-        <Check size={16} aria-hidden="true" /> {t("friends.accept")}
+        <Check size={iconSize} aria-hidden="true" /> {t("friends.accept")}
       </Button>
     );
   }
 
   if (request) {
     return (
-      <span className="flex items-center gap-1.5 px-4 py-2 text-sm text-content-muted">
-        <Clock size={16} aria-hidden="true" /> {t("users.requestPending")}
+      <span className={labelClass}>
+        <Clock size={iconSize} aria-hidden="true" /> {t("users.requestPending")}
       </span>
     );
   }
@@ -52,10 +60,11 @@ export function FriendButton({ userId }: Props) {
   return (
     <Button
       variant="neutral"
+      size={buttonSize}
       disabled={sendState.isLoading}
       onClick={() => sendRequest(userId)}
     >
-      <UserPlus size={16} aria-hidden="true" /> {t("users.addFriend")}
+      <UserPlus size={iconSize} aria-hidden="true" /> {t("users.addFriend")}
     </Button>
   );
 }
