@@ -46,19 +46,26 @@ describe("SelectUserContent", () => {
     expect(onSelected).toHaveBeenCalledExactlyOnceWith(7);
   });
 
-  it("does not let a user who closed messages be picked", async () => {
+  it("leaves out people who do not accept messages", async () => {
+    stubJson("get", "/api/User", [
+      OTHER_USER,
+      { ...OTHER_USER, id: 8, userName: "pavel", canMessage: false },
+    ]);
+    renderWithProviders(<SelectUserContent onSelected={vi.fn()} />);
+
+    await userEvent.type(screen.getByPlaceholderText("Search by username..."), "p");
+
+    expect(await screen.findByText("petya")).toBeInTheDocument();
+    expect(screen.queryByText("pavel")).not.toBeInTheDocument();
+  });
+
+  it("says so when only closed people match", async () => {
     stubJson("get", "/api/User", [{ ...OTHER_USER, canMessage: false }]);
-    const onSelected = vi.fn();
-    renderWithProviders(<SelectUserContent onSelected={onSelected} />);
+    renderWithProviders(<SelectUserContent onSelected={vi.fn()} />);
 
     await userEvent.type(screen.getByPlaceholderText("Search by username..."), "pet");
-    const row = await screen.findByLabelText("petya is not accepting messages from you");
 
-    expect(row).toBeDisabled();
-    expect(screen.queryByLabelText("Message petya")).not.toBeInTheDocument();
-    expect(screen.getByText("Not accepting messages from you")).toBeInTheDocument();
-    await userEvent.click(row);
-    expect(onSelected).not.toHaveBeenCalled();
+    expect(await screen.findByText("No users match your search")).toBeInTheDocument();
   });
 
   it("says so when nobody matches", async () => {
