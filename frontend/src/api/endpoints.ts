@@ -9,6 +9,7 @@ export const endpoints = {
     avatar: (id: number) => `/api/User/${id}/avatar`,
     privacy: "/api/User/privacy",
     presence: (ids: number[]) => `/api/User/presence/(${ids.join(",")})`,
+    collection: (ids: number[]) => `/api/User/collection/(${ids.join(",")})`,
   },
   block: {
     base: "/api/Block",

@@ -97,6 +97,24 @@ describe("SearchResults", () => {
     expect(onPicked).toHaveBeenCalledOnce();
   });
 
+  it("finds an existing chat by the friend's real name", async () => {
+    stubJson("get", "/api/Friend", [friend(2, "testu1", "Kowalska")]);
+    renderSearch("kowal", [DIRECT_CHAT]);
+
+    expect(await screen.findByText("Hello")).toBeInTheDocument();
+  });
+
+  it("does not offer to message a friend who closed messages", async () => {
+    stubJson("get", "/api/Friend", [friend(7, "petya")]);
+    stubJson("get", "/api/User/collection/(7)", [
+      { id: 7, userName: "petya", avatarUpdatedAt: null, canMessage: false },
+    ]);
+    renderSearch("pet");
+
+    expect(await screen.findByText("Not accepting messages from you")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /petya/ })).toBeDisabled();
+  });
+
   it("does not look up people who are not friends", async () => {
     stubJson("get", "/api/Friend", []);
     renderSearch("t");

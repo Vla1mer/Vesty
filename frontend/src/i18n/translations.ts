@@ -209,6 +209,7 @@ const en = {
   "users.requestPending": "Request pending",
   "users.addFriend": "Add to friends",
   "users.messagesClosed": "Not accepting messages from you",
+  "friends.actionFailed": "Could not update the friendship",
 
   "createChat.title": "New group chat",
   "createChat.addMembers": "Add members",
@@ -236,6 +237,7 @@ const en = {
   "a11y.isOnline": "{name} is online",
   "a11y.openProfile": "Open the profile of {name}",
   "a11y.messageUser": "Message {name}",
+  "a11y.messagesClosed": "{name} is not accepting messages from you",
   "a11y.removeSelected": "Remove {name}",
 
   "admins.title": "Administrators",
@@ -581,6 +583,7 @@ const pl: Record<keyof typeof en, string> = {
   "users.requestPending": "Zaproszenie oczekuje",
   "users.addFriend": "Dodaj do znajomych",
   "users.messagesClosed": "Nie przyjmuje od Ciebie wiadomości",
+  "friends.actionFailed": "Nie udało się zmienić znajomości",
 
   "createChat.title": "Nowy czat grupowy",
   "createChat.addMembers": "Dodaj uczestników",
@@ -608,6 +611,7 @@ const pl: Record<keyof typeof en, string> = {
   "a11y.isOnline": "{name} jest w sieci",
   "a11y.openProfile": "Otwórz profil: {name}",
   "a11y.messageUser": "Napisz do: {name}",
+  "a11y.messagesClosed": "{name} nie przyjmuje od Ciebie wiadomości",
   "a11y.removeSelected": "Usuń: {name}",
 
   "admins.title": "Administratorzy",

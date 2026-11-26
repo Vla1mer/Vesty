@@ -71,7 +71,7 @@ export function ChatInviteSection({ chatId }: Props) {
       <FormError message={error} />
 
       {isLoading ? (
-        <p className="text-sm text-content-subtle">Loading...</p>
+        <p className="text-sm text-content-subtle">{t("common.loading")}</p>
       ) : link ? (
         <>
           <div className="flex items-center gap-2">

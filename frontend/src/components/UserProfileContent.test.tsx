@@ -3,7 +3,7 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { UserProfileContent } from "./UserProfileContent";
 import { renderWithProviders, signIn } from "../test/renderWithProviders";
-import { installServer, requests, resetServer, stubJson } from "../test/server";
+import { installServer, requests, resetServer, stub, stubJson } from "../test/server";
 import type { FriendDto, UserDto } from "../types/api";
 
 const USER: UserDto = {
@@ -49,6 +49,19 @@ describe("UserProfileContent", () => {
     await waitFor(() =>
       expect(requests.some((r) => r.method.toLowerCase() === "post" && r.url === "/api/Friend/7")).toBe(true)
     );
+  });
+
+  it("says why a friend request failed", async () => {
+    stub("post", "/api/Friend/7", () => {
+      throw Object.assign(new Error("nope"), {
+        response: { status: 403, data: { Message: "This user has blocked you." } },
+      });
+    });
+    showProfile(USER);
+
+    await userEvent.click(await screen.findByRole("button", { name: /Add to friends/ }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("This user has blocked you.");
   });
 
   it("offers to accept a request the user sent", async () => {

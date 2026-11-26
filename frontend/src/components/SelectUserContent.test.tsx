@@ -52,9 +52,10 @@ describe("SelectUserContent", () => {
     renderWithProviders(<SelectUserContent onSelected={onSelected} />);
 
     await userEvent.type(screen.getByPlaceholderText("Search by username..."), "pet");
-    const row = await screen.findByLabelText("Message petya");
+    const row = await screen.findByLabelText("petya is not accepting messages from you");
 
     expect(row).toBeDisabled();
+    expect(screen.queryByLabelText("Message petya")).not.toBeInTheDocument();
     expect(screen.getByText("Not accepting messages from you")).toBeInTheDocument();
     await userEvent.click(row);
     expect(onSelected).not.toHaveBeenCalled();

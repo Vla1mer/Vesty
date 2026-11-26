@@ -1,6 +1,6 @@
 import { apiSlice } from "./apiSlice";
 import { endpoints } from "../api/endpoints";
-import { FRIEND_API_TAGS, TAG_ID } from "../api/constants";
+import { FRIEND_API_TAGS, TAG_ID, USER_API_TAGS } from "../api/constants";
 import { HTTP_METHOD } from "../utils/http";
 import {
   onFriendRequestReceived,
@@ -15,12 +15,24 @@ const REQUEST_LIST = {
   id: TAG_ID.LIST,
 } as const;
 
+const userTag = (userId: number) => ({ type: USER_API_TAGS.USER, id: userId }) as const;
+
+const relationTags = (userId: number) => [
+  FRIEND_LIST,
+  REQUEST_LIST,
+  userTag(userId),
+  { type: USER_API_TAGS.USER, id: TAG_ID.LIST } as const,
+];
+
 export const friendApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getFriends: builder.query<FriendDto[], void>({
       query: () => ({ url: endpoints.friend.base }),
       providesTags: [FRIEND_LIST],
-      async onCacheEntryAdded(_arg, { updateCachedData, cacheDataLoaded, cacheEntryRemoved }) {
+      async onCacheEntryAdded(
+        _arg,
+        { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch }
+      ) {
         const unsubscribes: Array<() => void> = [];
         try {
           await cacheDataLoaded;
@@ -30,6 +42,7 @@ export const friendApi = apiSlice.injectEndpoints({
               updateCachedData((draft) => {
                 if (!draft.some((f) => f.userId === friend.userId)) draft.push(friend);
               });
+              dispatch(apiSlice.util.invalidateTags([userTag(friend.userId)]));
             })
           );
 
@@ -39,6 +52,7 @@ export const friendApi = apiSlice.injectEndpoints({
                 const index = draft.findIndex((f) => f.userId === userId);
                 if (index !== -1) draft.splice(index, 1);
               });
+              dispatch(apiSlice.util.invalidateTags([userTag(userId)]));
             })
           );
         } finally {
@@ -93,7 +107,7 @@ export const friendApi = apiSlice.injectEndpoints({
         url: endpoints.friend.byUser(userId),
         method: HTTP_METHOD.POST,
       }),
-      invalidatesTags: [FRIEND_LIST, REQUEST_LIST],
+      invalidatesTags: (_result, _error, userId) => relationTags(userId),
     }),
 
     acceptFriendRequest: builder.mutation<FriendDto, number>({
@@ -101,7 +115,7 @@ export const friendApi = apiSlice.injectEndpoints({
         url: endpoints.friend.accept(userId),
         method: HTTP_METHOD.POST,
       }),
-      invalidatesTags: [FRIEND_LIST, REQUEST_LIST],
+      invalidatesTags: (_result, _error, userId) => relationTags(userId),
     }),
 
     removeFriend: builder.mutation<void, number>({
@@ -109,7 +123,7 @@ export const friendApi = apiSlice.injectEndpoints({
         url: endpoints.friend.byUser(userId),
         method: HTTP_METHOD.DELETE,
       }),
-      invalidatesTags: [FRIEND_LIST, REQUEST_LIST],
+      invalidatesTags: (_result, _error, userId) => relationTags(userId),
     }),
   }),
 });

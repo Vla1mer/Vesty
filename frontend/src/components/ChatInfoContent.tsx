@@ -164,7 +164,7 @@ export function ChatInfoContent({ chat, onOpenSettings, onBusyChange }: Props) {
       )}
 
       {loading ? (
-        <p className="text-content-muted text-center py-8">Loading...</p>
+        <p className="text-content-muted text-center py-8">{t("common.loading")}</p>
       ) : (
         <div className="space-y-4">
           <section>
