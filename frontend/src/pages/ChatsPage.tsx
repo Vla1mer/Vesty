@@ -25,6 +25,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { EmptyState } from "../components/ui/EmptyState";
 import { ChatListSkeleton } from "../components/ui/Skeleton";
 import { useLanguage } from "../context/useLanguage";
+import { useChatListMenu } from "../hooks/useChatListMenu";
 
 interface Props {
   isResizing?: boolean;
@@ -56,6 +57,13 @@ export function ChatsPage({ isResizing = false }: Props) {
   const incomingRequests = useIncomingFriendRequests();
   const [searchQuery, setSearchQuery] = useState("");
   const isMobile = useIsMobile();
+  const {
+    triggerRef: chatMenuRef,
+    openFor: openChatMenu,
+    openChatId: menuChatId,
+    error: chatMenuError,
+    element: chatMenuElement,
+  } = useChatListMenu();
 
   function openOnDesktopOrNavigate(
     openModal: (open: boolean) => void,
@@ -143,7 +151,11 @@ export function ChatsPage({ isResizing = false }: Props) {
         <SearchBar value={searchQuery} onChange={setSearchQuery} />
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto pb-20 md:pb-4 scrollbar-none">
+      <div
+        ref={chatMenuRef}
+        className="flex-1 min-h-0 overflow-y-auto pb-20 md:pb-4 scrollbar-none"
+      >
+        <FormError className="mx-4 mb-2" message={chatMenuError} />
         {isLoading && <ChatListSkeleton />}
 
         {isError && (
@@ -177,7 +189,12 @@ export function ChatsPage({ isResizing = false }: Props) {
                       exit={{ opacity: 0, height: 0 }}
                       transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
                     >
-                      <ChatListItem chat={chat} online={isChatOnline(chat)} />
+                      <ChatListItem
+                        chat={chat}
+                        online={isChatOnline(chat)}
+                        onOpenMenu={(x, y) => openChatMenu(chat, x, y)}
+                        menuOpen={menuChatId === chat.id}
+                      />
                     </motion.div>
                   ))}
                 </AnimatePresence>
@@ -222,6 +239,7 @@ export function ChatsPage({ isResizing = false }: Props) {
       <div className="md:hidden">
         <BottomNav />
       </div>
+      {chatMenuElement}
     </div>
   );
 }

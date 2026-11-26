@@ -2,7 +2,7 @@ import type { TouchEvent as ReactTouchEvent } from "react";
 import { Check, Pin } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLongPress } from "../hooks/useLongPress";
-import { useMessageMenu } from "../hooks/useMessageMenu";
+import { useContextMenu } from "../hooks/useContextMenu";
 import { Avatar } from "./Avatar";
 import { MessageAttachments } from "./MessageAttachments";
 import { isStandaloneEmoji } from "../utils/emoji";
@@ -60,7 +60,7 @@ export function MessageBubble({
   );
   const { t } = useLanguage();
   const dates = useDates();
-  const menu = useMessageMenu(Boolean(message.content) || hasActions);
+  const menu = useContextMenu(Boolean(message.content) || hasActions);
 
   function handleTap(e: ReactTouchEvent) {
     if (selectionMode) {
@@ -132,7 +132,7 @@ export function MessageBubble({
           </span>
           <div className="relative flex flex-col max-w-[78%] md:max-w-md">
             <div
-              ref={menu.bubbleRef}
+              ref={menu.triggerRef}
               {...menu.triggerProps}
               {...longPress.handlers}
               style={{ WebkitTouchCallout: "none" }}
