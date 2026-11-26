@@ -20,6 +20,7 @@ export const presenceApi = apiSlice.injectEndpoints({
               if (known) {
                 known.isOnline = presence.isOnline;
                 known.lastSeenAt = presence.lastSeenAt;
+                known.lastSeenApprox = presence.lastSeenApprox;
               }
             });
           }),

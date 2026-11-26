@@ -83,6 +83,28 @@ describe("UserProfileContent", () => {
     expect(screen.queryByRole("button", { name: /Add to friends/ })).not.toBeInTheDocument();
   });
 
+  it("shows roughly when a hidden user was last seen", async () => {
+    stubJson("get", "/api/Friend", []);
+    stubJson("get", "/api/Friend/requests", []);
+    stubJson("get", "/api/User/presence/(7)", [
+      { userId: 7, isOnline: false, lastSeenAt: null, lastSeenApprox: "week" },
+    ]);
+    renderWithProviders(<UserProfileContent user={USER} />);
+
+    expect(await screen.findByText("last seen within a week")).toBeInTheDocument();
+  });
+
+  it("prefers the exact time when it is visible", async () => {
+    stubJson("get", "/api/Friend", []);
+    stubJson("get", "/api/Friend/requests", []);
+    stubJson("get", "/api/User/presence/(7)", [
+      { userId: 7, isOnline: false, lastSeenAt: new Date().toISOString() },
+    ]);
+    renderWithProviders(<UserProfileContent user={USER} />);
+
+    expect(await screen.findByText(/^last seen at /)).toBeInTheDocument();
+  });
+
   it("explains instead of failing when messages are closed", async () => {
     showProfile({ ...USER, canMessage: false });
 

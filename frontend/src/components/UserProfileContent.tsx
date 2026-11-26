@@ -4,7 +4,6 @@ import { useAuth } from "../context/useAuth";
 import { useLanguage } from "../context/useLanguage";
 import { Avatar } from "./Avatar";
 import { usePresence } from "../hooks/usePresence";
-import { useDates } from "../hooks/useDates";
 import { Button } from "./ui/Button";
 import { FriendButton } from "./FriendButton";
 import type { UserDto } from "../types/api";
@@ -16,7 +15,6 @@ interface Props {
 export function UserProfileContent({ user }: Props) {
   const { t } = useLanguage();
   const { userId: currentUserId } = useAuth();
-  const dates = useDates();
   const navigate = useNavigate();
 
   const presence = usePresence([user.id]);
@@ -45,10 +43,8 @@ export function UserProfileContent({ user }: Props) {
           )}
           {presence.isOnline(user.id) ? (
             <p className="text-sm text-success">{t("chat.online")}</p>
-          ) : presence.lastSeenAt(user.id) ? (
-            <p className="text-sm text-content-muted">
-              {dates.lastSeen(presence.lastSeenAt(user.id)!)}
-            </p>
+          ) : presence.lastSeen(user.id) ? (
+            <p className="text-sm text-content-muted">{presence.lastSeen(user.id)}</p>
           ) : null}
         </div>
       </div>

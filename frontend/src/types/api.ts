@@ -229,10 +229,13 @@ export const PRIVACY_LEVEL = {
   NOBODY: 3,
 } as const;
 
+export type LastSeenApprox = "recently" | "week" | "month" | "longAgo";
+
 export interface UserPresenceDto {
   userId: number;
   isOnline: boolean;
   lastSeenAt?: string | null;
+  lastSeenApprox?: LastSeenApprox | null;
 }
 
 export interface PrivacySettingsDto {

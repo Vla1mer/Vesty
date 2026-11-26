@@ -42,16 +42,25 @@ namespace Services
                 return [];
 
             var users = (await _repository.User.GetByIdsAsync(wanted, trackChanges: false)).ToList();
-            var visible = await VisibleIdsAsync(users);
+            var (visible, blocked) = await VisibilityAsync(users);
+            var now = DateTime.UtcNow;
 
-            return users.Select(user => visible.Contains(user.Id)
-                ? new UserPresenceDto
-                {
-                    UserId = user.Id,
-                    IsOnline = _presence.IsOnline(user.Id),
-                    LastSeenAt = user.LastSeenAt
-                }
-                : new UserPresenceDto { UserId = user.Id })
+            return users.Select(user =>
+                visible.Contains(user.Id)
+                    ? new UserPresenceDto
+                    {
+                        UserId = user.Id,
+                        IsOnline = _presence.IsOnline(user.Id),
+                        LastSeenAt = user.LastSeenAt
+                    }
+                    : blocked.Contains(user.Id)
+                        ? new UserPresenceDto { UserId = user.Id }
+                        : new UserPresenceDto
+                        {
+                            UserId = user.Id,
+                            LastSeenApprox = LastSeenApproximation.Of(
+                                _presence.IsOnline(user.Id), user.LastSeenAt, now)
+                        })
                 .ToList();
         }
 
@@ -89,7 +98,8 @@ namespace Services
             owner.WhoCanSeeOnline == PrivacyLevel.Everyone ||
             (owner.WhoCanSeeOnline == PrivacyLevel.FriendsOnly && areFriends);
 
-        private async Task<HashSet<int>> VisibleIdsAsync(IReadOnlyCollection<User> users)
+        private async Task<(HashSet<int> Visible, HashSet<int> Blocked)> VisibilityAsync(
+            IReadOnlyCollection<User> users)
         {
             var currentUserId = _currentUser.UserId;
             var others = users.Where(u => u.Id != currentUserId).ToList();
@@ -102,11 +112,13 @@ namespace Services
                 ? (await _repository.Friendship.GetFriendIdsAsync(currentUserId)).ToHashSet()
                 : new HashSet<int>();
 
-            return users
+            var visible = users
                 .Where(user => user.Id == currentUserId ||
                     (!blocked.Contains(user.Id) && MaySee(user, friends.Contains(user.Id))))
                 .Select(user => user.Id)
                 .ToHashSet();
+
+            return (visible, blocked);
         }
     }
 }
