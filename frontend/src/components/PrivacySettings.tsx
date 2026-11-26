@@ -12,11 +12,15 @@ import { SectionHeading } from "./ui/SectionHeading";
 import type { TranslationKey } from "../i18n/translations";
 import type { PrivacySettingsDto } from "../types/api";
 
-const OPTIONS: Array<{ value: number; label: TranslationKey; Icon: LucideIcon }> = [
+type Option = { value: number; label: TranslationKey; Icon: LucideIcon };
+
+const ALL_OPTIONS: Option[] = [
   { value: PRIVACY_LEVEL.EVERYONE, label: "privacy.everyone", Icon: Globe },
   { value: PRIVACY_LEVEL.FRIENDS_ONLY, label: "privacy.friendsOnly", Icon: Users },
   { value: PRIVACY_LEVEL.NOBODY, label: "privacy.nobody", Icon: Lock },
 ];
+
+const CHAT_START_OPTIONS = ALL_OPTIONS.filter((o) => o.value !== PRIVACY_LEVEL.NOBODY);
 
 interface ChoiceProps {
   title: TranslationKey;
@@ -24,9 +28,17 @@ interface ChoiceProps {
   value: number;
   disabled: boolean;
   onChange: (value: number) => void;
+  options?: Option[];
 }
 
-function Choice({ title, description, value, disabled, onChange }: ChoiceProps) {
+function Choice({
+  title,
+  description,
+  value,
+  disabled,
+  onChange,
+  options = ALL_OPTIONS,
+}: ChoiceProps) {
   const { t } = useLanguage();
 
   return (
@@ -34,8 +46,10 @@ function Choice({ title, description, value, disabled, onChange }: ChoiceProps) 
       <p className="text-sm font-medium text-content">{t(title)}</p>
       <p className="mb-2 text-xs text-content-subtle">{t(description)}</p>
 
-      <div className="grid gap-2 sm:grid-cols-3">
-        {OPTIONS.map(({ value: option, label, Icon }) => {
+      <div
+        className={`grid gap-2 ${options.length === 2 ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}
+      >
+        {options.map(({ value: option, label, Icon }) => {
           const selected = value === option;
           return (
             <button
@@ -94,6 +108,7 @@ export function PrivacySettings() {
         value={settings.whoCanMessage}
         disabled={saving}
         onChange={(whoCanMessage) => save({ whoCanMessage })}
+        options={CHAT_START_OPTIONS}
       />
 
       <Choice
