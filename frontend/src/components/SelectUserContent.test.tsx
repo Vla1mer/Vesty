@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { SelectUserContent } from "./SelectUserContent";
 import { renderWithProviders } from "../test/renderWithProviders";
@@ -17,8 +17,6 @@ describe("SelectUserContent", () => {
   beforeEach(() => {
     resetServer();
     installServer();
-    stubJson("get", "/api/Friend", []);
-    stubJson("get", "/api/Friend/requests", []);
   });
 
   it("asks for nothing until something is typed", async () => {
@@ -48,18 +46,17 @@ describe("SelectUserContent", () => {
     expect(onSelected).toHaveBeenCalledExactlyOnceWith(7);
   });
 
-  it("sends a friend request without picking the user", async () => {
-    stubJson("get", "/api/User", [OTHER_USER]);
-    stubJson("post", "/api/Friend/7", {});
+  it("does not let a user who closed messages be picked", async () => {
+    stubJson("get", "/api/User", [{ ...OTHER_USER, canMessage: false }]);
     const onSelected = vi.fn();
     renderWithProviders(<SelectUserContent onSelected={onSelected} />);
 
     await userEvent.type(screen.getByPlaceholderText("Search by username..."), "pet");
-    await userEvent.click(await screen.findByLabelText("Add petya to friends"));
+    const row = await screen.findByLabelText("Message petya");
 
-    await waitFor(() =>
-      expect(requests.some((r) => r.url === "/api/Friend/7")).toBe(true)
-    );
+    expect(row).toBeDisabled();
+    expect(screen.getByText("Not accepting messages from you")).toBeInTheDocument();
+    await userEvent.click(row);
     expect(onSelected).not.toHaveBeenCalled();
   });
 

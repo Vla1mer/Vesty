@@ -204,9 +204,9 @@ const en = {
   "friends.blockedChatCancel": "Keep",
 
   "users.loadFailed": "Failed to load users",
-  "users.alreadyFriends": "Already friends",
   "users.requestPending": "Request pending",
   "users.addFriend": "Add to friends",
+  "users.messagesClosed": "Not accepting messages from you",
 
   "createChat.title": "New group chat",
   "createChat.addMembers": "Add members",
@@ -346,7 +346,6 @@ const en = {
   "friends.title": "Friends",
   "friends.accepted": "Accept",
   "friends.declined": "Decline",
-  "friends.pending": "Pending",
   "friends.alreadyFriend": "Friend",
 
   "users.startTyping": "Start typing to find someone",
@@ -567,9 +566,9 @@ const pl: Record<keyof typeof en, string> = {
   "friends.blockedChatCancel": "Zachowaj",
 
   "users.loadFailed": "Nie udało się wczytać użytkowników",
-  "users.alreadyFriends": "Już jesteście znajomymi",
   "users.requestPending": "Zaproszenie oczekuje",
   "users.addFriend": "Dodaj do znajomych",
+  "users.messagesClosed": "Nie przyjmuje od Ciebie wiadomości",
 
   "createChat.title": "Nowy czat grupowy",
   "createChat.addMembers": "Dodaj uczestników",
@@ -709,7 +708,6 @@ const pl: Record<keyof typeof en, string> = {
   "friends.title": "Znajomi",
   "friends.accepted": "Akceptuj",
   "friends.declined": "Odrzuć",
-  "friends.pending": "Oczekuje",
   "friends.alreadyFriend": "Znajomy",
 
   "users.startTyping": "Zacznij pisać, aby znaleźć osobę",
