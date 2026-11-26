@@ -79,9 +79,18 @@ namespace Services
                     ? (await _repository.UserBlock.GetRelatedUserIdsAsync(currentUserId)).ToHashSet()
                     : new HashSet<int>();
 
-            var friends = others.Any(u => u.WhoCanSeeProfile == PrivacyLevel.FriendsOnly)
+            var friends = others.Any(u => u.WhoCanSeeProfile == PrivacyLevel.FriendsOnly ||
+                                          u.WhoCanMessage == PrivacyLevel.FriendsOnly)
                 ? (await _repository.Friendship.GetFriendIdsAsync(currentUserId)).ToHashSet()
                 : new HashSet<int>();
+
+            var chatPartners = others.Any(u => u.WhoCanMessage != PrivacyLevel.Everyone)
+                ? (await _repository.Chat.GetPrivateChatPartnerIdsAsync(currentUserId)).ToHashSet()
+                : new HashSet<int>();
+
+            bool Allows(int level, int userId) =>
+                level == PrivacyLevel.Everyone ||
+                (level == PrivacyLevel.FriendsOnly && friends.Contains(userId));
 
             return users.Select(user =>
             {
@@ -89,14 +98,18 @@ namespace Services
                 if (user.Id == currentUserId)
                     return dto;
 
-                var visible = !blocked.Contains(user.Id) &&
-                    (user.WhoCanSeeProfile == PrivacyLevel.Everyone ||
-                     (user.WhoCanSeeProfile == PrivacyLevel.FriendsOnly &&
-                      friends.Contains(user.Id)));
+                var isBlocked = blocked.Contains(user.Id);
+                var visible = !isBlocked && Allows(user.WhoCanSeeProfile, user.Id);
+                var canMessage = !isBlocked &&
+                    (chatPartners.Contains(user.Id) || Allows(user.WhoCanMessage, user.Id));
 
                 return visible
-                    ? dto with { Phone = null }
-                    : dto with { Phone = null, Name = null, Surname = null, IsProfileHidden = true };
+                    ? dto with { Phone = null, CanMessage = canMessage }
+                    : dto with
+                    {
+                        Phone = null, Name = null, Surname = null,
+                        IsProfileHidden = true, CanMessage = canMessage
+                    };
             }).ToList();
         }
 

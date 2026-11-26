@@ -9,5 +9,6 @@
         public string? Phone { get; init; }
         public DateTime? AvatarUpdatedAt { get; init; }
         public bool IsProfileHidden { get; init; }
+        public bool CanMessage { get; init; }
     }
 }

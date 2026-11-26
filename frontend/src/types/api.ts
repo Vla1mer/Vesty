@@ -27,6 +27,7 @@ export interface UserDto {
   birthday?: string;
   avatarUpdatedAt?: string | null;
   isProfileHidden?: boolean;
+  canMessage?: boolean;
 }
 
 export interface UserForUpdateDto {

@@ -8,6 +8,7 @@ namespace Repository.Interfaces
         Task<PagedList<Chat>> GetAllChatsAsync(ChatParameters chatParameters, IEnumerable<int> allowedChatIds, bool trackChanges);
         Task<Chat?> GetChatAsync(int id, bool trackChanges);
         Task<Chat?> GetPrivateChatBetweenAsync(int userIdA, int userIdB);
+        Task<IEnumerable<int>> GetPrivateChatPartnerIdsAsync(int userId);
         void CreateChat(Chat chat);
         void DeleteChat(Chat chat);
     }

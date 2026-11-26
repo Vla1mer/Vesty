@@ -31,6 +31,14 @@ namespace Repository
                          && c.ChatMembers.Any(cm => cm.UserId == userIdB))
                 .FirstOrDefaultAsync();
 
+        public async Task<IEnumerable<int>> GetPrivateChatPartnerIdsAsync(int userId) =>
+            await FindByCondition(
+                    c => c.IsPrivate && c.ChatMembers.Any(cm => cm.UserId == userId),
+                    trackChanges: false)
+                .SelectMany(c => c.ChatMembers.Select(cm => cm.UserId))
+                .Where(id => id != userId)
+                .ToListAsync();
+
         public void CreateChat(Chat chat) => Create(chat);
 
         public void DeleteChat(Chat chat) => Delete(chat);
