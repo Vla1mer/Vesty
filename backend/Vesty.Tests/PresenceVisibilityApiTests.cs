@@ -2,6 +2,7 @@
 using Entities.Models;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
+using Services;
 using Services.DataTransferObjects;
 using Services.Interfaces;
 
@@ -56,6 +57,7 @@ namespace Vesty.Tests
             var presence = await PresenceOfAsync(stranger, owner.Id);
 
             Assert.True(presence.IsOnline);
+            Assert.Null(presence.LastSeenApprox);
         }
 
         [Fact]
@@ -69,6 +71,7 @@ namespace Vesty.Tests
 
             Assert.False(presence.IsOnline);
             Assert.Null(presence.LastSeenAt);
+            Assert.Equal(LastSeenApproximation.Recently, presence.LastSeenApprox);
         }
 
         [Fact]
@@ -113,6 +116,7 @@ namespace Vesty.Tests
             var presence = await PresenceOfAsync(blocked, owner.Id);
 
             Assert.False(presence.IsOnline);
+            Assert.Null(presence.LastSeenApprox);
         }
 
         [Fact]

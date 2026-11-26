@@ -5,5 +5,6 @@ namespace Services.DataTransferObjects
         public int UserId { get; init; }
         public bool IsOnline { get; init; }
         public DateTime? LastSeenAt { get; init; }
+        public string? LastSeenApprox { get; init; }
     }
 }
