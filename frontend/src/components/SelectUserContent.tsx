@@ -21,7 +21,7 @@ export function SelectUserContent({ onSelected }: Props) {
   });
 
   const filtered = useMemo(
-    () => users.filter((u) => u.id !== currentUserId),
+    () => users.filter((u) => u.id !== currentUserId && u.canMessage !== false),
     [users, currentUserId]
   );
 
@@ -51,18 +51,14 @@ export function SelectUserContent({ onSelected }: Props) {
       ) : (
         <ul className="space-y-1">
           {filtered.map((u) => {
-            const canMessage = u.canMessage !== false;
             const fullName = [u.name, u.surname].filter(Boolean).join(" ");
             return (
               <li key={u.id}>
                 <button
                   type="button"
                   onClick={() => onSelected(u.id)}
-                  disabled={!canMessage}
-                  aria-label={t(canMessage ? "a11y.messageUser" : "a11y.messagesClosed", {
-                    name: u.userName,
-                  })}
-                  className="flex w-full items-center gap-3 rounded px-3 py-2 text-left transition-colors hover:bg-surface-muted disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                  aria-label={t("a11y.messageUser", { name: u.userName })}
+                  className="flex w-full items-center gap-3 rounded px-3 py-2 text-left transition-colors hover:bg-surface-muted"
                 >
                   <Avatar
                     userId={u.id}
@@ -73,30 +69,16 @@ export function SelectUserContent({ onSelected }: Props) {
                     size="sm"
                   />
                   <div className="min-w-0 flex-1">
-                    <p
-                      className={`truncate text-sm font-medium ${
-                        canMessage ? "text-content" : "text-content-muted"
-                      }`}
-                    >
-                      {u.userName}
-                    </p>
-                    {canMessage ? (
-                      fullName && (
-                        <p className="truncate text-xs text-content-muted">{fullName}</p>
-                      )
-                    ) : (
-                      <p className="truncate text-xs text-content-subtle">
-                        {t("users.messagesClosed")}
-                      </p>
+                    <p className="truncate text-sm font-medium text-content">{u.userName}</p>
+                    {fullName && (
+                      <p className="truncate text-xs text-content-muted">{fullName}</p>
                     )}
                   </div>
-                  {canMessage && (
-                    <MessageSquare
-                      size={14}
-                      aria-hidden="true"
-                      className="shrink-0 text-accent-strong"
-                    />
-                  )}
+                  <MessageSquare
+                    size={14}
+                    aria-hidden="true"
+                    className="shrink-0 text-accent-strong"
+                  />
                 </button>
               </li>
             );

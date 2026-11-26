@@ -237,7 +237,6 @@ const en = {
   "a11y.isOnline": "{name} is online",
   "a11y.openProfile": "Open the profile of {name}",
   "a11y.messageUser": "Message {name}",
-  "a11y.messagesClosed": "{name} is not accepting messages from you",
   "a11y.removeSelected": "Remove {name}",
 
   "admins.title": "Administrators",
@@ -611,7 +610,6 @@ const pl: Record<keyof typeof en, string> = {
   "a11y.isOnline": "{name} jest w sieci",
   "a11y.openProfile": "Otwórz profil: {name}",
   "a11y.messageUser": "Napisz do: {name}",
-  "a11y.messagesClosed": "{name} nie przyjmuje od Ciebie wiadomości",
   "a11y.removeSelected": "Usuń: {name}",
 
   "admins.title": "Administratorzy",
