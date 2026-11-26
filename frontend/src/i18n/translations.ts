@@ -352,7 +352,7 @@ const en = {
   "users.startTyping": "Start typing to find someone",
 
   "search.chats": "Chats",
-  "search.users": "Users",
+  "search.friends": "Friends",
 
   "profile.hidden": "This user has hidden their profile",
 
@@ -714,7 +714,7 @@ const pl: Record<keyof typeof en, string> = {
   "users.startTyping": "Zacznij pisać, aby znaleźć osobę",
 
   "search.chats": "Czaty",
-  "search.users": "Osoby",
+  "search.friends": "Znajomi",
 
   "profile.hidden": "Ta osoba ukryła swój profil",
 

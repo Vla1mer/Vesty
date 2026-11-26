@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { screen } from "@testing-library/react";
 import { SearchResults } from "./SearchResults";
 import { renderWithProviders, signIn } from "../test/renderWithProviders";
-import { installServer, resetServer, stubJson } from "../test/server";
-import type { DirectChatDto } from "../types/api";
+import { installServer, requests, resetServer, stubJson } from "../test/server";
+import type { DirectChatDto, FriendDto } from "../types/api";
 
 const DIRECT_CHAT: DirectChatDto = {
   id: 3,
@@ -21,6 +21,22 @@ const DIRECT_CHAT: DirectChatDto = {
   partnerUserId: 2,
 };
 
+const friend = (userId: number, userName: string, name?: string): FriendDto => ({
+  userId,
+  userName,
+  name,
+  surname: null,
+  avatarUpdatedAt: null,
+  status: 2,
+  isIncoming: false,
+  createdAt: "2026-11-26T12:00:00Z",
+});
+
+const renderSearch = (query: string, chats: DirectChatDto[] = []) =>
+  renderWithProviders(
+    <SearchResults query={query} chats={chats} isChatOnline={() => false} />
+  );
+
 describe("SearchResults", () => {
   beforeEach(() => {
     resetServer();
@@ -28,25 +44,34 @@ describe("SearchResults", () => {
     signIn(1, "testu2");
   });
 
-  it("shows a found chat like the chat list does", async () => {
-    stubJson("get", "/api/User", []);
-    renderWithProviders(
-      <SearchResults query="test" chats={[DIRECT_CHAT]} isChatOnline={() => false} />
-    );
+  it("shows a found chat like the chat list does", () => {
+    stubJson("get", "/api/Friend", []);
+    renderSearch("test", [DIRECT_CHAT]);
 
     expect(screen.getByText("testu1")).toBeInTheDocument();
     expect(screen.getByText("Hello")).toBeInTheDocument();
   });
 
-  it("shows a found person with an avatar", async () => {
-    stubJson("get", "/api/User", [
-      { id: 7, userName: "petya", name: "Petya", surname: "Ivanov", avatarUpdatedAt: null },
-    ]);
-    renderWithProviders(
-      <SearchResults query="pet" chats={[]} isChatOnline={() => false} />
-    );
+  it("finds a friend by username or by name", async () => {
+    stubJson("get", "/api/Friend", [friend(7, "petya", "Piotr")]);
+    renderSearch("piot");
 
     expect(await screen.findByText("petya")).toBeInTheDocument();
-    expect(screen.getByText("PI")).toBeInTheDocument();
+  });
+
+  it("does not list a friend twice when a chat with them exists", async () => {
+    stubJson("get", "/api/Friend", [friend(2, "testu1")]);
+    renderSearch("testu1", [DIRECT_CHAT]);
+
+    await screen.findByText("Hello");
+    expect(screen.getAllByText("testu1")).toHaveLength(1);
+  });
+
+  it("does not look up people who are not friends", async () => {
+    stubJson("get", "/api/Friend", []);
+    renderSearch("t");
+
+    expect(await screen.findByText('No matches for "t"')).toBeInTheDocument();
+    expect(requests.some((r) => r.url === "/api/User")).toBe(false);
   });
 });

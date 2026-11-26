@@ -2,11 +2,10 @@ import { useLanguage } from "../context/useLanguage";
 import { MessageSquare } from "lucide-react";
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useGetAllUsersQuery } from "../store/userApi";
-import { useAuth } from "../context/useAuth";
+import { useGetFriendsQuery } from "../store/friendApi";
 import { getChatDisplayName } from "../utils/chats";
 import { isDirectChat } from "../types/api";
-import type { ChatDto } from "../types/api";
+import type { ChatDto, FriendDto } from "../types/api";
 import { ChatListItem } from "./ChatListItem";
 import { Avatar } from "./Avatar";
 
@@ -16,43 +15,38 @@ interface Props {
   isChatOnline: (chat: ChatDto) => boolean;
 }
 
+const fullName = (friend: FriendDto) =>
+  [friend.name, friend.surname].filter(Boolean).join(" ");
+
 export function SearchResults({ query, chats, isChatOnline }: Props) {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const { userId: currentUserId } = useAuth();
-  const { data: allUsers = [], isLoading: loadingUsers } = useGetAllUsersQuery();
+  const { data: friends = [], isLoading: loadingFriends } = useGetFriendsQuery();
 
   const term = query.trim().toLowerCase();
 
   const matchedChats = useMemo(() => {
     if (!term) return [];
-    return chats.filter((c) => {
-      const name = getChatDisplayName(c).toLowerCase();
-      return name.includes(term);
-    });
+    return chats.filter((c) => getChatDisplayName(c).toLowerCase().includes(term));
   }, [chats, term]);
 
-  const dmPartnerIds = useMemo(
-    () =>
-      new Set(
-        chats
-          .filter(isDirectChat)
-          .filter((c) => c.partnerUserName)
-          .map((c) => c.partnerUserName!.toLowerCase())
-      ),
+  const directPartnerIds = useMemo(
+    () => new Set(chats.filter(isDirectChat).map((c) => c.partnerUserId)),
     [chats]
   );
 
-  const matchedUsers = useMemo(() => {
+  const matchedFriends = useMemo(() => {
     if (!term) return [];
-    return allUsers
-      .filter((u) => u.id !== currentUserId)
-      .filter((u) => u.userName.toLowerCase().includes(term))
-      .filter((u) => !dmPartnerIds.has(u.userName.toLowerCase()))
-      .slice(0, 20);
-  }, [allUsers, term, currentUserId, dmPartnerIds]);
+    return friends
+      .filter((f) => !directPartnerIds.has(f.userId))
+      .filter(
+        (f) =>
+          f.userName.toLowerCase().includes(term) ||
+          fullName(f).toLowerCase().includes(term)
+      );
+  }, [friends, term, directPartnerIds]);
 
-  if (matchedChats.length === 0 && matchedUsers.length === 0 && !loadingUsers) {
+  if (matchedChats.length === 0 && matchedFriends.length === 0 && !loadingFriends) {
     return (
       <div className="text-center py-12 text-content-muted">
         <p>No matches for "{query}"</p>
@@ -75,33 +69,31 @@ export function SearchResults({ query, chats, isChatOnline }: Props) {
         </section>
       )}
 
-      {matchedUsers.length > 0 && (
+      {matchedFriends.length > 0 && (
         <section className="px-4">
           <h2 className="text-xs uppercase tracking-wide text-content-subtle font-semibold mb-2 px-1">
-            {t("search.users")}
+            {t("search.friends")}
           </h2>
           <div className="space-y-2">
-            {matchedUsers.map((u) => (
+            {matchedFriends.map((f) => (
               <button
-                key={u.id}
+                key={f.userId}
                 type="button"
-                onClick={() => navigate(`/chats/new/${u.id}`)}
+                onClick={() => navigate(`/chats/new/${f.userId}`)}
                 className="w-full flex items-center justify-between gap-3 p-3 rounded-lg border border-line bg-surface-raised hover:bg-surface-overlay hover:border-accent-strong transition text-left"
               >
                 <div className="flex min-w-0 items-center gap-3">
                   <Avatar
-                    userId={u.id}
-                    userName={u.userName}
-                    name={u.name}
-                    surname={u.surname}
-                    avatarUpdatedAt={u.avatarUpdatedAt}
+                    userId={f.userId}
+                    userName={f.userName}
+                    name={f.name ?? undefined}
+                    surname={f.surname ?? undefined}
+                    avatarUpdatedAt={f.avatarUpdatedAt}
                   />
                   <div className="min-w-0">
-                    <p className="text-content font-medium truncate">{u.userName}</p>
-                    {(u.name || u.surname) && (
-                      <p className="text-xs text-content-muted truncate">
-                        {[u.name, u.surname].filter(Boolean).join(" ")}
-                      </p>
+                    <p className="text-content font-medium truncate">{f.userName}</p>
+                    {fullName(f) && (
+                      <p className="text-xs text-content-muted truncate">{fullName(f)}</p>
                     )}
                   </div>
                 </div>
@@ -114,7 +106,7 @@ export function SearchResults({ query, chats, isChatOnline }: Props) {
         </section>
       )}
 
-      {loadingUsers && matchedChats.length === 0 && (
+      {loadingFriends && matchedChats.length === 0 && (
         <p className="text-content-muted text-center py-4">{t("info.searching")}</p>
       )}
     </div>
