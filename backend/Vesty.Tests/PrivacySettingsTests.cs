@@ -88,15 +88,6 @@ namespace Vesty.Tests
         }
 
         [Fact]
-        public async Task DirectChat_WhenTargetAllowsNobody_Throws()
-        {
-            TargetWithPrivacy(PrivacyLevel.Nobody, PrivacyLevel.Everyone);
-
-            await Assert.ThrowsAsync<PrivacyRestrictedException>(() =>
-                _chatService.CreateDirectChatAsync(TargetUserId));
-        }
-
-        [Fact]
         public async Task DirectChat_WhenFriendsOnlyAndNotFriends_Throws()
         {
             TargetWithPrivacy(PrivacyLevel.FriendsOnly, PrivacyLevel.Everyone);
@@ -122,7 +113,8 @@ namespace Vesty.Tests
         [Fact]
         public async Task DirectChat_WithExistingConversation_SkipsThePrivacyCheck()
         {
-            TargetWithPrivacy(PrivacyLevel.Nobody, PrivacyLevel.Everyone);
+            TargetWithPrivacy(PrivacyLevel.FriendsOnly, PrivacyLevel.Everyone);
+            AreFriends(false);
             _chats.Setup(r => r.GetPrivateChatBetweenAsync(CurrentUserId, TargetUserId))
                 .ReturnsAsync(new Chat { Id = 5, IsPrivate = true });
 
@@ -204,6 +196,7 @@ namespace Vesty.Tests
 
         [Theory]
         [InlineData(0, PrivacyLevel.Everyone, PrivacyLevel.Everyone, PrivacyLevel.Everyone)]
+        [InlineData(PrivacyLevel.Nobody, PrivacyLevel.Everyone, PrivacyLevel.Everyone, PrivacyLevel.Everyone)]
         [InlineData(PrivacyLevel.Everyone, 4, PrivacyLevel.Everyone, PrivacyLevel.Everyone)]
         [InlineData(PrivacyLevel.Everyone, PrivacyLevel.Everyone, 0, PrivacyLevel.Everyone)]
         [InlineData(PrivacyLevel.Everyone, PrivacyLevel.Everyone, 4, PrivacyLevel.Everyone)]
@@ -252,16 +245,16 @@ namespace Vesty.Tests
                 {
                     Id = CurrentUserId,
                     UserName = "me",
-                    WhoCanMessage = PrivacyLevel.Nobody,
-                    WhoCanInvite = PrivacyLevel.FriendsOnly,
+                    WhoCanMessage = PrivacyLevel.FriendsOnly,
+                    WhoCanInvite = PrivacyLevel.Nobody,
                     WhoCanSeeProfile = PrivacyLevel.Nobody,
                     WhoCanSeeOnline = PrivacyLevel.FriendsOnly
                 });
 
             var settings = await _userService.GetPrivacyAsync();
 
-            Assert.Equal(PrivacyLevel.Nobody, settings.WhoCanMessage);
-            Assert.Equal(PrivacyLevel.FriendsOnly, settings.WhoCanInvite);
+            Assert.Equal(PrivacyLevel.FriendsOnly, settings.WhoCanMessage);
+            Assert.Equal(PrivacyLevel.Nobody, settings.WhoCanInvite);
             Assert.Equal(PrivacyLevel.Nobody, settings.WhoCanSeeProfile);
             Assert.Equal(PrivacyLevel.FriendsOnly, settings.WhoCanSeeOnline);
         }

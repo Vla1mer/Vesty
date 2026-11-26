@@ -37,10 +37,19 @@ describe("PrivacySettings", () => {
   it("offers every privacy question", async () => {
     renderWithProviders(<PrivacySettings />);
 
-    expect(await screen.findByText("Who can message me")).toBeInTheDocument();
+    expect(await screen.findByText("Who can start a chat with me")).toBeInTheDocument();
     expect(screen.getByText("Who can add me to groups")).toBeInTheDocument();
     expect(screen.getByText("Who can see my profile")).toBeInTheDocument();
     expect(screen.getByText("Who can see when I am online")).toBeInTheDocument();
+  });
+
+  it("does not offer nobody for starting a chat", async () => {
+    renderWithProviders(<PrivacySettings />);
+
+    const section = (await screen.findByText("Who can start a chat with me")).parentElement!;
+
+    expect(within(section).queryByRole("button", { name: "Nobody" })).not.toBeInTheDocument();
+    expect(within(section).getAllByRole("button")).toHaveLength(2);
   });
 
   it("marks the stored level of each question", async () => {
@@ -48,7 +57,7 @@ describe("PrivacySettings", () => {
 
     await screen.findByText("Who can see my profile");
 
-    expect(choice("Who can message me", "Everyone")).toHaveAttribute(
+    expect(choice("Who can start a chat with me", "Everyone")).toHaveAttribute(
       "aria-pressed",
       "true"
     );
@@ -83,8 +92,8 @@ describe("PrivacySettings", () => {
   it("leaves the other questions untouched", async () => {
     renderWithProviders(<PrivacySettings />);
 
-    await screen.findByText("Who can message me");
-    await userEvent.click(choice("Who can message me", "Friends only"));
+    await screen.findByText("Who can start a chat with me");
+    await userEvent.click(choice("Who can start a chat with me", "Friends only"));
 
     await waitFor(() => expect(sentPrivacy()).toBeDefined());
     expect(sentPrivacy()).toEqual({
@@ -130,7 +139,7 @@ describe("PrivacySettings", () => {
     localStorage.setItem(LANGUAGE_STORAGE_KEY, "pl");
     renderWithProviders(<PrivacySettings />);
 
-    expect(await screen.findByText("Kto może do mnie pisać")).toBeInTheDocument();
+    expect(await screen.findByText("Kto może rozpocząć ze mną czat")).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: "Wszyscy" })).not.toHaveLength(0);
     localStorage.removeItem(LANGUAGE_STORAGE_KEY);
   });

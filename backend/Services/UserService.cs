@@ -165,7 +165,7 @@ namespace Services
 
         public async Task<PrivacySettingsDto> UpdatePrivacyAsync(PrivacySettingsDto settings)
         {
-            if (!PrivacyLevel.IsDefined(settings.WhoCanMessage) ||
+            if (!PrivacyLevel.IsAllowedForChatStart(settings.WhoCanMessage) ||
                 !PrivacyLevel.IsDefined(settings.WhoCanInvite) ||
                 !PrivacyLevel.IsDefined(settings.WhoCanSeeProfile) ||
                 !PrivacyLevel.IsDefined(settings.WhoCanSeeOnline))
