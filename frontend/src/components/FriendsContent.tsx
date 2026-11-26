@@ -228,7 +228,7 @@ export function FriendsContent() {
 
       {outgoing.length > 0 && (
         <section>
-          <h2 className="mb-2 px-3 text-sm font-semibold text-content">Sent</h2>
+          <h2 className="mb-2 px-3 text-sm font-semibold text-content">{t("friends.sent")}</h2>
           <ul>
             <AnimatePresence initial={false}>
               {outgoing.map((request) => (

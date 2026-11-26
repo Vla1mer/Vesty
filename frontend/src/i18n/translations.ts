@@ -96,6 +96,7 @@ const en = {
   "chats.newGroupHint": "Create a chat for multiple people",
   "chats.loadFailed": "Failed to load chats",
   "chats.empty": "No chats yet",
+  "chats.you": "You",
   "chats.emptyHint": "Use the compose button to start a conversation.",
   "chats.pick": "Select a chat",
   "chats.pickHint": "Pick a conversation from the list, or start a new one.",
@@ -343,6 +344,7 @@ const en = {
   "createChat.back": "Back",
 
   "friends.requests": "Requests",
+  "friends.sent": "Sent",
   "friends.title": "Friends",
   "friends.accepted": "Accept",
   "friends.declined": "Decline",
@@ -352,6 +354,7 @@ const en = {
 
   "search.chats": "Chats",
   "search.friends": "Friends",
+  "search.noMatches": "No matches for \"{query}\"",
 
   "profile.hidden": "This user has hidden their profile",
   "profile.messagesClosed": "This user is not accepting messages from you",
@@ -458,6 +461,7 @@ const pl: Record<keyof typeof en, string> = {
   "chats.newGroupHint": "Utwórz czat dla wielu osób",
   "chats.loadFailed": "Nie udało się wczytać czatów",
   "chats.empty": "Nie masz jeszcze czatów",
+  "chats.you": "Ty",
   "chats.emptyHint": "Użyj przycisku tworzenia, aby rozpocząć rozmowę.",
   "chats.pick": "Wybierz czat",
   "chats.pickHint": "Wybierz rozmowę z listy albo rozpocznij nową.",
@@ -705,6 +709,7 @@ const pl: Record<keyof typeof en, string> = {
   "createChat.back": "Wstecz",
 
   "friends.requests": "Zaproszenia",
+  "friends.sent": "Wysłane",
   "friends.title": "Znajomi",
   "friends.accepted": "Akceptuj",
   "friends.declined": "Odrzuć",
@@ -714,6 +719,7 @@ const pl: Record<keyof typeof en, string> = {
 
   "search.chats": "Czaty",
   "search.friends": "Znajomi",
+  "search.noMatches": "Brak wyników dla „{query}”",
 
   "profile.hidden": "Ta osoba ukryła swój profil",
   "profile.messagesClosed": "Ta osoba nie przyjmuje od Ciebie wiadomości",

@@ -13,12 +13,13 @@ interface Props {
   query: string;
   chats: ChatDto[];
   isChatOnline: (chat: ChatDto) => boolean;
+  onPicked: () => void;
 }
 
 const fullName = (friend: FriendDto) =>
   [friend.name, friend.surname].filter(Boolean).join(" ");
 
-export function SearchResults({ query, chats, isChatOnline }: Props) {
+export function SearchResults({ query, chats, isChatOnline, onPicked }: Props) {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { data: friends = [], isLoading: loadingFriends } = useGetFriendsQuery();
@@ -49,7 +50,7 @@ export function SearchResults({ query, chats, isChatOnline }: Props) {
   if (matchedChats.length === 0 && matchedFriends.length === 0 && !loadingFriends) {
     return (
       <div className="text-center py-12 text-content-muted">
-        <p>No matches for "{query}"</p>
+        <p>{t("search.noMatches", { query })}</p>
       </div>
     );
   }
@@ -63,7 +64,12 @@ export function SearchResults({ query, chats, isChatOnline }: Props) {
           </h2>
           <div>
             {matchedChats.map((chat) => (
-              <ChatListItem key={chat.id} chat={chat} online={isChatOnline(chat)} />
+              <ChatListItem
+                key={chat.id}
+                chat={chat}
+                online={isChatOnline(chat)}
+                onClick={onPicked}
+              />
             ))}
           </div>
         </section>
@@ -79,7 +85,10 @@ export function SearchResults({ query, chats, isChatOnline }: Props) {
               <button
                 key={f.userId}
                 type="button"
-                onClick={() => navigate(`/chats/new/${f.userId}`)}
+                onClick={() => {
+                  onPicked();
+                  navigate(`/chats/new/${f.userId}`);
+                }}
                 className="w-full flex items-center justify-between gap-3 p-3 rounded-lg border border-line bg-surface-raised hover:bg-surface-overlay hover:border-accent-strong transition text-left"
               >
                 <div className="flex min-w-0 items-center gap-3">
@@ -98,7 +107,7 @@ export function SearchResults({ query, chats, isChatOnline }: Props) {
                   </div>
                 </div>
                 <span className="flex shrink-0 items-center gap-1 text-xs text-accent-strong">
-                  <MessageSquare size={13} aria-hidden="true" /> Message
+                  <MessageSquare size={13} aria-hidden="true" /> {t("friends.message")}
                 </span>
               </button>
             ))}

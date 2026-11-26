@@ -1,5 +1,6 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { SearchResults } from "./SearchResults";
 import { renderWithProviders, signIn } from "../test/renderWithProviders";
 import { installServer, requests, resetServer, stubJson } from "../test/server";
@@ -32,9 +33,18 @@ const friend = (userId: number, userName: string, name?: string): FriendDto => (
   createdAt: "2026-11-26T12:00:00Z",
 });
 
-const renderSearch = (query: string, chats: DirectChatDto[] = []) =>
+const renderSearch = (
+  query: string,
+  chats: DirectChatDto[] = [],
+  onPicked: () => void = () => {}
+) =>
   renderWithProviders(
-    <SearchResults query={query} chats={chats} isChatOnline={() => false} />
+    <SearchResults
+      query={query}
+      chats={chats}
+      isChatOnline={() => false}
+      onPicked={onPicked}
+    />
   );
 
 describe("SearchResults", () => {
@@ -65,6 +75,26 @@ describe("SearchResults", () => {
 
     await screen.findByText("Hello");
     expect(screen.getAllByText("testu1")).toHaveLength(1);
+  });
+
+  it("reports a picked chat so the search can be cleared", async () => {
+    stubJson("get", "/api/Friend", []);
+    const onPicked = vi.fn();
+    renderSearch("test", [DIRECT_CHAT], onPicked);
+
+    await userEvent.click(screen.getByText("Hello"));
+
+    expect(onPicked).toHaveBeenCalledOnce();
+  });
+
+  it("reports a picked friend so the search can be cleared", async () => {
+    stubJson("get", "/api/Friend", [friend(7, "petya")]);
+    const onPicked = vi.fn();
+    renderSearch("pet", [], onPicked);
+
+    await userEvent.click(await screen.findByText("petya"));
+
+    expect(onPicked).toHaveBeenCalledOnce();
   });
 
   it("does not look up people who are not friends", async () => {

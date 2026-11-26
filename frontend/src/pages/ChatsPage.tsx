@@ -157,6 +157,7 @@ export function ChatsPage({ isResizing = false }: Props) {
                 query={searchQuery}
                 chats={chats}
                 isChatOnline={isChatOnline}
+                onPicked={() => setSearchQuery("")}
               />
             ) : chats.length === 0 ? (
               <EmptyState
