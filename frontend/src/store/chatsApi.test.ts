@@ -94,6 +94,21 @@ describe("chat api", () => {
 
       expect(chatList(store).map((c) => c.id)).toEqual([2, 1]);
     });
+
+    it("loads every page when there are more chats than fit on one", async () => {
+      const all = Array.from({ length: 51 }, (_, i) => chat(i + 1));
+      stub("get", "/api/Chat", (request) => {
+        const { pageNumber, pageSize } = request.params as { pageNumber: number; pageSize: number };
+        return all.slice((pageNumber - 1) * pageSize, pageNumber * pageSize);
+      });
+      const store = makeStore();
+      await store.dispatch(chatsApi.endpoints.getChats.initiate());
+
+      expect(chatList(store)).toHaveLength(51);
+      const pages = requests.filter((r) => r.url === "/api/Chat");
+      expect(pages).toHaveLength(2);
+      expect(pages.every((r) => (r.params as { orderBy: string }).orderBy === "id")).toBe(true);
+    });
   });
 
   describe("keeping the list live", () => {

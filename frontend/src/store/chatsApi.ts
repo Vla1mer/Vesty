@@ -15,16 +15,31 @@ import {
 } from "../lib/signalr";
 import type { ChatDto, ChatForCreationDto, ChatPermissionsDto } from "../types/api";
 
+const CHAT_PAGE_SIZE = 50;
+
+const byLatestActivity = (chats: ChatDto[]) =>
+  [...chats].sort(
+    (a, b) =>
+      new Date(b.lastMessageAt ?? b.createdAt).getTime() -
+      new Date(a.lastMessageAt ?? a.createdAt).getTime()
+  );
+
 export const chatsApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getChats: builder.query<ChatDto[], void>({
-      query: () => ({ url: endpoints.chat.base, params: { pageSize: 50 } }),
-      transformResponse: (response: ChatDto[]) =>
-        [...response].sort(
-          (a, b) =>
-            new Date(b.lastMessageAt ?? b.createdAt).getTime() -
-            new Date(a.lastMessageAt ?? a.createdAt).getTime()
-        ),
+      async queryFn(_arg, _api, _extraOptions, baseQuery) {
+        const chats: ChatDto[] = [];
+        for (let pageNumber = 1; ; pageNumber++) {
+          const page = await baseQuery({
+            url: endpoints.chat.base,
+            params: { pageSize: CHAT_PAGE_SIZE, pageNumber, orderBy: "id" },
+          });
+          if (page.error) return { error: page.error };
+          const batch = page.data as ChatDto[];
+          chats.push(...batch);
+          if (batch.length < CHAT_PAGE_SIZE) return { data: byLatestActivity(chats) };
+        }
+      },
       providesTags: (result) =>
         result
           ? [
